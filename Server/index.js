@@ -1,18 +1,25 @@
 const express = require('express');
-const cors = require('cors');
+const cors    = require('cors');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
-const productRoutes = require('./routes/productRoutes');
+
+const productRoutes  = require('./routes/productRoutes');
+const authRoutes     = require('./routes/authRoutes');
+const cartRoutes     = require('./routes/cartRoutes');
+const paymentRoutes  = require('./routes/paymentRoutes');
 
 const app = express();
 
-// Middleware
-app.use(cors()); // Allows your Vite frontend to connect
+// ── Middleware ────────────────────────────────────────────────────────────────
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
+app.use(cookieParser());
 
-// Routes
+// ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/products', productRoutes);
+app.use('/api/auth',     authRoutes);
+app.use('/api/cart',     cartRoutes);
+app.use('/api/payments', paymentRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,0 +1,323 @@
+const db = require('../config/db');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { validationResult } = require('express-validator');
+const { OAuth2Client } = require('google-auth-library');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// ─── Helper: Generate JWT ────────────────────────────────────────────────────
+const generateToken = (userId) => {
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+};
+
+// ─── Helper: Create Nodemailer Transporter ───────────────────────────────────
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,  // Gmail App Password (16-char, no spaces)
+    },
+  });
+};
+
+// ─── Helper: Send Verification Email ────────────────────────────────────────
+const sendVerificationEmail = async (email, fullName, token) => {
+  const transporter = createTransporter();
+  const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${token}`;
+
+  await transporter.sendMail({
+    from: `"A&I Store" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: 'Verify your A&I Account',
+    html: `
+      <div style="font-family:'Segoe UI',sans-serif;max-width:560px;margin:auto;background:#FBF6F0;border-radius:16px;overflow:hidden;">
+        <div style="background:#2C1A0E;padding:28px 36px;text-align:center;">
+          <h1 style="color:#fff;margin:0;font-size:26px;letter-spacing:-0.5px;">A<span style="color:#C4703A">&</span>I</h1>
+          <p style="color:rgba(255,255,255,0.6);margin:4px 0 0;font-size:13px;">Your Favorite Store</p>
+        </div>
+        <div style="padding:40px 36px;">
+          <h2 style="color:#2C1A0E;margin:0 0 10px;font-size:22px;">Hi ${fullName} 👋</h2>
+          <p style="color:#5C3D1E;font-size:15px;line-height:1.6;margin:0 0 28px;">
+            Welcome to A&I! You're almost there — just click the button below to verify your email and activate your account.
+          </p>
+          <div style="text-align:center;margin-bottom:28px;">
+            <a href="${verifyUrl}"
+               style="display:inline-block;background:#C4703A;color:#fff;text-decoration:none;
+                      padding:14px 36px;border-radius:40px;font-weight:700;font-size:15px;
+                      font-family:'Segoe UI',sans-serif;">
+              Verify My Email →
+            </a>
+          </div>
+          <p style="color:#9C7A60;font-size:12px;text-align:center;margin:0;">
+            This link expires in <strong>24 hours</strong>. If you didn't create an account, you can safely ignore this email.
+          </p>
+        </div>
+        <div style="background:#EDE3D9;padding:16px 36px;text-align:center;">
+          <p style="color:#9C7A60;font-size:11px;margin:0;">© 2025 A&I · Your Favorite Store</p>
+        </div>
+      </div>
+    `,
+  });
+};
+
+// ─── REGISTER BUYER ──────────────────────────────────────────────────────────
+// Flow: validate → check duplicate → hash password → send email FIRST
+//       → only save user AFTER email sends successfully
+exports.registerBuyer = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { full_name, email, password } = req.body;
+
+  try {
+    // 1. Check if email already registered
+    const userExists = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (userExists.rows.length > 0) {
+      return res.status(400).json({ msg: 'An account with this email already exists.' });
+    }
+
+    // 2. Hash password
+    const salt = await bcrypt.genSalt(12);
+    const password_hash = await bcrypt.hash(password, salt);
+
+    // 3. Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24hrs
+
+    // 4. Send verification email FIRST — before saving to DB
+    try {
+      await sendVerificationEmail(email, full_name, verificationToken);
+    } catch (emailErr) {
+      console.error('Email sending failed:', emailErr.message);
+      return res.status(500).json({
+        msg: 'Could not send verification email. Please check your email address and try again.',
+      });
+    }
+
+    // 5. Only save user to DB after email succeeds
+    const newUser = await db.query(
+      `INSERT INTO users 
+         (full_name, email, password_hash, verification_token, verification_token_expiry, is_verified)
+       VALUES ($1, $2, $3, $4, $5, FALSE)
+       RETURNING id, full_name, email, is_verified, role`,
+      [full_name, email, password_hash, verificationToken, verificationExpiry]
+    );
+
+    const user = newUser.rows[0];
+
+    // 6. Return success — do NOT issue JWT yet (user must verify first)
+    return res.status(201).json({
+      msg: 'Almost there! We sent a verification link to ' + email + '. Please check your inbox (and spam folder) to activate your account.',
+      user: {
+        id: user.id,
+        full_name: user.full_name,
+        email: user.email,
+        is_verified: false,
+        role: user.role,
+      },
+    });
+
+  } catch (err) {
+    console.error('Register error:', err.message);
+    return res.status(500).json({ msg: 'Server error. Please try again.' });
+  }
+};
+
+// ─── LOGIN USER ──────────────────────────────────────────────────────────────
+exports.loginUser = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { email, password } = req.body;
+
+  try {
+    const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (result.rows.length === 0) {
+      return res.status(400).json({ msg: 'Invalid email or password.' });
+    }
+
+    const user = result.rows[0];
+
+    // Google-only accounts
+    if (!user.password_hash) {
+      return res.status(400).json({ msg: 'This account uses Google Sign-In. Please log in with Google.' });
+    }
+
+    // Check password
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) {
+      return res.status(400).json({ msg: 'Invalid email or password.' });
+    }
+
+    // Block unverified users from logging in
+    if (!user.is_verified) {
+      return res.status(403).json({
+        msg: 'Please verify your email before logging in. Check your inbox for the verification link.',
+        unverified: true,
+      });
+    }
+
+    const token = generateToken(user.id);
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({
+      token,
+      user: {
+        id: user.id,
+        full_name: user.full_name,
+        email: user.email,
+        is_verified: user.is_verified,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    console.error('Login error:', err.message);
+    return res.status(500).json({ msg: 'Server error. Please try again.' });
+  }
+};
+
+// ─── GOOGLE AUTH ─────────────────────────────────────────────────────────────
+exports.googleAuth = async (req, res) => {
+  const { credential } = req.body;
+  if (!credential) return res.status(400).json({ msg: 'Google credential is required.' });
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const { sub: google_id, email, name: full_name, picture } = ticket.getPayload();
+
+    let result = await db.query(
+      'SELECT * FROM users WHERE google_id = $1 OR email = $2',
+      [google_id, email]
+    );
+
+    let user;
+
+    if (result.rows.length > 0) {
+      user = result.rows[0];
+      if (!user.google_id) {
+        await db.query(
+          'UPDATE users SET google_id = $1, is_verified = TRUE WHERE id = $2',
+          [google_id, user.id]
+        );
+        user.google_id = google_id;
+        user.is_verified = true;
+      }
+    } else {
+      const newUser = await db.query(
+        `INSERT INTO users (full_name, email, google_id, is_verified, profile_picture)
+         VALUES ($1, $2, $3, TRUE, $4)
+         RETURNING id, full_name, email, is_verified, role`,
+        [full_name, email, google_id, picture]
+      );
+      user = newUser.rows[0];
+    }
+
+    const token = generateToken(user.id);
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({
+      token,
+      user: {
+        id: user.id,
+        full_name: user.full_name,
+        email: user.email,
+        is_verified: user.is_verified,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    console.error('Google auth error:', err.message);
+    return res.status(401).json({ msg: 'Google authentication failed.' });
+  }
+};
+
+// ─── VERIFY EMAIL ─────────────────────────────────────────────────────────────
+exports.verifyEmail = async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    const result = await db.query(
+      `SELECT * FROM users 
+       WHERE verification_token = $1 
+       AND verification_token_expiry > NOW()
+       AND is_verified = FALSE`,
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({ msg: 'Verification link is invalid or has expired.' });
+    }
+
+    await db.query(
+      `UPDATE users 
+       SET is_verified = TRUE, verification_token = NULL, verification_token_expiry = NULL 
+       WHERE id = $1`,
+      [result.rows[0].id]
+    );
+
+    // Redirect to login page with success message
+    return res.redirect(`${process.env.CLIENT_URL}/login?verified=true`);
+
+  } catch (err) {
+    console.error('Verify email error:', err.message);
+    return res.status(500).json({ msg: 'Server error. Please try again.' });
+  }
+};
+
+// ─── RESEND VERIFICATION EMAIL ────────────────────────────────────────────────
+exports.resendVerification = async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ msg: 'Email is required.' });
+
+  try {
+    const result = await db.query(
+      'SELECT * FROM users WHERE email = $1 AND is_verified = FALSE',
+      [email]
+    );
+
+    if (result.rows.length === 0) {
+      // Don't reveal whether email exists
+      return res.json({ msg: 'If that email is registered and unverified, we sent a new link.' });
+    }
+
+    const user = result.rows[0];
+    const newToken = crypto.randomBytes(32).toString('hex');
+    const newExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await db.query(
+      'UPDATE users SET verification_token = $1, verification_token_expiry = $2 WHERE id = $3',
+      [newToken, newExpiry, user.id]
+    );
+
+    await sendVerificationEmail(user.email, user.full_name, newToken);
+
+    return res.json({ msg: 'Verification email resent! Check your inbox.' });
+  } catch (err) {
+    console.error('Resend verification error:', err.message);
+    return res.status(500).json({ msg: 'Server error. Please try again.' });
+  }
+};
