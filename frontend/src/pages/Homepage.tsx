@@ -88,7 +88,6 @@ export default function Homepage() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const menuRef  = useRef<HTMLDivElement>(null);
 
-  // ── Re-read user — only triggers re-render when user actually changes ────────
   const syncUser = useCallback(() => {
     const fresh = readUser();
     setUser(prev => {
@@ -106,7 +105,6 @@ export default function Homepage() {
     };
   }, [syncUser]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node))
@@ -116,7 +114,6 @@ export default function Homepage() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Fetch products
   useEffect(() => {
     fetch('/api/products')
       .then(r => r.json())
@@ -124,13 +121,11 @@ export default function Homepage() {
       .catch(() => setLoading(false));
   }, []);
 
-  // Auto-rotate banner
   useEffect(() => {
     timerRef.current = setInterval(() => setCurrentBanner(p => (p + 1) % BANNERS.length), 5000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
-  // ── Fetch cart only when logged-in user's ID changes (not every second) ─────
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token || !user) { setCartIds([]); setCartCount(0); return; }
@@ -143,7 +138,7 @@ export default function Homepage() {
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [user?.id]); // ← only re-fetches when a different user logs in
+  }, [user?.id]);
 
   const toggleCart = async (productId: number) => {
     const token = localStorage.getItem('token');
@@ -238,6 +233,8 @@ export default function Homepage() {
         .menu-item:hover { background:#F5EDE3; }
         .menu-item.danger { color:#C0392B; }
         .menu-item.danger:hover { background:#FDF0EE; }
+        .menu-item.admin { color:#C4703A; font-weight:700; }
+        .menu-item.admin:hover { background:#FDF0E6; }
         .auth-btn {
           font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600;
           border-radius:20px; padding:8px 18px;
@@ -305,7 +302,9 @@ export default function Homepage() {
                 title={user.full_name}
                 style={{
                   width: 40, height: 40, borderRadius: '50%',
-                  background: 'linear-gradient(135deg,#C4703A,#E8944A)',
+                  background: user.role === 'admin'
+                    ? 'linear-gradient(135deg,#C4703A,#7B5EA7)'
+                    : 'linear-gradient(135deg,#C4703A,#E8944A)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer',
                   fontFamily: 'DM Sans,sans-serif', userSelect: 'none',
@@ -318,6 +317,7 @@ export default function Homepage() {
 
               {showUserMenu && (
                 <div className="user-menu">
+                  {/* User info header */}
                   <div style={{ padding: '10px 14px 12px', borderBottom: '1px solid #EDE3D9', marginBottom: 6 }}>
                     <div style={{ fontFamily: 'DM Sans,sans-serif', fontWeight: 700, fontSize: 14, color: '#2C1A0E' }}>
                       {user.full_name}
@@ -325,11 +325,33 @@ export default function Homepage() {
                     <div style={{ fontFamily: 'DM Sans,sans-serif', fontSize: 12, color: '#9C7A60', marginTop: 2 }}>
                       {user.email}
                     </div>
-                    {user.is_verified
-                      ? <div className="verified-badge" style={{ marginTop: 6 }}>✓ Verified</div>
-                      : <div style={{ fontFamily: 'DM Sans,sans-serif', fontSize: 11, color: '#C4703A', marginTop: 6, fontWeight: 500 }}>⚠️ Please verify your email</div>
-                    }
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                      {user.is_verified
+                        ? <div className="verified-badge">✓ Verified</div>
+                        : <div style={{ fontFamily: 'DM Sans,sans-serif', fontSize: 11, color: '#C4703A', fontWeight: 500 }}>⚠️ Please verify your email</div>
+                      }
+                      {user.role === 'admin' && (
+                        <div style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                          fontSize: 10, fontWeight: 700, padding: '2px 8px',
+                          borderRadius: 20, background: '#FDF0E6', color: '#C4703A',
+                        }}>
+                          🛠️ Admin
+                        </div>
+                      )}
+                    </div>
                   </div>
+
+                  {/* ── Admin Dashboard — only visible to admin ── */}
+                  {user.role === 'admin' && (
+                    <div
+                      className="menu-item admin"
+                      onClick={() => { setShowUserMenu(false); navigate('/admin'); }}
+                    >
+                      🛠️ Admin Dashboard
+                    </div>
+                  )}
+
                   <div className="menu-item" onClick={() => { setShowUserMenu(false); navigate('/profile'); }}>👤 My Profile</div>
                   <div className="menu-item" onClick={() => { setShowUserMenu(false); navigate('/orders'); }}>📦 My Orders</div>
                   <div className="menu-item" onClick={() => { setShowUserMenu(false); navigate('/wishlist'); }}>
@@ -343,6 +365,7 @@ export default function Homepage() {
                   {user.role === 'seller' && (
                     <div className="menu-item" onClick={() => { setShowUserMenu(false); navigate('/seller/dashboard'); }}>🏪 Seller Dashboard</div>
                   )}
+
                   <div style={{ borderTop: '1px solid #EDE3D9', marginTop: 6, paddingTop: 6 }}>
                     <div className="menu-item danger" onClick={handleLogout}>🚪 Sign Out</div>
                   </div>

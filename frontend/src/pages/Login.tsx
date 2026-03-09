@@ -6,6 +6,11 @@ declare global {
   interface Window { google: any; }
 }
 
+// ── Helper: redirect based on role ───────────────────────────────────────────
+const redirectByRole = (user: any, navigate: (path: string) => void) => {
+  navigate(user?.role === 'admin' ? '/admin' : '/');
+};
+
 export default function Login() {
   const navigate  = useNavigate();
   const location  = useLocation();
@@ -21,7 +26,6 @@ export default function Login() {
   const [resendLoading, setResendLoading] = useState(false);
   const [resendMsg, setResendMsg]     = useState("");
 
-  // Show success message if redirected from email verification
   useEffect(() => {
     if (location.search.includes("verified=true")) {
       setVerifiedMsg("✅ Email verified! You can now sign in.");
@@ -37,7 +41,8 @@ export default function Login() {
         const res = await axios.post("/api/auth/google", { credential: response.credential });
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.user));
-        navigate("/");
+        // ✅ redirect admin → /admin, buyer → /
+        redirectByRole(res.data.user, navigate);
       } catch (err: any) {
         setError(err.response?.data?.msg || "Google sign-in failed. Please try again.");
       } finally {
@@ -78,7 +83,8 @@ export default function Login() {
       const res = await axios.post("/api/auth/login", { email, password });
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
-      navigate("/");
+      // ✅ redirect admin → /admin, buyer → /
+      redirectByRole(res.data.user, navigate);
     } catch (err: any) {
       const msg = err.response?.data?.msg || "Login failed. Please try again.";
       setError(msg);
@@ -117,12 +123,10 @@ export default function Login() {
         <h1 style={s.heading}>Welcome back</h1>
         <p style={s.subheading}>Sign in to your A&I account</p>
 
-        {/* Verified success message */}
         {verifiedMsg && (
           <div style={s.successBanner}>{verifiedMsg}</div>
         )}
 
-        {/* Error */}
         {error && (
           <div style={s.errorBanner}>
             {error}
@@ -149,14 +153,12 @@ export default function Login() {
           }
         </div>
 
-        {/* Divider */}
         <div style={s.divider}>
           <span style={s.dividerLine} />
           <span style={s.dividerText}>or sign in with email</span>
           <span style={s.dividerLine} />
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} noValidate style={s.form}>
           <div style={s.fieldGroup}>
             <label style={s.label}>Email Address</label>

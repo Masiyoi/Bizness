@@ -9,8 +9,8 @@ const crypto = require('crypto');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // ─── Helper: Generate JWT ────────────────────────────────────────────────────
-const generateToken = (userId) => {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+const generateToken = (userId, role) => {
+  return jwt.sign({ id: userId, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
 // ─── Helper: Create Nodemailer Transporter ───────────────────────────────────
@@ -19,7 +19,7 @@ const createTransporter = () => {
     service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,  // Gmail App Password (16-char, no spaces)
+      pass: process.env.EMAIL_PASS,
     },
   });
 };
@@ -65,8 +65,6 @@ const sendVerificationEmail = async (email, fullName, token) => {
 };
 
 // ─── REGISTER BUYER ──────────────────────────────────────────────────────────
-// Flow: validate → check duplicate → hash password → send email FIRST
-//       → only save user AFTER email sends successfully
 exports.registerBuyer = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -76,21 +74,17 @@ exports.registerBuyer = async (req, res) => {
   const { full_name, email, password } = req.body;
 
   try {
-    // 1. Check if email already registered
     const userExists = await db.query('SELECT id FROM users WHERE email = $1', [email]);
     if (userExists.rows.length > 0) {
       return res.status(400).json({ msg: 'An account with this email already exists.' });
     }
 
-    // 2. Hash password
     const salt = await bcrypt.genSalt(12);
     const password_hash = await bcrypt.hash(password, salt);
 
-    // 3. Generate verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24hrs
+    const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    // 4. Send verification email FIRST — before saving to DB
     try {
       await sendVerificationEmail(email, full_name, verificationToken);
     } catch (emailErr) {
@@ -100,7 +94,6 @@ exports.registerBuyer = async (req, res) => {
       });
     }
 
-    // 5. Only save user to DB after email succeeds
     const newUser = await db.query(
       `INSERT INTO users 
          (full_name, email, password_hash, verification_token, verification_token_expiry, is_verified)
@@ -111,7 +104,6 @@ exports.registerBuyer = async (req, res) => {
 
     const user = newUser.rows[0];
 
-    // 6. Return success — do NOT issue JWT yet (user must verify first)
     return res.status(201).json({
       msg: 'Almost there! We sent a verification link to ' + email + '. Please check your inbox (and spam folder) to activate your account.',
       user: {
@@ -146,18 +138,15 @@ exports.loginUser = async (req, res) => {
 
     const user = result.rows[0];
 
-    // Google-only accounts
     if (!user.password_hash) {
       return res.status(400).json({ msg: 'This account uses Google Sign-In. Please log in with Google.' });
     }
 
-    // Check password
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(400).json({ msg: 'Invalid email or password.' });
     }
 
-    // Block unverified users from logging in
     if (!user.is_verified) {
       return res.status(403).json({
         msg: 'Please verify your email before logging in. Check your inbox for the verification link.',
@@ -165,7 +154,8 @@ exports.loginUser = async (req, res) => {
       });
     }
 
-    const token = generateToken(user.id);
+    // ✅ role passed to generateToken
+    const token = generateToken(user.id, user.role);
 
     res.cookie('token', token, {
       httpOnly: true,
@@ -181,9 +171,11 @@ exports.loginUser = async (req, res) => {
         full_name: user.full_name,
         email: user.email,
         is_verified: user.is_verified,
-        role: user.role,
+        role: user.role,               // ✅ role included
+        profile_picture: user.profile_picture,
       },
     });
+
   } catch (err) {
     console.error('Login error:', err.message);
     return res.status(500).json({ msg: 'Server error. Please try again.' });
@@ -211,6 +203,7 @@ exports.googleAuth = async (req, res) => {
     let user;
 
     if (result.rows.length > 0) {
+      // Existing user — SELECT * already fetches role correctly
       user = result.rows[0];
       if (!user.google_id) {
         await db.query(
@@ -221,16 +214,18 @@ exports.googleAuth = async (req, res) => {
         user.is_verified = true;
       }
     } else {
+      // New user
       const newUser = await db.query(
         `INSERT INTO users (full_name, email, google_id, is_verified, profile_picture)
          VALUES ($1, $2, $3, TRUE, $4)
-         RETURNING id, full_name, email, is_verified, role`,
+         RETURNING id, full_name, email, is_verified, role, profile_picture`,
         [full_name, email, google_id, picture]
       );
       user = newUser.rows[0];
     }
 
-    const token = generateToken(user.id);
+    // ✅ role passed to generateToken
+    const token = generateToken(user.id, user.role);
 
     res.cookie('token', token, {
       httpOnly: true,
@@ -246,9 +241,11 @@ exports.googleAuth = async (req, res) => {
         full_name: user.full_name,
         email: user.email,
         is_verified: user.is_verified,
-        role: user.role,
+        role: user.role,                    // ✅ role included
+        profile_picture: user.profile_picture,
       },
     });
+
   } catch (err) {
     console.error('Google auth error:', err.message);
     return res.status(401).json({ msg: 'Google authentication failed.' });
@@ -279,7 +276,6 @@ exports.verifyEmail = async (req, res) => {
       [result.rows[0].id]
     );
 
-    // Redirect to login page with success message
     return res.redirect(`${process.env.CLIENT_URL}/login?verified=true`);
 
   } catch (err) {
@@ -300,7 +296,6 @@ exports.resendVerification = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      // Don't reveal whether email exists
       return res.json({ msg: 'If that email is registered and unverified, we sent a new link.' });
     }
 
@@ -316,6 +311,7 @@ exports.resendVerification = async (req, res) => {
     await sendVerificationEmail(user.email, user.full_name, newToken);
 
     return res.json({ msg: 'Verification email resent! Check your inbox.' });
+
   } catch (err) {
     console.error('Resend verification error:', err.message);
     return res.status(500).json({ msg: 'Server error. Please try again.' });

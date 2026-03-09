@@ -8,7 +8,9 @@ import ProductDetails from './pages/ProductDetails';
 import Register       from './pages/Register';
 import Login          from './pages/Login';
 import Cart           from './pages/Cart';
-import Checkout from './pages/Checkout';
+import Checkout       from './pages/Checkout';
+import ProductDetail  from './pages/ProductDetail';
+import AdminDashboard from './pages/AdminDashboard';
 
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
 const isAuthenticated = () => !!localStorage.getItem('token');
@@ -37,13 +39,23 @@ const clearIfExpired = () => {
 };
 
 // ─── GuestRoute ───────────────────────────────────────────────────────────────
-// Only redirect away from login/register if already logged in AND verified.
-// This prevents Google-logged-in users being silently bounced away.
+// Redirect away from login/register if already logged in.
+// Admins go to /admin, regular users go to /
 function GuestRoute({ children }: { children: React.ReactNode }) {
   const user = getUser();
   if (isAuthenticated() && user?.is_verified) {
+    if (user?.role === 'admin') return <Navigate to="/admin" replace />;
     return <Navigate to="/" replace />;
   }
+  return <>{children}</>;
+}
+
+// ─── AdminRoute ───────────────────────────────────────────────────────────────
+// Only admins can access — others get redirected
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const user = getUser();
+  if (!isAuthenticated()) return <Navigate to="/login" replace />;
+  if (user?.role !== 'admin') return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -57,16 +69,21 @@ function App() {
 
         {/* ── Public ── */}
         <Route path="/"            element={<Homepage />} />
-        <Route path="/product/:id" element={<ProductDetails />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
 
         {/* ── Auth (guests only) ── */}
         <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
         <Route path="/login"    element={<GuestRoute><Login /></GuestRoute>} />
 
+        {/* ── Protected ── */}
+        <Route path="/cart"     element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+
         {/* ── Email verification ── */}
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<Checkout />} />
+
+        {/* ── Admin only ── */}
+        <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
         {/* ── 404 ── */}
         <Route path="*" element={<NotFound />} />
