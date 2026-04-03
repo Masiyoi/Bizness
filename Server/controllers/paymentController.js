@@ -21,7 +21,6 @@ const getPassword = (timestamp) => {
 };
 
 const formatPhone = (phone) => {
-  // Accepts: 07xxxxxxxx, 01xxxxxxxx, +254xxxxxxxxx, 254xxxxxxxxx
   const cleaned = phone.replace(/\s+/g, '').replace(/^0/, '254').replace(/^\+/, '');
   if (!/^254\d{9}$/.test(cleaned)) throw new Error('Invalid phone number format');
   return cleaned;
@@ -43,8 +42,9 @@ const getAccessToken = async () => {
 };
 
 // ── POST /api/payments/stk-push ───────────────────────────────────────────────
+// Now also accepts delivery_zone and delivery_fee from the frontend
 exports.stkPush = async (req, res) => {
-  const { phone, amount } = req.body;
+  const { phone, amount, delivery_zone, delivery_fee } = req.body;
   const userId = req.user.id;
 
   if (!phone || !amount) {
@@ -58,7 +58,7 @@ exports.stkPush = async (req, res) => {
     return res.status(400).json({ msg: err.message });
   }
 
-  const roundedAmount = Math.ceil(Number(amount)); // M-Pesa requires whole numbers
+  const roundedAmount = Math.ceil(Number(amount));
 
   try {
     const token     = await getAccessToken();
@@ -79,7 +79,7 @@ exports.stkPush = async (req, res) => {
       PartyB:            process.env.MPESA_SHORTCODE,
       PhoneNumber:       formattedPhone,
       CallBackURL:       process.env.MPESA_CALLBACK_URL,
-      AccountReference:  'BiznaAI',
+      AccountReference:  'LukuPrime',
       TransactionDesc:   'Order Payment',
     };
 
@@ -93,12 +93,21 @@ exports.stkPush = async (req, res) => {
       return res.status(400).json({ msg: CustomerMessage || 'STK push failed' });
     }
 
-    // Save pending payment to DB
+    // Save pending payment — also store delivery info so callback can use it
     await db.query(
-      `INSERT INTO payments (user_id, checkout_request_id, merchant_request_id, amount, phone, status)
-       VALUES ($1, $2, $3, $4, $5, 'pending')
+      `INSERT INTO payments
+         (user_id, checkout_request_id, merchant_request_id, amount, phone, status, delivery_zone, delivery_fee)
+       VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7)
        ON CONFLICT (checkout_request_id) DO NOTHING`,
-      [userId, CheckoutRequestID, MerchantRequestID, roundedAmount, formattedPhone]
+      [
+        userId,
+        CheckoutRequestID,
+        MerchantRequestID,
+        roundedAmount,
+        formattedPhone,
+        delivery_zone || 'cbd',
+        delivery_fee  || 0,
+      ]
     );
 
     return res.json({
@@ -116,18 +125,19 @@ exports.stkPush = async (req, res) => {
 // ── POST /api/payments/callback  (called by Safaricom) ───────────────────────
 exports.mpesaCallback = async (req, res) => {
   try {
-    const body   = req.body?.Body?.stkCallback;
+    const body = req.body?.Body?.stkCallback;
     if (!body) return res.json({ ResultCode: 0, ResultDesc: 'Accepted' });
 
     const { CheckoutRequestID, ResultCode, ResultDesc, CallbackMetadata } = body;
 
     if (ResultCode === 0) {
-      // Successful payment — extract receipt
-      const items  = CallbackMetadata?.Item || [];
-      const get    = (name) => items.find(i => i.Name === name)?.Value;
+      // ── Successful payment ───────────────────────────────────────────────
+      const items   = CallbackMetadata?.Item || [];
+      const get     = (name) => items.find(i => i.Name === name)?.Value;
       const receipt = get('MpesaReceiptNumber');
       const amount  = get('Amount');
 
+      // 1. Mark payment completed
       await db.query(
         `UPDATE payments
          SET status = 'completed', mpesa_receipt = $1, result_desc = $2, updated_at = NOW()
@@ -135,9 +145,72 @@ exports.mpesaCallback = async (req, res) => {
         [receipt, ResultDesc, CheckoutRequestID]
       );
 
-      console.log(`✅ Payment complete: ${receipt} — KSh ${amount}`);
+      // 2. Fetch the payment row (we need user_id, delivery info)
+      const paymentRes = await db.query(
+        `SELECT id, user_id, amount, phone, delivery_zone, delivery_fee
+         FROM payments
+         WHERE checkout_request_id = $1`,
+        [CheckoutRequestID]
+      );
+
+      if (paymentRes.rows.length === 0) {
+        console.error('Callback: payment row not found for', CheckoutRequestID);
+        return res.json({ ResultCode: 0, ResultDesc: 'Accepted' });
+      }
+
+      const payment = paymentRes.rows[0];
+
+      // 3. Fetch the user's cart items with product details (snapshot)
+      const cartRes = await db.query(
+        `SELECT
+           ci.product_id,
+           ci.quantity,
+           p.name,
+           p.price,
+           p.image_url,
+           p.category
+         FROM carts c
+         JOIN cart_items ci ON ci.cart_id = c.id
+         JOIN products   p  ON p.id = ci.product_id
+         WHERE c.user_id = $1`,
+        [payment.user_id]
+      );
+
+      const itemsSnapshot = cartRes.rows.map(r => ({
+        product_id: r.product_id,
+        name:       r.name,
+        price:      r.price,
+        image_url:  r.image_url,
+        category:   r.category,
+        quantity:   r.quantity,
+      }));
+
+      // 4. Create the order
+      await db.query(
+        `INSERT INTO orders
+           (user_id, payment_id, total, delivery_fee, delivery_zone, status, tracking_status, items_snapshot)
+         VALUES ($1, $2, $3, $4, $5, 'confirmed', 'Order Placed', $6)`,
+        [
+          payment.user_id,
+          payment.id,
+          payment.amount,
+          payment.delivery_fee,
+          payment.delivery_zone,
+          JSON.stringify(itemsSnapshot),
+        ]
+      );
+
+      // 5. Clear the user's cart
+      await db.query(
+        `DELETE FROM cart_items
+         WHERE cart_id = (SELECT id FROM carts WHERE user_id = $1)`,
+        [payment.user_id]
+      );
+
+      console.log(`✅ Order created for user ${payment.user_id} — receipt ${receipt} — KSh ${amount}`);
+
     } else {
-      // Failed / cancelled
+      // ── Failed / cancelled ───────────────────────────────────────────────
       await db.query(
         `UPDATE payments
          SET status = 'failed', result_desc = $1, updated_at = NOW()

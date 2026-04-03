@@ -1,5 +1,5 @@
 import { HashRouter as Router, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -11,6 +11,7 @@ import Cart           from './pages/Cart';
 import Checkout       from './pages/Checkout';
 import ProductDetail  from './pages/ProductDetail';
 import AdminDashboard from './pages/AdminDashboard';
+import Orders         from './pages/Orders';
 
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
 const isAuthenticated = () => !!localStorage.getItem('token');
@@ -39,8 +40,6 @@ const clearIfExpired = () => {
 };
 
 // ─── GuestRoute ───────────────────────────────────────────────────────────────
-// Redirect away from login/register if already logged in.
-// Admins go to /admin, regular users go to /
 function GuestRoute({ children }: { children: React.ReactNode }) {
   const user = getUser();
   if (isAuthenticated() && user?.is_verified) {
@@ -51,11 +50,26 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
 }
 
 // ─── AdminRoute ───────────────────────────────────────────────────────────────
-// Only admins can access — others get redirected
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const user = getUser();
   if (!isAuthenticated()) return <Navigate to="/login" replace />;
   if (user?.role !== 'admin') return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
+// ─── ProtectedRoute ───────────────────────────────────────────────────────────
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  if (!isAuthenticated()) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+// ─── BuyerRoute ───────────────────────────────────────────────────────────────
+// Buyers only — admins are redirected back to /admin
+// Use for cart, checkout, and orders
+function BuyerRoute({ children }: { children: React.ReactNode }) {
+  const user = getUser();
+  if (!isAuthenticated()) return <Navigate to="/login" replace />;
+  if (user?.role === 'admin') return <Navigate to="/admin" replace />;
   return <>{children}</>;
 }
 
@@ -75,9 +89,10 @@ function App() {
         <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
         <Route path="/login"    element={<GuestRoute><Login /></GuestRoute>} />
 
-        {/* ── Protected ── */}
-        <Route path="/cart"     element={<Cart />} />
-        <Route path="/checkout" element={<Checkout />} />
+        {/* ── Buyer only (admins blocked) ── */}
+        <Route path="/cart"     element={<BuyerRoute><Cart /></BuyerRoute>} />
+        <Route path="/checkout" element={<BuyerRoute><Checkout /></BuyerRoute>} />
+        <Route path="/orders"   element={<BuyerRoute><Orders /></BuyerRoute>} />
 
         {/* ── Email verification ── */}
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
@@ -97,12 +112,16 @@ export default App;
 
 // ─── Email Verification Page ──────────────────────────────────────────────────
 function VerifyEmail() {
-  const { token } = useParams();
-  const navigate  = useNavigate();
+  const { token }  = useParams();
+  const navigate   = useNavigate();
+  const hasCalled  = useRef(false); // ← prevents double-call in React Strict Mode
   const [status, setStatus]   = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
+    if (hasCalled.current) return; // ← if already called, bail out immediately
+    hasCalled.current = true;
+
     axios.get(`/api/auth/verify/${token}`)
       .then(res => {
         setStatus('success');

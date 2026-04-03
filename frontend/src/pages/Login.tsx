@@ -2,297 +2,243 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
-declare global {
-  interface Window { google: any; }
-}
+declare global { interface Window { google: any; } }
 
-// ── Helper: redirect based on role ───────────────────────────────────────────
-const redirectByRole = (user: any, navigate: (path: string) => void) => {
+const redirectByRole = (user: any, navigate: (p: string) => void) =>
   navigate(user?.role === 'admin' ? '/admin' : '/');
+
+const T = {
+  navy:'#0D1B3E', navyMid:'#152348', navyLight:'#1E2F5A',
+  gold:'#C8A951', goldLight:'#DEC06A',
 };
 
 export default function Login() {
-  const navigate  = useNavigate();
-  const location  = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const [email, setEmail]             = useState("");
-  const [password, setPassword]       = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading]         = useState(false);
+  const [email,         setEmail]         = useState("");
+  const [password,      setPassword]      = useState("");
+  const [showPassword,  setShowPassword]  = useState(false);
+  const [loading,       setLoading]       = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [error, setError]             = useState("");
-  const [verifiedMsg, setVerifiedMsg] = useState("");
-  const [unverified, setUnverified]   = useState(false);
+  const [error,         setError]         = useState("");
+  const [verifiedMsg,   setVerifiedMsg]   = useState("");
+  const [unverified,    setUnverified]    = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
-  const [resendMsg, setResendMsg]     = useState("");
+  const [resendMsg,     setResendMsg]     = useState("");
 
   useEffect(() => {
-    if (location.search.includes("verified=true")) {
+    if (location.search.includes("verified=true"))
       setVerifiedMsg("✅ Email verified! You can now sign in.");
-    }
   }, [location]);
 
-  // ── Google Sign-In ──────────────────────────────────────────────────────
-  const handleGoogleResponse = useCallback(
-    async (response: { credential: string }) => {
-      setGoogleLoading(true);
-      setError("");
-      try {
-        const res = await axios.post("/api/auth/google", { credential: response.credential });
-        localStorage.setItem("token", res.data.token);
-        localStorage.setItem("user", JSON.stringify(res.data.user));
-        // ✅ redirect admin → /admin, buyer → /
-        redirectByRole(res.data.user, navigate);
-      } catch (err: any) {
-        setError(err.response?.data?.msg || "Google sign-in failed. Please try again.");
-      } finally {
-        setGoogleLoading(false);
-      }
-    },
-    [navigate]
-  );
+  const handleGoogleResponse = useCallback(async (response: { credential: string }) => {
+    setGoogleLoading(true); setError("");
+    try {
+      const res = await axios.post("/api/auth/google", { credential: response.credential });
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      redirectByRole(res.data.user, navigate);
+    } catch (err: any) {
+      setError(err.response?.data?.msg || "Google sign-in failed.");
+    } finally { setGoogleLoading(false); }
+  }, [navigate]);
 
   useEffect(() => {
-    const init = () => {
+    const t = setTimeout(() => {
       if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          callback: handleGoogleResponse,
-        });
-        window.google.accounts.id.renderButton(
-          document.getElementById("google-login-btn"),
-          { theme: "outline", size: "large", width: "100%", text: "signin_with", shape: "rectangular" }
-        );
+        window.google.accounts.id.initialize({ client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID, callback: handleGoogleResponse });
+        window.google.accounts.id.renderButton(document.getElementById("google-login-btn"), { theme:"outline", size:"large", width:"100%", text:"signin_with", shape:"rectangular" });
       }
-    };
-    const timer = setTimeout(init, 300);
-    return () => clearTimeout(timer);
+    }, 300);
+    return () => clearTimeout(t);
   }, [handleGoogleResponse]);
 
-  // ── Email/password login ────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError("Please enter your email and password.");
-      return;
-    }
-    setLoading(true);
-    setError("");
-    setUnverified(false);
+    if (!email || !password) { setError("Please enter your email and password."); return; }
+    setLoading(true); setError(""); setUnverified(false);
     try {
       const res = await axios.post("/api/auth/login", { email, password });
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
-      // ✅ redirect admin → /admin, buyer → /
       redirectByRole(res.data.user, navigate);
     } catch (err: any) {
-      const msg = err.response?.data?.msg || "Login failed. Please try again.";
-      setError(msg);
+      setError(err.response?.data?.msg || "Login failed.");
       if (err.response?.data?.unverified) setUnverified(true);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
-  // ── Resend verification email ───────────────────────────────────────────
   const handleResend = async () => {
-    setResendLoading(true);
-    setResendMsg("");
+    setResendLoading(true); setResendMsg("");
     try {
       const res = await axios.post("/api/auth/resend-verification", { email });
       setResendMsg(res.data.msg);
-    } catch {
-      setResendMsg("Failed to resend. Please try again.");
-    } finally {
-      setResendLoading(false);
-    }
+    } catch { setResendMsg("Failed to resend."); }
+    finally { setResendLoading(false); }
   };
 
   return (
     <div style={s.page}>
-      <div style={s.bgOrb1} />
-      <div style={s.bgOrb2} />
+      <style>{css}</style>
+      <div style={s.orb1}/><div style={s.orb2}/>
 
-      <div style={s.card}>
-        {/* Logo */}
-        <div style={s.logoRow}>
-          <div style={s.logoIcon}>A<span style={{ color: "#C4703A" }}>&</span>I</div>
-          <span style={s.logoText}>A&I Store</span>
+      {/* Left brand panel — hidden on mobile */}
+      <div className="lp-left">
+        <div style={{ position:"absolute", top:28, left:28, width:80, height:80, border:`1px solid rgba(200,169,81,0.12)`, borderRadius:4, pointerEvents:"none" }}/>
+        <div style={{ position:"absolute", bottom:28, right:28, width:60, height:60, border:`1px solid rgba(200,169,81,0.08)`, borderRadius:4, pointerEvents:"none" }}/>
+        <div style={s.logoMark}><span style={{ fontFamily:"'Playfair Display',serif", fontWeight:800, fontSize:22, color:T.navy }}>LP</span></div>
+        <div style={{ display:"flex", alignItems:"center", gap:10, width:"100%", marginBottom:22, zIndex:1, position:"relative" }}>
+          <div style={{ flex:1, height:1, background:`linear-gradient(90deg,transparent,${T.gold}88)` }}/>
+          <div style={{ width:5, height:5, background:T.gold, transform:"rotate(45deg)", flexShrink:0 }}/>
+          <div style={{ flex:1, height:1, background:`linear-gradient(90deg,${T.gold}88,transparent)` }}/>
         </div>
-
-        <h1 style={s.heading}>Welcome back</h1>
-        <p style={s.subheading}>Sign in to your A&I account</p>
-
-        {verifiedMsg && (
-          <div style={s.successBanner}>{verifiedMsg}</div>
-        )}
-
-        {error && (
-          <div style={s.errorBanner}>
-            {error}
-            {unverified && (
-              <div style={{ marginTop: 10 }}>
-                <button
-                  onClick={handleResend}
-                  disabled={resendLoading}
-                  style={s.resendBtn}
-                >
-                  {resendLoading ? "Sending…" : "Resend verification email"}
-                </button>
-                {resendMsg && <div style={{ marginTop: 8, fontSize: 12, color: "#86efac" }}>{resendMsg}</div>}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Google Sign-In */}
-        <div style={s.googleWrapper}>
-          {googleLoading
-            ? <div style={s.googleLoadingBtn}>Signing in with Google…</div>
-            : <div id="google-login-btn" style={{ width: "100%", minHeight: 44 }} />
-          }
-        </div>
-
-        <div style={s.divider}>
-          <span style={s.dividerLine} />
-          <span style={s.dividerText}>or sign in with email</span>
-          <span style={s.dividerLine} />
-        </div>
-
-        <form onSubmit={handleSubmit} noValidate style={s.form}>
-          <div style={s.fieldGroup}>
-            <label style={s.label}>Email Address</label>
-            <input
-              type="email"
-              placeholder="jane@example.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              autoComplete="email"
-              style={s.input}
-            />
-          </div>
-
-          <div style={s.fieldGroup}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <label style={s.label}>Password</label>
-              <span
-                style={{ fontSize: 12, color: "#C4703A", cursor: "pointer", fontWeight: 500 }}
-                onClick={() => navigate("/forgot-password")}
-              >
-                Forgot password?
-              </span>
-            </div>
-            <div style={{ position: "relative" }}>
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Your password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                autoComplete="current-password"
-                style={{ ...s.input, paddingRight: 50 }}
-              />
-              <button type="button" onClick={() => setShowPassword(x => !x)} style={s.eyeBtn}>
-                {showPassword ? "🙈" : "👁️"}
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ ...s.submitBtn, opacity: loading ? 0.7 : 1, cursor: loading ? "not-allowed" : "pointer" }}
-          >
-            {loading ? "Signing in…" : "Sign In"}
-          </button>
-        </form>
-
-        <p style={s.registerPrompt}>
-          Don't have an account?{" "}
-          <span onClick={() => navigate("/register")} style={{ ...s.registerLink, cursor: "pointer" }}>
-            Join Free
-          </span>
+        <h2 style={{ fontFamily:"'Playfair Display',serif", fontWeight:800, fontSize:28, color:"#fff", textAlign:"center", lineHeight:1.2, marginBottom:14, zIndex:1, position:"relative" }}>
+          Welcome Back<br/><span style={{ color:T.goldLight }}>to Luku Prime</span>
+        </h2>
+        <p style={{ fontFamily:"'Jost',sans-serif", fontWeight:300, fontSize:13, color:"rgba(255,255,255,0.42)", textAlign:"center", lineHeight:1.8, maxWidth:260, zIndex:1, position:"relative" }}>
+          Kenya's premium destination for the finest products.
         </p>
+        <div style={{ marginTop:44, display:"flex", flexDirection:"column", gap:14, width:"100%", zIndex:1, position:"relative" }}>
+          {[["🔒","Secure, encrypted login"],["👑","Access your premium account"],["🚚","Track your orders instantly"]].map(([icon,text]) => (
+            <div key={text} style={{ display:"flex", alignItems:"center", gap:12 }}>
+              <div style={{ width:32, height:32, borderRadius:8, flexShrink:0, background:"rgba(200,169,81,0.09)", border:"1px solid rgba(200,169,81,0.18)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13 }}>{icon}</div>
+              <span style={{ fontFamily:"'Jost',sans-serif", fontSize:12, color:"rgba(255,255,255,0.4)" }}>{text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Right form panel */}
+      <div style={s.right}>
+        <div style={s.ring1}/><div style={s.ring2}/>
+        <div className="lp-card" style={s.card}>
+
+          {/* Mobile-only logo */}
+          <div className="lp-mobile-logo">
+            <div style={{ width:40, height:40, borderRadius:10, background:`linear-gradient(135deg,${T.gold},${T.goldLight})`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <span style={{ fontFamily:"'Playfair Display',serif", fontWeight:800, fontSize:13, color:T.navy }}>LP</span>
+            </div>
+            <span style={{ fontFamily:"'Playfair Display',serif", fontWeight:800, fontSize:15, color:"#fff" }}>Luku Prime Shop</span>
+          </div>
+
+          <div style={{ marginBottom:24 }}>
+            <div style={s.tag}>Member Login</div>
+            <h1 style={s.heading}>Sign In</h1>
+            <p style={s.sub}>Enter your credentials to continue</p>
+          </div>
+
+          {verifiedMsg && <div style={s.successBox}>{verifiedMsg}</div>}
+
+          {error && (
+            <div style={s.errorBox}>
+              {error}
+              {unverified && (
+                <div style={{ marginTop:10 }}>
+                  <button onClick={handleResend} disabled={resendLoading} style={s.resendBtn}>
+                    {resendLoading ? "Sending…" : "Resend verification email"}
+                  </button>
+                  {resendMsg && <div style={{ marginTop:8, fontSize:12, color:"#86efac" }}>{resendMsg}</div>}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div style={{ marginBottom:20, minHeight:44 }}>
+            {googleLoading
+              ? <div style={s.gLoad}>Signing in with Google…</div>
+              : <div id="google-login-btn" style={{ width:"100%", minHeight:44 }}/>
+            }
+          </div>
+
+          <div style={s.divider}><span style={s.divLine}/><span style={s.divText}>or with email</span><span style={s.divLine}/></div>
+
+          <form onSubmit={handleSubmit} noValidate style={{ display:"flex", flexDirection:"column", gap:16 }}>
+            <div>
+              <label style={s.label}>Email Address</label>
+              <input type="email" placeholder="your@email.com" value={email}
+                onChange={e => setEmail(e.target.value)} autoComplete="email" className="lp-inp"/>
+            </div>
+            <div>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                <label style={{ ...s.label, marginBottom:0 }}>Password</label>
+                <span className="lp-link" style={{ fontSize:11 }} onClick={() => navigate("/forgot-password")}>
+                  Forgot password?
+                </span>
+              </div>
+              <div style={{ position:"relative" }}>
+                <input type={showPassword?"text":"password"} placeholder="Your password"
+                  value={password} onChange={e => setPassword(e.target.value)}
+                  autoComplete="current-password" className="lp-inp" style={{ paddingRight:48 }}/>
+                <button type="button" className="lp-eye" onClick={() => setShowPassword(x => !x)}>
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
+            </div>
+            <button type="submit" disabled={loading} className="lp-submit">
+              {loading ? "Signing in…" : "Sign In →"}
+            </button>
+          </form>
+
+          <div style={{ height:1, background:`linear-gradient(90deg,transparent,rgba(200,169,81,0.18),transparent)`, margin:"22px 0" }}/>
+          <p style={{ fontFamily:"'Jost',sans-serif", fontSize:13, color:"rgba(255,255,255,0.32)", textAlign:"center" }}>
+            Don't have an account? <span className="lp-link" onClick={() => navigate("/register")}>Join Free</span>
+          </p>
+        </div>
       </div>
     </div>
   );
 }
 
-const s: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: "100vh", backgroundColor: "#0b0b1a",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
-    padding: "40px 16px", position: "relative", overflow: "hidden",
-  },
-  bgOrb1: {
-    position: "fixed", width: 500, height: 500, borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(196,112,58,0.12) 0%, transparent 70%)",
-    top: -100, left: -100, pointerEvents: "none",
-  },
-  bgOrb2: {
-    position: "fixed", width: 400, height: 400, borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(90,138,90,0.1) 0%, transparent 70%)",
-    bottom: -80, right: -80, pointerEvents: "none",
-  },
-  card: {
-    background: "#13132a", border: "1px solid #2e2e4a",
-    borderRadius: 20, padding: "48px 40px",
-    width: "100%", maxWidth: 460,
-    position: "relative", zIndex: 1,
-    boxShadow: "0 25px 60px rgba(0,0,0,0.5)",
-  },
-  logoRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 28 },
-  logoIcon: {
-    width: 38, height: 38, borderRadius: 10,
-    background: "linear-gradient(135deg, #2C1A0E, #C4703A)",
-    display: "flex", alignItems: "center", justifyContent: "center",
-    fontWeight: 800, color: "#fff", fontSize: 16,
-  },
-  logoText: { color: "#fff", fontWeight: 700, fontSize: 18, letterSpacing: "-0.3px" },
-  heading: { color: "#fff", fontSize: 26, fontWeight: 800, margin: "0 0 8px 0", letterSpacing: "-0.5px" },
-  subheading: { color: "#8888aa", fontSize: 14, margin: "0 0 28px 0" },
-  successBanner: {
-    background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.3)",
-    borderRadius: 10, padding: "12px 16px", color: "#86efac",
-    fontSize: 14, marginBottom: 20,
-  },
-  errorBanner: {
-    background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)",
-    borderRadius: 10, padding: "12px 16px", color: "#fca5a5",
-    fontSize: 14, marginBottom: 20,
-  },
-  resendBtn: {
-    background: "transparent", border: "1px solid rgba(239,68,68,0.4)",
-    borderRadius: 8, padding: "7px 14px", color: "#fca5a5",
-    fontSize: 12, cursor: "pointer", fontFamily: "inherit",
-  },
-  googleWrapper: { marginBottom: 20, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center" },
-  googleLoadingBtn: {
-    width: "100%", padding: "12px 0", background: "#1e1e38",
-    border: "1px solid #2e2e4a", borderRadius: 8, color: "#8888aa",
-    textAlign: "center", fontSize: 14,
-  },
-  divider: { display: "flex", alignItems: "center", gap: 10, marginBottom: 24 },
-  dividerLine: { flex: 1, height: 1, background: "#2e2e4a", display: "block" },
-  dividerText: { color: "#555577", fontSize: 12, whiteSpace: "nowrap" },
-  form: { display: "flex", flexDirection: "column", gap: 18 },
-  fieldGroup: { display: "flex", flexDirection: "column", gap: 6 },
-  label: { color: "#aaaacc", fontSize: 13, fontWeight: 600, letterSpacing: "0.3px" },
-  input: {
-    background: "#0e0e22", border: "1px solid #2e2e4a",
-    borderRadius: 10, padding: "12px 16px", color: "#fff",
-    fontSize: 15, outline: "none", width: "100%", boxSizing: "border-box",
-  },
-  eyeBtn: {
-    position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
-    background: "none", border: "none", cursor: "pointer", fontSize: 16, padding: 0,
-  },
-  submitBtn: {
-    background: "linear-gradient(135deg, #C4703A 0%, #E8944A 100%)",
-    color: "#fff", border: "none", borderRadius: 10,
-    padding: "14px 0", fontWeight: 700, fontSize: 15,
-    marginTop: 4, width: "100%", fontFamily: "inherit", transition: "opacity 0.2s",
-  },
-  registerPrompt: { textAlign: "center", color: "#8888aa", fontSize: 14, marginTop: 22, marginBottom: 0 },
-  registerLink: { color: "#E8944A", fontWeight: 600 },
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Jost:wght@300;400;500;600;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  .lp-inp{background:rgba(255,255,255,0.05);border:1px solid rgba(200,169,81,0.22);border-radius:8px;padding:13px 16px;color:#fff;font-size:14px;font-family:'Jost',sans-serif;width:100%;outline:none;letter-spacing:0.2px;transition:border-color 0.2s,background 0.2s}
+  .lp-inp:focus{border-color:#C8A951;background:rgba(200,169,81,0.07)}
+  .lp-inp::placeholder{color:rgba(255,255,255,0.22)}
+
+  .lp-submit{width:100%;border:none;border-radius:6px;padding:14px;font-family:'Jost',sans-serif;font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;background:linear-gradient(135deg,#C8A951,#DEC06A);color:#0D1B3E;transition:all 0.25s;margin-top:4px}
+  .lp-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 28px rgba(200,169,81,0.35)}
+  .lp-submit:disabled{opacity:0.6;cursor:not-allowed}
+
+  .lp-link{color:#DEC06A;cursor:pointer;font-weight:600;font-family:'Jost',sans-serif;font-size:12px;transition:color 0.2s}
+  .lp-link:hover{color:#fff}
+
+  .lp-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;color:rgba(255,255,255,0.3);transition:color 0.2s;padding:0}
+  .lp-eye:hover{color:#C8A951}
+
+  @keyframes lpFadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .lp-card{animation:lpFadeUp 0.5s ease both}
+
+  .lp-left{width:400px;flex-shrink:0;background:linear-gradient(155deg,#152348 0%,#091325 100%);border-right:1px solid rgba(200,169,81,0.12);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 44px;position:relative;overflow:hidden}
+
+  .lp-mobile-logo{display:none;align-items:center;gap:12px;margin-bottom:26px}
+
+  @media(max-width:768px){
+    .lp-left{display:none !important}
+    .lp-mobile-logo{display:flex !important}
+  }
+`;
+
+const s: Record<string,React.CSSProperties> = {
+  page:{ minHeight:"100vh", display:"flex", fontFamily:"'Jost',sans-serif", background:T.navy, overflow:"hidden" },
+  orb1:{ position:"fixed", width:500, height:500, borderRadius:"50%", background:"radial-gradient(circle,rgba(200,169,81,0.07) 0%,transparent 70%)", top:-120, left:-120, pointerEvents:"none" },
+  orb2:{ position:"fixed", width:400, height:400, borderRadius:"50%", background:"radial-gradient(circle,rgba(200,169,81,0.04) 0%,transparent 70%)", bottom:-100, right:-100, pointerEvents:"none" },
+  logoMark:{ width:80, height:80, borderRadius:16, marginBottom:36, background:`linear-gradient(135deg,${T.gold},${T.goldLight})`, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 8px 28px rgba(200,169,81,0.3)", position:"relative", zIndex:1 },
+  right:{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"clamp(20px,4vw,40px) clamp(16px,4vw,24px)", background:`linear-gradient(135deg,${T.navy} 0%,#091325 100%)`, position:"relative", overflow:"hidden" },
+  ring1:{ position:"absolute", bottom:-140, right:-140, width:420, height:420, borderRadius:"50%", border:"1px solid rgba(200,169,81,0.06)", pointerEvents:"none" },
+  ring2:{ position:"absolute", bottom:-100, right:-100, width:300, height:300, borderRadius:"50%", border:"1px solid rgba(200,169,81,0.04)", pointerEvents:"none" },
+  card:{ width:"100%", maxWidth:430, background:"rgba(255,255,255,0.03)", border:"1px solid rgba(200,169,81,0.15)", borderRadius:20, padding:"clamp(24px,5vw,44px) clamp(18px,5vw,40px)", backdropFilter:"blur(8px)", position:"relative", zIndex:1 },
+  tag:{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:"3px", color:T.gold, textTransform:"uppercase" as const, marginBottom:10 },
+  heading:{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:"clamp(20px,4vw,26px)" as any, color:"#fff", marginBottom:6 },
+  sub:{ fontFamily:"'Jost',sans-serif", fontSize:13, color:"rgba(255,255,255,0.35)" },
+  label:{ display:"block", fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:"2px", color:`rgba(200,169,81,0.75)`, textTransform:"uppercase" as const, marginBottom:8 },
+  successBox:{ background:"rgba(90,138,90,0.12)", border:"1px solid rgba(90,138,90,0.3)", borderRadius:8, padding:"12px 16px", color:"#86efac", fontFamily:"'Jost',sans-serif", fontSize:13, marginBottom:20 },
+  errorBox:{ background:"rgba(192,57,43,0.1)", border:"1px solid rgba(192,57,43,0.3)", borderRadius:8, padding:"12px 16px", color:"#fca5a5", fontFamily:"'Jost',sans-serif", fontSize:13, marginBottom:20 },
+  resendBtn:{ background:"transparent", border:"1px solid rgba(192,57,43,0.4)", borderRadius:6, padding:"6px 14px", color:"#fca5a5", fontSize:12, cursor:"pointer", fontFamily:"'Jost',sans-serif" },
+  gLoad:{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(200,169,81,0.2)", borderRadius:8, padding:"12px", color:"rgba(255,255,255,0.28)", fontFamily:"'Jost',sans-serif", fontSize:13, textAlign:"center" as const },
+  divider:{ display:"flex", alignItems:"center", gap:12, marginBottom:22 },
+  divLine:{ flex:1, height:1, background:"linear-gradient(90deg,transparent,rgba(200,169,81,0.2),transparent)", display:"block" },
+  divText:{ fontFamily:"'Jost',sans-serif", fontSize:10, color:"rgba(255,255,255,0.22)", letterSpacing:"1.5px", textTransform:"uppercase" as const, whiteSpace:"nowrap" as const },
 };

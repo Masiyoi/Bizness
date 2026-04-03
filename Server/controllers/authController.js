@@ -27,7 +27,7 @@ const createTransporter = () => {
 // ─── Helper: Send Verification Email ────────────────────────────────────────
 const sendVerificationEmail = async (email, fullName, token) => {
   const transporter = createTransporter();
-  const verifyUrl = `${process.env.CLIENT_URL}/verify-email/${token}`;
+  const verifyUrl = `${process.env.CLIENT_URL}/#/verify-email/${token}`;
 
   await transporter.sendMail({
     from: `"A&I Store" <${process.env.EMAIL_USER}>`,
@@ -154,7 +154,6 @@ exports.loginUser = async (req, res) => {
       });
     }
 
-    // ✅ role passed to generateToken
     const token = generateToken(user.id, user.role);
 
     res.cookie('token', token, {
@@ -171,7 +170,7 @@ exports.loginUser = async (req, res) => {
         full_name: user.full_name,
         email: user.email,
         is_verified: user.is_verified,
-        role: user.role,               // ✅ role included
+        role: user.role,
         profile_picture: user.profile_picture,
       },
     });
@@ -203,7 +202,6 @@ exports.googleAuth = async (req, res) => {
     let user;
 
     if (result.rows.length > 0) {
-      // Existing user — SELECT * already fetches role correctly
       user = result.rows[0];
       if (!user.google_id) {
         await db.query(
@@ -214,7 +212,6 @@ exports.googleAuth = async (req, res) => {
         user.is_verified = true;
       }
     } else {
-      // New user
       const newUser = await db.query(
         `INSERT INTO users (full_name, email, google_id, is_verified, profile_picture)
          VALUES ($1, $2, $3, TRUE, $4)
@@ -224,7 +221,6 @@ exports.googleAuth = async (req, res) => {
       user = newUser.rows[0];
     }
 
-    // ✅ role passed to generateToken
     const token = generateToken(user.id, user.role);
 
     res.cookie('token', token, {
@@ -241,7 +237,7 @@ exports.googleAuth = async (req, res) => {
         full_name: user.full_name,
         email: user.email,
         is_verified: user.is_verified,
-        role: user.role,                    // ✅ role included
+        role: user.role,
         profile_picture: user.profile_picture,
       },
     });
@@ -276,7 +272,7 @@ exports.verifyEmail = async (req, res) => {
       [result.rows[0].id]
     );
 
-    return res.redirect(`${process.env.CLIENT_URL}/login?verified=true`);
+    return res.json({ msg: 'Email verified successfully! You can now log in.' });
 
   } catch (err) {
     console.error('Verify email error:', err.message);

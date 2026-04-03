@@ -21,22 +21,48 @@ const uploadToCloudinary = (buffer) =>
     streamifier.createReadStream(buffer).pipe(stream);
   });
 
+// ── Safely convert any value to a valid JSON array string for ::jsonb cast ────
+const toJsonString = (val) => {
+  if (Array.isArray(val)) return JSON.stringify(val);
+  if (typeof val === 'string' && val.trim() !== '') {
+    try {
+      const parsed = JSON.parse(val);
+      return JSON.stringify(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      return '[]';
+    }
+  }
+  return '[]';
+};
+
+// ── Normalise a product row before sending to the client ─────────────────────
+const normaliseProduct = (p) => ({
+  ...p,
+  images:   Array.isArray(p.images)   ? p.images   : [],
+  features: Array.isArray(p.features) ? p.features : [],
+  colors:   Array.isArray(p.colors)   ? p.colors   : [],
+  sizes:    Array.isArray(p.sizes)    ? p.sizes    : [],
+});
+
 // ── GET /api/products  (public) ───────────────────────────────────────────────
 exports.getProducts = async (req, res) => {
   try {
     const { category, search, sort } = req.query;
     let query  = `SELECT * FROM products WHERE 1=1`;
     const vals = [];
-    if (category) { vals.push(category);       query += ` AND category = $${vals.length}`; }
-    if (search)   { vals.push(`%${search}%`);  query += ` AND name ILIKE $${vals.length}`; }
+
+    if (category) { vals.push(category);      query += ` AND category = $${vals.length}`; }
+    if (search)   { vals.push(`%${search}%`); query += ` AND name ILIKE $${vals.length}`; }
+
     query +=
       sort === 'price_asc'  ? ' ORDER BY price ASC'  :
       sort === 'price_desc' ? ' ORDER BY price DESC' :
                               ' ORDER BY created_at DESC';
+
     const result = await db.query(query, vals);
-    res.json(result.rows);
+    res.json(result.rows.map(normaliseProduct));
   } catch (err) {
-    console.error(err.message);
+    console.error('getProducts error:', err.message);
     res.status(500).json({ msg: 'Server error' });
   }
 };
@@ -46,8 +72,9 @@ exports.getProductById = async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM products WHERE id = $1', [req.params.id]);
     if (!result.rows.length) return res.status(404).json({ msg: 'Product not found' });
-    res.json(result.rows[0]);
+    res.json(normaliseProduct(result.rows[0]));
   } catch (err) {
+    console.error('getProductById error:', err.message);
     res.status(500).json({ msg: 'Server error' });
   }
 };
@@ -55,7 +82,17 @@ exports.getProductById = async (req, res) => {
 // ── POST /api/admin/products ──────────────────────────────────────────────────
 exports.createProduct = async (req, res) => {
   try {
-    const { name, price, category, description, features, stock } = req.body;
+    const {
+      name,
+      price,
+      category    = null,
+      description = null,
+      features    = '[]',
+      stock       = '0',
+      colors      = '[]',
+      sizes       = '[]',
+    } = req.body;
+
     if (!name || !price) return res.status(400).json({ msg: 'Name and price are required' });
 
     let imageUrls = [];
@@ -64,21 +101,33 @@ exports.createProduct = async (req, res) => {
       imageUrls = uploads.map(u => u.secure_url);
     }
 
-    const parsedFeatures =
-      typeof features === 'string' ? JSON.parse(features || '[]') : (features || []);
+    const featuresJson = toJsonString(features);
+    const colorsJson   = toJsonString(colors);
+    const sizesJson    = toJsonString(sizes);
+    const imagesJson   = JSON.stringify(imageUrls);
 
     const result = await db.query(
-      `INSERT INTO products (name, price, category, description, features, stock, images, image_url)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+      `INSERT INTO products
+         (name, price, category, description, features, stock, images, image_url, colors, sizes)
+       VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7::jsonb, $8, $9::jsonb, $10::jsonb)
+       RETURNING *`,
       [
-        name, price, category || null, description || null,
-        JSON.stringify(parsedFeatures), parseInt(stock) || 0,
-        JSON.stringify(imageUrls), imageUrls[0] || null,
+        name,
+        price,
+        category    || null,
+        description || null,
+        featuresJson,
+        parseInt(stock) || 0,
+        imagesJson,
+        imageUrls[0] || null,
+        colorsJson,
+        sizesJson,
       ]
     );
-    res.status(201).json(result.rows[0]);
+
+    res.status(201).json(normaliseProduct(result.rows[0]));
   } catch (err) {
-    console.error('Create product error:', err.message);
+    console.error('createProduct error:', err.message);
     res.status(500).json({ msg: 'Server error' });
   }
 };
@@ -86,7 +135,23 @@ exports.createProduct = async (req, res) => {
 // ── PUT /api/admin/products/:id ───────────────────────────────────────────────
 exports.updateProduct = async (req, res) => {
   try {
-    const { name, price, category, description, features, stock, existingImages } = req.body;
+    console.log('=== UPDATE PRODUCT DEBUG ===');
+    console.log('req.body:', req.body);
+    console.log('req.files:', req.files?.length, 'files');
+    console.log('sizes value:', req.body.sizes);
+    console.log('===========================');
+    const {
+      name,
+      price,
+      category       = null,
+      description    = null,
+      features       = '[]',
+      stock          = '0',
+      existingImages = '[]',
+      colors         = '[]',
+      sizes          = '[]',
+    } = req.body;
+
     const productId = req.params.id;
 
     let newUrls = [];
@@ -95,45 +160,73 @@ exports.updateProduct = async (req, res) => {
       newUrls = uploads.map(u => u.secure_url);
     }
 
-    const kept    = typeof existingImages === 'string'
-      ? JSON.parse(existingImages || '[]') : (existingImages || []);
-    const allImgs = [...kept, ...newUrls];
-    const parsedFeatures =
-      typeof features === 'string' ? JSON.parse(features || '[]') : (features || []);
+    let keptImages = [];
+    try {
+      const parsed = JSON.parse(existingImages);
+      keptImages = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      keptImages = [];
+    }
+    const allImgs = [...keptImages, ...newUrls];
+
+    const featuresJson = toJsonString(features);
+    const colorsJson   = toJsonString(colors);
+    const sizesJson    = toJsonString(sizes);
+    const imagesJson   = JSON.stringify(allImgs);
 
     const result = await db.query(
       `UPDATE products
-       SET name=$1, price=$2, category=$3, description=$4,
-           features=$5, stock=$6, images=$7, image_url=$8
-       WHERE id=$9 RETURNING *`,
+       SET name        = $1,
+           price       = $2,
+           category    = $3,
+           description = $4,
+           features    = $5::jsonb,
+           stock       = $6,
+           images      = $7::jsonb,
+           image_url   = $8,
+           colors      = $9::jsonb,
+           sizes       = $10::jsonb,
+           updated_at  = NOW()
+       WHERE id = $11
+       RETURNING *`,
       [
-        name, price, category || null, description || null,
-        JSON.stringify(parsedFeatures), parseInt(stock) || 0,
-        JSON.stringify(allImgs), allImgs[0] || null,
+        name,
+        price,
+        category    || null,
+        description || null,
+        featuresJson,
+        parseInt(stock) || 0,
+        imagesJson,
+        allImgs[0] || null,
+        colorsJson,
+        sizesJson,
         productId,
       ]
     );
+
     if (!result.rows.length) return res.status(404).json({ msg: 'Product not found' });
-    res.json(result.rows[0]);
+    res.json(normaliseProduct(result.rows[0]));
   } catch (err) {
-    console.error('Update product error:', err.message);
+    console.error('updateProduct error:', err.message);
     res.status(500).json({ msg: 'Server error' });
   }
 };
 
-// ── PATCH /api/admin/products/:id/stock  (quick stock update) ─────────────────
+// ── PATCH /api/admin/products/:id/stock ──────────────────────────────────────
 exports.updateStock = async (req, res) => {
   try {
     const { stock } = req.body;
     if (stock === undefined || parseInt(stock) < 0)
       return res.status(400).json({ msg: 'Valid stock value required' });
+
     const result = await db.query(
-      `UPDATE products SET stock=$1 WHERE id=$2 RETURNING id, name, stock`,
+      `UPDATE products SET stock = $1, updated_at = NOW() WHERE id = $2 RETURNING id, name, stock`,
       [parseInt(stock), req.params.id]
     );
     if (!result.rows.length) return res.status(404).json({ msg: 'Product not found' });
     res.json(result.rows[0]);
   } catch (err) {
+    console.error('updateStock error:', err.message);
     res.status(500).json({ msg: 'Server error' });
   }
 };
@@ -141,9 +234,14 @@ exports.updateStock = async (req, res) => {
 // ── DELETE /api/admin/products/:id ───────────────────────────────────────────
 exports.deleteProduct = async (req, res) => {
   try {
-    await db.query('DELETE FROM products WHERE id = $1', [req.params.id]);
+    const result = await db.query(
+      'DELETE FROM products WHERE id = $1 RETURNING id',
+      [req.params.id]
+    );
+    if (!result.rows.length) return res.status(404).json({ msg: 'Product not found' });
     res.json({ msg: 'Product deleted' });
   } catch (err) {
+    console.error('deleteProduct error:', err.message);
     res.status(500).json({ msg: 'Server error' });
   }
 };
@@ -151,7 +249,6 @@ exports.deleteProduct = async (req, res) => {
 // ── GET /api/admin/orders ─────────────────────────────────────────────────────
 exports.getOrders = async (req, res) => {
   try {
-    // NOTE: users table uses full_name (not name)
     const result = await db.query(
       `SELECT o.*,
               u.full_name   AS customer_name,
@@ -175,13 +272,16 @@ exports.updateOrderStatus = async (req, res) => {
   try {
     const { status, tracking_status } = req.body;
     const result = await db.query(
-      `UPDATE orders SET status=$1, tracking_status=$2, updated_at=NOW()
-       WHERE id=$3 RETURNING *`,
+      `UPDATE orders
+       SET status = $1, tracking_status = $2, updated_at = NOW()
+       WHERE id = $3
+       RETURNING *`,
       [status, tracking_status, req.params.id]
     );
     if (!result.rows.length) return res.status(404).json({ msg: 'Order not found' });
     res.json(result.rows[0]);
   } catch (err) {
+    console.error('updateOrderStatus error:', err.message);
     res.status(500).json({ msg: 'Server error' });
   }
 };
@@ -201,30 +301,17 @@ exports.getStats = async (req, res) => {
       revenueByDayRes,
       ordersByStatusRes,
     ] = await Promise.all([
-
-      // Total orders
       db.query(`SELECT COUNT(*) FROM orders`),
-
-      // Total products
       db.query(`SELECT COUNT(*) FROM products`),
-
-      // Revenue — only confirmed/processing/shipped/delivered orders
       db.query(`
         SELECT COALESCE(SUM(total), 0) AS total
-        FROM orders
-        WHERE status NOT IN ('cancelled', 'pending')
+        FROM orders WHERE status NOT IN ('cancelled', 'pending')
       `),
-
-      // Customers (non-admin users)
       db.query(`SELECT COUNT(*) FROM users WHERE role != 'admin'`),
-
-      // Active orders needing attention
       db.query(`
         SELECT COUNT(*) FROM orders
         WHERE status NOT IN ('delivered', 'cancelled')
       `),
-
-      // Recent 8 orders with customer info
       db.query(`
         SELECT o.id, o.total, o.status, o.tracking_status, o.created_at,
                u.full_name  AS customer_name,
@@ -234,11 +321,8 @@ exports.getStats = async (req, res) => {
         FROM orders o
         LEFT JOIN users    u ON o.user_id    = u.id
         LEFT JOIN payments p ON o.payment_id = p.id
-        ORDER BY o.created_at DESC
-        LIMIT 8
+        ORDER BY o.created_at DESC LIMIT 8
       `),
-
-      // Top 5 products by number of orders (approximate via JSON snapshot)
       db.query(`
         SELECT p.id, p.name, p.price, p.image_url, p.stock,
                COUNT(o.id)              AS order_count,
@@ -247,37 +331,25 @@ exports.getStats = async (req, res) => {
         LEFT JOIN orders o
           ON o.items_snapshot::text ILIKE '%"product_id":' || p.id || '%'
         GROUP BY p.id
-        ORDER BY order_count DESC, p.created_at DESC
-        LIMIT 5
+        ORDER BY order_count DESC, p.created_at DESC LIMIT 5
       `),
-
-      // Low stock (≤ 5 units)
       db.query(`
         SELECT id, name, stock, image_url, price
-        FROM products
-        WHERE stock <= 5
-        ORDER BY stock ASC
-        LIMIT 6
+        FROM products WHERE stock <= 5
+        ORDER BY stock ASC LIMIT 6
       `),
-
-      // Revenue per day — last 7 days
       db.query(`
-        SELECT DATE(created_at)           AS day,
-               COALESCE(SUM(total), 0)    AS revenue,
-               COUNT(*)                   AS orders
+        SELECT DATE(created_at)        AS day,
+               COALESCE(SUM(total), 0) AS revenue,
+               COUNT(*)                AS orders
         FROM orders
         WHERE created_at >= NOW() - INTERVAL '7 days'
           AND status NOT IN ('cancelled', 'pending')
-        GROUP BY DATE(created_at)
-        ORDER BY day ASC
+        GROUP BY DATE(created_at) ORDER BY day ASC
       `),
-
-      // Order breakdown by status
       db.query(`
         SELECT status, COUNT(*) AS count
-        FROM orders
-        GROUP BY status
-        ORDER BY count DESC
+        FROM orders GROUP BY status ORDER BY count DESC
       `),
     ]);
 
@@ -294,7 +366,7 @@ exports.getStats = async (req, res) => {
       ordersByStatus: ordersByStatusRes.rows,
     });
   } catch (err) {
-    console.error('Stats error:', err.message);
+    console.error('getStats error:', err.message);
     res.status(500).json({ msg: 'Server error' });
   }
 };
