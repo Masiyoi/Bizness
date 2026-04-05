@@ -44,6 +44,7 @@ const ANNOUNCEMENTS = [
   '✦ WOMEN\'S COLLECTION NOW LIVE','✦ EXCLUSIVE SNEAKER DROPS',
 ];
 
+
 const SOCIAL = [
   {
     name: 'Instagram',
@@ -103,7 +104,7 @@ export default function Homepage() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [cartIds,        setCartIds]        = useState<number[]>([]);
   const [cartCount,      setCartCount]      = useState(0);
-  const [wishlist,       setWishlist]       = useState<number[]>([]);
+  const [wishlist, setWishlist] = useState<number[]>([]);
   const [banner,         setBanner]         = useState(0);
   const [bannerFading,   setBannerFading]   = useState(false);
   const [search,         setSearch]         = useState('');
@@ -116,17 +117,6 @@ export default function Homepage() {
   const menuRef      = useRef<HTMLDivElement>(null);
   const timerRef     = useRef<ReturnType<typeof setInterval> | null>(null);
   const catScrollRef = useRef<HTMLDivElement>(null);
-
-  const syncUser = useCallback(() => {
-    const f = readUser();
-    setUser(p => JSON.stringify(p) === JSON.stringify(f) ? p : f);
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('storage', syncUser);
-    const id = setInterval(syncUser, 1000);
-    return () => { window.removeEventListener('storage', syncUser); clearInterval(id); };
-  }, [syncUser]);
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
@@ -177,6 +167,16 @@ export default function Homepage() {
     return () => window.removeEventListener('focus', fetchCart);
   }, [fetchCart]);
 
+  const fetchWishlist = useCallback(() => {
+  const token = localStorage.getItem('token');
+  if (!token || !user) { setWishlist([]); return; }
+  axios.get('/api/wishlist', { headers: { Authorization: `Bearer ${token}` } })
+    .then(res => setWishlist(res.data.map((i: any) => i.product_id)))
+    .catch(() => {});
+}, [user?.id]);
+
+  useEffect(() => { fetchWishlist(); }, [fetchWishlist]);
+
   const toggleCart = async (productId: number) => {
     const token = localStorage.getItem('token');
     if (!token) { navigate('/login'); return; }
@@ -195,12 +195,36 @@ export default function Homepage() {
     } catch (e: any) { if (e.response?.status === 401) navigate('/login'); }
   };
 
-  const toggleWishlist = (id: number) =>
-    setWishlist(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+  const toggleWishlist = async (productId: number) => {
+  const token = localStorage.getItem('token');
+  if (!token) { navigate('/login'); return; }
+
+  if (wishlist.includes(productId)) {
+    // Optimistic remove
+    setWishlist(p => p.filter(id => id !== productId));
+    try {
+      await axios.delete(`/api/wishlist/${productId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch {
+      fetchWishlist(); // roll back on failure
+    }
+  } else {
+    // Optimistic add
+    setWishlist(p => [...p, productId]);
+    try {
+      await axios.post('/api/wishlist', { product_id: productId }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch {
+      fetchWishlist(); // roll back on failure
+    }
+  }
+};
 
   const handleLogout = () => {
     localStorage.removeItem('token'); localStorage.removeItem('user');
-    setUser(null); setCartIds([]); setCartCount(0); setShowMenu(false); setMobileMenuOpen(false);
+    setUser(null); setCartIds([]); setCartCount(0); setWishlist([]); setShowMenu(false); setMobileMenuOpen(false);
   };
 
   const setCategory = (cat: string) => {

@@ -4,7 +4,6 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import Homepage       from './pages/Homepage';
-import ProductDetails from './pages/ProductDetails';
 import Register       from './pages/Register';
 import Login          from './pages/Login';
 import Cart           from './pages/Cart';
@@ -12,6 +11,7 @@ import Checkout       from './pages/Checkout';
 import ProductDetail  from './pages/ProductDetail';
 import AdminDashboard from './pages/AdminDashboard';
 import Orders         from './pages/Orders';
+import Wishlist from './pages/Wishlist';
 
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
 const isAuthenticated = () => !!localStorage.getItem('token');
@@ -93,6 +93,7 @@ function App() {
         <Route path="/cart"     element={<BuyerRoute><Cart /></BuyerRoute>} />
         <Route path="/checkout" element={<BuyerRoute><Checkout /></BuyerRoute>} />
         <Route path="/orders"   element={<BuyerRoute><Orders /></BuyerRoute>} />
+        <Route path="/wishlist" element={<BuyerRoute><Wishlist /></BuyerRoute>} />
 
         {/* ── Email verification ── */}
         <Route path="/verify-email/:token" element={<VerifyEmail />} />

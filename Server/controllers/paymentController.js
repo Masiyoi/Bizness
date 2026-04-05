@@ -42,9 +42,16 @@ const getAccessToken = async () => {
 };
 
 // ── POST /api/payments/stk-push ───────────────────────────────────────────────
-// Now also accepts delivery_zone and delivery_fee from the frontend
 exports.stkPush = async (req, res) => {
-  const { phone, amount, delivery_zone, delivery_fee } = req.body;
+  const {
+    phone,
+    amount,
+    delivery_zone,
+    delivery_fee,
+    shipping       = {},
+    selectedColors = {},
+    selectedSizes  = {},
+  } = req.body;
   const userId = req.user.id;
 
   if (!phone || !amount) {
@@ -93,11 +100,12 @@ exports.stkPush = async (req, res) => {
       return res.status(400).json({ msg: CustomerMessage || 'STK push failed' });
     }
 
-    // Save pending payment — also store delivery info so callback can use it
+    // Single atomic INSERT — shipping_meta is $8, no separate UPDATE needed
     await db.query(
       `INSERT INTO payments
-         (user_id, checkout_request_id, merchant_request_id, amount, phone, status, delivery_zone, delivery_fee)
-       VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7)
+         (user_id, checkout_request_id, merchant_request_id, amount, phone,
+          status, delivery_zone, delivery_fee, shipping_meta)
+       VALUES ($1, $2, $3, $4, $5, 'pending', $6, $7, $8)
        ON CONFLICT (checkout_request_id) DO NOTHING`,
       [
         userId,
@@ -107,6 +115,7 @@ exports.stkPush = async (req, res) => {
         formattedPhone,
         delivery_zone || 'cbd',
         delivery_fee  || 0,
+        JSON.stringify({ shipping, selectedColors, selectedSizes, delivery_zone, delivery_fee }),
       ]
     );
 
@@ -145,9 +154,9 @@ exports.mpesaCallback = async (req, res) => {
         [receipt, ResultDesc, CheckoutRequestID]
       );
 
-      // 2. Fetch the payment row (we need user_id, delivery info)
+      // 2. Fetch the payment row (user_id, delivery info, and shipping_meta)
       const paymentRes = await db.query(
-        `SELECT id, user_id, amount, phone, delivery_zone, delivery_fee
+        `SELECT id, user_id, amount, phone, delivery_zone, delivery_fee, shipping_meta
          FROM payments
          WHERE checkout_request_id = $1`,
         [CheckoutRequestID]
@@ -160,11 +169,20 @@ exports.mpesaCallback = async (req, res) => {
 
       const payment = paymentRes.rows[0];
 
-      // 3. Fetch the user's cart items with product details (snapshot)
+      // Retrieve the shipping meta saved during stk-push
+      const shippingMeta = payment.shipping_meta || {};
+      const { shipping = {}, selectedColors = {}, selectedSizes = {} } = shippingMeta;
+      const deliveryZone = shippingMeta.delivery_zone || payment.delivery_zone || 'cbd';
+      const deliveryFee  = shippingMeta.delivery_fee  || payment.delivery_fee  || 0;
+
+      // 3. Fetch the user's cart items with product details
       const cartRes = await db.query(
         `SELECT
+           ci.id,
            ci.product_id,
            ci.quantity,
+           ci.selected_color,
+           ci.selected_size,
            p.name,
            p.price,
            p.image_url,
@@ -176,27 +194,45 @@ exports.mpesaCallback = async (req, res) => {
         [payment.user_id]
       );
 
-      const itemsSnapshot = cartRes.rows.map(r => ({
-        product_id: r.product_id,
-        name:       r.name,
-        price:      r.price,
-        image_url:  r.image_url,
-        category:   r.category,
-        quantity:   r.quantity,
+      // Build items array — DB color/size wins, frontend selections are fallback
+      const itemsArray = cartRes.rows.map(item => ({
+        id:             item.id,
+        product_id:     item.product_id,
+        name:           item.name,
+        price:          item.price,
+        image_url:      item.image_url,
+        category:       item.category,
+        quantity:       item.quantity,
+        selected_color: item.selected_color || selectedColors[String(item.id)] || null,
+        selected_size:  item.selected_size  || selectedSizes[String(item.id)]  || null,
       }));
+
+      // items_snapshot includes items array + shipping info + delivery zone
+      const itemsSnapshot = {
+        items: itemsArray,
+        shipping,
+        deliveryZone,
+      };
 
       // 4. Create the order
       await db.query(
         `INSERT INTO orders
-           (user_id, payment_id, total, delivery_fee, delivery_zone, status, tracking_status, items_snapshot)
-         VALUES ($1, $2, $3, $4, $5, 'confirmed', 'Order Placed', $6)`,
+           (user_id, payment_id, status, tracking_status, total, delivery_fee,
+            delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
         [
           payment.user_id,
           payment.id,
+          'confirmed',
+          'Payment Confirmed',
           payment.amount,
-          payment.delivery_fee,
-          payment.delivery_zone,
+          deliveryFee,
+          deliveryZone,
           JSON.stringify(itemsSnapshot),
+          `${shipping.firstName || ''} ${shipping.lastName || ''}`.trim() || 'Customer',
+          shipping.email  || '',
+          shipping.phone  || payment.phone,
+          receipt,
         ]
       );
 

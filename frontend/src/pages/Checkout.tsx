@@ -97,10 +97,23 @@ export default function Checkout() {
     setPushing(true);
     setServerError('');
     try {
-      const res = await axios.post('/api/payments/stk-push',
-        { phone, amount: total, delivery_zone: deliveryZone, delivery_fee: deliveryFee },
-        authHeaders()
-      );
+      const passedShipping = (location.state as any)?.shipping ?? {};
+      const passedColors   = (location.state as any)?.selectedColors ?? {};
+      const passedSizes    = (location.state as any)?.selectedSizes ?? {};
+
+  const res = await axios.post('/api/payments/stk-push',
+      {
+    phone,
+    amount:        total,
+    delivery_zone: deliveryZone,
+    delivery_fee:  deliveryFee,
+    shipping:      passedShipping,    // ← add this
+    selectedColors: passedColors,     // ← add this
+    selectedSizes:  passedSizes,      // ← add this
+  },
+  authHeaders()
+);
+
       setCheckoutRequestId(res.data.checkoutRequestId);
       setStep('waiting');
       startPolling(res.data.checkoutRequestId);

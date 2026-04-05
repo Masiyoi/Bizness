@@ -140,6 +140,7 @@ exports.updateProduct = async (req, res) => {
     console.log('req.files:', req.files?.length, 'files');
     console.log('sizes value:', req.body.sizes);
     console.log('===========================');
+
     const {
       name,
       price,
@@ -247,14 +248,16 @@ exports.deleteProduct = async (req, res) => {
 };
 
 // ── GET /api/admin/orders ─────────────────────────────────────────────────────
+// COALESCE prefers columns stored directly on the orders row (set by the new
+// mpesaCallback), then falls back to the JOIN values for older orders.
 exports.getOrders = async (req, res) => {
   try {
     const result = await db.query(
       `SELECT o.*,
-              u.full_name   AS customer_name,
-              u.email       AS customer_email,
-              p.phone       AS mpesa_phone,
-              p.mpesa_receipt
+              COALESCE(o.customer_name,  u.full_name)    AS customer_name,
+              COALESCE(o.customer_email, u.email)         AS customer_email,
+              COALESCE(o.mpesa_phone,    p.phone)         AS mpesa_phone,
+              COALESCE(o.mpesa_receipt,  p.mpesa_receipt) AS mpesa_receipt
        FROM orders o
        LEFT JOIN users    u ON o.user_id    = u.id
        LEFT JOIN payments p ON o.payment_id = p.id
@@ -312,12 +315,13 @@ exports.getStats = async (req, res) => {
         SELECT COUNT(*) FROM orders
         WHERE status NOT IN ('delivered', 'cancelled')
       `),
+      // COALESCE applied here too for the dashboard recent-orders panel
       db.query(`
         SELECT o.id, o.total, o.status, o.tracking_status, o.created_at,
-               u.full_name  AS customer_name,
-               u.email      AS customer_email,
-               p.phone      AS mpesa_phone,
-               p.mpesa_receipt
+               COALESCE(o.customer_name,  u.full_name)    AS customer_name,
+               COALESCE(o.customer_email, u.email)         AS customer_email,
+               COALESCE(o.mpesa_phone,    p.phone)         AS mpesa_phone,
+               COALESCE(o.mpesa_receipt,  p.mpesa_receipt) AS mpesa_receipt
         FROM orders o
         LEFT JOIN users    u ON o.user_id    = u.id
         LEFT JOIN payments p ON o.payment_id = p.id

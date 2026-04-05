@@ -414,28 +414,150 @@ function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps) {
               </div>
             </div>
           )}
-          {step === 3 && (
+       {step === 3 && (
             <div style={{ animation:'fadeUp 0.28s ease both' }}>
-              <p style={{ fontFamily:'Jost,sans-serif', fontSize:14, color:T.muted, marginBottom:20 }}>Review everything before publishing to the store.</p>
-              <div style={{ border:`1px solid ${T.cream3}`, borderRadius:18, overflow:'hidden', marginBottom:22, background:'#fff', boxShadow:`0 4px 20px rgba(13,27,62,0.07)` }}>
-                {(existingImgs[0] || previews[0]) ? (
-                  <div style={{ height:190, overflow:'hidden', background:T.cream2 }}>
-                    <img src={existingImgs[0] || previews[0]} alt={name} style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/560x190/F0EAD8/0D1B3E?text=Product`; }}/>
+              <p style={{ fontFamily:'Jost,sans-serif', fontSize:14, color:T.muted, marginBottom:18, lineHeight:1.65 }}>
+                Review everything below before publishing — this is exactly how it will appear in the store.
+              </p>
+
+              {/* ── Product card preview ── */}
+              <div style={{ border:`1.5px solid ${T.cream3}`, borderRadius:18, overflow:'hidden', marginBottom:16, background:'#fff', boxShadow:`0 6px 28px rgba(13,27,62,0.09)` }}>
+
+                {/* Cover image */}
+                <div style={{ position:'relative', height:200, background:T.cream2, overflow:'hidden' }}>
+                  {(existingImgs[0] || previews[0]) ? (
+                    <img src={existingImgs[0] || previews[0]} alt={name} style={{ width:'100%', height:'100%', objectFit:'cover' }}
+                      onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/560x200/F0EAD8/0D1B3E?text=Product`; }}/>
+                  ) : (
+                    <div style={{ height:'100%', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Jost,sans-serif', fontSize:13, color:T.muted, flexDirection:'column', gap:8 }}>
+                      <span style={{ fontSize:36 }}>📷</span>No cover image
+                    </div>
+                  )}
+                  {category && (
+                    <div style={{ position:'absolute', top:10, left:10, background:T.navy, color:T.gold, borderRadius:4, padding:'3px 9px', fontFamily:'Jost,sans-serif', fontSize:8, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase' }}>{category}</div>
+                  )}
+                  <div style={{ position:'absolute', bottom:10, right:10, background:'rgba(13,27,62,0.75)', color:T.gold, borderRadius:20, padding:'3px 10px', fontFamily:'Jost,sans-serif', fontSize:10, fontWeight:700 }}>
+                    {existingImgs.length + previews.length} photo{existingImgs.length + previews.length !== 1 ? 's' : ''}
                   </div>
-                ) : (
-                  <div style={{ height:80, background:T.cream2, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Jost,sans-serif', fontSize:13, color:T.muted }}>No image</div>
+                  {Number(stock) === 0 && (
+                    <div style={{ position:'absolute', inset:0, background:'rgba(13,27,62,0.55)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                      <span style={{ background:'rgba(255,255,255,0.95)', color:T.navy, fontWeight:700, fontSize:9, padding:'5px 14px', borderRadius:3, letterSpacing:'2px', fontFamily:'Jost,sans-serif', textTransform:'uppercase' }}>Sold Out</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Thumbnail strip — only if more than 1 photo */}
+                {(existingImgs.length + previews.length) > 1 && (
+                  <div style={{ display:'flex', gap:6, padding:'10px 14px', background:T.cream, borderBottom:`1px solid ${T.cream3}`, overflowX:'auto' }}>
+                    {[...existingImgs, ...previews].map((src, i) => (
+                      <img key={i} src={src} alt={`Photo ${i+1}`}
+                        style={{ width:44, height:44, borderRadius:8, objectFit:'cover', flexShrink:0, border: i === 0 ? `2px solid ${T.gold}` : `1.5px solid ${T.cream3}` }}
+                        onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/44x44/F0EAD8/0D1B3E?text=📦`; }}/>
+                    ))}
+                  </div>
                 )}
-                <div style={{ padding:'16px 20px' }}>
-                  {category && <div style={{ fontFamily:'Jost,sans-serif', fontSize:10, fontWeight:700, color:T.gold, letterSpacing:'2px', textTransform:'uppercase', marginBottom:6 }}>{category}</div>}
-                  <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:17, color:T.navy, marginBottom:5 }}>{name}</div>
-                  <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:21, color:T.gold, marginBottom:8 }}>KSh {Number(price).toLocaleString()}</div>
+
+                {/* Info section */}
+                <div style={{ padding:'16px 20px', display:'flex', flexDirection:'column', gap:12 }}>
+
+                  {/* Name + price + stock */}
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12 }}>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:17, color:T.navy, marginBottom:4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                        {name || <span style={{ color:T.muted, fontStyle:'italic' }}>Untitled product</span>}
+                      </div>
+                      <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:20, color:T.gold }}>KSh {Number(price || 0).toLocaleString()}</div>
+                    </div>
+                    <div style={{ flexShrink:0, textAlign:'center', padding:'8px 14px', borderRadius:10,
+                      background: Number(stock) === 0 ? '#FDF0EE' : Number(stock) <= 5 ? '#FDF8EC' : '#EEF5EE',
+                      border:`1px solid ${Number(stock) === 0 ? '#F5C6C0' : Number(stock) <= 5 ? '#F6E4A0' : '#C8DFC8'}` }}>
+                      <div style={{ fontFamily:'Jost,sans-serif', fontSize:9, color:T.muted, letterSpacing:'1px', textTransform:'uppercase', marginBottom:2 }}>Stock</div>
+                      <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:20,
+                        color: Number(stock) === 0 ? '#C0392B' : Number(stock) <= 5 ? '#B7791F' : '#2E7D32' }}>{stock || '0'}</div>
+                    </div>
+                  </div>
+
+                  {/* Stock badge */}
+                  <div>
+                    {Number(stock) === 0
+                      ? <span style={{ fontFamily:'Jost,sans-serif', fontSize:9, fontWeight:700, color:'#C0392B', background:'#FDF0EE', border:'1px solid #F5C6C0', borderRadius:3, padding:'2px 7px' }}>Out of stock</span>
+                      : Number(stock) <= 5
+                      ? <span style={{ fontFamily:'Jost,sans-serif', fontSize:9, fontWeight:700, color:'#8A6A20', background:'rgba(200,169,81,0.1)', border:'1px solid rgba(200,169,81,0.3)', borderRadius:3, padding:'2px 7px' }}>⚠ Only {stock} left</span>
+                      : <span style={{ fontFamily:'Jost,sans-serif', fontSize:9, fontWeight:600, color:'#4A7A4A', background:'#EEF3EE', border:'1px solid #C8DFC8', borderRadius:3, padding:'2px 7px' }}>✓ In Stock</span>
+                    }
+                  </div>
+
+                  {/* Colours */}
+                  {colors.length > 0 && (
+                    <div>
+                      <div style={{ fontFamily:'Jost,sans-serif', fontSize:9, fontWeight:700, color:T.muted, letterSpacing:'1.5px', textTransform:'uppercase', marginBottom:7 }}>Available Colours</div>
+                      <div style={{ display:'flex', gap:7, flexWrap:'wrap' }}>
+                        {colors.map((c, i) => (
+                          <div key={i} style={{ display:'flex', alignItems:'center', gap:6, background:T.cream, border:`1.5px solid ${T.cream3}`, borderRadius:20, padding:'4px 10px 4px 7px', fontFamily:'Jost,sans-serif', fontSize:11, fontWeight:600, color:T.navy }}>
+                            <div style={{ width:12, height:12, borderRadius:'50%', background:c, border:'1.5px solid rgba(0,0,0,0.12)', flexShrink:0 }}/>{c}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Sizes */}
+                  {sizes.length > 0 && (
+                    <div>
+                      <div style={{ fontFamily:'Jost,sans-serif', fontSize:9, fontWeight:700, color:T.muted, letterSpacing:'1.5px', textTransform:'uppercase', marginBottom:7 }}>Available Sizes</div>
+                      <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                        {sizes.map((s, i) => (
+                          <div key={i} style={{ background:T.cream, border:`1.5px solid ${T.cream3}`, borderRadius:7, padding:'4px 12px', fontFamily:'Jost,sans-serif', fontSize:11, fontWeight:700, color:T.navy }}>{s}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Description */}
+                  {description.trim() && (
+                    <div style={{ background:T.cream, borderRadius:10, padding:'11px 14px', border:`1px solid ${T.cream3}` }}>
+                      <div style={{ fontFamily:'Jost,sans-serif', fontSize:9, fontWeight:700, color:T.muted, letterSpacing:'1.5px', textTransform:'uppercase', marginBottom:6 }}>Description</div>
+                      <div style={{ fontFamily:'Jost,sans-serif', fontSize:13, color:T.navy, lineHeight:1.7 }}>{description}</div>
+                    </div>
+                  )}
                 </div>
               </div>
-              {error && <div style={{ background:'#FDF0EE', border:'1px solid #F5C6C0', borderRadius:8, padding:'12px 16px', fontFamily:'Jost,sans-serif', fontSize:13, color:'#C0392B', marginBottom:14 }}>⚠ {error}</div>}
+
+              {/* ── Publish checklist ── */}
+              <div style={{ background:`rgba(200,169,81,0.06)`, border:`1px solid rgba(200,169,81,0.2)`, borderRadius:12, padding:'12px 16px', marginBottom:16 }}>
+                <div style={{ fontFamily:'Jost,sans-serif', fontSize:10, fontWeight:700, color:T.gold, letterSpacing:'2px', textTransform:'uppercase', marginBottom:10 }}>Ready to Publish?</div>
+                <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                  {[
+                    { ok: existingImgs.length + previews.length > 0, label:`${existingImgs.length + previews.length} photo${existingImgs.length + previews.length !== 1 ? 's' : ''} uploaded` },
+                    { ok: name.trim() !== '',                         label:`Product name: "${name}"` },
+                    { ok: Number(price) > 0,                         label:`Price: KSh ${Number(price||0).toLocaleString()}` },
+                    { ok: category !== '',                            label: category ? `Category: ${category}` : 'No category selected' },
+                    { ok: Number(stock) > 0,                         label:`Stock: ${stock || 0} units` },
+                    { ok: colors.length > 0,  optional:true,         label: colors.length > 0 ? `${colors.length} colour${colors.length !== 1 ? 's' : ''}` : 'No colours added' },
+                    { ok: sizes.length > 0,   optional:true,         label: sizes.length > 0 ? `${sizes.length} size${sizes.length !== 1 ? 's' : ''}` : 'No sizes added' },
+                    { ok: description.trim() !== '', optional:true,   label: description.trim() ? 'Description added' : 'No description' },
+                  ].map((item, i) => (
+                    <div key={i} style={{ display:'flex', alignItems:'center', gap:9, fontFamily:'Jost,sans-serif', fontSize:12,
+                      color: item.ok ? (item.optional ? T.navy : '#2E7D32') : item.optional ? T.muted : '#C0392B' }}>
+                      <span style={{ fontSize:13, flexShrink:0 }}>{item.ok ? (item.optional ? '✓' : '✅') : (item.optional ? '○' : '⚠')}</span>
+                      <span style={{ fontWeight: item.ok ? 600 : 400 }}>{item.label}</span>
+                      {(item as any).optional && !item.ok && <span style={{ fontSize:10, color:T.muted, fontStyle:'italic' }}>(optional)</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {error && (
+                <div style={{ background:'#FDF0EE', border:'1px solid #F5C6C0', borderRadius:8, padding:'12px 16px', fontFamily:'Jost,sans-serif', fontSize:13, color:'#C0392B', marginBottom:14 }}>⚠ {error}</div>
+              )}
+
               <div style={{ display:'flex', gap:12 }}>
                 <button onClick={() => setStep(2)} style={{ background:T.cream, border:`1px solid ${T.cream3}`, borderRadius:10, padding:'12px 20px', fontFamily:'Jost,sans-serif', fontWeight:600, fontSize:13, color:T.muted, cursor:'pointer' }}>← Edit Details</button>
-                <button onClick={handleSave} disabled={saving} style={{ flex:1, borderRadius:10, border:'none', padding:'14px', fontFamily:'Jost,sans-serif', fontWeight:700, fontSize:14, letterSpacing:'1px', textTransform:'uppercase', background: saving ? T.cream2 : `linear-gradient(135deg,${T.gold},${T.gold2})`, color: saving ? T.muted : T.navy, cursor: saving ? 'not-allowed' : 'pointer' }}>
-                  {saving ? '⏳ Publishing…' : '🚀 Publish to Store'}
+                <button onClick={handleSave} disabled={saving} style={{ flex:1, borderRadius:10, border:'none', padding:'14px', fontFamily:'Jost,sans-serif', fontWeight:700, fontSize:14, letterSpacing:'1px', textTransform:'uppercase',
+                  background: saving ? T.cream2 : `linear-gradient(135deg,${T.gold},${T.gold2})`,
+                  color: saving ? T.muted : T.navy, cursor: saving ? 'not-allowed' : 'pointer',
+                  boxShadow: saving ? 'none' : `0 4px 18px rgba(200,169,81,0.35)` }}>
+                  {saving ? '⏳ Publishing…' : editProduct ? '✓ Save Changes' : '🚀 Publish to Store'}
                 </button>
               </div>
             </div>
