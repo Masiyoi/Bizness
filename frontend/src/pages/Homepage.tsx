@@ -11,6 +11,18 @@ interface User {
   id: number; full_name: string; email: string; role: string; is_verified: boolean;
 }
 
+// PATCH 1 — New interface for homepage reviews
+interface HomepageReview {
+  id: number;
+  rating: number;
+  comment: string;
+  created_at: string;
+  full_name: string;
+  product_name: string;
+  product_image: string;
+  product_id: number;
+}
+
 const T = {
   navy:'#0D1B3E', navyMid:'#152348', navyLight:'#1E2F5A',
   gold:'#C8A951', goldLight:'#DEC06A', goldPale:'#F0D98A',
@@ -49,7 +61,6 @@ const SOCIAL = [
   {
     name: 'Instagram',
     url: 'https://www.instagram.com/lukuprimeshoesbagsthrift?igsh=MWxmazlvM2JseWNzeQ==',
-    // Instagram gradient icon as inline SVG
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="2" y="2" width="20" height="20" rx="5.5" stroke="currentColor" strokeWidth="1.8"/>
@@ -114,6 +125,10 @@ export default function Homepage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSearch,     setShowSearch]     = useState(false);
 
+  // PATCH 1 — Homepage reviews state
+  const [homepageReviews, setHomepageReviews] = useState<HomepageReview[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+
   const menuRef      = useRef<HTMLDivElement>(null);
   const timerRef     = useRef<ReturnType<typeof setInterval> | null>(null);
   const catScrollRef = useRef<HTMLDivElement>(null);
@@ -130,6 +145,14 @@ export default function Homepage() {
     fetch('/api/products').then(r => r.json())
       .then(d => { setProducts(d); setLoading(false); })
       .catch(() => setLoading(false));
+  }, []);
+
+  // PATCH 1 — Fetch homepage reviews
+  useEffect(() => {
+    fetch('/api/reviews/homepage?limit=12')
+      .then(r => r.json())
+      .then(d => { setHomepageReviews(Array.isArray(d) ? d : []); setReviewsLoading(false); })
+      .catch(() => setReviewsLoading(false));
   }, []);
 
   const goToBanner = (idx: number) => {
@@ -155,13 +178,10 @@ export default function Homepage() {
       }).catch(() => {});
   }, [user?.id]);
 
-  // Fetch on every mount — this runs when user navigates BACK from /cart to /
-  // (React Router unmounts Cart and mounts Homepage fresh each time)
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
 
-  // Fallback: re-fetch when the browser tab regains focus
   useEffect(() => {
     window.addEventListener('focus', fetchCart);
     return () => window.removeEventListener('focus', fetchCart);
@@ -200,24 +220,22 @@ export default function Homepage() {
   if (!token) { navigate('/login'); return; }
 
   if (wishlist.includes(productId)) {
-    // Optimistic remove
     setWishlist(p => p.filter(id => id !== productId));
     try {
       await axios.delete(`/api/wishlist/${productId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
     } catch {
-      fetchWishlist(); // roll back on failure
+      fetchWishlist();
     }
   } else {
-    // Optimistic add
     setWishlist(p => [...p, productId]);
     try {
       await axios.post('/api/wishlist', { product_id: productId }, {
         headers: { Authorization: `Bearer ${token}` }
       });
     } catch {
-      fetchWishlist(); // roll back on failure
+      fetchWishlist();
     }
   }
 };
@@ -340,6 +358,12 @@ export default function Homepage() {
                       🤍 Wishlist {wishlist.length>0 && <span style={{ marginLeft:'auto', background:T.gold, color:T.navy, borderRadius:10, padding:'1px 7px', fontSize:10, fontWeight:800, fontFamily:"'Jost',sans-serif" }}>{wishlist.length}</span>}
                     </div>
                   )}
+                  {/* PATCH 2 — My Reviews link in dropdown */}
+                  {user.role!=='admin' && (
+                    <div className="mitem" onClick={() => { setShowMenu(false); navigate('/reviews'); }}>
+                      ⭐ My Reviews
+                    </div>
+                  )}
                   <div style={{ borderTop:`1px solid ${T.creamDeep}`, marginTop:6, paddingTop:6 }}>
                     <div className="mitem danger" onClick={handleLogout}>🚪 Sign Out</div>
                   </div>
@@ -390,7 +414,8 @@ export default function Homepage() {
                 <div className="jost" style={{ fontWeight:700, fontSize:14, color:'#fff' }}>{user.full_name}</div>
                 <div className="jost" style={{ fontSize:11, color:'rgba(255,255,255,0.4)', marginTop:2 }}>{user.email}</div>
               </div>
-              {[['📦','My Orders','/orders'],['🤍','Wishlist','/wishlist'],['👤','Profile','/profile']].map(([icon,label,path]) => (
+              {/* PATCH 2 — My Reviews added to mobile menu array */}
+              {[['📦','My Orders','/orders'],['🤍','Wishlist','/wishlist'],['⭐','My Reviews','/reviews'],['👤','Profile','/profile']].map(([icon,label,path]) => (
                 <button key={label} className="hp-menu-item" onClick={() => { navigate(path); setMobileMenuOpen(false); }}>{icon} {label}</button>
               ))}
               {user.role==='admin' && <button className="hp-menu-item" style={{ color:T.gold }} onClick={() => { navigate('/admin'); setMobileMenuOpen(false); }}>👑 Admin Dashboard</button>}
@@ -620,6 +645,110 @@ export default function Homepage() {
         )}
       </div>
 
+      {/* PATCH 3 — REVIEWS SHOWCASE (inserted before footer) */}
+      <div style={{ padding:`clamp(40px,6vw,80px) 5%`, background:T.navy, position:'relative', overflow:'hidden' }}>
+        {/* Background decoration */}
+        <div style={{ position:'absolute', inset:0, backgroundImage:`radial-gradient(circle at 15% 50%, rgba(200,169,81,0.07) 0%, transparent 40%), radial-gradient(circle at 85% 20%, rgba(200,169,81,0.05) 0%, transparent 35%)`, pointerEvents:'none' }}/>
+
+        {/* Section header */}
+        <div style={{ maxWidth:1100, margin:'0 auto', position:'relative' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', marginBottom:28, flexWrap:'wrap', gap:12 }}>
+            <div>
+              <div className="ornament" style={{ '--ornament-color': 'rgba(200,169,81,0.6)' } as React.CSSProperties}>
+                <div style={{ width:28, height:1, background:`rgba(200,169,81,0.5)` }}/>
+                <div style={{ width:4, height:4, background:`rgba(200,169,81,0.5)`, transform:'rotate(45deg)' }}/>
+                <span className="jost" style={{ fontSize:9, fontWeight:700, letterSpacing:'3px', color:`rgba(200,169,81,0.7)`, textTransform:'uppercase' }}>Real Customers</span>
+                <div style={{ width:4, height:4, background:`rgba(200,169,81,0.5)`, transform:'rotate(45deg)' }}/>
+                <div style={{ width:28, height:1, background:`rgba(200,169,81,0.5)` }}/>
+              </div>
+              <h2 style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:'clamp(20px,3vw,30px)', color:T.white, marginTop:4 }}>
+                What Our Customers Say
+              </h2>
+              {/* Aggregate stars */}
+              {!reviewsLoading && homepageReviews.length > 0 && (
+                <div style={{ display:'flex', alignItems:'center', gap:10, marginTop:8 }}>
+                  <div style={{ display:'flex', gap:2 }}>
+                    {[1,2,3,4,5].map(s => (
+                      <span key={s} style={{ fontSize:14, color:T.gold }}>★</span>
+                    ))}
+                  </div>
+                  <span className="jost" style={{ fontSize:11, color:`rgba(255,255,255,0.5)`, fontWeight:600 }}>
+                    Based on {homepageReviews.length}+ verified reviews
+                  </span>
+                </div>
+              )}
+            </div>
+            {user?.role !== 'admin' && (
+              <button onClick={() => navigate('/reviews')} className="jost"
+                style={{ background:'transparent', border:`1px solid rgba(200,169,81,0.4)`, color:T.goldLight, borderRadius:6, padding:'9px 20px', fontSize:10, fontWeight:700, letterSpacing:'2px', textTransform:'uppercase', cursor:'pointer', transition:'all 0.2s', flexShrink:0 }}
+                onMouseEnter={e => { e.currentTarget.style.background=`rgba(200,169,81,0.1)`; e.currentTarget.style.borderColor=T.gold; }}
+                onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='rgba(200,169,81,0.4)'; }}>
+                My Reviews ⭐
+              </button>
+            )}
+          </div>
+
+          {/* Review cards */}
+          {reviewsLoading ? (
+            <div className="reviews-grid">
+              {[...Array(6)].map((_,i) => (
+                <div key={i} style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(200,169,81,0.1)', borderRadius:16, padding:20 }}>
+                  <div className="skel-dark" style={{ height:10, width:'60%', marginBottom:12 }}/>
+                  <div className="skel-dark" style={{ height:8, width:'40%', marginBottom:14 }}/>
+                  <div className="skel-dark" style={{ height:8, width:'85%', marginBottom:6 }}/>
+                  <div className="skel-dark" style={{ height:8, width:'70%' }}/>
+                </div>
+              ))}
+            </div>
+          ) : homepageReviews.length === 0 ? (
+            <div style={{ textAlign:'center', padding:'40px 0' }}>
+              <div style={{ fontSize:40, marginBottom:12 }}>⭐</div>
+              <p className="jost" style={{ fontSize:13, color:'rgba(255,255,255,0.4)' }}>Be the first to leave a review after your purchase!</p>
+            </div>
+          ) : (
+            <div className="reviews-grid">
+              {homepageReviews.map(review => (
+                <div key={review.id} className="review-card" onClick={() => navigate(`/product/${review.product_id}`)}>
+                  {/* Quote mark */}
+                  <div style={{ position:'absolute', top:14, right:18, fontSize:40, lineHeight:1, color:`rgba(200,169,81,0.08)`, fontFamily:'Georgia,serif', userSelect:'none', pointerEvents:'none' }}>"</div>
+
+                  {/* Stars */}
+                  <div style={{ display:'flex', gap:2, marginBottom:10 }}>
+                    {[1,2,3,4,5].map(s => (
+                      <span key={s} style={{ fontSize:13, color: s<=review.rating ? T.gold : 'rgba(200,169,81,0.2)' }}>★</span>
+                    ))}
+                  </div>
+
+                  {/* Comment */}
+                  <p className="jost" style={{ fontSize:12, color:'rgba(255,255,255,0.65)', lineHeight:1.75, marginBottom:14, flex:1, overflow:'hidden', display:'-webkit-box', WebkitLineClamp:4, WebkitBoxOrient:'vertical' as any }}>
+                    {review.comment}
+                  </p>
+
+                  {/* Product + Author */}
+                  <div style={{ display:'flex', alignItems:'center', gap:10, paddingTop:12, borderTop:'1px solid rgba(200,169,81,0.1)', marginTop:'auto' }}>
+                    <img src={review.product_image} alt={review.product_name}
+                      onError={e => { (e.target as HTMLImageElement).src=`https://placehold.co/36x36/152348/C8A951?text=LP`; }}
+                      style={{ width:36, height:36, borderRadius:8, objectFit:'cover', border:'1px solid rgba(200,169,81,0.2)', flexShrink:0 }}/>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div className="jost" style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.85)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                        {review.full_name.split(' ')[0]} {review.full_name.split(' ')[1]?.[0]}.
+                      </div>
+                      <div className="jost" style={{ fontSize:9, color:`rgba(200,169,81,0.6)`, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginTop:2 }}>
+                        {review.product_name}
+                      </div>
+                    </div>
+                    <div className="jost" style={{ fontSize:9, color:'rgba(255,255,255,0.3)', whiteSpace:'nowrap' }}>
+                      {new Date(review.created_at).toLocaleDateString('en-KE',{month:'short',year:'numeric'})}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      {/* END PATCH 3 */}
+
       {/* ── FOOTER ── */}
       <footer style={{ background:T.navy, borderTop:`1px solid rgba(200,169,81,0.2)` }}>
         <div style={{ height:2, background:`linear-gradient(90deg,transparent 0%,${T.gold} 30%,${T.goldLight} 50%,${T.gold} 70%,transparent 100%)` }}/>
@@ -784,6 +913,36 @@ const css = `
   .hp-nav-right{display:flex}
   .hp-mobile-controls{display:none}
 
+  /* PATCH 4 — Reviews grid styles */
+  .reviews-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:14px;
+  }
+  .review-card{
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(200,169,81,0.12);
+    border-radius:16px;
+    padding:20px;
+    cursor:pointer;
+    position:relative;
+    transition:all 0.25s;
+    display:flex;
+    flex-direction:column;
+  }
+  .review-card:hover{
+    background:rgba(255,255,255,0.07);
+    border-color:rgba(200,169,81,0.3);
+    transform:translateY(-3px);
+    box-shadow:0 16px 40px rgba(0,0,0,0.25);
+  }
+  .skel-dark{
+    background:linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.04) 75%);
+    background-size:200% 100%;
+    animation:sk 1.4s infinite;
+    border-radius:4px;
+  }
+
   /* ── MOBILE BREAKPOINT ── */
   @media(max-width:768px){
     .hp-search-desktop{display:none !important}
@@ -802,6 +961,12 @@ const css = `
 
     /* Social pills: full width on mobile */
     .social-pill{min-width:0;width:100%}
+
+    .reviews-grid{grid-template-columns:1fr 1fr;gap:10px}
+  }
+
+  @media(max-width:480px){
+    .reviews-grid{grid-template-columns:1fr}
   }
 
   @media(max-width:360px){

@@ -12,6 +12,7 @@ import ProductDetail  from './pages/ProductDetail';
 import AdminDashboard from './pages/AdminDashboard';
 import Orders         from './pages/Orders';
 import Wishlist from './pages/Wishlist';
+import Reviews from './pages/Reviews';
 
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
 const isAuthenticated = () => !!localStorage.getItem('token');
@@ -94,6 +95,7 @@ function App() {
         <Route path="/checkout" element={<BuyerRoute><Checkout /></BuyerRoute>} />
         <Route path="/orders"   element={<BuyerRoute><Orders /></BuyerRoute>} />
         <Route path="/wishlist" element={<BuyerRoute><Wishlist /></BuyerRoute>} />
+        <Route path="/reviews"  element={<BuyerRoute><Reviews/></BuyerRoute>} />
 
         {/* ── Email verification ── */}
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
