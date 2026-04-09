@@ -27,7 +27,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/orders',   orderRoutes);    // ← new
 app.use('/api',          adminRoutes);
 app.use('/api/wishlist', wishlistRoutes);
-app.use('/api/review' ,  reviewRoutes);
+app.use('/api/reviews' ,  reviewRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

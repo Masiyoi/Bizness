@@ -1,37 +1,92 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Jost:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base resets ──────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #F9F5EC; font-family: 'Jost', sans-serif; }
+  a    { text-decoration: none; color: inherit; }
 }
 
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+/* ── Reusable component classes ───────────────────────────────── */
+@layer components {
 
-html, body, #root {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
-  text-align: left;
-}
+  /* Skeleton shimmer */
+  .skel {
+    @apply rounded-md;
+    background: linear-gradient(90deg, #F0EAD8 25%, #F9F5EC 50%, #F0EAD8 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+  }
 
-body {
-  min-width: 320px;
-  min-height: 100vh;
-}
+  /* Gold CTA button */
+  .btn-gold {
+    @apply font-sans font-bold text-[10px] tracking-[3px] uppercase
+           border-none rounded-lg px-7 py-3 cursor-pointer
+           transition-all duration-200 bg-gold text-navy
+           hover:-translate-y-0.5 hover:shadow-gold;
+  }
 
-a {
-  font-weight: 500;
-  text-decoration: none;
-  color: inherit;
-}
+  /* Outline button */
+  .btn-outline {
+    @apply font-sans font-semibold text-[11px] tracking-[2px] uppercase
+           border border-cream-deep rounded-lg px-6 py-3 cursor-pointer
+           transition-all duration-200 bg-white text-navy
+           hover:border-gold hover:bg-cream;
+  }
 
-button {
-  cursor: pointer;
-  font-family: inherit;
+  /* Product card */
+  .pcard {
+    @apply bg-white rounded-card border border-cream-deep
+           transition-all duration-300 cursor-pointer overflow-hidden
+           hover:-translate-y-1.5 hover:shadow-card-hover hover:border-gold;
+  }
+  .pcard:hover .pimg { transform: scale(1.05); }
+  .pimg { transition: transform 0.5s ease; width: 100%; height: 100%; object-fit: cover; }
+
+  /* Category pill */
+  .cat-pill {
+    @apply cursor-pointer border border-cream-deep bg-white rounded-pill
+           px-4 py-2 whitespace-nowrap flex items-center gap-2 shrink-0
+           transition-all duration-200 hover:border-gold hover:-translate-y-px;
+  }
+  .cat-pill.active { @apply border-gold bg-navy text-white; }
+
+  /* Nav link */
+  .nav-link {
+    @apply font-sans text-[12px] font-medium text-white/70 cursor-pointer
+           tracking-[1.5px] uppercase transition-colors duration-200
+           hover:text-gold-light relative pb-0.5;
+  }
+  .nav-link::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-0 h-px bg-gold transition-all duration-200;
+  }
+  .nav-link:hover::after { @apply w-full; }
+
+  /* User menu item */
+  .mitem {
+    @apply font-sans text-[13px] font-medium px-3 py-2.5 rounded-[9px]
+           cursor-pointer text-navy transition-colors duration-150
+           flex items-center gap-2.5 hover:bg-cream;
+  }
+  .mitem-danger { @apply text-red-600 hover:bg-red-50; }
+
+  /* Review card (light) */
+  .review-card {
+    @apply bg-white border border-cream-deep rounded-card p-5
+           cursor-pointer relative transition-all duration-300 flex flex-col
+           animate-fade-up hover:-translate-y-1 hover:shadow-card hover:border-gold;
+  }
+
+  /* Deal card */
+  .deal-card {
+    @apply rounded-xl px-4 py-3.5 flex items-center justify-between
+           border border-cream-deep bg-white transition-all duration-200
+           cursor-pointer hover:border-gold hover:-translate-y-0.5
+           hover:shadow-card;
+  }
 }

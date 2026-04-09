@@ -1,7 +1,6 @@
 import { HashRouter as Router, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import 'bootstrap/dist/css/bootstrap.min.css';
 
 import Homepage       from './pages/Homepage';
 import Register       from './pages/Register';

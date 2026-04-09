@@ -5,7 +5,7 @@
 
 const express = require('express');
 const router  = express.Router();
-const pool    = require('../config/db');          // your pg Pool instance
+const pool    = require('../config/db');       // your pg Pool instance
 const auth    = require('../middleware/auth'); // JWT middleware → sets req.user
 
 // ── helpers ────────────────────────────────────────────────────
@@ -48,8 +48,8 @@ router.get('/product/:productId', async (req, res) => {
     ]);
 
     res.json({
-      reviews:    reviewsResult.rows,
-      stats:      statsResult.rows[0],
+      reviews: reviewsResult.rows,
+      stats:   statsResult.rows[0],
     });
   } catch (err) {
     console.error('GET /reviews/product', err);
@@ -63,16 +63,16 @@ router.get('/product/:productId', async (req, res) => {
 router.get('/homepage', async (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 12, 50);
   try {
-    const { rows } = await db.query(
+    const { rows } = await pool.query(   // <-- was `db`, fixed to `pool`
       `SELECT
          r.id,
          r.rating,
          r.comment,
          r.created_at,
          u.full_name,
-         p.name  AS product_name,
-         p.image_url AS product_image,
-         p.id    AS product_id
+         p.name       AS product_name,
+         p.image_url  AS product_image,
+         p.id         AS product_id
        FROM reviews r
        JOIN users    u ON u.id = r.user_id
        JOIN products p ON p.id = r.product_id
@@ -94,7 +94,7 @@ router.get('/homepage', async (req, res) => {
 // Auth required. Returns all reviews written by the logged-in user.
 router.get('/my', auth, async (req, res) => {
   try {
-    const { rows } = await db.query(
+    const { rows } = await pool.query(   // <-- was `db`, fixed to `pool`
       `SELECT
          r.id,
          r.rating,
@@ -124,7 +124,7 @@ router.get('/my', auth, async (req, res) => {
 // (or null). Useful to pre-fill the review form.
 router.get('/check/:productId', auth, async (req, res) => {
   try {
-    const { rows } = await db.query(
+    const { rows } = await pool.query(   // <-- was `db`, fixed to `pool`
       `SELECT id, rating, comment, created_at, updated_at
        FROM reviews
        WHERE user_id = $1 AND product_id = $2`,
@@ -139,39 +139,47 @@ router.get('/check/:productId', auth, async (req, res) => {
 
 // ── POST /api/reviews ──────────────────────────────────────────
 // Auth required. Create a new review (one per user per product).
+// Requires a confirmed (non-cancelled) order for that product.
 router.post('/', auth, async (req, res) => {
   const { product_id, rating, comment } = req.body;
 
-  if (!product_id)                              return badReq(res, 'product_id is required');
-  if (!rating || rating < 1 || rating > 5)      return badReq(res, 'rating must be 1–5');
-  if (comment && comment.length > 1000)         return badReq(res, 'comment too long (max 1000 chars)');
-
-  // Only buyers who ordered the product can review it
-  const orderCheck = await db.query(
-    `SELECT 1 FROM order_items oi
-     JOIN orders o ON o.id = oi.order_id
-     WHERE o.user_id = $1
-       AND oi.product_id = $2
-       AND o.status NOT IN ('cancelled')
-     LIMIT 1`,
-    [req.user.id, product_id]
-  ).catch(() => ({ rows: [] }));
-
-  if (!orderCheck.rows.length) {
-    return res.status(403).json({ error: 'You can only review products you have purchased.' });
-  }
+  if (!product_id)                         return badReq(res, 'product_id is required');
+  if (!rating || rating < 1 || rating > 5) return badReq(res, 'rating must be 1–5');
+  if (comment && comment.length > 1000)    return badReq(res, 'comment too long (max 1000 chars)');
 
   try {
-    const { rows } = await db.query(
+    // ── Purchase verification ──────────────────────────────────
+    // Only users who have a confirmed order for this product may review it.
+    const orderCheck = await pool.query(   // <-- was `db` inside a .catch(), now properly throws
+      `SELECT 1 FROM order_items oi
+       JOIN orders o ON o.id = oi.order_id
+       WHERE o.user_id    = $1
+         AND oi.product_id = $2
+         AND o.status NOT IN ('cancelled')
+       LIMIT 1`,
+      [req.user.id, product_id]
+    );
+
+    if (!orderCheck.rows.length) {
+      return res.status(403).json({
+        error: 'You can only review products you have purchased.',
+      });
+    }
+
+    // ── Insert review ──────────────────────────────────────────
+    const { rows } = await pool.query(
       `INSERT INTO reviews (user_id, product_id, rating, comment)
        VALUES ($1, $2, $3, $4)
        RETURNING id, rating, comment, created_at`,
       [req.user.id, product_id, rating, comment?.trim() || null]
     );
     res.status(201).json(rows[0]);
+
   } catch (err) {
-    if (err.code === '23505') {             // unique violation
-      return res.status(409).json({ error: 'You have already reviewed this product. Use PATCH to update.' });
+    if (err.code === '23505') {            // unique constraint — already reviewed
+      return res.status(409).json({
+        error: 'You have already reviewed this product. Use PATCH to update.',
+      });
     }
     console.error('POST /reviews', err);
     res.status(500).json({ error: 'Server error' });
@@ -184,11 +192,13 @@ router.patch('/:id', auth, async (req, res) => {
   const { rating, comment } = req.body;
   const reviewId = req.params.id;
 
-  if (rating !== undefined && (rating < 1 || rating > 5)) return badReq(res, 'rating must be 1–5');
-  if (comment && comment.length > 1000)                   return badReq(res, 'comment too long (max 1000 chars)');
+  if (rating !== undefined && (rating < 1 || rating > 5))
+    return badReq(res, 'rating must be 1–5');
+  if (comment && comment.length > 1000)
+    return badReq(res, 'comment too long (max 1000 chars)');
 
   try {
-    const { rows } = await db.query(
+    const { rows } = await pool.query(
       `UPDATE reviews
        SET
          rating  = COALESCE($1, rating),
@@ -237,7 +247,7 @@ router.get('/admin/all', auth, async (req, res) => {
   const offset = (page - 1) * limit;
 
   try {
-    const { rows } = await db.query(
+    const { rows } = await pool.query(   // <-- was `db`, fixed to `pool`
       `SELECT
          r.id, r.rating, r.comment, r.created_at,
          u.full_name, u.email,
