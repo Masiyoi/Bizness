@@ -17,7 +17,11 @@ exports.getOrders = async (req, res) => {
          o.items_snapshot,
          p.mpesa_receipt,
          p.phone,
-         p.amount AS paid_amount
+         p.amount AS paid_amount,
+         ROW_NUMBER() OVER (
+           PARTITION BY o.user_id
+           ORDER BY o.created_at ASC
+         ) AS user_order_number
        FROM orders o
        LEFT JOIN payments p ON p.id = o.payment_id
        WHERE o.user_id = $1
@@ -26,26 +30,22 @@ exports.getOrders = async (req, res) => {
     );
 
     const orders = result.rows.map(row => {
-      // items_snapshot is a JSONB object: { items: [], shipping: {}, deliveryZone: "" }
       const snapshot = row.items_snapshot || {};
-      
       return {
-        id:              row.id,
-        created_at:      row.created_at,
-        updated_at:      row.updated_at,
-        status:          row.status,
-        tracking_status: row.tracking_status,
-        total_amount:    row.total,
-        delivery_fee:    row.delivery_fee,
-        delivery_zone:   row.delivery_zone,
-        mpesa_receipt:   row.mpesa_receipt,
-        phone:           row.phone,
-        // Extract items array from the new snapshot structure
-        items:           Array.isArray(snapshot.items) ? snapshot.items : [],
-        // Include shipping info for the detail modal
-        shipping:        snapshot.shipping || null,
-        // Optional: Include the snapshot delivery zone if it differs from the column
-        snapshot_zone:   snapshot.deliveryZone || row.delivery_zone
+        id:               row.id,
+        user_order_number: parseInt(row.user_order_number), // e.g. 1, 2, 3...
+        created_at:       row.created_at,
+        updated_at:       row.updated_at,
+        status:           row.status,
+        tracking_status:  row.tracking_status,
+        total_amount:     row.total,
+        delivery_fee:     row.delivery_fee,
+        delivery_zone:    row.delivery_zone,
+        mpesa_receipt:    row.mpesa_receipt,
+        phone:            row.phone,
+        items:            Array.isArray(snapshot.items) ? snapshot.items : [],
+        shipping:         snapshot.shipping || null,
+        snapshot_zone:    snapshot.deliveryZone || row.delivery_zone,
       };
     });
 
@@ -79,7 +79,11 @@ exports.getOrderById = async (req, res) => {
          o.items_snapshot,
          p.mpesa_receipt,
          p.phone,
-         p.amount AS paid_amount
+         p.amount AS paid_amount,
+         ROW_NUMBER() OVER (
+           PARTITION BY o.user_id
+           ORDER BY o.created_at ASC
+         ) AS user_order_number
        FROM orders o
        LEFT JOIN payments p ON p.id = o.payment_id
        WHERE o.id = $1 AND o.user_id = $2`,
@@ -90,23 +94,23 @@ exports.getOrderById = async (req, res) => {
       return res.status(404).json({ msg: 'Order not found' });
     }
 
-    const row = result.rows[0];
+    const row      = result.rows[0];
     const snapshot = row.items_snapshot || {};
 
     return res.json({
-      id:              row.id,
-      created_at:      row.created_at,
-      updated_at:      row.updated_at,
-      status:          row.status,
-      tracking_status: row.tracking_status,
-      total_amount:    row.total,
-      delivery_fee:    row.delivery_fee,
-      delivery_zone:   row.delivery_zone,
-      mpesa_receipt:   row.mpesa_receipt,
-      phone:           row.phone,
-      // Extract items and shipping from the snapshot object
-      items:           Array.isArray(snapshot.items) ? snapshot.items : [],
-      shipping:        snapshot.shipping || null
+      id:                row.id,
+      user_order_number: parseInt(row.user_order_number),
+      created_at:        row.created_at,
+      updated_at:        row.updated_at,
+      status:            row.status,
+      tracking_status:   row.tracking_status,
+      total_amount:      row.total,
+      delivery_fee:      row.delivery_fee,
+      delivery_zone:     row.delivery_zone,
+      mpesa_receipt:     row.mpesa_receipt,
+      phone:             row.phone,
+      items:             Array.isArray(snapshot.items) ? snapshot.items : [],
+      shipping:          snapshot.shipping || null,
     });
   } catch (err) {
     console.error('getOrderById error:', err.message);

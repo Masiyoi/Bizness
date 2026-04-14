@@ -12,6 +12,7 @@ interface OrderItem {
 
 interface Order {
   id: number;
+  user_order_number: number;
   created_at: string;
   status: 'pending' | 'processing' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
   tracking_status: string;
@@ -115,7 +116,7 @@ export default function OrderCard({ order, index, reviewedMap, onReviewSubmit, o
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="order-title-row">
             <span style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 'clamp(14px,3.5vw,16px)', color: T.navy }}>
-              Order #{order.id}
+              Order #{order.user_order_number}
             </span>
             <span className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', padding: '3px 10px', borderRadius: 20, background: status.bg, color: status.color, border: `1px solid ${status.border}`, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
               {status.icon} {status.label}

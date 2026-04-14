@@ -36,7 +36,14 @@ const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem(
 
 const TRACKING_STEPS = ['Order Placed','Payment Confirmed','Processing','Packed','Shipped','Out for Delivery','Delivered'];
 const ORDER_STATUSES  = ['pending','confirmed','processing','shipped','delivered','cancelled'];
-const CATEGORIES      = ['Clothes','Shoes','Bags','Female Wear','Sneakers','Jackets','Socks','Jerseys','Hoodies'];
+const CATEGORIES = [
+  'Dresses',
+  'Designer Wear',
+  'Sneakers',
+  'Bags',
+  'Shoes',
+  'Heels',
+];
 
 const TRACKING_TO_STATUS: Record<string, string> = {
   'Order Placed':'confirmed','Payment Confirmed':'confirmed','Processing':'processing',

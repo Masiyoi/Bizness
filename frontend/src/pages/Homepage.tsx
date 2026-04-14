@@ -147,7 +147,7 @@ export default function Homepage() {
 
       <Hero />
       <TrustStrip />
-      <CategorySection active={activeCategory} onChange={setActiveCategory} />
+      <CategorySection />
 
       {/* ── Deal strips ── */}
       <div className="px-[5%] pb-[clamp(20px,3vw,36px)]">
