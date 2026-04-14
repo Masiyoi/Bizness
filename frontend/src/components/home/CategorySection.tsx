@@ -30,12 +30,6 @@ interface Cat {
 
 const CATS: Cat[] = [
   {
-    label: 'Dresses', desc: 'Day wear & evening gowns', count: 48,
-    imgUrl: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=900&q=80&fit=crop',
-    colClass: 'md:[grid-column:1/3]', rowClass: 'md:[grid-row:1]',
-    mobileCol: 'col-span-2', mobileH: 'h-[52vw]',
-  },
-  {
     label: 'New Arrivals', desc: 'Fresh drops, just landed', count: 32,
     badge: 'New In', badgeStyle: 'red',
     imgUrl: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=900&q=80&fit=crop',
@@ -43,14 +37,20 @@ const CATS: Cat[] = [
     mobileCol: 'col-span-2', mobileH: 'h-[44vw]',
   },
   {
+   label: 'Dresses', desc: 'Day wear & evening gowns', count: 48,
+    imgUrl: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=900&q=80&fit=crop',
+    colClass: 'md:[grid-column:1/3]', rowClass: 'md:[grid-row:1]',
+    mobileCol: 'col-span-2', mobileH: 'h-[52vw]',
+  },
+  {
     label: 'Sneakers', desc: 'Street & sport',
-    imgUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80&fit=crop',
+    imgUrl: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1776155927/sneakers_shil7y.jpg',
     colClass: 'md:[grid-column:1/2]', rowClass: 'md:[grid-row:2]',
     mobileCol: 'col-span-1', mobileH: 'h-[44vw]',
   },
   {
     label: 'Bags', desc: 'Totes, clutches & more',
-    imgUrl: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80&fit=crop',
+    imgUrl: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1776156107/bags_ywn2d3.jpg',
     colClass: 'md:[grid-column:2/3]', rowClass: 'md:[grid-row:2]',
     mobileCol: 'col-span-1', mobileH: 'h-[44vw]',
   },
@@ -63,13 +63,13 @@ const CATS: Cat[] = [
   },
   {
     label: 'Designer Wear', desc: 'Luxury & couture pieces',
-    imgUrl: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=900&q=80&fit=crop',
+    imgUrl: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1776156326/designer_eoe0hj.jpg',
     colClass: 'md:[grid-column:1/3]', rowClass: 'md:[grid-row:3]',
     mobileCol: 'col-span-2', mobileH: 'h-[44vw]',
   },
   {
     label: 'Shoes', desc: 'Boots, flats & more',
-    imgUrl: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=80&fit=crop',
+    imgUrl: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1776158344/shoesss_z5vrdk.jpg',
     colClass: 'md:[grid-column:3/4]', rowClass: 'md:[grid-row:3]',
     mobileCol: 'col-span-1', mobileH: 'h-[44vw]',
   },
@@ -79,13 +79,6 @@ const CATS: Cat[] = [
     imgUrl: 'https://images.unsplash.com/photo-1515347619252-60a4bf4fff4f?w=600&q=80&fit=crop',
     colClass: 'md:[grid-column:4/5]', rowClass: 'md:[grid-row:3]',
     mobileCol: 'col-span-1', mobileH: 'h-[44vw]',
-  },
-  {
-    label: 'View All', desc: 'Browse the full collection',
-    imgUrl: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&q=80&fit=crop',
-    colClass: 'md:hidden', rowClass: '',
-    mobileCol: 'col-span-2', mobileH: 'h-[44vw]',
-    isViewAll: true,
   },
 ];
 
