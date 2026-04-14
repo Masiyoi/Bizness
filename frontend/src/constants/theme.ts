@@ -168,6 +168,8 @@ export interface HomepageReview {
   product_name:  string;
   product_image: string;
   product_id:    number;
+  image_url?:   string; 
+  category?:    string;
 }
 
 // ── Utility helpers ─────────────────────────────────────────────────────────

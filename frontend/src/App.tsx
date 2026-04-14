@@ -1,7 +1,9 @@
+// src/App.tsx
 import { HashRouter as Router, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 
+// ── Pages ──────────────────────────────────────────────────────────────────────
 import Homepage       from './pages/Homepage';
 import Register       from './pages/Register';
 import Login          from './pages/Login';
@@ -10,10 +12,20 @@ import Checkout       from './pages/Checkout';
 import ProductDetail  from './pages/ProductDetail';
 import AdminDashboard from './pages/AdminDashboard';
 import Orders         from './pages/Orders';
-import Wishlist from './pages/Wishlist';
-import Reviews from './pages/Reviews';
+import Wishlist       from './pages/Wishlist';
+import Reviews        from './pages/Reviews';
 
-// ─── Auth helpers ─────────────────────────────────────────────────────────────
+// ── Category Pages ─────────────────────────────────────────────────────────────
+import Dresses      from './pages/categories/Dresses';
+import NewArrivals  from './pages/categories/NewArrivals';
+import Sneakers     from './pages/categories/Sneakers';
+import Bags         from './pages/categories/Bags';
+import BestSellers  from './pages/categories/BestSellers';
+import DesignerWear from './pages/categories/DesignerWear';
+import Shoes        from './pages/categories/Shoes';
+import Heels        from './pages/categories/Heels';
+
+// ─── Auth helpers ──────────────────────────────────────────────────────────────
 const isAuthenticated = () => !!localStorage.getItem('token');
 
 const getUser = () => {
@@ -23,7 +35,6 @@ const getUser = () => {
   } catch { return null; }
 };
 
-// ─── Clear expired tokens on app load ────────────────────────────────────────
 const clearIfExpired = () => {
   const token = localStorage.getItem('token');
   if (!token) return;
@@ -39,17 +50,20 @@ const clearIfExpired = () => {
   }
 };
 
-// ─── GuestRoute ───────────────────────────────────────────────────────────────
+// ─── Route Guards ──────────────────────────────────────────────────────────────
+
+/** Redirect logged-in verified users away from auth pages */
 function GuestRoute({ children }: { children: React.ReactNode }) {
   const user = getUser();
   if (isAuthenticated() && user?.is_verified) {
-    if (user?.role === 'admin') return <Navigate to="/admin" replace />;
-    return <Navigate to="/" replace />;
+    return user?.role === 'admin'
+      ? <Navigate to="/admin" replace />
+      : <Navigate to="/" replace />;
   }
   return <>{children}</>;
 }
 
-// ─── AdminRoute ───────────────────────────────────────────────────────────────
+/** Admins only */
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const user = getUser();
   if (!isAuthenticated()) return <Navigate to="/login" replace />;
@@ -57,15 +71,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// ─── ProtectedRoute ───────────────────────────────────────────────────────────
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  if (!isAuthenticated()) return <Navigate to="/login" replace />;
-  return <>{children}</>;
-}
-
-// ─── BuyerRoute ───────────────────────────────────────────────────────────────
-// Buyers only — admins are redirected back to /admin
-// Use for cart, checkout, and orders
+/** Logged-in buyers only — admins are redirected to /admin */
 function BuyerRoute({ children }: { children: React.ReactNode }) {
   const user = getUser();
   if (!isAuthenticated()) return <Navigate to="/login" replace />;
@@ -73,36 +79,46 @@ function BuyerRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// ─── App ──────────────────────────────────────────────────────────────────────
-function App() {
+// ─── App ───────────────────────────────────────────────────────────────────────
+export default function App() {
   useEffect(() => { clearIfExpired(); }, []);
 
   return (
     <Router>
       <Routes>
 
-        {/* ── Public ── */}
+        {/* ── Public ─────────────────────────────────────────────────────────── */}
         <Route path="/"            element={<Homepage />} />
         <Route path="/product/:id" element={<ProductDetail />} />
 
-        {/* ── Auth (guests only) ── */}
+        {/* ── Categories (public) ─────────────────────────────────────────────── */}
+        <Route path="/categories/dresses"       element={<Dresses />} />
+        <Route path="/categories/new-arrivals"  element={<NewArrivals />} />
+        <Route path="/categories/sneakers"      element={<Sneakers />} />
+        <Route path="/categories/bags"          element={<Bags />} />
+        <Route path="/categories/best-sellers"  element={<BestSellers />} />
+        <Route path="/categories/designer-wear" element={<DesignerWear />} />
+        <Route path="/categories/shoes"         element={<Shoes />} />
+        <Route path="/categories/heels"         element={<Heels />} />
+
+        {/* ── Auth (guests only) ──────────────────────────────────────────────── */}
         <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
         <Route path="/login"    element={<GuestRoute><Login /></GuestRoute>} />
 
-        {/* ── Buyer only (admins blocked) ── */}
+        {/* ── Buyer only ──────────────────────────────────────────────────────── */}
         <Route path="/cart"     element={<BuyerRoute><Cart /></BuyerRoute>} />
         <Route path="/checkout" element={<BuyerRoute><Checkout /></BuyerRoute>} />
         <Route path="/orders"   element={<BuyerRoute><Orders /></BuyerRoute>} />
         <Route path="/wishlist" element={<BuyerRoute><Wishlist /></BuyerRoute>} />
-        <Route path="/reviews"  element={<BuyerRoute><Reviews/></BuyerRoute>} />
+        <Route path="/reviews"  element={<BuyerRoute><Reviews /></BuyerRoute>} />
 
-        {/* ── Email verification ── */}
+        {/* ── Email verification ──────────────────────────────────────────────── */}
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
-        {/* ── Admin only ── */}
+        {/* ── Admin only ──────────────────────────────────────────────────────── */}
         <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
-        {/* ── 404 ── */}
+        {/* ── 404 ─────────────────────────────────────────────────────────────── */}
         <Route path="*" element={<NotFound />} />
 
       </Routes>
@@ -110,18 +126,16 @@ function App() {
   );
 }
 
-export default App;
-
-// ─── Email Verification Page ──────────────────────────────────────────────────
+// ─── Email Verification Page ───────────────────────────────────────────────────
 function VerifyEmail() {
-  const { token }  = useParams();
-  const navigate   = useNavigate();
-  const hasCalled  = useRef(false); // ← prevents double-call in React Strict Mode
-  const [status, setStatus]   = useState<'loading' | 'success' | 'error'>('loading');
+  const { token } = useParams();
+  const navigate  = useNavigate();
+  const hasCalled = useRef(false);
+  const [status,  setStatus]  = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    if (hasCalled.current) return; // ← if already called, bail out immediately
+    if (hasCalled.current) return;
     hasCalled.current = true;
 
     axios.get(`/api/auth/verify/${token}`)
@@ -136,16 +150,28 @@ function VerifyEmail() {
       });
   }, [token, navigate]);
 
+  const containerStyle: React.CSSProperties = {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: '#FBF6F0',
+    fontFamily: "'DM Sans', sans-serif",
+  };
+
+  const cardStyle: React.CSSProperties = {
+    background: '#fff',
+    borderRadius: 20,
+    padding: '48px 40px',
+    textAlign: 'center',
+    maxWidth: 400,
+    width: '100%',
+    boxShadow: '0 8px 32px rgba(44,26,14,0.1)',
+  };
+
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: '#FBF6F0', fontFamily: "'DM Sans', sans-serif",
-    }}>
-      <div style={{
-        background: '#fff', borderRadius: 20, padding: '48px 40px',
-        textAlign: 'center', maxWidth: 400, width: '100%',
-        boxShadow: '0 8px 32px rgba(44,26,14,0.1)',
-      }}>
+    <div style={containerStyle}>
+      <div style={cardStyle}>
         {status === 'loading' && (
           <>
             <div style={{ fontSize: 52, marginBottom: 16 }}>⏳</div>
@@ -168,9 +194,15 @@ function VerifyEmail() {
             <button
               onClick={() => navigate('/login')}
               style={{
-                marginTop: 20, background: '#C4703A', color: '#fff',
-                border: 'none', borderRadius: 12, padding: '12px 28px',
-                fontWeight: 600, cursor: 'pointer', fontSize: 14,
+                marginTop: 20,
+                background: '#C4703A',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 12,
+                padding: '12px 28px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: 14,
               }}
             >
               Back to Login
@@ -182,14 +214,20 @@ function VerifyEmail() {
   );
 }
 
-// ─── 404 Not Found ────────────────────────────────────────────────────────────
+// ─── 404 Not Found ─────────────────────────────────────────────────────────────
 function NotFound() {
   const navigate = useNavigate();
+
   return (
     <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: '#FBF6F0', fontFamily: "'DM Sans', sans-serif",
-      flexDirection: 'column', gap: 16,
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#FBF6F0',
+      fontFamily: "'DM Sans', sans-serif",
+      flexDirection: 'column',
+      gap: 16,
     }}>
       <div style={{ fontSize: 72 }}>🌿</div>
       <h1 style={{ fontFamily: 'Lora, serif', fontSize: 32, color: '#2C1A0E' }}>Page Not Found</h1>
@@ -197,9 +235,15 @@ function NotFound() {
       <button
         onClick={() => navigate('/')}
         style={{
-          background: '#C4703A', color: '#fff', border: 'none',
-          borderRadius: 12, padding: '12px 28px', fontWeight: 600,
-          cursor: 'pointer', fontSize: 14, marginTop: 8,
+          background: '#C4703A',
+          color: '#fff',
+          border: 'none',
+          borderRadius: 12,
+          padding: '12px 28px',
+          fontWeight: 600,
+          cursor: 'pointer',
+          fontSize: 14,
+          marginTop: 8,
         }}
       >
         Back to Homepage

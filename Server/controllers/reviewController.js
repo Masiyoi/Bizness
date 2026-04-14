@@ -63,7 +63,7 @@ router.get('/product/:productId', async (req, res) => {
 router.get('/homepage', async (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 12, 50);
   try {
-    const { rows } = await pool.query(   // <-- was `db`, fixed to `pool`
+    const { rows } = await pool.query(
       `SELECT
          r.id,
          r.rating,
@@ -71,8 +71,9 @@ router.get('/homepage', async (req, res) => {
          r.created_at,
          u.full_name,
          p.name       AS product_name,
-         p.image_url  AS product_image,
-         p.id         AS product_id
+         p.id         AS product_id,
+         p.image_url  AS image_url,
+         p.category   AS category
        FROM reviews r
        JOIN users    u ON u.id = r.user_id
        JOIN products p ON p.id = r.product_id
