@@ -214,7 +214,7 @@ export default function CategoryPage({
         {/* Empty state */}
         {!loading && sorted.length === 0 && (
           <div className="text-center py-20">
-            <div className="text-5xl mb-4">👗</div>
+            <div className="text-5xl mb-4">🛍️</div>
             <p className="font-sans font-bold text-[16px] text-navy mb-2">No products here yet</p>
             <p className="font-sans text-[13px] text-muted mb-6">
               We're stocking up {categoryName} — check back soon!

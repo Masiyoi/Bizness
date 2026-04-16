@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import logo from '../assets/logo.png';
+
+import Navbar from '../components/common/Navbar';
+import Footer from '../components/common/Footer';
 
 interface Review {
   id: number;
@@ -257,11 +259,7 @@ export default function ReviewPage() {
       )}
 
       {/* Navbar */}
-      <nav style={{ background:T.navy, padding:'0 5%', height:70, display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:100, boxShadow:`0 4px 32px rgba(13,27,62,0.35)`, borderBottom:`1px solid rgba(200,169,81,0.25)` }}>
-        <img src={logo} alt="Luku Prime" style={{ height:54, width:'auto', objectFit:'contain', cursor:'pointer', filter:'drop-shadow(0 2px 6px rgba(0,0,0,0.3))' }} onClick={() => navigate('/')}/>
-        <div className="jost" style={{ fontSize:13, fontWeight:600, letterSpacing:'2px', textTransform:'uppercase', color:`rgba(200,169,81,0.8)` }}>My Reviews</div>
-        <button onClick={() => navigate(-1)} className="jost" style={{ background:'rgba(200,169,81,0.12)', border:`1px solid rgba(200,169,81,0.25)`, color:T.goldLight, borderRadius:6, padding:'8px 16px', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer' }}>← Back</button>
-      </nav>
+      <Navbar />
 
       {/* Page header */}
       <div style={{ background:T.navy, padding:'40px 5% 48px', position:'relative', overflow:'hidden' }}>
@@ -476,6 +474,7 @@ export default function ReviewPage() {
           </>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

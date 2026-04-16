@@ -25,6 +25,28 @@ import DesignerWear from './pages/categories/DesignerWear';
 import Shoes        from './pages/categories/Shoes';
 import Heels        from './pages/categories/Heels';
 
+// ── Components ─────────────────────────────────────────────────────────────────
+import FloatingCart from './components/common/FloatingCart';
+import ScrollToTop from './components/common/ScrollToTop';
+
+// Support pages
+import TrackOrder  from './pages/support/TrackOrder';
+import Returns     from './pages/support/Returns';
+import Delivery    from './pages/support/Delivery';
+import SizeGuide   from './pages/support/SizeGuide';
+import FAQs        from './pages/support/FAQs';
+import Contact     from './pages/support/Contact';
+ 
+// Company pages
+import About       from './pages/company/About';
+import Careers     from './pages/company/Careers';
+import Press       from './pages/company/Press';
+ 
+// Legal pages
+import Privacy     from './pages/legal/Privacy';
+import Terms       from './pages/legal/Terms';
+import Cookies     from './pages/legal/Cookies';
+
 // ─── Auth helpers ──────────────────────────────────────────────────────────────
 const isAuthenticated = () => !!localStorage.getItem('token');
 
@@ -67,7 +89,7 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const user = getUser();
   if (!isAuthenticated()) return <Navigate to="/login" replace />;
-  if (user?.role !== 'admin') return <Navigate to="/" replace />;
+  if (user?.role !== 'admin') return <Navigate to="/admin" replace />;
   return <>{children}</>;
 }
 
@@ -79,12 +101,45 @@ function BuyerRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// ─── FloatingCart wrapper (lives inside Router so it can use hooks) ─────────────
+function FloatingCartManager() {
+  const [cartCount, setCartCount] = useState(0);
+
+  const fetchCount = () => {
+    const token = localStorage.getItem('token');
+    const user  = getUser();
+    // Don't show for admins or unauthenticated users
+    if (!token || user?.role === 'admin') { setCartCount(0); return; }
+    axios
+      .get('/api/cart', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => setCartCount(r.data.reduce((s: number, i: any) => s + i.quantity, 0)))
+      .catch(() => setCartCount(0));
+  };
+
+  useEffect(() => {
+    fetchCount();
+    window.addEventListener('cartUpdated', fetchCount);
+    window.addEventListener('focus',       fetchCount);
+    return () => {
+      window.removeEventListener('cartUpdated', fetchCount);
+      window.removeEventListener('focus',       fetchCount);
+    };
+  }, []);
+
+  return <FloatingCart count={cartCount} />;
+}
+
 // ─── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
   useEffect(() => { clearIfExpired(); }, []);
 
   return (
     <Router>
+      {/* FloatingCart is inside Router (needs useNavigate) but outside all Routes
+          so it is never unmounted during navigation and has no parent overflow clipping */}
+      <ScrollToTop /> 
+      <FloatingCartManager />
+
       <Routes>
 
         {/* ── Public ─────────────────────────────────────────────────────────── */}
@@ -100,6 +155,23 @@ export default function App() {
         <Route path="/categories/designer-wear" element={<DesignerWear />} />
         <Route path="/categories/shoes"         element={<Shoes />} />
         <Route path="/categories/heels"         element={<Heels />} />
+          {/* ── Support (public) ─────────────────────────────────────────────────── */}
+        <Route path="/track-order"  element={<TrackOrder />} />
+        <Route path="/returns"      element={<Returns />} />
+        <Route path="/delivery"     element={<Delivery />} />
+        <Route path="/size-guide"   element={<SizeGuide />} />
+        <Route path="/faqs"         element={<FAQs />} />
+        <Route path="/contact"      element={<Contact />} />
+ 
+  {/* ── Company (public) ─────────────────────────────────────────────────── */}
+       <Route path="/about"    element={<About />} />
+       <Route path="/careers"  element={<Careers />} />
+       <Route path="/press"    element={<Press />} />
+ 
+  {/* ── Legal (public) ───────────────────────────────────────────────────── */}
+       <Route path="/privacy"  element={<Privacy />} />
+      <Route path="/terms"    element={<Terms />} />
+      <Route path="/cookies"  element={<Cookies />} />
 
         {/* ── Auth (guests only) ──────────────────────────────────────────────── */}
         <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />

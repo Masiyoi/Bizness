@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+
+import Navbar       from '../components/common/Navbar';
+import Footer       from '../components/common/Footer';
 import FloatingCart from '../components/common/FloatingCart';
 
 interface Product {
@@ -95,7 +98,6 @@ function ReviewsSection({ productId }: { productId: number }) {
 
   return (
     <div style={{ marginTop:40, fontFamily:"'Jost','DM Sans',sans-serif" }}>
-      {/* ── Trigger button ── */}
       <button
         onClick={() => setOpen(o => !o)}
         style={{
@@ -138,29 +140,18 @@ function ReviewsSection({ productId }: { productId: number }) {
         }}>▼</span>
       </button>
 
-      {/* ── Collapsible body ── */}
-      <div style={{
-        overflow:'hidden',
-        maxHeight: open ? 3000 : 0,
-        transition:'max-height 0.4s ease',
-      }}>
+      <div style={{ overflow:'hidden', maxHeight: open ? 3000 : 0, transition:'max-height 0.4s ease' }}>
         <div style={{
-          background:T.cream,
-          border:`1px solid ${T.creamDeep}`,
-          borderTop:'none',
-          borderRadius:'0 0 10px 10px',
-          padding:'22px 22px 20px',
+          background:T.cream, border:`1px solid ${T.creamDeep}`,
+          borderTop:'none', borderRadius:'0 0 10px 10px', padding:'22px 22px 20px',
         }}>
-
           {loading && (
             <div style={{ textAlign:'center', padding:'28px 0', color:T.muted, fontSize:13, fontFamily:"'Jost',sans-serif" }}>
               Loading reviews…
             </div>
           )}
-
           {!loading && fetched && (
             <>
-              {/* Rating breakdown bars */}
               {stats && stats.total > 0 && (
                 <div style={{ marginBottom:4 }}>
                   {statRows.map(({ label, key }) => {
@@ -178,10 +169,7 @@ function ReviewsSection({ productId }: { productId: number }) {
                   })}
                 </div>
               )}
-
               <div style={{ height:1, background:`linear-gradient(90deg,transparent,rgba(200,169,81,0.25),transparent)`, margin:'18px 0' }}/>
-
-              {/* Review cards */}
               {reviews.length === 0 ? (
                 <div style={{ textAlign:'center', padding:'24px 0', fontSize:13, color:T.muted, fontFamily:"'Jost',sans-serif" }}>
                   No reviews yet — be the first after your purchase!
@@ -189,12 +177,7 @@ function ReviewsSection({ productId }: { productId: number }) {
               ) : (
                 <div style={{ display:'flex', flexDirection:'column' as const, gap:12 }}>
                   {reviews.map(r => (
-                    <div key={r.id} style={{
-                      background:'#fff',
-                      border:`1px solid ${T.creamDeep}`,
-                      borderRadius:10,
-                      padding:'16px 18px',
-                    }}>
+                    <div key={r.id} style={{ background:'#fff', border:`1px solid ${T.creamDeep}`, borderRadius:10, padding:'16px 18px' }}>
                       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:8 }}>
                         <div>
                           <div style={{ fontSize:13, fontWeight:700, color:T.navy, fontFamily:"'Jost',sans-serif" }}>{r.full_name}</div>
@@ -223,6 +206,7 @@ function ReviewsSection({ productId }: { productId: number }) {
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [product,       setProduct]       = useState<Product | null>(null);
   const [loading,       setLoading]       = useState(true);
   const [activeImg,     setActiveImg]     = useState(0);
@@ -234,8 +218,51 @@ export default function ProductDetail() {
   const [colorError,    setColorError]    = useState(false);
   const [selectedSize,  setSelectedSize]  = useState<string>('');
   const [sizeError,     setSizeError]     = useState(false);
-  const [cartCount,     setCartCount]     = useState(0);
 
+  // ── Shared state mirrored from Homepage ─────────────────────────
+  const [cartCount,     setCartCount]     = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
+
+  // ── Fetch cart count ──────────────────────────────────────────
+  const fetchCartCount = useCallback(() => {
+    const token = localStorage.getItem('token');
+    if (!token) { setCartCount(0); return; }
+    axios.get('/api/cart', authHeaders())
+      .then(res => {
+        setCartCount(res.data.reduce((s: number, i: any) => s + i.quantity, 0));
+      })
+      .catch(() => {});
+  }, []);
+
+  // ── Fetch wishlist count ──────────────────────────────────────
+  const fetchWishlistCount = useCallback(() => {
+    const token = localStorage.getItem('token');
+    if (!token) { setWishlistCount(0); return; }
+    axios.get('/api/wishlist', authHeaders())
+      .then(res => setWishlistCount(res.data.length))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchCartCount();
+    fetchWishlistCount();
+    // Keep counts fresh when tab regains focus
+    window.addEventListener('focus', fetchCartCount);
+    window.addEventListener('focus', fetchWishlistCount);
+    return () => {
+      window.removeEventListener('focus', fetchCartCount);
+      window.removeEventListener('focus', fetchWishlistCount);
+    };
+  }, [fetchCartCount, fetchWishlistCount]);
+
+  // Keep counts in sync when cart is updated from this page
+  useEffect(() => {
+    const handler = () => { fetchCartCount(); fetchWishlistCount(); };
+    window.addEventListener('cartUpdated', handler);
+    return () => window.removeEventListener('cartUpdated', handler);
+  }, [fetchCartCount, fetchWishlistCount]);
+
+  // ── Fetch product ─────────────────────────────────────────────
   useEffect(() => {
     axios.get(`/api/products/${id}`)
       .then(res => {
@@ -253,10 +280,11 @@ export default function ProductDetail() {
       .catch(() => { setLoading(false); navigate('/'); });
   }, [id]);
 
+  // ── Check if already in cart ──────────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token || !id) return;
-    axios.get('/api/cart', { headers: { Authorization: `Bearer ${token}` } })
+    axios.get('/api/cart', authHeaders())
       .then(res => {
         const cartItem = res.data.find((i: any) => i.product_id === Number(id));
         if (cartItem) {
@@ -353,6 +381,11 @@ export default function ProductDetail() {
     } catch {}
   };
 
+  const handleLogout = () => {
+    setCartCount(0);
+    setWishlistCount(0);
+  };
+
   if (loading) return (
     <div style={{ minHeight:'100vh', background:T.navy, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
@@ -368,25 +401,25 @@ export default function ProductDetail() {
   const hasSizes  = Array.isArray(product.sizes)  && product.sizes.length  > 0;
 
   return (
-    <div style={{ minHeight:'100vh', background:T.cream, fontFamily:"'Jost','DM Sans',sans-serif" }}>
+    <div className="font-serif bg-cream min-h-screen text-navy overflow-x-hidden">
       <style>{css}</style>
 
       {toast && <div className="lp-toast">{toast}</div>}
 
-     <FloatingCart count={cartCount} />
-
-      {/* ── Top nav ── */}
-      <div style={{ background:T.navy, borderBottom:`1px solid rgba(200,169,81,0.2)`, padding:'0 5%', height:54, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <button className="lp-back" onClick={() => navigate('/')}>← Shop</button>
-        <span style={{ fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700, letterSpacing:'2.5px', color:`rgba(200,169,81,0.55)`, textTransform:'uppercase' }}>{product.category || 'Product'}</span>
-        <button className="lp-back" onClick={() => navigate('/cart')}>🛒 Cart</button>
-      </div>
+      {/* ── Shared Navbar (same as Homepage) ── */}
+      <Navbar
+        cartCount={cartCount}
+        wishlistCount={wishlistCount}
+        onLogout={handleLogout}
+      />
 
       <div className="lp-fade" style={{ maxWidth:1100, margin:'0 auto', padding:'clamp(20px,4vw,48px) clamp(16px,5%,5%) 80px' }}>
 
         {/* Breadcrumb */}
         <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:'clamp(18px,3vw,32px)', flexWrap:'wrap' as const }}>
-          <button className="lp-back" style={{ color:T.muted }} onClick={() => navigate(-1)}>← Back</button>
+          <button className="lp-back" onClick={() => navigate(-1)}>← Back</button>
+          <span style={{ color:T.creamDeep }}>·</span>
+          <button className="lp-back" style={{ color:T.muted }} onClick={() => navigate('/')}>Home</button>
           <span style={{ color:T.creamDeep }}>·</span>
           <span style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:T.muted }}>{product.category || 'Product'}</span>
           <span style={{ color:T.creamDeep }}>·</span>
@@ -632,6 +665,12 @@ export default function ProductDetail() {
         <ReviewsSection productId={product.id} />
 
       </div>
+
+      {/* ── Shared Footer (same as Homepage) ── */}
+      <Footer />
+
+      {/* ── Shared FloatingCart (now with live count) ── */}
+      <FloatingCart count={cartCount} />
     </div>
   );
 }

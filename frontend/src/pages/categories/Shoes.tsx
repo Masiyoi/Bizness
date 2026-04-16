@@ -6,7 +6,7 @@ export default function Shoes() {
       categoryName="Shoes"
       headline="Shop Shoes"
       description="Boots, flats, loafers and everything your wardrobe needs."
-      bannerUrl=""
+      bannerUrl="https://res.cloudinary.com/dfiy43f01/image/upload/v1776158344/shoesss_z5vrdk.jpg"
     />
   );
 }

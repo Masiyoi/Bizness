@@ -96,7 +96,7 @@ export default function CategorySection() {
       {/* ── Header ── */}
       <div className="flex justify-between items-end mb-3.5">
         <div>
-          <Ornament label="Explore the Edit" />
+          <Ornament label="Explore our Categories" />
           <h2
             className="font-serif font-bold text-navy"
             style={{ fontSize: 'clamp(17px,4vw,26px)' }}

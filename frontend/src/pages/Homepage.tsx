@@ -16,6 +16,7 @@ import ProductCard     from '../components/home/ProductCard';
 import ReviewSection   from '../components/home/ReviewSection';
 import Ornament        from '../components/ui/Ornament';
 import FloatingCart from '../components/common/FloatingCart';
+import VideoCarousel, { VIDEO_TILES } from '../components/home/VideoCarousel';
 
 import { T, readUser } from '../constants/theme';
 import type { Product, HomepageReview, User } from '../constants/theme';
@@ -45,6 +46,9 @@ export default function Homepage() {
   // ── Reviews ─────────────────────────────────────────────────────
   const [reviews,        setReviews]        = useState<HomepageReview[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
+
+  const topVideo    = [VIDEO_TILES[0]];
+  const bottomVideo = [VIDEO_TILES[1]];
 
   // ── Fetch products ──────────────────────────────────────────────
   useEffect(() => {
@@ -148,43 +152,13 @@ export default function Homepage() {
 
       <Hero />
       <TrustStrip />
-      <CategorySection />
 
-      {/* ── Deal strips ── */}
-      <div className="px-[5%] pb-[clamp(20px,3vw,36px)]">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {[
-            { label:'Sneaker Drop',     icon:'👟', ends:'02:47:33', accent:T.navy   },
-            { label:'Style of the Day', icon:'👗', ends:'08:12:05', accent:T.gold   },
-            { label:'Weekend Sale',     icon:'🏷️', ends:'1d 04:22', accent:'#3A6EA8' },
-          ].map(d => (
-            <div key={d.label} className="deal-card">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-[10px] shrink-0 flex items-center justify-center text-lg"
-                  style={{
-                    background: d.accent === T.gold ? 'rgba(200,169,81,0.12)'
-                              : d.accent === T.navy ? T.creamMid
-                              : '#EEF3FA',
-                  }}
-                >
-                  {d.icon}
-                </div>
-                <div>
-                  <div className="font-sans font-bold text-[13px] text-navy">{d.label}</div>
-                  <div className="font-sans text-[11px] text-muted mt-0.5">Ends in {d.ends}</div>
-                </div>
-              </div>
-              <span
-                className="font-sans text-[11px] font-bold tracking-[1.5px] uppercase"
-                style={{ color: d.accent === T.gold ? T.gold : T.navy }}
-              >
-                Shop →
-              </span>
-            </div>
-          ))}
-        </div>
+      {/* ── Top video carousel ── */}
+      <div style={{ padding: 'clamp(24px, 4vw, 48px) 0' }}>
+        <VideoCarousel tiles={topVideo} />
       </div>
+
+      <CategorySection />
 
       {/* ── Products grid ── */}
       <div className="px-[5%] pb-[clamp(40px,6vw,80px)]">
@@ -256,6 +230,11 @@ export default function Homepage() {
         )}
       </div>
 
+      {/* ── Bottom video carousel ── */}
+      <div style={{ padding: 'clamp(24px, 4vw, 48px) 0' }}>
+        <VideoCarousel tiles={bottomVideo} />
+      </div>
+
       <ReviewSection
         reviews={reviews}
         loading={reviewsLoading}
@@ -263,7 +242,7 @@ export default function Homepage() {
       />
 
       <Footer />
-    <FloatingCart count={cartCount} />
+      <FloatingCart count={cartCount} />
     </div>
   );
 }
