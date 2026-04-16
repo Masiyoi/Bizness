@@ -3,6 +3,9 @@ import logo from '../assets/logo.png';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+import Navbar       from '../components/common/Navbar';
+import Footer       from '../components/common/Footer';
+
 interface WishlistItem {
   id: number;          // wishlist row id
   product_id: number;
@@ -137,64 +140,9 @@ export default function WishlistPage() {
     <div style={{ fontFamily:"'Playfair Display','Georgia',serif", background:T.cream, minHeight:'100vh', color:T.text, overflowX:'hidden' }}>
       <style>{css}</style>
 
-      {/* ── ANNOUNCEMENT TOPBAR ── */}
-      <div style={{ background:T.navy, height:32, overflow:'hidden', display:'flex', alignItems:'center', borderBottom:`1px solid rgba(200,169,81,0.2)` }}>
-        <div style={{ overflow:'hidden', width:'100%' }}>
-          <div className="wl-marquee">
-            {[...Array(2)].map((_, r) =>
-              ['✦ YOUR SAVED PIECES', '✦ FREE PICKUP FROM OUR SHOP', '✦ NAIROBI CBD — KSH 100', '✦ NEW DROPS EVERY FRIDAY', '✦ AUTHENTIC FASHION ONLY', '✦ SECURE M-PESA CHECKOUT'].map((t, i) => (
-                <span key={`${r}-${i}`} className="jost" style={{ fontSize:9, fontWeight:600, letterSpacing:'2px', color:'rgba(200,169,81,0.85)' }}>{t}</span>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* ── NAVBAR ── */}
-      <nav style={{ background:T.navy, padding:'0 5%', height:70, display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:100, boxShadow:'0 4px 32px rgba(13,27,62,0.35)', borderBottom:`1px solid rgba(200,169,81,0.25)` }}>
-        <img src={logo} alt="Luku Prime" style={{ height:54, width:'auto', objectFit:'contain', cursor:'pointer', filter:'drop-shadow(0 2px 6px rgba(0,0,0,0.3))' }} onClick={() => navigate('/')} />
+      <Navbar />
 
-        <div style={{ display:'flex', alignItems:'center', gap:22 }}>
-          <span className="nav-link jost" onClick={() => navigate('/')}>Shop</span>
-          <span className="nav-link jost" onClick={() => navigate('/new-drops')}>New Drops</span>
-
-          <div style={{ position:'relative', cursor:'pointer', color:'rgba(255,255,255,0.75)', fontSize:18 }} onClick={() => navigate('/cart')}>
-            🛒
-            {cartCount > 0 && (
-              <span className="jost" style={{ position:'absolute', top:-7, right:-8, background:T.gold, color:T.navy, borderRadius:'50%', width:16, height:16, fontSize:9, fontWeight:800, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                {cartCount}
-              </span>
-            )}
-          </div>
-
-          {user ? (
-            <div style={{ position:'relative' }}>
-              <div onClick={() => setShowMenu(s => !s)} title={user.full_name}
-                style={{ width:36, height:36, borderRadius:'50%', background:`linear-gradient(135deg,${T.gold},${T.goldLight})`, display:'flex', alignItems:'center', justifyContent:'center', color:T.navy, fontWeight:800, fontSize:12, cursor:'pointer', fontFamily:"'Jost',sans-serif", userSelect:'none', border:`2px solid rgba(200,169,81,0.4)` }}>
-                {getInitials(user.full_name)}
-              </div>
-              {showMenu && (
-                <div className="umenu">
-                  <div style={{ padding:'10px 14px 12px', borderBottom:`1px solid ${T.creamDeep}`, marginBottom:6 }}>
-                    <div className="jost" style={{ fontWeight:700, fontSize:13, color:T.navy }}>{user.full_name}</div>
-                    <div className="jost" style={{ fontSize:11, color:T.muted, marginTop:2 }}>{user.email}</div>
-                  </div>
-                  <div className="mitem" onClick={() => { setShowMenu(false); navigate('/orders'); }}>📦 My Orders</div>
-                  <div className="mitem" style={{ background:T.creamMid }} onClick={() => { setShowMenu(false); navigate('/wishlist'); }}>
-                    🤍 Wishlist
-                    {items.length > 0 && <span style={{ marginLeft:'auto', background:T.gold, color:T.navy, borderRadius:10, padding:'1px 7px', fontSize:10, fontWeight:800, fontFamily:"'Jost',sans-serif" }}>{items.length}</span>}
-                  </div>
-                  <div style={{ borderTop:`1px solid ${T.creamDeep}`, marginTop:6, paddingTop:6 }}>
-                    <div className="mitem danger" onClick={handleLogout}>🚪 Sign Out</div>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <button className="auth-btn jost" onClick={() => navigate('/login')} style={{ background:T.gold, color:T.navy, border:'none', fontWeight:700 }}>Sign In</button>
-          )}
-        </div>
-      </nav>
 
       {/* ── HERO HEADER ── */}
       <div style={{ background:T.navy, position:'relative', overflow:'hidden', padding:'clamp(40px,6vw,72px) 5% clamp(36px,5vw,60px)' }}>
@@ -413,25 +361,7 @@ export default function WishlistPage() {
       </div>
 
       {/* ── FOOTER ── */}
-      <footer style={{ background:T.navy, borderTop:`1px solid rgba(200,169,81,0.2)` }}>
-        <div style={{ height:2, background:`linear-gradient(90deg,transparent 0%,${T.gold} 30%,${T.goldLight} 50%,${T.gold} 70%,transparent 100%)` }} />
-        <div style={{ padding:'clamp(20px,3vw,30px) 5%', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:16 }}>
-          <img src={logo} alt="Luku Prime" style={{ height:44, objectFit:'contain' }} />
-          <div style={{ textAlign:'center' }}>
-            <div className="jost" style={{ fontSize:9, fontWeight:700, letterSpacing:'3px', color:'rgba(200,169,81,0.7)', textTransform:'uppercase', marginBottom:4 }}>Dress the Finest</div>
-            <div className="jost" style={{ fontSize:10, color:'rgba(255,255,255,0.25)' }}>© 2025 Luku Prime · All rights reserved</div>
-          </div>
-          <div style={{ display:'flex', gap:18 }}>
-            {['Privacy', 'Terms', 'Help'].map(l => (
-              <span key={l} className="jost" style={{ cursor:'pointer', color:'rgba(255,255,255,0.35)', fontSize:11, letterSpacing:'1px', textTransform:'uppercase', transition:'color 0.2s' }}
-                onMouseEnter={e => (e.currentTarget.style.color=T.goldLight)}
-                onMouseLeave={e => (e.currentTarget.style.color='rgba(255,255,255,0.35)')}>
-                {l}
-              </span>
-            ))}
-          </div>
-        </div>
-      </footer>
+     <Footer />
     </div>
   );
 }

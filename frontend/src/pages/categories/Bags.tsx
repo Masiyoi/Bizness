@@ -6,7 +6,7 @@ export default function Bags() {
       categoryName="Bags"
       headline="Shop Bags"
       description="Totes, clutches, crossbodies and everything in between."
-      bannerUrl="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=1200&q=80&fit=crop"
+      bannerUrl="https://res.cloudinary.com/dfiy43f01/image/upload/v1776156107/bags_ywn2d3.jpg"
     />
   );
 }

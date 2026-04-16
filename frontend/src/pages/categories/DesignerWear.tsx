@@ -6,7 +6,7 @@ export default function DesignerWear() {
       categoryName="Designer Wear"
       headline="Designer Wear"
       description="Luxury and couture pieces for the discerning buyer."
-      bannerUrl="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&q=80&fit=crop"
+      bannerUrl="https://res.cloudinary.com/dfiy43f01/image/upload/v1776156326/designer_eoe0hj.jpg"
     />
   );
 }

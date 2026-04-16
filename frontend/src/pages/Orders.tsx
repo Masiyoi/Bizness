@@ -3,6 +3,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+import Navbar from '../components/common/Navbar';
+import Footer from '../components/common/Footer';
+
 interface OrderItem {
   id: number;
   product_id: number;
@@ -301,30 +304,7 @@ export default function Orders() {
         />
       )}
 
-      {/* Topbar marquee */}
-      <div style={{ background:T.navy, height:34, overflow:'hidden', display:'flex', alignItems:'center', borderBottom:`1px solid rgba(200,169,81,0.2)` }}>
-        <div style={{ overflow:'hidden', width:'100%' }}>
-          <div className="topbar-marquee">
-            {[...Array(2)].map((_, r) =>
-              ['✦ NAIROBI CBD DELIVERY — KSH 100','✦ NAIROBI ENVIRONS — KSH 200','✦ OTHER COUNTIES — KSH 300','✦ FREE PICKUP FROM OUR SHOP','✦ SECURE M-PESA CHECKOUT','✦ 30-DAY RETURNS'].map((t, i) => (
-                <span key={`${r}-${i}`} style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:600, letterSpacing:'2px', color:'rgba(200,169,81,0.85)' }}>{t}</span>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Navbar */}
-      <nav style={{ background:T.navy, padding:'0 clamp(16px,5%,5%)', height:64, display:'flex', alignItems:'center', justifyContent:'space-between', position:'sticky', top:0, zIndex:100, boxShadow:`0 4px 32px rgba(13,27,62,0.35)`, borderBottom:`1px solid rgba(200,169,81,0.25)` }}>
-        <button className="back-btn" onClick={() => navigate('/')}>← <span>Shop</span></button>
-        <div style={{ position:'absolute', left:'50%', transform:'translateX(-50%)', display:'flex', flexDirection:'column', alignItems:'center' }}>
-          <div style={{ fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700, letterSpacing:'3px', color:T.gold, textTransform:'uppercase', marginBottom:2 }}>My</div>
-          <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:18, color:T.white, letterSpacing:'0.5px' }}>Orders</div>
-        </div>
-        <div style={{ fontFamily:"'Jost',sans-serif", fontSize:12, color:'rgba(255,255,255,0.45)', letterSpacing:'1px' }}>
-          {orders.length > 0 ? `${orders.length}` : ''}
-        </div>
-      </nav>
+    <Navbar />
 
       {/* Body */}
       <div style={{ padding:`clamp(24px,5vw,40px) clamp(14px,5%,5%) clamp(60px,10vw,80px)`, maxWidth:860, margin:'0 auto' }}>
@@ -580,24 +560,8 @@ export default function Orders() {
         })}
       </div>
 
-      {/* Footer */}
-      <footer style={{ background:T.navy, borderTop:`1px solid rgba(200,169,81,0.2)` }}>
-        <div style={{ height:2, background:`linear-gradient(90deg,transparent 0%,${T.gold} 30%,${T.goldLight} 50%,${T.gold} 70%,transparent 100%)` }}/>
-        <div style={{ padding:`20px clamp(16px,5%,5%)`, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12 }}>
-          <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:18, color:T.white }}>Luku <span style={{ color:T.gold }}>Prime</span></div>
-          <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:'rgba(255,255,255,0.25)' }}>© 2025 Luku Prime · All rights reserved</div>
-          <div style={{ display:'flex', gap:20 }}>
-            {['Privacy','Terms','Help'].map(l => (
-              <span
-                key={l}
-                style={{ cursor:'pointer', color:'rgba(255,255,255,0.35)', fontFamily:"'Jost',sans-serif", fontSize:12, letterSpacing:'1px', textTransform:'uppercase', transition:'color 0.2s', minHeight:44, display:'flex', alignItems:'center' }}
-                onMouseEnter={e => (e.currentTarget.style.color = T.goldLight)}
-                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}
-              >{l}</span>
-            ))}
-          </div>
-        </div>
-      </footer>
+      <Footer />
+
     </div>
   );
 }
