@@ -4,7 +4,7 @@ import axios from 'axios';
 
 import Navbar       from '../components/common/Navbar';
 import Footer       from '../components/common/Footer';
-import FloatingCart from '../components/common/FloatingCart';
+
 
 interface Product {
   id: number; name: string; price: string; description: string;
@@ -668,9 +668,6 @@ export default function ProductDetail() {
 
       {/* ── Shared Footer (same as Homepage) ── */}
       <Footer />
-
-      {/* ── Shared FloatingCart (now with live count) ── */}
-      <FloatingCart count={cartCount} />
     </div>
   );
 }
