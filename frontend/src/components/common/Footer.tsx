@@ -1,8 +1,17 @@
 // src/components/common/Footer.tsx
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/logo.png';
 import { T, SOCIAL_LINKS } from '../../constants/theme';
 
+// ─────────────────────────────────────────────
+//  API base URL — set via environment variable
+//  Dev:  VITE_API_URL=https://expert-eureka-4jx6vjqgqpgwhj754-5000.app.github.dev
+//  Prod: VITE_API_URL=https://api.lukuprime.com   (or whatever your prod URL is)
+// ─────────────────────────────────────────────
+const API_BASE = 'https://expert-eureka-4jx6vjqgqpgwhj754-5000.app.github.dev';
+
+// ── Social icons ──────────────────────────────
 const SOCIAL_ICONS: Record<string, React.ReactNode> = {
   Instagram: (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -24,15 +33,16 @@ const SOCIAL_ICONS: Record<string, React.ReactNode> = {
   ),
 };
 
+// ── Link data ─────────────────────────────────
 const SHOP_LINKS = [
-  { label: 'New Arrivals',       path: '/?category=New' },
-  { label: 'Dresses',            path: '/?category=Dresses' },
-  { label: 'Shoes & Sneakers',   path: '/?category=Shoes' },
-  { label: 'Bags & Purses',      path: '/?category=Bags' },
-  { label: 'Female Wear',        path: '/?category=Female+Wear' },
-  { label: 'Jackets & Hoodies',  path: '/?category=Jackets' },
-  { label: 'Jerseys',            path: '/?category=Jerseys' },
-  { label: 'Socks',              path: '/?category=Socks' },
+  { label: 'New Arrivals',      path: '/?category=New' },
+  { label: 'Dresses',           path: '/?category=Dresses' },
+  { label: 'Shoes & Sneakers',  path: '/?category=Shoes' },
+  { label: 'Bags & Purses',     path: '/?category=Bags' },
+  { label: 'Female Wear',       path: '/?category=Female+Wear' },
+  { label: 'Jackets & Hoodies', path: '/?category=Jackets' },
+  { label: 'Jerseys',           path: '/?category=Jerseys' },
+  { label: 'Socks',             path: '/?category=Socks' },
 ];
 
 const SUPPORT_LINKS = [
@@ -51,9 +61,9 @@ const COMPANY_LINKS = [
 ];
 
 const LEGAL_LINKS = [
-  { label: 'Privacy Policy',    path: '/privacy' },
-  { label: 'Terms & Conditions',path: '/terms' },
-  { label: 'Cookie Policy',     path: '/cookies' },
+  { label: 'Privacy Policy',     path: '/privacy' },
+  { label: 'Terms & Conditions', path: '/terms' },
+  { label: 'Cookie Policy',      path: '/cookies' },
 ];
 
 const TRUST_BADGES = [
@@ -62,89 +72,232 @@ const TRUST_BADGES = [
   '🔒 Secure Checkout',
 ];
 
+// ── Types ─────────────────────────────────────
+type SubscribeStatus = 'idle' | 'loading' | 'success' | 'error';
+
+// ── Component ─────────────────────────────────
 export default function Footer() {
   const navigate = useNavigate();
 
+  const [email, setEmail]     = useState('');
+  const [status, setStatus]   = useState<SubscribeStatus>('idle');
+  const [message, setMessage] = useState('');
+
+  // ── Newsletter handler ───────────────────────
+  const handleSubscribe = async () => {
+    // Auth guard — change 'token' key to match your app's auth storage
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    if (!email || !email.includes('@')) {
+      setStatus('error');
+      setMessage('Please enter a valid email address.');
+      return;
+    }
+
+    setStatus('loading');
+    setMessage('');
+
+    try {
+      const res = await fetch(`${API_BASE}/api/subscribers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setStatus('success');
+        setMessage(data.msg);
+        setEmail('');
+      } else {
+        setStatus('error');
+        setMessage(data.msg ?? 'Something went wrong.');
+      }
+    } catch {
+      setStatus('error');
+      setMessage('Network error. Please try again.');
+    }
+  };
+
+  // ── Derived button label ─────────────────────
+  const btnLabel =
+    status === 'loading' ? '...' :
+    status === 'success' ? '✓ Joined' :
+    'Subscribe';
+
+  const inputBorderColor =
+    status === 'error'   ? 'rgba(220,80,80,0.7)' :
+    status === 'success' ? 'rgba(46,204,113,0.5)' :
+    'rgba(255,255,255,0.12)';
+
+  const btnBg =
+    status === 'success' ? '#2ecc71' : T.gold;
+
+  // ── Render ────────────────────────────────────
   return (
     <footer style={{ background: T.navy, fontFamily: "'Jost','DM Sans',sans-serif" }}>
       <style>{footerCss}</style>
 
       {/* Gold rule */}
-      <div style={{ height: 2, background: `linear-gradient(90deg,transparent,${T.gold} 30%,${T.goldLight} 50%,${T.gold} 70%,transparent)` }}/>
+      <div style={{
+        height: 2,
+        background: `linear-gradient(90deg,transparent,${T.gold} 30%,${T.goldLight} 50%,${T.gold} 70%,transparent)`,
+      }}/>
 
       {/* Main grid */}
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: 'clamp(40px,6vw,60px) clamp(16px,5%,5%) clamp(32px,5vw,48px)' }}>
+      <div style={{
+        maxWidth: 1100,
+        margin: '0 auto',
+        padding: 'clamp(40px,6vw,60px) clamp(16px,5%,5%) clamp(32px,5vw,48px)',
+      }}>
         <div className="ft-grid">
 
-          {/* ── Brand column ── */}
+          {/* ── Brand column ──────────────────── */}
           <div>
-            <img src={logo} alt="Luku Prime" style={{ height: 44, objectFit: 'contain', marginBottom: 8 }}/>
-            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '3px', color: `rgba(200,169,81,0.6)`, textTransform: 'uppercase' as const, marginBottom: 14 }}>
+            <img
+              src={logo}
+              alt="Luku Prime"
+              style={{ height: 44, objectFit: 'contain', marginBottom: 8 }}
+            />
+            <div style={{
+              fontSize: 9, fontWeight: 700, letterSpacing: '3px',
+              color: 'rgba(200,169,81,0.6)', textTransform: 'uppercase',
+              marginBottom: 14,
+            }}>
               Dress the Finest
             </div>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.85, marginBottom: 20, maxWidth: 280 }}>
-              Kenya's premier fashion destination — authentic drops, fast delivery, and style that speaks before you do.
+            <p style={{
+              fontSize: 13, color: 'rgba(255,255,255,0.4)',
+              lineHeight: 1.85, marginBottom: 20, maxWidth: 280,
+            }}>
+              Kenya's premier fashion destination — authentic drops, fast delivery,
+              and style that speaks before you do.
             </p>
 
             {/* Trust badges */}
-            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8, marginBottom: 24 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
               {TRUST_BADGES.map(b => (
-                <span key={b} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(200,169,81,0.1)', border: '1px solid rgba(200,169,81,0.25)', borderRadius: 20, padding: '4px 10px', fontSize: 10, fontWeight: 700, color: T.gold }}>
+                <span key={b} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  background: 'rgba(200,169,81,0.1)',
+                  border: '1px solid rgba(200,169,81,0.25)',
+                  borderRadius: 20, padding: '4px 10px',
+                  fontSize: 10, fontWeight: 700, color: T.gold,
+                }}>
                   {b}
                 </span>
               ))}
             </div>
 
-            {/* Newsletter */}
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'rgba(200,169,81,0.6)', textTransform: 'uppercase' as const, marginBottom: 10 }}>
+            {/* ── Newsletter ─────────────────── */}
+            <div style={{
+              fontSize: 10, fontWeight: 700, letterSpacing: '1.5px',
+              color: 'rgba(200,169,81,0.6)', textTransform: 'uppercase',
+              marginBottom: 10,
+            }}>
               Newsletter
             </div>
             <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginBottom: 10, lineHeight: 1.6 }}>
               New drops, exclusive deals & style inspo — straight to your inbox.
             </p>
+
             <div style={{ display: 'flex' }}>
               <input
                 type="email"
                 placeholder="your@email.com"
+                value={email}
+                disabled={status === 'loading' || status === 'success'}
+                onChange={e => {
+                  setEmail(e.target.value);
+                  if (status !== 'idle') { setStatus('idle'); setMessage(''); }
+                }}
+                onKeyDown={e => e.key === 'Enter' && handleSubscribe()}
                 style={{
-                  flex: 1, background: 'rgba(255,255,255,0.07)',
-                  border: '1px solid rgba(255,255,255,0.12)', borderRight: 'none',
-                  borderRadius: '8px 0 0 8px', padding: '10px 14px',
-                  fontFamily: "'Jost',sans-serif", fontSize: 12, color: '#fff', outline: 'none',
+                  flex: 1,
+                  background: 'rgba(255,255,255,0.07)',
+                  border: `1px solid ${inputBorderColor}`,
+                  borderRight: 'none',
+                  borderRadius: '8px 0 0 8px',
+                  padding: '10px 14px',
+                  fontFamily: "'Jost',sans-serif",
+                  fontSize: 12,
+                  color: '#fff',
+                  outline: 'none',
+                  transition: 'border-color 0.2s',
                 }}
               />
-              <button style={{
-                background: T.gold, border: 'none', borderRadius: '0 8px 8px 0',
-                padding: '10px 16px', fontFamily: "'Jost',sans-serif",
-                fontSize: 11, fontWeight: 700, letterSpacing: '1.5px',
-                color: T.navy, cursor: 'pointer', whiteSpace: 'nowrap' as const,
-              }}>
-                Subscribe
+              <button
+                onClick={handleSubscribe}
+                disabled={status === 'loading' || status === 'success'}
+                style={{
+                  background: btnBg,
+                  border: 'none',
+                  borderRadius: '0 8px 8px 0',
+                  padding: '10px 16px',
+                  fontFamily: "'Jost',sans-serif",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: '1.5px',
+                  color: T.navy,
+                  cursor: (status === 'loading' || status === 'success') ? 'not-allowed' : 'pointer',
+                  whiteSpace: 'nowrap',
+                  opacity: status === 'loading' ? 0.7 : 1,
+                  transition: 'background 0.25s, opacity 0.2s',
+                  minWidth: 88,
+                }}
+              >
+                {btnLabel}
               </button>
             </div>
+
+            {/* Feedback message */}
+            {message && (
+              <p style={{
+                marginTop: 8,
+                fontSize: 11,
+                lineHeight: 1.5,
+                color: status === 'success' ? '#2ecc71' : '#e05555',
+              }}>
+                {message}
+              </p>
+            )}
           </div>
 
-          {/* ── Shop links ── */}
+          {/* ── Shop links ────────────────────── */}
           <div>
             <div className="ft-col-title">Shop</div>
             {SHOP_LINKS.map(l => (
-              <button key={l.label} className="ft-link" onClick={() => navigate(l.path)}>{l.label}</button>
+              <button key={l.label} className="ft-link" onClick={() => navigate(l.path)}>
+                {l.label}
+              </button>
             ))}
           </div>
 
-          {/* ── Support + Company ── */}
+          {/* ── Support + Company ─────────────── */}
           <div>
             <div className="ft-col-title">Customer Care</div>
             {SUPPORT_LINKS.map(l => (
-              <button key={l.label} className="ft-link" onClick={() => navigate(l.path)}>{l.label}</button>
+              <button key={l.label} className="ft-link" onClick={() => navigate(l.path)}>
+                {l.label}
+              </button>
             ))}
             <div className="ft-col-title" style={{ marginTop: 24 }}>Company</div>
             {COMPANY_LINKS.map(l => (
-              <button key={l.label} className="ft-link" onClick={() => navigate(l.path)}>{l.label}</button>
+              <button key={l.label} className="ft-link" onClick={() => navigate(l.path)}>
+                {l.label}
+              </button>
             ))}
           </div>
 
-          {/* ── Social + Contact ── */}
+          {/* ── Social + Contact ──────────────── */}
           <div>
             <div className="ft-col-title">Follow Us</div>
             {SOCIAL_LINKS.map(s => (
@@ -154,23 +307,48 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="ft-social"
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = s.hoverBg; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(200,169,81,0.3)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.background = s.hoverBg;
+                  el.style.borderColor = 'rgba(200,169,81,0.3)';
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.background = 'rgba(255,255,255,0.03)';
+                  el.style.borderColor = 'rgba(255,255,255,0.08)';
+                }}
               >
                 <span style={{ color: s.color, flexShrink: 0, display: 'flex', alignItems: 'center' }}>
                   {SOCIAL_ICONS[s.name]}
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>{s.name}</div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{s.label}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>
+                    {s.name}
+                  </div>
+                  <div style={{
+                    fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 1,
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>
+                    {s.label}
+                  </div>
                 </div>
                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', flexShrink: 0 }}>↗</span>
               </a>
             ))}
 
             {/* Contact card */}
-            <div style={{ marginTop: 20, padding: 14, borderRadius: 10, background: 'rgba(200,169,81,0.07)', border: '1px solid rgba(200,169,81,0.18)' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '2px', color: 'rgba(200,169,81,0.65)', textTransform: 'uppercase' as const, marginBottom: 10 }}>Get in Touch</div>
+            <div style={{
+              marginTop: 20, padding: 14, borderRadius: 10,
+              background: 'rgba(200,169,81,0.07)',
+              border: '1px solid rgba(200,169,81,0.18)',
+            }}>
+              <div style={{
+                fontSize: 9, fontWeight: 700, letterSpacing: '2px',
+                color: 'rgba(200,169,81,0.65)', textTransform: 'uppercase',
+                marginBottom: 10,
+              }}>
+                Get in Touch
+              </div>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.9 }}>
                 📍 Nairobi CBD, Kenya<br/>
                 📞 +254 714 022 882<br/>
@@ -184,20 +362,27 @@ export default function Footer() {
       </div>
 
       {/* Divider */}
-      <div style={{ height: 1, background: 'rgba(200,169,81,0.15)', maxWidth: 1100, margin: '0 auto' }}/>
+      <div style={{
+        height: 1,
+        background: 'rgba(200,169,81,0.15)',
+        maxWidth: 1100,
+        margin: '0 auto',
+      }}/>
 
       {/* Bottom bar */}
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '18px clamp(16px,5%,5%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: 12 }}>
+      <div style={{
+        maxWidth: 1100, margin: '0 auto',
+        padding: '18px clamp(16px,5%,5%)',
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: 12,
+      }}>
         <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.22)' }}>
           © 2025 Luku Prime · All rights reserved · Made by Masiyoi
         </div>
-        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' as const }}>
+        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
           {LEGAL_LINKS.map(l => (
-            <button
-              key={l.label}
-              className="ft-legal"
-              onClick={() => navigate(l.path)}
-            >
+            <button key={l.label} className="ft-legal" onClick={() => navigate(l.path)}>
               {l.label}
             </button>
           ))}
@@ -207,6 +392,7 @@ export default function Footer() {
   );
 }
 
+// ── Styles ────────────────────────────────────
 const footerCss = `
   .ft-grid {
     display: grid;

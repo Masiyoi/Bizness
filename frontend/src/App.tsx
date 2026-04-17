@@ -1,5 +1,5 @@
 // src/App.tsx
-import { HashRouter as Router, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 
@@ -104,11 +104,20 @@ function BuyerRoute({ children }: { children: React.ReactNode }) {
 // ─── FloatingCart wrapper (lives inside Router so it can use hooks) ─────────────
 function FloatingCartManager() {
   const [cartCount, setCartCount] = useState(0);
+  const { pathname } = useLocation();
+
+  // Only show on these exact paths
+  const allowedPaths = ['/', '/wishlist', '/orders'];
+  // Also show on any path starting with these prefixes
+  const allowedPrefixes = ['/categories/', '/product/'];
+
+  const shouldShow =
+    allowedPaths.includes(pathname) ||
+    allowedPrefixes.some(prefix => pathname.startsWith(prefix));
 
   const fetchCount = () => {
     const token = localStorage.getItem('token');
     const user  = getUser();
-    // Don't show for admins or unauthenticated users
     if (!token || user?.role === 'admin') { setCartCount(0); return; }
     axios
       .get('/api/cart', { headers: { Authorization: `Bearer ${token}` } })
@@ -126,6 +135,8 @@ function FloatingCartManager() {
     };
   }, []);
 
+  if (!shouldShow) return null;
+
   return <FloatingCart count={cartCount} />;
 }
 
@@ -135,8 +146,6 @@ export default function App() {
 
   return (
     <Router>
-      {/* FloatingCart is inside Router (needs useNavigate) but outside all Routes
-          so it is never unmounted during navigation and has no parent overflow clipping */}
       <ScrollToTop /> 
       <FloatingCartManager />
 
@@ -155,7 +164,8 @@ export default function App() {
         <Route path="/categories/designer-wear" element={<DesignerWear />} />
         <Route path="/categories/shoes"         element={<Shoes />} />
         <Route path="/categories/heels"         element={<Heels />} />
-          {/* ── Support (public) ─────────────────────────────────────────────────── */}
+
+        {/* ── Support (public) ─────────────────────────────────────────────────── */}
         <Route path="/track-order"  element={<TrackOrder />} />
         <Route path="/returns"      element={<Returns />} />
         <Route path="/delivery"     element={<Delivery />} />
@@ -163,15 +173,15 @@ export default function App() {
         <Route path="/faqs"         element={<FAQs />} />
         <Route path="/contact"      element={<Contact />} />
  
-  {/* ── Company (public) ─────────────────────────────────────────────────── */}
-       <Route path="/about"    element={<About />} />
-       <Route path="/careers"  element={<Careers />} />
-       <Route path="/press"    element={<Press />} />
+        {/* ── Company (public) ─────────────────────────────────────────────────── */}
+        <Route path="/about"    element={<About />} />
+        <Route path="/careers"  element={<Careers />} />
+        <Route path="/press"    element={<Press />} />
  
-  {/* ── Legal (public) ───────────────────────────────────────────────────── */}
-       <Route path="/privacy"  element={<Privacy />} />
-      <Route path="/terms"    element={<Terms />} />
-      <Route path="/cookies"  element={<Cookies />} />
+        {/* ── Legal (public) ───────────────────────────────────────────────────── */}
+        <Route path="/privacy"  element={<Privacy />} />
+        <Route path="/terms"    element={<Terms />} />
+        <Route path="/cookies"  element={<Cookies />} />
 
         {/* ── Auth (guests only) ──────────────────────────────────────────────── */}
         <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
