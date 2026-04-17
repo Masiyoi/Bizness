@@ -17,7 +17,7 @@ import ReviewSection   from '../components/home/ReviewSection';
 import Ornament        from '../components/ui/Ornament';
 import VideoCarousel, { VIDEO_TILES } from '../components/home/VideoCarousel';
 
-import { T, readUser } from '../constants/theme';
+import { readUser } from '../constants/theme';
 import type { Product, HomepageReview, User } from '../constants/theme';
 
 const authHeader = () => ({
