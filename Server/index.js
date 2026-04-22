@@ -2,6 +2,7 @@ const express = require('express');
 const cors    = require('cors');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
+const helmet = require('helmet');
 
 const productRoutes  = require('./routes/productRoutes');
 const authRoutes     = require('./routes/authRoutes');
@@ -19,6 +20,11 @@ const app = express();
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(helmet({
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }, // ← fixes Google popup
+}));
+app.use(express.json({ limit: '10kb' })); // prevent oversized payload attacks
+app.set('trust proxy', 1);
 
 // ── Routes ─────────────────────────────────────────────────────────────────────
 app.use('/api/products', productRoutes);
