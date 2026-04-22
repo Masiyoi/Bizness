@@ -30,14 +30,14 @@ interface Cat {
 
 const CATS: Cat[] = [
   {
-    label: 'New Arrivals', desc: 'Fresh drops, just landed', count: 32,
+    label: 'New Arrivals', desc: 'Fresh drops, just landed',
     badge: 'New In', badgeStyle: 'red',
     imgUrl: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=900&q=80&fit=crop',
     colClass: 'md:[grid-column:3/5]', rowClass: 'md:[grid-row:1]',
     mobileCol: 'col-span-2', mobileH: 'h-[44vw]',
   },
   {
-   label: 'Dresses', desc: 'Day wear & evening gowns', count: 48,
+   label: 'Dresses', desc: 'Day wear & evening gowns',
     imgUrl: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=900&q=80&fit=crop',
     colClass: 'md:[grid-column:1/3]', rowClass: 'md:[grid-row:1]',
     mobileCol: 'col-span-2', mobileH: 'h-[52vw]',

@@ -14,6 +14,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import Orders         from './pages/Orders';
 import Wishlist       from './pages/Wishlist';
 import Reviews        from './pages/Reviews';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from  './pages/ResetPassword';
 
 // ── Category Pages ─────────────────────────────────────────────────────────────
 import Dresses      from './pages/categories/Dresses';
@@ -186,6 +188,8 @@ export default function App() {
         {/* ── Auth (guests only) ──────────────────────────────────────────────── */}
         <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
         <Route path="/login"    element={<GuestRoute><Login /></GuestRoute>} />
+        <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
+        <Route path="/reset-password/:token" element={<GuestRoute><ResetPassword /></GuestRoute>} />
 
         {/* ── Buyer only ──────────────────────────────────────────────────────── */}
         <Route path="/cart"     element={<BuyerRoute><Cart /></BuyerRoute>} />

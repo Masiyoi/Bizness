@@ -2,7 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
-declare global { interface Window { google: any; } }
+declare global {
+  interface Window {
+    google: any;
+    grecaptcha: any;
+  }
+}
 
 const redirectByRole = (user: any, navigate: (p: string) => void) =>
   navigate(user?.role === 'admin' ? '/admin' : '/');
@@ -10,6 +15,18 @@ const redirectByRole = (user: any, navigate: (p: string) => void) =>
 const T = {
   navy:'#0D1B3E', navyMid:'#152348', navyLight:'#1E2F5A',
   gold:'#C8A951', goldLight:'#DEC06A',
+};
+
+const getRecaptchaToken = (action: string): Promise<string> => {
+  return new Promise((resolve) => {
+    window.grecaptcha.ready(async () => {
+      const token = await window.grecaptcha.execute(
+        import.meta.env.VITE_RECAPTCHA_SITE_KEY,
+        { action }
+      );
+      resolve(token);
+    });
+  });
 };
 
 export default function Login() {
@@ -26,6 +43,8 @@ export default function Login() {
   const [unverified,    setUnverified]    = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendMsg,     setResendMsg]     = useState("");
+  const [locked,        setLocked]        = useState(false);
+  const [lockedUntil,   setLockedUntil]   = useState<Date | null>(null);
 
   useEffect(() => {
     if (location.search.includes("verified=true"))
@@ -57,15 +76,20 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { setError("Please enter your email and password."); return; }
-    setLoading(true); setError(""); setUnverified(false);
+    setLoading(true); setError(""); setUnverified(false); setLocked(false);
     try {
-      const res = await axios.post("/api/auth/login", { email, password });
+      const recaptchaToken = await getRecaptchaToken('login');
+      const res = await axios.post("/api/auth/login", { email, password, recaptchaToken });
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       redirectByRole(res.data.user, navigate);
     } catch (err: any) {
       setError(err.response?.data?.msg || "Login failed.");
       if (err.response?.data?.unverified) setUnverified(true);
+      if (err.response?.status === 423) {
+        setLocked(true);
+        setLockedUntil(new Date(err.response.data.lockedUntil));
+      }
     } finally { setLoading(false); }
   };
 
@@ -130,7 +154,13 @@ export default function Login() {
 
           {verifiedMsg && <div style={s.successBox}>{verifiedMsg}</div>}
 
-          {error && (
+          {locked && lockedUntil && (
+            <div style={s.lockedBox}>
+              🔒 Account locked until {lockedUntil.toLocaleTimeString('en-KE')}. Too many failed attempts.
+            </div>
+          )}
+
+          {error && !locked && (
             <div style={s.errorBox}>
               {error}
               {unverified && (
@@ -156,8 +186,15 @@ export default function Login() {
           <form onSubmit={handleSubmit} noValidate style={{ display:"flex", flexDirection:"column", gap:16 }}>
             <div>
               <label style={s.label}>Email Address</label>
-              <input type="email" placeholder="your@email.com" value={email}
-                onChange={e => setEmail(e.target.value)} autoComplete="email" className="lp-inp"/>
+              <input
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                autoComplete="email"
+                maxLength={254}
+                className="lp-inp"
+              />
             </div>
             <div>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
@@ -167,16 +204,23 @@ export default function Login() {
                 </span>
               </div>
               <div style={{ position:"relative" }}>
-                <input type={showPassword?"text":"password"} placeholder="Your password"
-                  value={password} onChange={e => setPassword(e.target.value)}
-                  autoComplete="current-password" className="lp-inp" style={{ paddingRight:48 }}/>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Your password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  maxLength={128}
+                  className="lp-inp"
+                  style={{ paddingRight:48 }}
+                />
                 <button type="button" className="lp-eye" onClick={() => setShowPassword(x => !x)}>
                   {showPassword ? "🙈" : "👁️"}
                 </button>
               </div>
             </div>
-            <button type="submit" disabled={loading} className="lp-submit">
-              {loading ? "Signing in…" : "Sign In →"}
+            <button type="submit" disabled={loading || locked} className="lp-submit">
+              {loading ? "Signing in…" : locked ? "Account Locked" : "Sign In →"}
             </button>
           </form>
 
@@ -221,24 +265,25 @@ const css = `
   }
 `;
 
-const s: Record<string,React.CSSProperties> = {
-  page:{ minHeight:"100vh", display:"flex", fontFamily:"'Jost',sans-serif", background:T.navy, overflow:"hidden" },
-  orb1:{ position:"fixed", width:500, height:500, borderRadius:"50%", background:"radial-gradient(circle,rgba(200,169,81,0.07) 0%,transparent 70%)", top:-120, left:-120, pointerEvents:"none" },
-  orb2:{ position:"fixed", width:400, height:400, borderRadius:"50%", background:"radial-gradient(circle,rgba(200,169,81,0.04) 0%,transparent 70%)", bottom:-100, right:-100, pointerEvents:"none" },
-  logoMark:{ width:80, height:80, borderRadius:16, marginBottom:36, background:`linear-gradient(135deg,${T.gold},${T.goldLight})`, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 8px 28px rgba(200,169,81,0.3)", position:"relative", zIndex:1 },
-  right:{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"clamp(20px,4vw,40px) clamp(16px,4vw,24px)", background:`linear-gradient(135deg,${T.navy} 0%,#091325 100%)`, position:"relative", overflow:"hidden" },
-  ring1:{ position:"absolute", bottom:-140, right:-140, width:420, height:420, borderRadius:"50%", border:"1px solid rgba(200,169,81,0.06)", pointerEvents:"none" },
-  ring2:{ position:"absolute", bottom:-100, right:-100, width:300, height:300, borderRadius:"50%", border:"1px solid rgba(200,169,81,0.04)", pointerEvents:"none" },
-  card:{ width:"100%", maxWidth:430, background:"rgba(255,255,255,0.03)", border:"1px solid rgba(200,169,81,0.15)", borderRadius:20, padding:"clamp(24px,5vw,44px) clamp(18px,5vw,40px)", backdropFilter:"blur(8px)", position:"relative", zIndex:1 },
-  tag:{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:"3px", color:T.gold, textTransform:"uppercase" as const, marginBottom:10 },
-  heading:{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:"clamp(20px,4vw,26px)" as any, color:"#fff", marginBottom:6 },
-  sub:{ fontFamily:"'Jost',sans-serif", fontSize:13, color:"rgba(255,255,255,0.35)" },
-  label:{ display:"block", fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:"2px", color:`rgba(200,169,81,0.75)`, textTransform:"uppercase" as const, marginBottom:8 },
-  successBox:{ background:"rgba(90,138,90,0.12)", border:"1px solid rgba(90,138,90,0.3)", borderRadius:8, padding:"12px 16px", color:"#86efac", fontFamily:"'Jost',sans-serif", fontSize:13, marginBottom:20 },
-  errorBox:{ background:"rgba(192,57,43,0.1)", border:"1px solid rgba(192,57,43,0.3)", borderRadius:8, padding:"12px 16px", color:"#fca5a5", fontFamily:"'Jost',sans-serif", fontSize:13, marginBottom:20 },
-  resendBtn:{ background:"transparent", border:"1px solid rgba(192,57,43,0.4)", borderRadius:6, padding:"6px 14px", color:"#fca5a5", fontSize:12, cursor:"pointer", fontFamily:"'Jost',sans-serif" },
-  gLoad:{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(200,169,81,0.2)", borderRadius:8, padding:"12px", color:"rgba(255,255,255,0.28)", fontFamily:"'Jost',sans-serif", fontSize:13, textAlign:"center" as const },
-  divider:{ display:"flex", alignItems:"center", gap:12, marginBottom:22 },
-  divLine:{ flex:1, height:1, background:"linear-gradient(90deg,transparent,rgba(200,169,81,0.2),transparent)", display:"block" },
-  divText:{ fontFamily:"'Jost',sans-serif", fontSize:10, color:"rgba(255,255,255,0.22)", letterSpacing:"1.5px", textTransform:"uppercase" as const, whiteSpace:"nowrap" as const },
+const s: Record<string, React.CSSProperties> = {
+  page:       { minHeight:"100vh", display:"flex", fontFamily:"'Jost',sans-serif", background:T.navy, overflow:"hidden" },
+  orb1:       { position:"fixed", width:500, height:500, borderRadius:"50%", background:"radial-gradient(circle,rgba(200,169,81,0.07) 0%,transparent 70%)", top:-120, left:-120, pointerEvents:"none" },
+  orb2:       { position:"fixed", width:400, height:400, borderRadius:"50%", background:"radial-gradient(circle,rgba(200,169,81,0.04) 0%,transparent 70%)", bottom:-100, right:-100, pointerEvents:"none" },
+  logoMark:   { width:80, height:80, borderRadius:16, marginBottom:36, background:`linear-gradient(135deg,${T.gold},${T.goldLight})`, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 8px 28px rgba(200,169,81,0.3)", position:"relative", zIndex:1 },
+  right:      { flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"clamp(20px,4vw,40px) clamp(16px,4vw,24px)", background:`linear-gradient(135deg,${T.navy} 0%,#091325 100%)`, position:"relative", overflow:"hidden" },
+  ring1:      { position:"absolute", bottom:-140, right:-140, width:420, height:420, borderRadius:"50%", border:"1px solid rgba(200,169,81,0.06)", pointerEvents:"none" },
+  ring2:      { position:"absolute", bottom:-100, right:-100, width:300, height:300, borderRadius:"50%", border:"1px solid rgba(200,169,81,0.04)", pointerEvents:"none" },
+  card:       { width:"100%", maxWidth:430, background:"rgba(255,255,255,0.03)", border:"1px solid rgba(200,169,81,0.15)", borderRadius:20, padding:"clamp(24px,5vw,44px) clamp(18px,5vw,40px)", backdropFilter:"blur(8px)", position:"relative", zIndex:1 },
+  tag:        { fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:"3px", color:T.gold, textTransform:"uppercase" as const, marginBottom:10 },
+  heading:    { fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:"clamp(20px,4vw,26px)" as any, color:"#fff", marginBottom:6 },
+  sub:        { fontFamily:"'Jost',sans-serif", fontSize:13, color:"rgba(255,255,255,0.35)" },
+  label:      { display:"block", fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:"2px", color:`rgba(200,169,81,0.75)`, textTransform:"uppercase" as const, marginBottom:8 },
+  successBox: { background:"rgba(90,138,90,0.12)", border:"1px solid rgba(90,138,90,0.3)", borderRadius:8, padding:"12px 16px", color:"#86efac", fontFamily:"'Jost',sans-serif", fontSize:13, marginBottom:20 },
+  errorBox:   { background:"rgba(192,57,43,0.1)", border:"1px solid rgba(192,57,43,0.3)", borderRadius:8, padding:"12px 16px", color:"#fca5a5", fontFamily:"'Jost',sans-serif", fontSize:13, marginBottom:20 },
+  lockedBox:  { background:"rgba(192,57,43,0.12)", border:"1px solid rgba(192,57,43,0.4)", borderRadius:8, padding:"12px 16px", color:"#fca5a5", fontFamily:"'Jost',sans-serif", fontSize:13, marginBottom:20, fontWeight:600 },
+  resendBtn:  { background:"transparent", border:"1px solid rgba(192,57,43,0.4)", borderRadius:6, padding:"6px 14px", color:"#fca5a5", fontSize:12, cursor:"pointer", fontFamily:"'Jost',sans-serif" },
+  gLoad:      { background:"rgba(255,255,255,0.04)", border:"1px solid rgba(200,169,81,0.2)", borderRadius:8, padding:"12px", color:"rgba(255,255,255,0.28)", fontFamily:"'Jost',sans-serif", fontSize:13, textAlign:"center" as const },
+  divider:    { display:"flex", alignItems:"center", gap:12, marginBottom:22 },
+  divLine:    { flex:1, height:1, background:"linear-gradient(90deg,transparent,rgba(200,169,81,0.2),transparent)", display:"block" },
+  divText:    { fontFamily:"'Jost',sans-serif", fontSize:10, color:"rgba(255,255,255,0.22)", letterSpacing:"1.5px", textTransform:"uppercase" as const, whiteSpace:"nowrap" as const },
 };

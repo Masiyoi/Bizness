@@ -17,8 +17,10 @@ import ReviewSection   from '../components/home/ReviewSection';
 import Ornament        from '../components/ui/Ornament';
 import VideoCarousel, { VIDEO_TILES } from '../components/home/VideoCarousel';
 
-import { readUser } from '../constants/theme';
+import { readUser, T } from '../constants/theme';
 import type { Product, HomepageReview, User } from '../constants/theme';
+
+const PRODUCTS_PER_PAGE = 8;
 
 const authHeader = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -36,6 +38,9 @@ export default function Homepage() {
   const [productsLoading, setProductsLoading] = useState(true);
   const [activeCategory,  setActiveCategory]  = useState('All');
   const [search,          setSearch]          = useState(searchParams.get('search') ?? '');
+
+  // ── Pagination ──────────────────────────────────────────────────
+  const [currentPage, setCurrentPage] = useState(1);
 
   // ── Cart & wishlist ─────────────────────────────────────────────
   const [cartIds,    setCartIds]    = useState<number[]>([]);
@@ -140,6 +145,33 @@ export default function Homepage() {
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  // ── Reset to page 1 when filter/search changes ────────────────
+  useEffect(() => { setCurrentPage(1); }, [activeCategory, search]);
+
+  // ── Pagination math ───────────────────────────────────────────
+  const totalPages   = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
+  const pageStart    = (currentPage - 1) * PRODUCTS_PER_PAGE;
+  const paginated    = filtered.slice(pageStart, pageStart + PRODUCTS_PER_PAGE);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    // Scroll back up to the product grid smoothly
+    document.getElementById('product-grid-top')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  // Build page number list with ellipsis e.g. [1, '...', 4, 5, 6, '...', 12]
+  const getPageNumbers = (): (number | '...')[] => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages: (number | '...')[] = [1];
+    if (currentPage > 3) pages.push('...');
+    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+      pages.push(i);
+    }
+    if (currentPage < totalPages - 2) pages.push('...');
+    pages.push(totalPages);
+    return pages;
+  };
+
   return (
     <div className="font-serif bg-cream min-h-screen text-navy overflow-x-hidden">
 
@@ -161,6 +193,10 @@ export default function Homepage() {
 
       {/* ── Products grid ── */}
       <div className="px-[5%] pb-[clamp(40px,6vw,80px)]">
+
+        {/* Scroll anchor — sits above the header so the heading is visible after page change */}
+        <div id="product-grid-top" style={{ scrollMarginTop: 80 }} />
+
         <div className="flex justify-between items-end mb-5 gap-3 flex-wrap">
           <div>
             <Ornament label={activeCategory === 'All' ? 'Curated for You' : activeCategory} />
@@ -169,7 +205,12 @@ export default function Homepage() {
             </h2>
           </div>
           <div className="flex items-center gap-2.5">
-            <span className="font-sans text-[11px] text-muted">{filtered.length} items</span>
+            <span className="font-sans text-[11px] text-muted">
+              {filtered.length > 0
+                ? `${pageStart + 1}–${Math.min(pageStart + PRODUCTS_PER_PAGE, filtered.length)} of ${filtered.length} items`
+                : '0 items'
+              }
+            </span>
             <select className="font-sans border border-cream-deep rounded-md px-3 py-1.5 text-[11px] text-navy bg-white cursor-pointer outline-none">
               <option>Featured</option>
               <option>Price: Low → High</option>
@@ -211,21 +252,151 @@ export default function Homepage() {
           </div>
         )}
 
-        {/* Product grid */}
+        {/* Product grid — paginated slice */}
         {!productsLoading && filtered.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-            {filtered.map(product => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                inCart={cartIds.includes(product.id)}
-                inWishlist={wishlist.includes(product.id)}
-                isAdmin={user?.role === 'admin'}
-                onCartToggle={toggleCart}
-                onWishlistToggle={toggleWishlist}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+              {paginated.map(product => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  inCart={cartIds.includes(product.id)}
+                  inWishlist={wishlist.includes(product.id)}
+                  isAdmin={user?.role === 'admin'}
+                  onCartToggle={toggleCart}
+                  onWishlistToggle={toggleWishlist}
+                />
+              ))}
+            </div>
+
+            {/* ── Pagination controls ── */}
+            {totalPages > 1 && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                marginTop: 40,
+                flexWrap: 'wrap',
+              }}>
+
+                {/* Prev */}
+                <button
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    padding: '8px 16px',
+                    fontFamily: 'sans-serif', fontSize: 11, fontWeight: 700,
+                    letterSpacing: '1px', textTransform: 'uppercase',
+                    border: `1.5px solid ${currentPage === 1 ? '#DDD' : T.navy}`,
+                    borderRadius: 6,
+                    background: 'transparent',
+                    color: currentPage === 1 ? '#CCC' : T.navy,
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    transition: 'background 0.2s, color 0.2s',
+                  }}
+                  onMouseEnter={e => {
+                    if (currentPage !== 1) {
+                      e.currentTarget.style.background = T.navy;
+                      e.currentTarget.style.color = '#fff';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = currentPage === 1 ? '#CCC' : T.navy;
+                  }}
+                >
+                  ← Prev
+                </button>
+
+                {/* Page number pills */}
+                {getPageNumbers().map((page, idx) =>
+                  page === '...'
+                    ? (
+                      <span key={`ellipsis-${idx}`} style={{
+                        fontFamily: 'sans-serif', fontSize: 12,
+                        color: '#AAA', padding: '0 4px', userSelect: 'none',
+                      }}>
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={page}
+                        onClick={() => goToPage(page as number)}
+                        style={{
+                          width: 36, height: 36,
+                          borderRadius: 6,
+                          border: page === currentPage ? 'none' : `1.5px solid #DDD`,
+                          background: page === currentPage ? T.gold : 'transparent',
+                          color: page === currentPage ? T.navy : '#777',
+                          fontFamily: 'sans-serif',
+                          fontSize: 12, fontWeight: page === currentPage ? 700 : 500,
+                          cursor: 'pointer',
+                          transition: 'background 0.18s, color 0.18s, border 0.18s',
+                        }}
+                        onMouseEnter={e => {
+                          if (page !== currentPage) {
+                            e.currentTarget.style.background = '#F5EDD5';
+                            e.currentTarget.style.color = T.navy;
+                          }
+                        }}
+                        onMouseLeave={e => {
+                          if (page !== currentPage) {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.color = '#777';
+                          }
+                        }}
+                      >
+                        {page}
+                      </button>
+                    )
+                )}
+
+                {/* Next */}
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    padding: '8px 16px',
+                    fontFamily: 'sans-serif', fontSize: 11, fontWeight: 700,
+                    letterSpacing: '1px', textTransform: 'uppercase',
+                    border: `1.5px solid ${currentPage === totalPages ? '#DDD' : T.navy}`,
+                    borderRadius: 6,
+                    background: 'transparent',
+                    color: currentPage === totalPages ? '#CCC' : T.navy,
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    transition: 'background 0.2s, color 0.2s',
+                  }}
+                  onMouseEnter={e => {
+                    if (currentPage !== totalPages) {
+                      e.currentTarget.style.background = T.navy;
+                      e.currentTarget.style.color = '#fff';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = currentPage === totalPages ? '#CCC' : T.navy;
+                  }}
+                >
+                  Next →
+                </button>
+
+              </div>
+            )}
+
+            {/* Page indicator text */}
+            {totalPages > 1 && (
+              <p style={{
+                textAlign: 'center', marginTop: 12,
+                fontFamily: 'sans-serif', fontSize: 11,
+                color: '#AAA', letterSpacing: '0.5px',
+              }}>
+                Page {currentPage} of {totalPages}
+              </p>
+            )}
+          </>
         )}
       </div>
 
