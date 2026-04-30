@@ -73,6 +73,21 @@ export default function Login() {
     return () => clearTimeout(t);
   }, [handleGoogleResponse]);
 
+  // Add this useEffect to Login.tsx and Register.tsx only
+useEffect(() => {
+  const script = document.createElement('script');
+  script.src = 'https://www.google.com/recaptcha/api.js?render=6LdlHMQsAAAAAJ5Ft84oddhVF0cUKkU7u65Xlb2o';
+  script.async = true;
+  document.body.appendChild(script);
+
+  // Cleanup — remove script and badge when leaving the page
+  return () => {
+    document.body.removeChild(script);
+    const badge = document.querySelector('.grecaptcha-badge');
+    if (badge) badge.remove();
+  };
+}, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { setError("Please enter your email and password."); return; }

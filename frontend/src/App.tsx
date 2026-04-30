@@ -10,12 +10,14 @@ import Login          from './pages/Login';
 import Cart           from './pages/Cart';
 import Checkout       from './pages/Checkout';
 import ProductDetail  from './pages/ProductDetail';
-import AdminDashboard from './pages/AdminDashboard';
 import Orders         from './pages/Orders';
 import Wishlist       from './pages/Wishlist';
 import Reviews        from './pages/Reviews';
 import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from  './pages/ResetPassword';
+import ResetPassword  from './pages/ResetPassword';
+
+// ── Admin (index.ts re-exports AdminDashboard) ─────────────────────────────────
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 // ── Category Pages ─────────────────────────────────────────────────────────────
 import Dresses      from './pages/categories/Dresses';
@@ -29,25 +31,25 @@ import Heels        from './pages/categories/Heels';
 
 // ── Components ─────────────────────────────────────────────────────────────────
 import FloatingCart from './components/common/FloatingCart';
-import ScrollToTop from './components/common/ScrollToTop';
+import ScrollToTop  from './components/common/ScrollToTop';
 
-// Support pages
-import TrackOrder  from './pages/support/TrackOrder';
-import Returns     from './pages/support/Returns';
-import Delivery    from './pages/support/Delivery';
-import SizeGuide   from './pages/support/SizeGuide';
-import FAQs        from './pages/support/FAQs';
-import Contact     from './pages/support/Contact';
- 
-// Company pages
-import About       from './pages/company/About';
-import Careers     from './pages/company/Careers';
-import Press       from './pages/company/Press';
- 
-// Legal pages
-import Privacy     from './pages/legal/Privacy';
-import Terms       from './pages/legal/Terms';
-import Cookies     from './pages/legal/Cookies';
+// ── Support Pages ──────────────────────────────────────────────────────────────
+import TrackOrder from './pages/support/TrackOrder';
+import Returns    from './pages/support/Returns';
+import Delivery   from './pages/support/Delivery';
+import SizeGuide  from './pages/support/SizeGuide';
+import FAQs       from './pages/support/FAQs';
+import Contact    from './pages/support/Contact';
+
+// ── Company Pages ──────────────────────────────────────────────────────────────
+import About   from './pages/company/About';
+import Careers from './pages/company/Careers';
+import Press   from './pages/company/Press';
+
+// ── Legal Pages ────────────────────────────────────────────────────────────────
+import Privacy from './pages/legal/Privacy';
+import Terms   from './pages/legal/Terms';
+import Cookies from './pages/legal/Cookies';
 
 // ─── Auth helpers ──────────────────────────────────────────────────────────────
 const isAuthenticated = () => !!localStorage.getItem('token');
@@ -91,7 +93,7 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const user = getUser();
   if (!isAuthenticated()) return <Navigate to="/login" replace />;
-  if (user?.role !== 'admin') return <Navigate to="/admin" replace />;
+  if (user?.role !== 'admin') return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -148,7 +150,7 @@ export default function App() {
 
   return (
     <Router>
-      <ScrollToTop /> 
+      <ScrollToTop />
       <FloatingCartManager />
 
       <Routes>
@@ -168,27 +170,27 @@ export default function App() {
         <Route path="/categories/heels"         element={<Heels />} />
 
         {/* ── Support (public) ─────────────────────────────────────────────────── */}
-        <Route path="/track-order"  element={<TrackOrder />} />
-        <Route path="/returns"      element={<Returns />} />
-        <Route path="/delivery"     element={<Delivery />} />
-        <Route path="/size-guide"   element={<SizeGuide />} />
-        <Route path="/faqs"         element={<FAQs />} />
-        <Route path="/contact"      element={<Contact />} />
- 
+        <Route path="/track-order" element={<TrackOrder />} />
+        <Route path="/returns"     element={<Returns />} />
+        <Route path="/delivery"    element={<Delivery />} />
+        <Route path="/size-guide"  element={<SizeGuide />} />
+        <Route path="/faqs"        element={<FAQs />} />
+        <Route path="/contact"     element={<Contact />} />
+
         {/* ── Company (public) ─────────────────────────────────────────────────── */}
-        <Route path="/about"    element={<About />} />
-        <Route path="/careers"  element={<Careers />} />
-        <Route path="/press"    element={<Press />} />
- 
+        <Route path="/about"   element={<About />} />
+        <Route path="/careers" element={<Careers />} />
+        <Route path="/press"   element={<Press />} />
+
         {/* ── Legal (public) ───────────────────────────────────────────────────── */}
-        <Route path="/privacy"  element={<Privacy />} />
-        <Route path="/terms"    element={<Terms />} />
-        <Route path="/cookies"  element={<Cookies />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms"   element={<Terms />} />
+        <Route path="/cookies" element={<Cookies />} />
 
         {/* ── Auth (guests only) ──────────────────────────────────────────────── */}
-        <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
-        <Route path="/login"    element={<GuestRoute><Login /></GuestRoute>} />
-        <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
+        <Route path="/register"              element={<GuestRoute><Register /></GuestRoute>} />
+        <Route path="/login"                 element={<GuestRoute><Login /></GuestRoute>} />
+        <Route path="/forgot-password"       element={<GuestRoute><ForgotPassword /></GuestRoute>} />
         <Route path="/reset-password/:token" element={<GuestRoute><ResetPassword /></GuestRoute>} />
 
         {/* ── Buyer only ──────────────────────────────────────────────────────── */}
@@ -202,7 +204,28 @@ export default function App() {
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
         {/* ── Admin only ──────────────────────────────────────────────────────── */}
-        <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        {/*
+          AdminDashboard handles its own tab routing internally (Overview, Orders, Products).
+          We register nested routes here so tabs are deep-linkable via URL, and the
+          parent component reads the active tab from the URL (e.g. /admin/orders).
+          All sub-routes render AdminDashboard — it reads the path to set the active tab.
+        */}
+        <Route
+          path="/admin"
+          element={<AdminRoute><AdminDashboard /></AdminRoute>}
+        />
+        <Route
+          path="/admin/overview"
+          element={<AdminRoute><AdminDashboard /></AdminRoute>}
+        />
+        <Route
+          path="/admin/orders"
+          element={<AdminRoute><AdminDashboard /></AdminRoute>}
+        />
+        <Route
+          path="/admin/products"
+          element={<AdminRoute><AdminDashboard /></AdminRoute>}
+        />
 
         {/* ── 404 ─────────────────────────────────────────────────────────────── */}
         <Route path="*" element={<NotFound />} />

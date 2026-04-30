@@ -374,3 +374,77 @@ exports.getStats = async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 };
+// server/controllers/adminController.js  — ADD these two exports to your existing file
+
+// ── GET /api/admin/customers ──────────────────────────────────────────────────
+exports.getCustomers = async (req, res) => {
+  try {
+    const usersResult = await db.query(`
+      SELECT
+        id,
+        full_name  AS name,
+        email,
+        role,
+        is_verified,
+        profile_picture,
+        created_at
+      FROM users
+      WHERE role != 'admin'
+      ORDER BY created_at DESC
+    `);
+
+    const users = usersResult.rows;
+    if (!users.length) return res.json([]);
+
+    const userIds = users.map(u => u.id);
+
+    const ordersResult = await db.query(`
+      SELECT id, user_id, total, status, created_at
+      FROM orders
+      WHERE user_id = ANY($1::int[])
+      ORDER BY created_at DESC
+    `, [userIds]);
+
+    // Group orders by user_id
+    const ordersByUser = {};
+    for (const o of ordersResult.rows) {
+      if (!ordersByUser[o.user_id]) ordersByUser[o.user_id] = [];
+      ordersByUser[o.user_id].push(o);
+    }
+
+    const customers = users.map(u => {
+      const orders = ordersByUser[u.id] || [];
+      const total_spent = orders
+        .filter(o => o.status !== 'cancelled')
+        .reduce((sum, o) => sum + parseFloat(o.total || 0), 0);
+      return { ...u, orders, total_spent };
+    });
+
+    res.json(customers);
+  } catch (err) {
+    console.error('getCustomers error:', err.message);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// ── PATCH /api/admin/customers/:id/verify ────────────────────────────────────
+// Manually marks a user as verified (bypasses the email link flow)
+exports.verifyCustomer = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await db.query(
+      `UPDATE users
+       SET is_verified             = TRUE,
+           verification_token      = NULL,
+           verification_token_expiry = NULL
+       WHERE id = $1 AND role != 'admin'
+       RETURNING id, full_name, email, is_verified`,
+      [id]
+    );
+    if (!result.rows.length) return res.status(404).json({ msg: 'User not found' });
+    res.json({ success: true, user: result.rows[0] });
+  } catch (err) {
+    console.error('verifyCustomer error:', err.message);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
