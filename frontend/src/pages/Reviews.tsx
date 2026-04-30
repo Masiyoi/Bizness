@@ -161,16 +161,13 @@ export default function ReviewPage() {
 
   useEffect(() => { if (!user) navigate('/login'); }, []);
 
-  const token   = localStorage.getItem('token');
-  const headers = { Authorization: `Bearer ${token}` };
 
-  const fetchAll = useCallback(async () => {
-    if (!token) return;
-    try {
-      const [r1, r2] = await Promise.all([
-        axios.get('/api/reviews/my',          { headers }),
-        axios.get('/api/reviews/purchasable', { headers }),
-      ]);
+ const fetchAll = useCallback(async () => {
+  try {
+    const [r1, r2] = await Promise.all([
+      axios.get('/api/reviews/my'),
+      axios.get('/api/reviews/purchasable'),
+    ]);
       setReviews(Array.isArray(r1.data) ? r1.data : []);
       setPurchasable(Array.isArray(r2.data) ? r2.data : []);
     } catch (err) {
@@ -178,7 +175,7 @@ export default function ReviewPage() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -189,13 +186,13 @@ export default function ReviewPage() {
 
   const handleSave = async (productId: number, rating: number, comment: string, existingId?: number) => {
     if (existingId) {
-      const { data } = await axios.patch(`/api/reviews/${existingId}`, { rating, comment }, { headers });
+      const { data } = await axios.patch(`/api/reviews/${existingId}`, { rating, comment });
       setReviews(prev => prev.map(r =>
         r.id === existingId ? { ...r, rating: data.rating, comment: data.comment, updated_at: data.updated_at } : r
       ));
       showToast('✓ Review updated');
     } else {
-      await axios.post('/api/reviews', { product_id: productId, rating, comment }, { headers });
+      await axios.post('/api/reviews', { product_id: productId, rating, comment });
       await fetchAll();
       showToast('✓ Review submitted — thank you!');
     }
@@ -203,7 +200,7 @@ export default function ReviewPage() {
 
   const handleDelete = async (id: number) => {
     try {
-      await axios.delete(`/api/reviews/${id}`, { headers });
+      await axios.delete(`/api/reviews/${id}`);
       setReviews(prev => prev.filter(r => r.id !== id));
       await fetchAll();
       showToast('Review deleted');

@@ -10,9 +10,6 @@ import Ornament    from '../../components/ui/Ornament';
 import { readUser } from '../../constants/theme';
 import type { Product, User } from '../../constants/theme';
 
-const authHeader = () => ({
-  headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-});
 
 interface CategoryPageProps {
   categoryName: string;
@@ -59,12 +56,11 @@ export default function CategoryPage({
   }, [categoryName, apiEndpoint]);
 
   // ── Fetch cart ─────────────────────────────────────────────────
-  const fetchCart = useCallback(() => {
-    const token = localStorage.getItem('token');
-    if (!token || !user || user.role === 'admin') {
-      setCartIds([]); setCartCount(0); return;
-    }
-    axios.get('/api/cart', authHeader())
+const fetchCart = useCallback(() => {
+  if (!user || user.role === 'admin') {
+    setCartIds([]); setCartCount(0); return;
+  }
+  axios.get('/api/cart')
       .then(res => {
         setCartIds(res.data.map((i: any) => i.product_id));
         setCartCount(res.data.reduce((s: number, i: any) => s + i.quantity, 0));
@@ -76,9 +72,8 @@ export default function CategoryPage({
 
   // ── Fetch wishlist ─────────────────────────────────────────────
   const fetchWishlist = useCallback(() => {
-    const token = localStorage.getItem('token');
-    if (!token || !user || user.role === 'admin') { setWishlist([]); return; }
-    axios.get('/api/wishlist', authHeader())
+  if (!user || user.role === 'admin') { setWishlist([]); return; }
+  axios.get('/api/wishlist')
       .then(res => setWishlist(res.data.map((i: any) => i.product_id)))
       .catch(() => {});
   }, [user?.id]);
@@ -87,17 +82,16 @@ export default function CategoryPage({
 
   // ── Cart toggle ────────────────────────────────────────────────
   const toggleCart = async (productId: number) => {
-    const token = localStorage.getItem('token');
-    if (!token) { navigate('/login'); return; }
+    if (!user) { navigate('/login'); return; }
     if (cartIds.includes(productId)) {
       try {
-        await axios.delete(`/api/cart/${productId}`, authHeader());
+        await axios.delete(`/api/cart/${productId}`);
         setCartIds(p => p.filter(id => id !== productId));
         setCartCount(p => Math.max(0, p - 1));
       } catch (e: any) { if (e.response?.status === 401) navigate('/login'); }
     } else {
       try {
-        await axios.post('/api/cart', { product_id: productId, quantity: 1 }, authHeader());
+        await axios.post('/api/cart', { product_id: productId, quantity: 1 });
         setCartIds(p => [...p, productId]);
         setCartCount(p => p + 1);
       } catch (e: any) { if (e.response?.status === 401) navigate('/login'); }
@@ -105,16 +99,15 @@ export default function CategoryPage({
   };
 
   // ── Wishlist toggle ────────────────────────────────────────────
-  const toggleWishlist = async (productId: number) => {
-    const token = localStorage.getItem('token');
-    if (!token) { navigate('/login'); return; }
+const toggleWishlist = async (productId: number) => {
+  if (!user) { navigate('/login'); return; }
     if (wishlist.includes(productId)) {
       setWishlist(p => p.filter(id => id !== productId));
-      try { await axios.delete(`/api/wishlist/${productId}`, authHeader()); }
+      try { await axios.delete(`/api/wishlist/${productId}`); }
       catch { fetchWishlist(); }
     } else {
       setWishlist(p => [...p, productId]);
-      try { await axios.post('/api/wishlist', { product_id: productId }, authHeader()); }
+      try { await axios.post('/api/wishlist', { product_id: productId }); }
       catch { fetchWishlist(); }
     }
   };

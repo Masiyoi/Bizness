@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from 'react';
-import logo from '../assets/logo.png';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -26,21 +25,16 @@ const T = {
 const readUser = (): User | null => {
   try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
 };
-const getInitials = (name: string) =>
-  name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 const isNewProduct = (createdAt?: string) =>
   createdAt ? Date.now() - new Date(createdAt).getTime() < 7 * 24 * 60 * 60 * 1000 : false;
-const authHeader = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
 
 export default function WishlistPage() {
   const navigate = useNavigate();
   const [user, setUser]           = useState<User | null>(readUser);
   const [items, setItems]         = useState<WishlistItem[]>([]);
   const [cartIds, setCartIds]     = useState<number[]>([]);
-  const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading]     = useState(true);
   const [removing, setRemoving]   = useState<number | null>(null);
-  const [showMenu, setShowMenu]   = useState(false);
   const [busyCart, setBusyCart]   = useState<number | null>(null);
 
   // ── Sync logged-in user ──────────────────────────────────────────────────────
@@ -55,11 +49,9 @@ export default function WishlistPage() {
   }, []);
 
   // ── Fetch wishlist from API ──────────────────────────────────────────────────
-  const fetchWishlist = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) { setItems([]); setLoading(false); return; }
-    try {
-      const res = await axios.get('/api/wishlist', { headers: authHeader() });
+const fetchWishlist = useCallback(async () => {
+  try {
+    const res = await axios.get('/api/wishlist');
       setItems(res.data);
     } catch (e: any) {
       if (e.response?.status === 401) navigate('/login');
@@ -71,15 +63,13 @@ export default function WishlistPage() {
   useEffect(() => { fetchWishlist(); }, [fetchWishlist]);
 
   // ── Fetch cart ───────────────────────────────────────────────────────────────
-  const fetchCart = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token || !user) return;
-    try {
-      const res = await axios.get('/api/cart', { headers: authHeader() });
-      setCartIds(res.data.map((i: any) => i.product_id));
-      setCartCount(res.data.reduce((s: number, i: any) => s + i.quantity, 0));
-    } catch {}
-  }, [user?.id]);
+const fetchCart = useCallback(async () => {
+  if (!user) return;
+  try {
+    const res = await axios.get('/api/cart');
+    setCartIds(res.data.map((i: any) => i.product_id));
+  } catch {}
+}, [user?.id]);
 
   useEffect(() => { fetchCart(); }, [fetchCart]);
 
@@ -88,7 +78,7 @@ export default function WishlistPage() {
     setRemoving(productId);
     setTimeout(async () => {
       try {
-        await axios.delete(`/api/wishlist/${productId}`, { headers: authHeader() });
+        await axios.delete(`/api/wishlist/${productId}`);
         setItems(prev => prev.filter(i => i.product_id !== productId));
       } catch (e: any) {
         fetchWishlist(); // roll back on failure
@@ -101,37 +91,27 @@ export default function WishlistPage() {
 
   // ── Toggle cart ──────────────────────────────────────────────────────────────
   const toggleCart = async (productId: number) => {
-    const token = localStorage.getItem('token');
-    if (!token) { navigate('/login'); return; }
-    setBusyCart(productId);
-    try {
-      if (cartIds.includes(productId)) {
-        await axios.delete(`/api/cart/${productId}`, { headers: authHeader() });
-        setCartIds(p => p.filter(id => id !== productId));
-        setCartCount(p => Math.max(0, p - 1));
-      } else {
-        await axios.post('/api/cart', { product_id: productId, quantity: 1 }, { headers: authHeader() });
-        setCartIds(p => [...p, productId]);
-        setCartCount(p => p + 1);
-      }
-    } catch (e: any) {
-      if (e.response?.status === 401) navigate('/login');
-    } finally {
-      setBusyCart(null);
+  setBusyCart(productId);
+  try {
+    if (cartIds.includes(productId)) {
+      await axios.delete(`/api/cart/${productId}`);
+      setCartIds(p => p.filter(id => id !== productId));
+    } else {
+      await axios.post('/api/cart', { product_id: productId, quantity: 1 });
+      setCartIds(p => [...p, productId]);
     }
-  };
-
+  } catch (e: any) {
+    if (e.response?.status === 401) navigate('/login');
+  } finally {
+    setBusyCart(null);
+  }
+};
   // ── Clear all ────────────────────────────────────────────────────────────────
   const clearAll = async () => {
     try {
-      await axios.delete('/api/wishlist', { headers: authHeader() });
+      await axios.delete('/api/wishlist');
       setItems([]);
     } catch {}
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token'); localStorage.removeItem('user');
-    setUser(null); setCartIds([]); setCartCount(0); navigate('/');
   };
 
   const totalValue = items.reduce((s, i) => s + Number(i.price), 0);
