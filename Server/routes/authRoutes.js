@@ -61,5 +61,6 @@ router.post('/resend-verification', resendLimiter,                       authCtr
 router.post('/forgot-password',          forgotPasswordLimiter, authCtrl.forgotPassword);
 router.get('/reset-password/:token',                            authCtrl.validateResetToken);
 router.post('/reset-password/:token',    resetPasswordLimiter,  authCtrl.resetPassword);
+router.post('/logout', authCtrl.logoutUser);
 
 module.exports = router;

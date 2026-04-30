@@ -54,14 +54,17 @@ export default function Login() {
   const handleGoogleResponse = useCallback(async (response: { credential: string }) => {
     setGoogleLoading(true); setError("");
     try {
-      const res = await axios.post("/api/auth/google", { credential: response.credential });
-      localStorage.setItem("token", res.data.token);
+      const res = await axios.post("/api/auth/google", { credential: response.credential }, {
+        withCredentials: true,   // ← same here
+      });
+      // ✅ Only store safe UI data
       localStorage.setItem("user", JSON.stringify(res.data.user));
       redirectByRole(res.data.user, navigate);
     } catch (err: any) {
       setError(err.response?.data?.msg || "Google sign-in failed.");
     } finally { setGoogleLoading(false); }
   }, [navigate]);
+
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -73,14 +76,31 @@ export default function Login() {
     return () => clearTimeout(t);
   }, [handleGoogleResponse]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Add this useEffect to Login.tsx and Register.tsx only
+useEffect(() => {
+  const script = document.createElement('script');
+  script.src = 'https://www.google.com/recaptcha/api.js?render=6LdlHMQsAAAAAJ5Ft84oddhVF0cUKkU7u65Xlb2o';
+  script.async = true;
+  document.body.appendChild(script);
+
+  // Cleanup — remove script and badge when leaving the page
+  return () => {
+    document.body.removeChild(script);
+    const badge = document.querySelector('.grecaptcha-badge');
+    if (badge) badge.remove();
+  };
+}, []);
+
+   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { setError("Please enter your email and password."); return; }
     setLoading(true); setError(""); setUnverified(false); setLocked(false);
     try {
       const recaptchaToken = await getRecaptchaToken('login');
-      const res = await axios.post("/api/auth/login", { email, password, recaptchaToken });
-      localStorage.setItem("token", res.data.token);
+      const res = await axios.post("/api/auth/login", { email, password, recaptchaToken }, {
+        withCredentials: true,   // ← ensures the Set-Cookie header is accepted
+      });
+      // ✅ Only store safe, non-sensitive UI data — never the token
       localStorage.setItem("user", JSON.stringify(res.data.user));
       redirectByRole(res.data.user, navigate);
     } catch (err: any) {
@@ -92,6 +112,7 @@ export default function Login() {
       }
     } finally { setLoading(false); }
   };
+ 
 
   const handleResend = async () => {
     setResendLoading(true); setResendMsg("");
