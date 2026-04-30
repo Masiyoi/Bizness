@@ -54,14 +54,17 @@ export default function Login() {
   const handleGoogleResponse = useCallback(async (response: { credential: string }) => {
     setGoogleLoading(true); setError("");
     try {
-      const res = await axios.post("/api/auth/google", { credential: response.credential });
-      localStorage.setItem("token", res.data.token);
+      const res = await axios.post("/api/auth/google", { credential: response.credential }, {
+        withCredentials: true,   // ← same here
+      });
+      // ✅ Only store safe UI data
       localStorage.setItem("user", JSON.stringify(res.data.user));
       redirectByRole(res.data.user, navigate);
     } catch (err: any) {
       setError(err.response?.data?.msg || "Google sign-in failed.");
     } finally { setGoogleLoading(false); }
   }, [navigate]);
+
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -88,14 +91,16 @@ useEffect(() => {
   };
 }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) { setError("Please enter your email and password."); return; }
     setLoading(true); setError(""); setUnverified(false); setLocked(false);
     try {
       const recaptchaToken = await getRecaptchaToken('login');
-      const res = await axios.post("/api/auth/login", { email, password, recaptchaToken });
-      localStorage.setItem("token", res.data.token);
+      const res = await axios.post("/api/auth/login", { email, password, recaptchaToken }, {
+        withCredentials: true,   // ← ensures the Set-Cookie header is accepted
+      });
+      // ✅ Only store safe, non-sensitive UI data — never the token
       localStorage.setItem("user", JSON.stringify(res.data.user));
       redirectByRole(res.data.user, navigate);
     } catch (err: any) {
@@ -107,6 +112,7 @@ useEffect(() => {
       }
     } finally { setLoading(false); }
   };
+ 
 
   const handleResend = async () => {
     setResendLoading(true); setResendMsg("");

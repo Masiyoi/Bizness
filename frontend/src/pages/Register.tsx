@@ -55,18 +55,22 @@ export default function Register() {
   const [resendMsg, setResendMsg] = useState("");
   const passwordStrength = getPasswordStrength(formData.password);
 
+ // ── handleGoogleResponse in Register.tsx ─────────────────────────────────
+  // Same change as Login.tsx — drop the token from localStorage
   const handleGoogleResponse = useCallback(async (response: { credential: string }) => {
     setGoogleLoading(true); setServerError("");
     try {
-      const res = await axios.post("/api/auth/google", { credential: response.credential });
-      localStorage.setItem("token", res.data.token);
+      const res = await axios.post("/api/auth/google", { credential: response.credential }, {
+        withCredentials: true,   // ← ensures cookie is accepted
+      });
+      // ✅ Only store safe UI data — never the token
       localStorage.setItem("user", JSON.stringify(res.data.user));
       navigate("/");
     } catch (err: any) {
       setServerError(err.response?.data?.msg || "Google sign-in failed.");
     } finally { setGoogleLoading(false); }
   }, [navigate]);
-
+  
   useEffect(() => {
     const t = setTimeout(() => {
       if (window.google) {

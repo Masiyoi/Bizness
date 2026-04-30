@@ -16,7 +16,7 @@ import Reviews        from './pages/Reviews';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword  from './pages/ResetPassword';
 
-// ── Admin (index.ts re-exports AdminDashboard) ─────────────────────────────────
+// ── Admin ──────────────────────────────────────────────────────────────────────
 import AdminDashboard from './pages/admin/AdminDashboard';
 
 // ── Category Pages ─────────────────────────────────────────────────────────────
@@ -51,8 +51,15 @@ import Privacy from './pages/legal/Privacy';
 import Terms   from './pages/legal/Terms';
 import Cookies from './pages/legal/Cookies';
 
+// ── Global axios config ────────────────────────────────────────────────────────
+// withCredentials: true means axios automatically sends the httpOnly cookie
+// on every request without you needing to pass it manually anywhere.
+axios.defaults.withCredentials = true;
+
 // ─── Auth helpers ──────────────────────────────────────────────────────────────
-const isAuthenticated = () => !!localStorage.getItem('token');
+// We no longer check for a token in localStorage (it doesn't exist there anymore).
+// We only check for the user object, which holds safe UI data (name, role, avatar).
+// The actual authentication is enforced server-side via the httpOnly cookie.
 
 const getUser = () => {
   try {
@@ -61,20 +68,10 @@ const getUser = () => {
   } catch { return null; }
 };
 
-const clearIfExpired = () => {
-  const token = localStorage.getItem('token');
-  if (!token) return;
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    if (payload.exp && Date.now() / 1000 > payload.exp) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-    }
-  } catch {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  }
-};
+// isAuthenticated now just checks if we have a user object stored.
+// If the cookie has expired, the next API call will return 401 and the
+// error handler will redirect to /login — no need to decode the JWT here.
+const isAuthenticated = () => !!getUser();
 
 // ─── Route Guards ──────────────────────────────────────────────────────────────
 
@@ -105,14 +102,26 @@ function BuyerRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// ─── FloatingCart wrapper (lives inside Router so it can use hooks) ─────────────
+// ─── Global 401 interceptor ───────────────────────────────────────────────────
+// If any API call returns 401 (cookie expired or missing), automatically
+// clear the stale user object and redirect to login.
+axios.interceptors.response.use(
+  res => res,
+  err => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('user');
+      window.location.hash = '/login';
+    }
+    return Promise.reject(err);
+  }
+);
+
+// ─── FloatingCart wrapper ──────────────────────────────────────────────────────
 function FloatingCartManager() {
   const [cartCount, setCartCount] = useState(0);
   const { pathname } = useLocation();
 
-  // Only show on these exact paths
-  const allowedPaths = ['/', '/wishlist', '/orders'];
-  // Also show on any path starting with these prefixes
+  const allowedPaths    = ['/', '/wishlist', '/orders'];
   const allowedPrefixes = ['/categories/', '/product/'];
 
   const shouldShow =
@@ -120,11 +129,11 @@ function FloatingCartManager() {
     allowedPrefixes.some(prefix => pathname.startsWith(prefix));
 
   const fetchCount = () => {
-    const token = localStorage.getItem('token');
-    const user  = getUser();
-    if (!token || user?.role === 'admin') { setCartCount(0); return; }
-    axios
-      .get('/api/cart', { headers: { Authorization: `Bearer ${token}` } })
+    const user = getUser();
+    // Don't fetch cart for unauthenticated users or admins
+    if (!user || user.role === 'admin') { setCartCount(0); return; }
+    // Cookie is sent automatically via axios.defaults.withCredentials = true
+    axios.get('/api/cart')
       .then(r => setCartCount(r.data.reduce((s: number, i: any) => s + i.quantity, 0)))
       .catch(() => setCartCount(0));
   };
@@ -146,7 +155,9 @@ function FloatingCartManager() {
 
 // ─── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
-  useEffect(() => { clearIfExpired(); }, []);
+  // clearIfExpired() is removed — the server handles cookie expiry automatically.
+  // When the cookie expires, the next API call returns 401 and the interceptor
+  // above clears localStorage and redirects to /login.
 
   return (
     <Router>
@@ -159,7 +170,7 @@ export default function App() {
         <Route path="/"            element={<Homepage />} />
         <Route path="/product/:id" element={<ProductDetail />} />
 
-        {/* ── Categories (public) ─────────────────────────────────────────────── */}
+        {/* ── Categories ──────────────────────────────────────────────────────── */}
         <Route path="/categories/dresses"       element={<Dresses />} />
         <Route path="/categories/new-arrivals"  element={<NewArrivals />} />
         <Route path="/categories/sneakers"      element={<Sneakers />} />
@@ -169,7 +180,7 @@ export default function App() {
         <Route path="/categories/shoes"         element={<Shoes />} />
         <Route path="/categories/heels"         element={<Heels />} />
 
-        {/* ── Support (public) ─────────────────────────────────────────────────── */}
+        {/* ── Support ─────────────────────────────────────────────────────────── */}
         <Route path="/track-order" element={<TrackOrder />} />
         <Route path="/returns"     element={<Returns />} />
         <Route path="/delivery"    element={<Delivery />} />
@@ -177,12 +188,12 @@ export default function App() {
         <Route path="/faqs"        element={<FAQs />} />
         <Route path="/contact"     element={<Contact />} />
 
-        {/* ── Company (public) ─────────────────────────────────────────────────── */}
+        {/* ── Company ─────────────────────────────────────────────────────────── */}
         <Route path="/about"   element={<About />} />
         <Route path="/careers" element={<Careers />} />
         <Route path="/press"   element={<Press />} />
 
-        {/* ── Legal (public) ───────────────────────────────────────────────────── */}
+        {/* ── Legal ───────────────────────────────────────────────────────────── */}
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms"   element={<Terms />} />
         <Route path="/cookies" element={<Cookies />} />
@@ -204,28 +215,10 @@ export default function App() {
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
         {/* ── Admin only ──────────────────────────────────────────────────────── */}
-        {/*
-          AdminDashboard handles its own tab routing internally (Overview, Orders, Products).
-          We register nested routes here so tabs are deep-linkable via URL, and the
-          parent component reads the active tab from the URL (e.g. /admin/orders).
-          All sub-routes render AdminDashboard — it reads the path to set the active tab.
-        */}
-        <Route
-          path="/admin"
-          element={<AdminRoute><AdminDashboard /></AdminRoute>}
-        />
-        <Route
-          path="/admin/overview"
-          element={<AdminRoute><AdminDashboard /></AdminRoute>}
-        />
-        <Route
-          path="/admin/orders"
-          element={<AdminRoute><AdminDashboard /></AdminRoute>}
-        />
-        <Route
-          path="/admin/products"
-          element={<AdminRoute><AdminDashboard /></AdminRoute>}
-        />
+        <Route path="/admin"          element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/admin/overview" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/admin/orders"   element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/admin/products" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
         {/* ── 404 ─────────────────────────────────────────────────────────────── */}
         <Route path="*" element={<NotFound />} />
@@ -246,7 +239,6 @@ function VerifyEmail() {
   useEffect(() => {
     if (hasCalled.current) return;
     hasCalled.current = true;
-
     axios.get(`/api/auth/verify/${token}`)
       .then(res => {
         setStatus('success');
@@ -260,33 +252,18 @@ function VerifyEmail() {
   }, [token, navigate]);
 
   const containerStyle: React.CSSProperties = {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: '#FBF6F0',
-    fontFamily: "'DM Sans', sans-serif",
+    minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    background: '#FBF6F0', fontFamily: "'DM Sans', sans-serif",
   };
-
   const cardStyle: React.CSSProperties = {
-    background: '#fff',
-    borderRadius: 20,
-    padding: '48px 40px',
-    textAlign: 'center',
-    maxWidth: 400,
-    width: '100%',
-    boxShadow: '0 8px 32px rgba(44,26,14,0.1)',
+    background: '#fff', borderRadius: 20, padding: '48px 40px', textAlign: 'center',
+    maxWidth: 400, width: '100%', boxShadow: '0 8px 32px rgba(44,26,14,0.1)',
   };
 
   return (
     <div style={containerStyle}>
       <div style={cardStyle}>
-        {status === 'loading' && (
-          <>
-            <div style={{ fontSize: 52, marginBottom: 16 }}>⏳</div>
-            <p style={{ color: '#5C3D1E', fontWeight: 600 }}>Verifying your email…</p>
-          </>
-        )}
+        {status === 'loading' && <><div style={{ fontSize: 52, marginBottom: 16 }}>⏳</div><p style={{ color: '#5C3D1E', fontWeight: 600 }}>Verifying your email…</p></>}
         {status === 'success' && (
           <>
             <div style={{ fontSize: 52, marginBottom: 16 }}>✅</div>
@@ -300,20 +277,7 @@ function VerifyEmail() {
             <div style={{ fontSize: 52, marginBottom: 16 }}>❌</div>
             <h2 style={{ color: '#2C1A0E', marginBottom: 8, fontFamily: 'Lora, serif' }}>Link Expired</h2>
             <p style={{ color: '#9C7A60', fontSize: 14 }}>{message}</p>
-            <button
-              onClick={() => navigate('/login')}
-              style={{
-                marginTop: 20,
-                background: '#C4703A',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 12,
-                padding: '12px 28px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontSize: 14,
-              }}
-            >
+            <button onClick={() => navigate('/login')} style={{ marginTop: 20, background: '#C4703A', color: '#fff', border: 'none', borderRadius: 12, padding: '12px 28px', fontWeight: 600, cursor: 'pointer', fontSize: 14 }}>
               Back to Login
             </button>
           </>
@@ -326,35 +290,12 @@ function VerifyEmail() {
 // ─── 404 Not Found ─────────────────────────────────────────────────────────────
 function NotFound() {
   const navigate = useNavigate();
-
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: '#FBF6F0',
-      fontFamily: "'DM Sans', sans-serif",
-      flexDirection: 'column',
-      gap: 16,
-    }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FBF6F0', fontFamily: "'DM Sans', sans-serif", flexDirection: 'column', gap: 16 }}>
       <div style={{ fontSize: 72 }}>🌿</div>
       <h1 style={{ fontFamily: 'Lora, serif', fontSize: 32, color: '#2C1A0E' }}>Page Not Found</h1>
       <p style={{ color: '#9C7A60', fontSize: 15 }}>The page you're looking for doesn't exist.</p>
-      <button
-        onClick={() => navigate('/')}
-        style={{
-          background: '#C4703A',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 12,
-          padding: '12px 28px',
-          fontWeight: 600,
-          cursor: 'pointer',
-          fontSize: 14,
-          marginTop: 8,
-        }}
-      >
+      <button onClick={() => navigate('/')} style={{ background: '#C4703A', color: '#fff', border: 'none', borderRadius: 12, padding: '12px 28px', fontWeight: 600, cursor: 'pointer', fontSize: 14, marginTop: 8 }}>
         Back to Homepage
       </button>
     </div>

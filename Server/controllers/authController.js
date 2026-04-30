@@ -516,3 +516,12 @@ exports.resetPassword = async (req, res) => {
     return res.status(500).json({ msg: 'Server error. Please try again.' });
   }
 };
+
+exports.logoutUser = (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure:   process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+  });
+  res.json({ msg: 'Logged out.' });
+};
