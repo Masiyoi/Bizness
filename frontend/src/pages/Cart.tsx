@@ -70,10 +70,6 @@ const PICKUP_LOCATIONS = [
   'Luku Prime — Upperhill',
 ];
 
-const authHeaders = () => ({
-  headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-});
-
 const EMPTY_SHIPPING: ShippingInfo = {
   firstName: '', lastName: '', phone: '', email: '',
   county: '', town: '', pickupLocation: '', additionalInfo: '',
@@ -105,10 +101,7 @@ export default function Cart() {
   const [selectedColors, setSelectedColors] = useState<Record<number, string>>({});
   const [selectedSizes,  setSelectedSizes]  = useState<Record<number, string>>({});
 
-  const token = localStorage.getItem('token');
-
   useEffect(() => {
-    if (!token) { navigate('/login'); return; }
     fetchCart();
     try {
       const saved = sessionStorage.getItem('luku_shipping');
@@ -127,7 +120,7 @@ export default function Cart() {
 
   const fetchCart = async () => {
     try {
-      const res = await axios.get('/api/cart', authHeaders());
+      const res = await axios.get('/api/cart');
       const normalised: CartItem[] = (res.data as any[]).map(item => ({
         ...item,
         colors:         parseArr(item.colors),
@@ -179,7 +172,7 @@ export default function Cart() {
         quantity:       qty,
         selected_color: selectedColors[itemId] ?? item?.selected_color ?? null,
         selected_size:  selectedSizes[itemId]  ?? item?.selected_size  ?? null,
-      }, authHeaders());
+      });
       setItems(prev => prev.map(i => i.id === itemId ? { ...i, quantity: qty } : i));
       broadcastCartChange();
     } catch { setError('Failed to update quantity.'); }
@@ -189,7 +182,7 @@ export default function Cart() {
   const removeItem = async (itemId: number) => {
     setUpdating(itemId);
     try {
-      await axios.delete(`/api/cart/${itemId}`, authHeaders());
+      await axios.delete(`/api/cart/${itemId}`);
       setItems(prev => prev.filter(i => i.id !== itemId));
       setSelectedColors(prev => {
         const next = { ...prev }; delete next[itemId];
@@ -208,7 +201,7 @@ export default function Cart() {
 
   const clearCart = async () => {
     try {
-      await axios.delete('/api/cart', authHeaders());
+      await axios.delete('/api/cart');
       setItems([]);
       setSelectedColors({});
       setSelectedSizes({});
@@ -236,7 +229,7 @@ export default function Cart() {
         quantity:       item.quantity,
         selected_color: color,
         selected_size:  selectedSizes[itemId] ?? item.selected_size ?? null,
-      }, authHeaders());
+      });
 
       // If backend merged rows (variant collision), re-fetch to get accurate state
       if (res.data?.merged) {
@@ -262,7 +255,7 @@ export default function Cart() {
         quantity:       item.quantity,
         selected_color: selectedColors[itemId] ?? item.selected_color ?? null,
         selected_size:  size,
-      }, authHeaders());
+      });
 
       if (res.data?.merged) {
         await fetchCart();
@@ -733,12 +726,10 @@ export default function Cart() {
                       const isLast   = idx === arr.length - 1;
                       return (
                         <div key={i.id} style={{ marginBottom: isLast ? 0 : 12, paddingBottom: isLast ? 0 : 12, borderBottom: isLast ? 'none' : `1px solid ${T.creamDeep}` }}>
-                          {/* item name */}
                           <div className="jost" style={{ fontSize: 11, fontWeight: 700, color: T.navy, marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {i.name}
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                            {/* colour row — only for items that have colours */}
                             {hasColor && (
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span className="jost" style={{ fontSize: 10, color: T.muted, letterSpacing: '0.5px' }}>Colour</span>
@@ -752,7 +743,6 @@ export default function Cart() {
                                 )}
                               </div>
                             )}
-                            {/* size row — only for items that have sizes */}
                             {hasSize && (
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span className="jost" style={{ fontSize: 10, color: T.muted, letterSpacing: '0.5px' }}>Size</span>
@@ -824,8 +814,7 @@ export default function Cart() {
       )}
 
       {/* ── FOOTER ── */}
-       {/* ── Shared Footer (same as Homepage) ── */}
-            <Footer />
+      <Footer />
     </div>
   );
 }

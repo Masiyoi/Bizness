@@ -50,10 +50,6 @@ const DELIVERY_ZONE_LABELS: Record<string, string> = {
   pickup:'Shop Pickup', cbd:'Nairobi CBD', environs:'Nairobi Environs', county:'Other County',
 };
 
-const authHeaders = () => ({
-  headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-});
-
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-KE', { day:'numeric', month:'long', year:'numeric' });
 const formatTime = (iso: string) =>
@@ -179,11 +175,9 @@ export default function Orders() {
   const [reviewModal,   setReviewModal]   = useState<OrderItem | null>(null);
   const [toast,         setToast]         = useState('');
 
-  const token = localStorage.getItem('token');
-
   const fetchReviewedStatus = useCallback(async () => {
     try {
-      const res = await axios.get('/api/reviews/my', authHeaders());
+      const res = await axios.get('/api/reviews/my');
       const reviewed: ReviewMap = {};
       for (const r of res.data) reviewed[Number(r.product_id)] = true;
       setReviewedMap(reviewed);
@@ -192,7 +186,7 @@ export default function Orders() {
 
   const fetchOrders = useCallback(async () => {
     try {
-      const res = await axios.get('/api/orders', authHeaders());
+      const res = await axios.get('/api/orders');
       const sorted = [...res.data].sort((a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
@@ -207,9 +201,8 @@ export default function Orders() {
   }, [navigate, fetchReviewedStatus]);
 
   useEffect(() => {
-    if (!token) { navigate('/login'); return; }
     fetchOrders();
-  }, [navigate, fetchOrders, token]);
+  }, [fetchOrders]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -217,7 +210,7 @@ export default function Orders() {
   };
 
   const handleReviewSubmit = async (productId: number, rating: number, comment: string) => {
-    await axios.post('/api/reviews', { product_id: productId, rating, comment }, authHeaders());
+    await axios.post('/api/reviews', { product_id: productId, rating, comment });
     setReviewedMap(prev => ({ ...prev, [Number(productId)]: true }));
     showToast('✓ Review submitted — thank you!');
   };

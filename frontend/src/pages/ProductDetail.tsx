@@ -28,7 +28,6 @@ interface ReviewStats {
   five: number; four: number; three: number; two: number; one: number;
 }
 
-const authHeaders = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
 
 const T = {
   navy:'#0D1B3E', navyLight:'#1E2F5A',
@@ -224,10 +223,8 @@ export default function ProductDetail() {
   const [wishlistCount, setWishlistCount] = useState(0);
 
   // ── Fetch cart count ──────────────────────────────────────────
-  const fetchCartCount = useCallback(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { setCartCount(0); return; }
-    axios.get('/api/cart', authHeaders())
+const fetchCartCount = useCallback(() => {
+  axios.get('/api/cart')
       .then(res => {
         setCartCount(res.data.reduce((s: number, i: any) => s + i.quantity, 0));
       })
@@ -235,10 +232,8 @@ export default function ProductDetail() {
   }, []);
 
   // ── Fetch wishlist count ──────────────────────────────────────
-  const fetchWishlistCount = useCallback(() => {
-    const token = localStorage.getItem('token');
-    if (!token) { setWishlistCount(0); return; }
-    axios.get('/api/wishlist', authHeaders())
+const fetchWishlistCount = useCallback(() => {
+  axios.get('/api/wishlist')
       .then(res => setWishlistCount(res.data.length))
       .catch(() => {});
   }, []);
@@ -281,10 +276,9 @@ export default function ProductDetail() {
   }, [id]);
 
   // ── Check if already in cart ──────────────────────────────────
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token || !id) return;
-    axios.get('/api/cart', authHeaders())
+useEffect(() => {
+  if (!id) return;
+  axios.get('/api/cart')
       .then(res => {
         const cartItem = res.data.find((i: any) => i.product_id === Number(id));
         if (cartItem) {
@@ -304,7 +298,6 @@ export default function ProductDetail() {
   };
 
   const handleCartToggle = async () => {
-    if (!localStorage.getItem('token')) { navigate('/login'); return; }
     if (!inCart && product?.colors?.length && !selectedColor) {
       setColorError(true);
       setTimeout(() => setColorError(false), 600);
@@ -320,9 +313,9 @@ export default function ProductDetail() {
     setAdding(true);
     try {
       if (inCart) {
-        const cartRes = await axios.get('/api/cart', authHeaders());
+        const cartRes = await axios.get('/api/cart');
         const cartItem = cartRes.data.find((i: any) => i.product_id === product!.id);
-        if (cartItem) await axios.delete(`/api/cart/${cartItem.id}`, authHeaders());
+        if (cartItem) await axios.delete(`/api/cart/${cartItem.id}`);
         setInCart(false);
         setSelectedColor('');
         setSelectedSize('');
@@ -331,10 +324,10 @@ export default function ProductDetail() {
       } else {
         await axios.post('/api/cart', {
           product_id:     product!.id,
-          quantity:       qty,
+          quantity:       1,
           selected_color: selectedColor || null,
           selected_size:  selectedSize  || null,
-        }, authHeaders());
+        });
         setInCart(true);
         showToast('Added to cart!');
         window.dispatchEvent(new CustomEvent('cartUpdated'));
@@ -348,14 +341,14 @@ export default function ProductDetail() {
     setColorError(false);
     if (!inCart || !product) return;
     try {
-      const cartRes  = await axios.get('/api/cart', authHeaders());
+      const cartRes  = await axios.get('/api/cart');
       const cartItem = cartRes.data.find((i: any) => i.product_id === product.id);
       if (cartItem) {
         await axios.patch(`/api/cart/${cartItem.id}`, {
           quantity: cartItem.quantity,
           selected_color: color,
           selected_size: selectedSize || cartItem.selected_size,
-        }, authHeaders());
+        });
         window.dispatchEvent(new CustomEvent('cartUpdated'));
         showToast(`Colour updated to ${color}`);
       }
@@ -367,14 +360,14 @@ export default function ProductDetail() {
     setSizeError(false);
     if (!inCart || !product) return;
     try {
-      const cartRes  = await axios.get('/api/cart', authHeaders());
+      const cartRes  = await axios.get('/api/cart');
       const cartItem = cartRes.data.find((i: any) => i.product_id === product.id);
       if (cartItem) {
         await axios.patch(`/api/cart/${cartItem.id}`, {
           quantity: cartItem.quantity,
           selected_color: selectedColor || cartItem.selected_color,
           selected_size: size,
-        }, authHeaders());
+        });
         window.dispatchEvent(new CustomEvent('cartUpdated'));
         showToast(`Size updated to ${size}`);
       }
