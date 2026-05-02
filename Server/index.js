@@ -20,7 +20,7 @@ const app = express();
 
 // 1. Define exactly who is allowed to talk to your API
 const allowedOrigins = [
-  'https://lukuprime.vercel.app/', // Your live Vercel production site
+  'https://lukuprime.vercel.app', // Your live Vercel production site
   'http://localhost:5173'          // Keep this so you can still test locally!
 ];
 
