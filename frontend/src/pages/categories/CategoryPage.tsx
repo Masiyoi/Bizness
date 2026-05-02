@@ -41,15 +41,16 @@ export default function CategoryPage({
   const [wishlist,   setWishlist]   = useState<number[]>([]);
 
   // ── Fetch products ─────────────────────────────────────────────
-  useEffect(() => {
+ useEffect(() => {
     setLoading(true);
     const url = apiEndpoint
       ?? `/api/products?category=${encodeURIComponent(categoryName)}`;
 
-    fetch(url)
-      .then(r => r.json())
-      .then(d => {
-        setProducts(Array.isArray(d) ? d : []);
+    // Swapped fetch for axios.get
+    axios.get(url)
+      .then(res => {
+        // Remember to use res.data with Axios!
+        setProducts(Array.isArray(res.data) ? res.data : []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
