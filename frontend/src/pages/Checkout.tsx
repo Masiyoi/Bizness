@@ -38,10 +38,6 @@ const DELIVERY_OPTIONS: { value: DeliveryZone; label: string; fee: number }[] = 
   { value:'county',   label:'Other Counties',      fee:300 },
 ];
 
-const authHeaders = () => ({
-  headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-});
-
 export default function Checkout() {
   const navigate   = useNavigate();
   const location   = useLocation();
@@ -75,11 +71,11 @@ export default function Checkout() {
   const deliveryFee   = DELIVERY_OPTIONS.find(o => o.value === deliveryZone)!.fee;
   const deliveryLabel = DELIVERY_OPTIONS.find(o => o.value === deliveryZone)!.label;
 
-  const token = localStorage.getItem('token');
+  const user = localStorage.getItem('user');
 
   useEffect(() => {
-    if (!token) { navigate('/login'); return; }
-    axios.get('/api/cart', authHeaders())
+    if (!user) { navigate('/login'); return; }
+    axios.get('/api/cart')
       .then(res => { setItems(res.data); setLoading(false); })
       .catch(() => { setLoading(false); navigate('/cart'); });
   }, []);
@@ -133,7 +129,7 @@ export default function Checkout() {
         shipping:       passedShipping,
         selectedColors: passedColors,
         selectedSizes:  passedSizes,
-      }, authHeaders());
+      });
 
       setCheckoutRequestId(res.data.checkoutRequestId);
       setStep('waiting');
@@ -151,11 +147,11 @@ export default function Checkout() {
     tickRef.current = setInterval(() => { seconds++; setElapsed(seconds); }, 1000);
     pollRef.current = setInterval(async () => {
       try {
-        const res = await axios.get(`/api/payments/status/${reqId}`, authHeaders());
+        const res = await axios.get(`/api/payments/status/${reqId}`);
         const { status, mpesa_receipt } = res.data;
         if (status === 'completed') {
           clearAll(); setReceipt(mpesa_receipt || ''); setStep('success');
-          await axios.delete('/api/cart', authHeaders());
+          await axios.delete('/api/cart');
         } else if (status === 'failed') {
           clearAll(); setFailMsg(res.data.result_desc || 'Payment was not completed.'); setStep('failed');
         }
@@ -164,11 +160,11 @@ export default function Checkout() {
     timeoutRef.current = setTimeout(async () => {
       clearAll();
       try {
-        await axios.get(`/api/payments/query/${reqId}`, authHeaders());
-        const res = await axios.get(`/api/payments/status/${reqId}`, authHeaders());
+        await axios.get(`/api/payments/query/${reqId}`);
+        const res = await axios.get(`/api/payments/status/${reqId}`);
         if (res.data.status === 'completed') {
           setReceipt(res.data.mpesa_receipt || ''); setStep('success');
-          await axios.delete('/api/cart', authHeaders());
+          await axios.delete('/api/cart');
         } else {
           setFailMsg('Payment timed out. If charged, contact support.'); setStep('failed');
         }
@@ -194,7 +190,7 @@ export default function Checkout() {
         shipping:       passedShipping,
         selectedColors: passedColors,
         selectedSizes:  passedSizes,
-      }, authHeaders());
+      });
 
       // Save tracking ID in case user comes back via callback URL
       setPesapalTrackingId(res.data.orderTrackingId);
@@ -215,7 +211,7 @@ export default function Checkout() {
     tickRef.current = setInterval(() => { seconds++; setElapsed(seconds); }, 1000);
     pollRef.current = setInterval(async () => {
       try {
-        const res = await axios.get(`/api/payments/pesapal/status/${trackingId}`, authHeaders());
+        const res = await axios.get(`/api/payments/pesapal/status/${trackingId}`);
         const { status, confirmation_code } = res.data;
         if (status === 'completed') {
           clearAll(); setReceipt(confirmation_code || ''); setStep('success');
