@@ -17,7 +17,19 @@ const subscribersRoutes = require('./routes/subscribersRoutes');
 const app = express();
 
 // ── Middleware ─────────────────────────────────────────────────────────────────
-app.use(cors({ origin: true, credentials: true }));
+
+// 1. Define exactly who is allowed to talk to your API
+const allowedOrigins = [
+  'https://bizness-mu.vercel.app', // Your live Vercel production site
+  'http://localhost:5173'          // Keep this so you can still test locally!
+];
+
+// 2. Apply the CORS policy
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true, // Crucial for your HTTP-only cookies/auth to work!
+}));
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(helmet({
