@@ -288,8 +288,8 @@ exports.loginUser = async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure:   process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure:   true,
+      sameSite: 'none',
       maxAge:   7 * 24 * 60 * 60 * 1000,
     });
 
@@ -348,7 +348,7 @@ exports.googleAuth = async (req, res) => {
       user = newUser.rows[0];
     }
     const token = generateToken(user.id, user.role);
-    res.cookie('token', token, { httpOnly:true, secure:process.env.NODE_ENV==='production', sameSite:'strict', maxAge:7*24*60*60*1000 });
+    res.cookie('token', token, { httpOnly:true, secure:true, sameSite:'none', maxAge:7*24*60*60*1000 });
     return res.json({ token, user: { id:user.id, full_name:user.full_name, email:user.email, is_verified:user.is_verified, role:user.role, profile_picture:user.profile_picture } });
   } catch (err) {
     console.error('Google auth error:', err.message);
@@ -520,8 +520,8 @@ exports.resetPassword = async (req, res) => {
 exports.logoutUser = (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
-    secure:   process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure:   true,
+    sameSite: 'none',
   });
   res.json({ msg: 'Logged out.' });
 };
