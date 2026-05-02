@@ -52,20 +52,20 @@ export default function Homepage() {
 
   // ── Fetch products ──────────────────────────────────────────────
   useEffect(() => {
-    fetch('/api/products')
-      .then(r => r.json())
-      .then(d => { setProducts(d); setProductsLoading(false); })
+    // Swapped fetch for axios.get
+    axios.get('/api/products')
+      .then(res => { setProducts(res.data); setProductsLoading(false); })
       .catch(()  => setProductsLoading(false));
   }, []);
 
   // ── Fetch reviews ─────────────────────────────────────────────
-  useEffect(() => {
-    fetch('/api/reviews/homepage?limit=12')
-      .then(r => r.json())
-      .then(d => { setReviews(Array.isArray(d) ? d : []); setReviewsLoading(false); })
+ useEffect(() => {
+    // Swapped fetch for axios.get
+    axios.get('/api/reviews/homepage?limit=12')
+      .then(res => { setReviews(Array.isArray(res.data) ? res.data : []); setReviewsLoading(false); })
       .catch(()  => setReviewsLoading(false));
   }, []);
-
+  
   // ── Fetch cart ────────────────────────────────────────────────
 const fetchCart = useCallback(() => {
   if (!user || user.role === 'admin') { setCartIds([]); setCartCount(0); return; }
