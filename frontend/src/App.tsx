@@ -55,6 +55,7 @@ import Cookies from './pages/legal/Cookies';
 // withCredentials: true means axios automatically sends the httpOnly cookie
 // on every request without you needing to pass it manually anywhere.
 axios.defaults.withCredentials = true;
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || '';
 
 // ─── Auth helpers ──────────────────────────────────────────────────────────────
 // We no longer check for a token in localStorage (it doesn't exist there anymore).
