@@ -1,15 +1,9 @@
 // src/components/common/Footer.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import logo from '../../assets/logo.png';
 import { T, SOCIAL_LINKS } from '../../constants/theme';
-
-// ─────────────────────────────────────────────
-//  API base URL — set via environment variable
-//  Dev:  VITE_API_URL=https://expert-eureka-4jx6vjqgqpgwhj754-5000.app.github.dev
-//  Prod: VITE_API_URL=https://api.lukuprime.com   (or whatever your prod URL is)
-// ─────────────────────────────────────────────
-const API_BASE = 'https://expert-eureka-4jx6vjqgqpgwhj754-5000.app.github.dev';
 
 // ── Social icons ──────────────────────────────
 const SOCIAL_ICONS: Record<string, React.ReactNode> = {
@@ -85,9 +79,9 @@ export default function Footer() {
 
   // ── Newsletter handler ───────────────────────
   const handleSubscribe = async () => {
-    // Auth guard — change 'token' key to match your app's auth storage
-    const token = localStorage.getItem('token');
-    if (!token) {
+    // Auth guard
+    const user = localStorage.getItem('user');
+    if (!user) {
       navigate('/login');
       return;
     }
@@ -102,28 +96,14 @@ export default function Footer() {
     setMessage('');
 
     try {
-      const res = await fetch(`${API_BASE}/api/subscribers`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setStatus('success');
-        setMessage(data.msg);
-        setEmail('');
-      } else {
-        setStatus('error');
-        setMessage(data.msg ?? 'Something went wrong.');
-      }
-    } catch {
+      const res = await axios.post('/api/subscribers', { email });
+      
+      setStatus('success');
+      setMessage(res.data.msg || 'Subscribed successfully!');
+      setEmail('');
+    } catch (error: any) {
       setStatus('error');
-      setMessage('Network error. Please try again.');
+      setMessage(error.response?.data?.msg ?? 'Network error. Please try again.');
     }
   };
 
