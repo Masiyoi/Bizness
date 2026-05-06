@@ -214,7 +214,7 @@ const toggleCart = async (productId: number) => {
 
         {/* Skeleton */}
         {productsLoading && (
-          <div className="grid grid-cols-2 md:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-x-6 gap-y-10">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="rounded-card overflow-hidden border border-cream-deep">
                 <div className="skel h-60"/>
