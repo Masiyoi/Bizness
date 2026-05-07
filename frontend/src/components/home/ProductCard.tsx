@@ -26,11 +26,11 @@ export default function ProductCard({
       <div className="group">
 
         {/* ── Image ── */}
-        <Link to={`/product/${product.id}`} className="block relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
+        <Link to={`/product/${product.id}`} className="block relative overflow-hidden bg-[#F5F5F5]" style={{ aspectRatio: '3/4' }}>
           <img
             src={product.image_url}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+            className="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-105"
             onError={e => {
               (e.target as HTMLImageElement).src =
                 `https://placehold.co/300x400/F0EAD8/0D1B3E?text=Luku+Prime`;
