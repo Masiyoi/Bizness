@@ -259,21 +259,37 @@ function RelatedProducts({ category, currentId }: { category:string; currentId:n
         </h2>
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:20 }}>
+      <div className="related-grid" style={{ display:'grid',gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap:12 }}>
         {products.map(p => (
           <div key={p.id} onClick={() => { navigate(`/product/${p.id}`); window.scrollTo({top:0, behavior:'smooth'}); }}
             style={{ cursor:'pointer', group:'true' } as React.CSSProperties}
             className="related-card"
           >
-            <div style={{ aspectRatio:'1', overflow:'hidden', borderRadius:10, background:'#fff', border:`1px solid ${T.creamDeep}`, marginBottom:10 }}>
-              <img
-                src={p.image_url}
-                alt={p.name}
-                style={{ width:'100%', height:'100%', objectFit:'contain', transition:'transform 0.4s ease' }}
-                className="related-img"
-                onError={e => { (e.target as HTMLImageElement).src=`https://placehold.co/300x300/F0EAD8/0D1B3E?text=LP`; }}
-              />
-            </div>
+<div style={{
+  position: 'relative',
+  width: '100%',
+  paddingBottom: '100%',          // creates a perfect square
+  overflow: 'hidden',
+  borderRadius: 10,
+  background: '#fff',
+  border: `1px solid ${T.creamDeep}`,
+  marginBottom: 10,
+}}>
+  <img
+    src={p.image_url}
+    alt={p.name}
+    style={{
+      position: 'absolute',
+      inset: 0,
+      width: '100%',
+      height: '100%',
+      objectFit: 'contain',        // show full image, no crop
+      transition: 'transform 0.4s ease',
+    }}
+    className="related-img"
+    onError={e => { (e.target as HTMLImageElement).src=`https://placehold.co/300x300/F0EAD8/0D1B3E?text=LP`; }}
+  />
+</div>
             <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:600, letterSpacing:'1.5px', textTransform:'uppercase', color:T.navy, marginBottom:4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
               {p.name}
             </div>
@@ -765,6 +781,9 @@ const css = `
   .lp-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,56px);align-items:start}
   @media(max-width:768px){.lp-grid{grid-template-columns:1fr;gap:24px}}
   .related-card:hover .related-img{transform:scale(1.06)}
+  @media(min-width:640px){
+  .related-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 20px !important; }
+}
 `;
 
 const s: Record<string, React.CSSProperties> = {
