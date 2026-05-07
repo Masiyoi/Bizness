@@ -227,17 +227,21 @@ function RelatedProducts({ category, currentId }: { category:string; currentId:n
   const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
-    fetch('/api/products')
-      .then(r => r.json())
-      .then((all: Product[]) => {
-        const related = all
-          .filter(p => p.id !== currentId && p.category === category)
-          .slice(0, 4);
-        setProducts(related.length >= 2 ? related : all.filter(p=>p.id!==currentId).slice(0,4));
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [category, currentId]);
+  axios.get('/api/products')           // axios, not fetch
+    .then(res => {
+      const all: Product[] = res.data;
+      const others = all.filter(p => p.id !== currentId);
+
+      const sameCat = others.filter(p =>
+        (p.category ?? '').trim().toLowerCase() ===
+        (category ?? '').trim().toLowerCase()
+      );
+
+      setProducts(sameCat.length >= 1 ? sameCat.slice(0, 4) : others.slice(0, 4));
+      setLoading(false);
+    })
+    .catch(() => setLoading(false));
+}, [category, currentId]);
 
   if (loading || products.length === 0) return null;
 
@@ -310,31 +314,45 @@ function ReviewsSection({ productId }: { productId: number }) {
 
   return (
     <div style={{ marginTop:40, fontFamily:"'Jost','DM Sans',sans-serif" }}>
-      <button onClick={() => setOpen(o=>!o)}
-        style={{ width:'100%', background:T.navy, border:'none', borderRadius: open?'10px 10px 0 0':10, padding:'16px 22px', display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', transition:'background 0.2s' }}
-        onMouseEnter={e=>(e.currentTarget.style.background=T.navyLight)}
-        onMouseLeave={e=>(e.currentTarget.style.background=T.navy)}
-      >
-        <div style={{ display:'flex', alignItems:'center', gap:14, flexWrap:'wrap' as const }}>
-          <span style={{ fontSize:9, fontWeight:700, letterSpacing:'2.5px', textTransform:'uppercase' as const, color:T.gold }}>Reviews</span>
-          {stats ? (
-            <>
-              <span style={{ background:'rgba(200,169,81,0.15)', border:'1px solid rgba(200,169,81,0.3)', color:T.gold, borderRadius:20, padding:'3px 10px', fontSize:11, fontWeight:700 }}>
-                {stats.total} review{stats.total!==1?'s':''}
-              </span>
-              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                <span style={{ fontSize:18, fontWeight:700, color:T.cream, fontFamily:"'Playfair Display',serif" }}>{Number(stats.average).toFixed(1)}</span>
-                <Stars rating={stats.average??0} size={13}/>
-              </div>
-            </>
-          ) : (
-            <span style={{ background:'rgba(200,169,81,0.15)', border:'1px solid rgba(200,169,81,0.3)', color:T.gold, borderRadius:20, padding:'3px 10px', fontSize:11, fontWeight:700 }}>
-              {loading ? 'Loading…' : 'See all reviews'}
-            </span>
-          )}
+      <button onClick={() => setOpen(o => !o)}
+  style={{
+    width: '100%',
+    background: 'transparent',
+    border: 'none',
+    borderTop: `1px solid ${T.creamDeep}`,
+    borderBottom: open ? 'none' : `1px solid ${T.creamDeep}`,
+    padding: '18px 0',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    cursor: 'pointer',
+  }}
+>
+  <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+    <span style={{ fontFamily: "'Jost',sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '2.5px', textTransform: 'uppercase', color: T.navy }}>
+      Reviews
+    </span>
+    {stats && (
+      <>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <Stars rating={stats.average ?? 0} size={12} />
+          <span style={{ fontFamily: "'Jost',sans-serif", fontSize: 12, color: T.muted }}>
+            {Number(stats.average).toFixed(1)}
+          </span>
         </div>
-        <span style={{ color:'rgba(200,169,81,0.6)', fontSize:11, transition:'transform 0.25s', transform: open?'rotate(180deg)':'rotate(0deg)', display:'inline-block' }}>▼</span>
-      </button>
+        <span style={{ fontFamily: "'Jost',sans-serif", fontSize: 11, color: T.muted }}>
+          ({stats.total} review{stats.total !== 1 ? 's' : ''})
+        </span>
+      </>
+    )}
+  </div>
+  <span style={{
+    color: T.muted, fontSize: 10,
+    transition: 'transform 0.25s',
+    transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+    display: 'inline-block',
+  }}>▼</span>
+</button>
 
       <div style={{ overflow:'hidden', maxHeight: open?3000:0, transition:'max-height 0.4s ease' }}>
         <div style={{ background:T.cream, border:`1px solid ${T.creamDeep}`, borderTop:'none', borderRadius:'0 0 10px 10px', padding:'22px 22px 20px' }}>
