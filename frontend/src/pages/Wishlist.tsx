@@ -4,6 +4,7 @@ import axios from 'axios';
 
 import Navbar       from '../components/common/Navbar';
 import Footer       from '../components/common/Footer';
+import InstagramStrip from '../components/common/InstagramStrip';
 
 interface WishlistItem {
   id: number;          // wishlist row id
@@ -339,6 +340,11 @@ const fetchCart = useCallback(async () => {
           </>
         )}
       </div>
+      <InstagramStrip
+        handle="@lukuprime"
+        profileUrl="https://instagram.com/lukuprime"
+        limit={12}
+            />
 
       {/* ── FOOTER ── */}
      <Footer />

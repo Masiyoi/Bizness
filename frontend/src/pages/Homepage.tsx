@@ -9,6 +9,7 @@ import axios                                  from 'axios';
 
 import Navbar          from '../components/common/Navbar';
 import Footer          from '../components/common/Footer';
+import InstagramStrip from '../components/common/InstagramStrip';
 import Hero            from '../components/home/Hero';
 import TrustStrip      from '../components/home/TrustStrip';
 import CategorySection from '../components/home/CategorySection';
@@ -396,6 +397,12 @@ const toggleCart = async (productId: number) => {
       <div style={{ padding: 'clamp(24px, 4vw, 48px) 0' }}>
         <VideoCarousel tiles={bottomVideo} />
       </div>
+
+      <InstagramStrip
+  handle="@lukuprime"
+  profileUrl="https://instagram.com/lukuprime"
+  limit={12}
+      />
 
       <ReviewSection
         reviews={reviews}
