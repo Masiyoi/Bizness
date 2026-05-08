@@ -4,6 +4,7 @@ import axios from 'axios';
 
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
+import InstagramStrip from '../components/common/InstagramStrip';
 
 interface Review {
   id: number;
@@ -471,6 +472,11 @@ export default function ReviewPage() {
           </>
         )}
       </div>
+      <InstagramStrip
+        handle="@lukuprime"
+        profileUrl="https://instagram.com/lukuprime"
+        limit={12}
+            />
       <Footer />
     </div>
   );

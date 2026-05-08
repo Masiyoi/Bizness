@@ -4,6 +4,7 @@ import axios from 'axios';
 
 import Navbar  from '../components/common/Navbar';
 import Footer  from '../components/common/Footer';
+import InstagramStrip from '../components/common/InstagramStrip';
 
 interface Product {
   id: number; name: string; price: string; description: string;
@@ -741,6 +742,12 @@ export default function ProductDetail() {
         <ReviewsSection productId={product.id} />
         <RelatedProducts category={product.category} currentId={product.id} />
       </div>
+
+       <InstagramStrip
+  handle="@lukuprime"
+  profileUrl="https://instagram.com/lukuprime"
+  limit={12}
+      />
 
       <Footer />
     </div>
