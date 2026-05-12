@@ -50,6 +50,7 @@ exports.getProducts = async (req, res) => {
 };
 
 // ── GET /api/products/:id  (public) ──────────────────────────────────────────
+// ── GET /api/products/:id  (public) ──────────────────────────────────────────
 exports.getProductById = async (req, res) => {
   try {
     const result = await db.query(
@@ -61,7 +62,28 @@ exports.getProductById = async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    res.json(normaliseProduct(result.rows[0]));
+    const product = normaliseProduct(result.rows[0]);
+
+    // ── Fetch variants ────────────────────────────────────────────────────
+    const variantResult = await db.query(
+      `SELECT id, product_id, color, size,
+              stock::integer AS stock,
+              sku, created_at
+       FROM product_variants
+       WHERE product_id = $1
+       ORDER BY color, size`,
+      [req.params.id]
+    );
+
+    product.variants = variantResult.rows;
+
+    if (product.variants.length > 0) {
+      product.colors = [...new Set(product.variants.map(v => v.color).filter(Boolean))];
+      product.sizes  = [...new Set(product.variants.map(v => v.size).filter(Boolean))];
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
+    res.json(product);
   } catch (err) {
     console.error('getProductById error:', err.message);
     res.status(500).json({ error: 'Server error' });

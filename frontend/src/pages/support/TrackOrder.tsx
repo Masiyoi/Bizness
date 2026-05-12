@@ -51,8 +51,8 @@ export default function TrackOrder() {
 
       <Section title="Contact to Track">
         <InfoGrid items={[
-          { icon: '📞', label: 'Call / WhatsApp', value: '+254 714 022 882' },
-          { icon: '✉️', label: 'Email', value: 'masiyoiisaac@gmail.com' },
+          { icon: '📞', label: 'Call / WhatsApp', value: '+254 707 099 935' },
+          { icon: '✉️', label: 'Email', value: 'lukuprime254@gmail.com' },
           { icon: '🕐', label: 'Support Hours', value: 'Mon–Sat, 9am–6pm' },
           { icon: '📍', label: 'Location', value: 'Nairobi CBD, Kenya' },
         ]} />

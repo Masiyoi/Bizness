@@ -27,7 +27,7 @@ export default function FAQs() {
     >
       <Section title="Ordering">
         <FAQItem q="How do I place an order?" a="Browse our categories, add items to your cart, and proceed to checkout. You can pay via M-Pesa, card, or cash on delivery for Nairobi orders." />
-        <FAQItem q="Can I modify my order after placing it?" a="Contact us within 1 hour of placing the order via WhatsApp (+254 714 022 882) and we'll do our best to accommodate changes before dispatch." />
+        <FAQItem q="Can I modify my order after placing it?" a="Contact us within 1 hour of placing the order via WhatsApp (+254 707 099 935) and we'll do our best to accommodate changes before dispatch." />
         <FAQItem q="Do you offer gift wrapping?" a="Yes! Add a note at checkout requesting gift wrapping and we'll package your order beautifully at no extra charge." />
       </Section>
 
@@ -56,7 +56,7 @@ export default function FAQs() {
       </Section>
 
       <AccentCard>
-        Still have a question? Reach us directly on WhatsApp at <strong>+254 714 022 882</strong> or email <strong>masiyoiisaac@gmail.com</strong> — we typically respond within a few hours during business hours.
+        Still have a question? Reach us directly on WhatsApp at <strong>+254 707 099 935</strong> or email <strong>lukuprime254@gmail.com</strong> — we typically respond within a few hours during business hours.
       </AccentCard>
     </PageShell>
   );
