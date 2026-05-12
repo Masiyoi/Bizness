@@ -34,8 +34,8 @@ export default function Contact() {
     >
       <Section title="Get in Touch">
         <InfoGrid items={[
-          { icon: '📞', label: 'Phone / WhatsApp', value: '+254 714 022 882' },
-          { icon: '✉️', label: 'Email', value: 'masiyoiisaac@gmail.com' },
+          { icon: '📞', label: 'Phone / WhatsApp', value: '+254 707 099 935' },
+          { icon: '✉️', label: 'Email', value: 'lukuprime254@gmail.com' },
           { icon: '📍', label: 'Visit Us', value: 'Nairobi CBD, Kenya' },
           { icon: '🕐', label: 'Working Hours', value: 'Mon–Sat, 9am–6pm' },
         ]} />
@@ -89,7 +89,7 @@ export default function Contact() {
       </Section>
 
       <AccentCard>
-        <strong>Fastest response:</strong> WhatsApp us directly at <strong>+254 714 022 882</strong> for urgent queries — we typically reply within minutes during business hours.
+        <strong>Fastest response:</strong> WhatsApp us directly at <strong>+254 707 099 935</strong> for urgent queries — we typically reply within minutes during business hours.
       </AccentCard>
     </PageShell>
   );
