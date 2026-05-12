@@ -21,6 +21,49 @@ const uploadToCloudinary = (buffer) =>
     streamifier.createReadStream(buffer).pipe(stream);
   });
 
+  // ── Save variants for a product (upsert all, delete removed) ─────────────────
+const saveVariants = async (productId, variantsJson) => {
+  let variants = [];
+  try {
+    const parsed = typeof variantsJson === 'string' ? JSON.parse(variantsJson) : variantsJson;
+    variants = Array.isArray(parsed) ? parsed : [];
+  } catch {
+    variants = [];
+  }
+
+  if (!variants.length) return;
+
+  // Delete existing variants for this product, then re-insert
+  // This is simpler than diffing and handles removals cleanly
+  await db.query('DELETE FROM product_variants WHERE product_id = $1', [productId]);
+
+  for (const v of variants) {
+    const color = v.color || null;
+    const size  = v.size  || null;
+    if (!color && !size) continue; // skip empty rows
+    if (!parseInt(v.stock)) continue; // skip zero stock rows (they don't need to be saved as variants)
+
+    await db.query(
+      `INSERT INTO product_variants (product_id, color, size, stock, sku)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [productId, color, size, parseInt(v.stock) || 0, v.sku || null]
+    );
+  }
+};
+
+// ── Fetch variants for a product ──────────────────────────────────────────────
+const getVariants = async (productId) => {
+  const result = await db.query(
+    'SELECT * FROM product_variants WHERE product_id = $1 ORDER BY color, size',
+    [productId]
+  );
+  return result.rows;
+};
+
+// ── Compute total stock from variants (used to keep products.stock in sync) ───
+const sumVariantStock = (variants) =>
+  variants.reduce((sum, v) => sum + (parseInt(v.stock) || 0), 0);
+
 // ── Safely convert any value to a valid JSON array string for ::jsonb cast ────
 const toJsonString = (val) => {
   if (Array.isArray(val)) return JSON.stringify(val);
@@ -68,17 +111,41 @@ exports.getProducts = async (req, res) => {
 };
 
 // ── GET /api/products/:id  (public) ──────────────────────────────────────────
+// ── GET /api/products/:id  (public) ──────────────────────────────────────────
+// ── GET /api/products/:id  (public) ──────────────────────────────────────────
 exports.getProductById = async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM products WHERE id = $1', [req.params.id]);
+    const result = await db.query(
+      'SELECT * FROM products WHERE id = $1',
+      [req.params.id]
+    );
     if (!result.rows.length) return res.status(404).json({ msg: 'Product not found' });
-    res.json(normaliseProduct(result.rows[0]));
+
+    const product = normaliseProduct(result.rows[0]);
+
+    const variantResult = await db.query(
+      `SELECT id, product_id, color, size,
+              stock::integer AS stock,
+              sku, created_at
+       FROM product_variants
+       WHERE product_id = $1
+       ORDER BY color, size`,
+      [req.params.id]
+    );
+
+    product.variants = variantResult.rows;
+
+    if (product.variants.length > 0) {
+      product.colors = [...new Set(product.variants.map(v => v.color).filter(Boolean))];
+      product.sizes  = [...new Set(product.variants.map(v => v.size).filter(Boolean))];
+    }
+
+    res.json(product);
   } catch (err) {
     console.error('getProductById error:', err.message);
     res.status(500).json({ msg: 'Server error' });
   }
 };
-
 // ── POST /api/admin/products ──────────────────────────────────────────────────
 exports.createProduct = async (req, res) => {
   try {
@@ -88,9 +155,9 @@ exports.createProduct = async (req, res) => {
       category    = null,
       description = null,
       features    = '[]',
-      stock       = '0',
       colors      = '[]',
       sizes       = '[]',
+      variants    = '[]',   // ← add this
     } = req.body;
 
     if (!name || !price) return res.status(400).json({ msg: 'Name and price are required' });
@@ -100,6 +167,11 @@ exports.createProduct = async (req, res) => {
       const uploads = await Promise.all(req.files.map(f => uploadToCloudinary(f.buffer)));
       imageUrls = uploads.map(u => u.secure_url);
     }
+
+    // Compute stock from variants if provided, else default to 0
+    let parsedVariants = [];
+    try { parsedVariants = JSON.parse(variants); } catch { parsedVariants = []; }
+    const stockValue = parsedVariants.length ? sumVariantStock(parsedVariants) : 0;
 
     const featuresJson = toJsonString(features);
     const colorsJson   = toJsonString(colors);
@@ -117,7 +189,7 @@ exports.createProduct = async (req, res) => {
         category    || null,
         description || null,
         featuresJson,
-        parseInt(stock) || 0,
+        stockValue,          // ← computed from variants
         imagesJson,
         imageUrls[0] || null,
         colorsJson,
@@ -125,7 +197,13 @@ exports.createProduct = async (req, res) => {
       ]
     );
 
-    res.status(201).json(normaliseProduct(result.rows[0]));
+    const newProduct = normaliseProduct(result.rows[0]);
+
+    // Save variants linked to the new product id
+    await saveVariants(newProduct.id, variants);
+    newProduct.variants = await getVariants(newProduct.id);
+
+    res.status(201).json(newProduct);
   } catch (err) {
     console.error('createProduct error:', err.message);
     res.status(500).json({ msg: 'Server error' });
@@ -135,22 +213,16 @@ exports.createProduct = async (req, res) => {
 // ── PUT /api/admin/products/:id ───────────────────────────────────────────────
 exports.updateProduct = async (req, res) => {
   try {
-    console.log('=== UPDATE PRODUCT DEBUG ===');
-    console.log('req.body:', req.body);
-    console.log('req.files:', req.files?.length, 'files');
-    console.log('sizes value:', req.body.sizes);
-    console.log('===========================');
-
     const {
       name,
       price,
       category       = null,
       description    = null,
       features       = '[]',
-      stock          = '0',
       existingImages = '[]',
       colors         = '[]',
       sizes          = '[]',
+      variants       = '[]',   // ← add this
     } = req.body;
 
     const productId = req.params.id;
@@ -165,10 +237,14 @@ exports.updateProduct = async (req, res) => {
     try {
       const parsed = JSON.parse(existingImages);
       keptImages = Array.isArray(parsed) ? parsed : [];
-    } catch {
-      keptImages = [];
-    }
+    } catch { keptImages = []; }
+
     const allImgs = [...keptImages, ...newUrls];
+
+    // Compute stock from variants
+    let parsedVariants = [];
+    try { parsedVariants = JSON.parse(variants); } catch { parsedVariants = []; }
+    const stockValue = parsedVariants.length ? sumVariantStock(parsedVariants) : parseInt(req.body.stock) || 0;
 
     const featuresJson = toJsonString(features);
     const colorsJson   = toJsonString(colors);
@@ -196,7 +272,7 @@ exports.updateProduct = async (req, res) => {
         category    || null,
         description || null,
         featuresJson,
-        parseInt(stock) || 0,
+        stockValue,          // ← computed from variants
         imagesJson,
         allImgs[0] || null,
         colorsJson,
@@ -206,7 +282,14 @@ exports.updateProduct = async (req, res) => {
     );
 
     if (!result.rows.length) return res.status(404).json({ msg: 'Product not found' });
-    res.json(normaliseProduct(result.rows[0]));
+
+    const updated = normaliseProduct(result.rows[0]);
+
+    // Save variants
+    await saveVariants(productId, variants);
+    updated.variants = await getVariants(productId);
+
+    res.json(updated);
   } catch (err) {
     console.error('updateProduct error:', err.message);
     res.status(500).json({ msg: 'Server error' });
@@ -338,10 +421,19 @@ exports.getStats = async (req, res) => {
         ORDER BY order_count DESC, p.created_at DESC LIMIT 5
       `),
       db.query(`
-        SELECT id, name, stock, image_url, price
-        FROM products WHERE stock <= 5
-        ORDER BY stock ASC LIMIT 6
-      `),
+  SELECT
+    p.id, p.name, p.image_url, p.price,
+    COALESCE(
+      (SELECT SUM(pv.stock) FROM product_variants pv WHERE pv.product_id = p.id),
+      p.stock
+    ) AS stock
+  FROM products p
+  WHERE COALESCE(
+    (SELECT SUM(pv.stock) FROM product_variants pv WHERE pv.product_id = p.id),
+    p.stock
+  ) <= 5
+  ORDER BY stock ASC LIMIT 6
+`),
       db.query(`
         SELECT DATE(created_at)        AS day,
                COALESCE(SUM(total), 0) AS revenue,

@@ -27,8 +27,8 @@ export default function Press() {
         <div style={{ background: '#fff', border: '1px solid rgba(10,22,40,0.09)', borderRadius: 12, padding: '20px 22px' }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '1.5px', color: '#C8A951', textTransform: 'uppercase', marginBottom: 12 }}>Media Enquiries</div>
           <div style={{ fontSize: 14, color: '#0A1628', lineHeight: 2 }}>
-            <div>✉️ <strong>masiyoiisaac@gmail.com</strong></div>
-            <div>📞 <strong>+254 714 022 882</strong></div>
+            <div>✉️ <strong>lukuprime254@gmail.com</strong></div>
+            <div>📞 <strong>+254 707 099 935</strong></div>
             <div style={{ marginTop: 8, fontSize: 12, color: '#7A6A5A' }}>Please use the subject line <em>"Press Enquiry — [Topic]"</em> for a faster response.</div>
           </div>
         </div>

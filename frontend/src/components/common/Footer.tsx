@@ -331,8 +331,8 @@ export default function Footer() {
               </div>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.9 }}>
                 📍 Nairobi CBD, Kenya<br/>
-                📞 +254 714 022 882<br/>
-                ✉️ masiyoiisaac@gmail.com<br/>
+                📞 +254 707 099 935<br/>
+                ✉️ lukuprime254@gmail.com<br/>
                 🕐 Mon–Sat, 9am – 6pm
               </div>
             </div>

@@ -52,7 +52,7 @@ export default function Delivery() {
           { icon: '📦', label: 'Processing Time', value: 'Same day (orders before 12pm)' },
           { icon: '🚚', label: 'Fastest Delivery', value: 'Nairobi CBD — same day' },
           { icon: '💳', label: 'Pay on Delivery', value: 'Available for Nairobi orders' },
-          { icon: '📞', label: 'Delivery Support', value: '+254 714 022 882' },
+          { icon: '📞', label: 'Delivery Support', value: '+254 707 099 935' },
         ]} />
       </Section>
 

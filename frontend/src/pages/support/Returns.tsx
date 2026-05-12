@@ -61,7 +61,7 @@ export default function Returns() {
       </Section>
 
       <AccentCard>
-        <strong>Exchange faster:</strong> For size swaps, WhatsApp us directly at <strong>+254 714 022 882</strong> — we often process same-day exchanges for Nairobi CBD customers.
+        <strong>Exchange faster:</strong> For size swaps, WhatsApp us directly at <strong>+254 707 099 935</strong> — we often process same-day exchanges for Nairobi CBD customers.
       </AccentCard>
     </PageShell>
   );
