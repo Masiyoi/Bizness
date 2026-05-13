@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="copper" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#C9853A"/>
+      <stop offset="100%" style="stop-color:#A0622A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Shield background (navy) -->
+  <path d="M50 10 L85 25 L85 60 Q85 85 50 95 Q15 85 15 60 L15 25 Z"
+        fill="#1B2B5E"/>
+
+  <!-- Shield inner trim (copper) -->
+  <path d="M50 16 L79 29 L79 59 Q79 80 50 89 Q21 80 21 59 L21 29 Z"
+        fill="none" stroke="url(#copper)" stroke-width="3"/>
+
+  <!-- Crown (copper) -->
+  <g fill="url(#copper)">
+    <!-- Crown base bar -->
+    <rect x="33" y="18" width="34" height="5" rx="2"/>
+    <!-- Three crown points -->
+    <polygon points="35,18 40,8 45,18"/>
+    <polygon points="47,18 50,6 53,18"/>
+    <polygon points="55,18 60,8 65,18"/>
+    <!-- Crown dots -->
+    <circle cx="40" cy="8" r="2"/>
+    <circle cx="50" cy="5" r="2"/>
+    <circle cx="60" cy="8" r="2"/>
+  </g>
+
+  <!-- Letter L (white) -->
+  <text x="50" y="74" font-family="Georgia, serif" font-size="38"
+        font-weight="bold" fill="white"
+        text-anchor="middle">L</text>
+
+  <!-- Small star left (copper) -->
+  <text x="23" y="62" font-size="12" fill="url(#copper)" text-anchor="middle">★</text>
+
+  <!-- Small star right (copper) -->
+  <text x="77" y="62" font-size="12" fill="url(#copper)" text-anchor="middle">★</text>
+</svg>
