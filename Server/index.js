@@ -22,6 +22,8 @@ const app = express();
 // 1. Define exactly who is allowed to talk to your API
 const allowedOrigins = [
   'https://lukuprime.vercel.app',
+  'https://lukuprime.shop',       // ✅ Add your new production domain
+  'https://www.lukuprime.shop',
   'http://localhost:5173',
   'https://bizness.onrender.com',
 ];
