@@ -93,12 +93,24 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
         className="bg-navy px-[5%] h-[70px] flex items-center justify-between sticky top-0 z-[100] shadow-nav border-b border-gold/25"
         style={{ fontFamily: "'Playfair Display', serif" }}
       >
-        {/* Logo */}
-        <img
-          src={logo} alt="Luku Prime"
-          className="h-[54px] w-auto object-contain cursor-pointer drop-shadow-md"
-          onClick={() => navigate('/')}
-        />
+     {/* Logo + Brand Name */}
+<div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
+  <img
+    src={logo} alt="Luku Prime"
+    className="h-[54px] w-auto object-contain drop-shadow-md"
+  />
+  <div className="flex flex-col leading-tight">
+    <span
+      className="text-gold font-bold tracking-[2px] uppercase text-[15px]"
+      style={{ fontFamily: "'Playfair Display', serif" }}
+    >
+      Luku Prime
+    </span>
+    <span className="text-white/40 font-sans text-[8px] tracking-[3px] uppercase">
+      Walk prime Live Prime
+    </span>
+  </div>
+</div>
 
         {/* Desktop search */}
         <div className="hidden md:flex items-center bg-white/[0.06] rounded border border-gold/20 px-3.5 py-2 gap-2 w-[300px]">
