@@ -152,7 +152,7 @@ export default function Footer() {
               color: 'rgba(200,169,81,0.6)', textTransform: 'uppercase',
               marginBottom: 14,
             }}>
-              Dress the Finest
+              Walk prime Live prime
             </div>
             <p style={{
               fontSize: 13, color: 'rgba(255,255,255,0.4)',
