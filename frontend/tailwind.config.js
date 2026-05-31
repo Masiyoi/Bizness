@@ -3,24 +3,24 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
-      // ── Brand colours ──────────────────────────────────────────
+      // ── Brand colours (Black & White theme) ────────────────────
       colors: {
         navy: {
-          DEFAULT: '#0D1B3E',
-          mid:     '#152348',
-          light:   '#1E2F5A',
+          DEFAULT: '#000000',   // was #0D1B3E
+          mid:     '#111111',   // was #152348
+          light:   '#222222',   // was #1E2F5A
         },
         gold: {
-          DEFAULT: '#C8A951',
-          light:   '#DEC06A',
-          pale:    '#F0D98A',
+          DEFAULT: '#000000',   // was #C8A951 → black (accent on white bg)
+          light:   '#333333',   // was #DEC06A
+          pale:    '#555555',   // was #F0D98A
         },
         cream: {
-          DEFAULT: '#F9F5EC',
-          mid:     '#F0EAD8',
-          deep:    '#E4D9C0',
+          DEFAULT: '#FFFFFF',   // was #F9F5EC → pure white
+          mid:     '#F0F0F0',   // was #F0EAD8
+          deep:    '#E0E0E0',   // was #E4D9C0
         },
-        muted: '#7A7A8A',
+        muted: '#6B6B6B',       // was #7A7A8A
       },
 
       // ── Typography ──────────────────────────────────────────────
@@ -36,11 +36,11 @@ export default {
 
       // ── Box shadows ─────────────────────────────────────────────
       boxShadow: {
-        card:  '0 12px 36px rgba(13,27,62,0.10)',
-        'card-hover': '0 20px 48px rgba(13,27,62,0.13)',
-        nav:   '0 4px 32px rgba(13,27,62,0.35)',
-        modal: '0 32px 80px rgba(13,27,62,0.30)',
-        gold:  '0 8px 24px rgba(200,169,81,0.35)',
+        card:         '0 12px 36px rgba(0,0,0,0.08)',
+        'card-hover': '0 20px 48px rgba(0,0,0,0.12)',
+        nav:          '0 4px 32px rgba(0,0,0,0.12)',
+        modal:        '0 32px 80px rgba(0,0,0,0.18)',
+        gold:         '0 8px 24px rgba(0,0,0,0.15)',
       },
 
       // ── Border radius ───────────────────────────────────────────
@@ -80,13 +80,13 @@ export default {
         },
       },
       animation: {
-        marquee:  'marquee 32s linear infinite',
-        'fade-up':'fadeUp 0.4s ease both',
-        'fade-in':'fadeIn 0.35s ease forwards',
-        shimmer:  'shimmer 1.4s infinite',
-        pop:      'pop 0.3s ease',
-        'modal-in':'modalIn 0.22s ease',
-        'toast-in':'toastIn 0.3s ease',
+        marquee:    'marquee 32s linear infinite',
+        'fade-up':  'fadeUp 0.4s ease both',
+        'fade-in':  'fadeIn 0.35s ease forwards',
+        shimmer:    'shimmer 1.4s infinite',
+        pop:        'pop 0.3s ease',
+        'modal-in': 'modalIn 0.22s ease',
+        'toast-in': 'toastIn 0.3s ease',
       },
     },
   },

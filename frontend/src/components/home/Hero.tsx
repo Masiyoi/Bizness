@@ -1,93 +1,72 @@
 // src/components/home/Hero.tsx
-import { useEffect, useRef, useState } from 'react';
-import { T, BANNERS } from '../../constants/theme';
+import { useNavigate } from 'react-router-dom';
+
+const VIDEO_URL =
+  'https://res.cloudinary.com/dfiy43f01/video/upload/v1780182574/Soul-soothing_scripture_reflections_for_creative_people_to_save_for_Sunday_inspiration_-_Pin-720364902941634412_bwyhcj.mp4';
 
 export default function Hero() {
-  const [banner,       setBanner]       = useState(0);
-  const [bannerFading, setBannerFading] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const goTo = (idx: number) => {
-    setBannerFading(true);
-    setTimeout(() => { setBanner(idx); setBannerFading(false); }, 300);
-  };
-
-  useEffect(() => {
-    timerRef.current = setInterval(() => {
-      setBannerFading(true);
-      setTimeout(() => { setBanner(p => (p + 1) % BANNERS.length); setBannerFading(false); }, 300);
-    }, 5500);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, []);
-
-  const b = BANNERS[banner];
+  const navigate = useNavigate();
 
   return (
-    <div className="px-[5%] pt-[clamp(12px,2vw,28px)]">
+    <div className="relative bg-black" style={{ height: 'clamp(260px,50vw,490px)' }}>
+      {/* Full-bleed background video */}
+      <video
+        src={VIDEO_URL}
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+
+      {/* Minimal left-side gradient — just enough for text contrast */}
       <div
-        className="rounded-[clamp(12px,2vw,20px)] overflow-hidden relative bg-navy"
-        style={{ height: 'clamp(260px,50vw,490px)' }}
+        className="absolute inset-0"
+        style={{ background: 'linear-gradient(105deg,rgba(0,0,0,0.42) 30%,rgba(0,0,0,0.08) 60%,transparent)' }}
+      />
+
+      {/* Content */}
+      <div
+        className="absolute inset-0 flex flex-col justify-center"
+        style={{ padding: '0 clamp(20px,5%,60px)' }}
       >
-        {/* Background image */}
-        <img
-          src={b.img} alt=""
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
-          style={{ opacity: bannerFading ? 0 : 0.3 }}
-        />
-
-        {/* Gradient overlay */}
-        <div className="absolute inset-0"
-          style={{ background:`linear-gradient(105deg,${T.navy} 40%,rgba(13,27,62,0.6) 75%,transparent)` }}/>
-
-        {/* Content */}
-        <div
-          className="absolute inset-0 flex flex-col justify-center transition-opacity duration-300"
-          style={{
-            padding: '0 clamp(20px,5%,60px)',
-            opacity: bannerFading ? 0 : 1,
-          }}
-        >
-          {/* Tag line */}
-          <div className="flex items-center gap-2.5 mb-[clamp(10px,2vw,18px)]">
-            <div className="w-5 h-px bg-gold"/>
-            <span className="font-sans font-bold tracking-[3px] uppercase text-gold"
-              style={{ fontSize:'clamp(8px,1.5vw,10px)' }}>
-              {b.tag}
-            </span>
-            <div className="w-5 h-px bg-gold"/>
-          </div>
-
-          {/* Headline */}
-          <h1
-            className="font-serif font-extrabold text-white leading-[1.05] whitespace-pre-line mb-[clamp(10px,2vw,18px)]"
-            style={{ fontSize:'clamp(26px,5vw,48px)' }}
+        {/* Tag line */}
+        <div className="flex items-center gap-2.5 mb-[clamp(10px,2vw,18px)]">
+          <div className="w-5 h-px bg-white/70" />
+          <span
+            className="font-sans font-bold tracking-[3px] uppercase text-white/90"
+            style={{ fontSize: 'clamp(8px,1.5vw,10px)' }}
           >
-            {b.title}
-          </h1>
-
-          {/* Sub */}
-          <p className="font-sans font-light text-white/60 mb-[clamp(18px,3vw,36px)] max-w-[420px] leading-[1.75]"
-            style={{ fontSize:'clamp(12px,1.8vw,14px)' }}>
-            {b.sub}
-          </p>
-
-          {/* CTA */}
-          <button className="btn-gold w-fit">
-            {b.cta} →
-          </button>
+            NEW COLLECTION
+          </span>
+          <div className="w-5 h-px bg-white/70" />
         </div>
 
-        {/* Dots */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 items-center">
-          {BANNERS.map((_, i) => (
-            <div
-              key={i}
-              onClick={() => goTo(i)}
-              className="h-[3px] rounded-sm cursor-pointer transition-all duration-300"
-              style={{ width: i === banner ? 24 : 5, background: i === banner ? T.gold : 'rgba(255,255,255,0.25)' }}
-            />
-          ))}
-        </div>
+        {/* Headline */}
+        <h1
+          className="font-serif font-extrabold text-white leading-[1.05] whitespace-pre-line mb-[clamp(10px,2vw,18px)]"
+          style={{ fontSize: 'clamp(26px,5vw,48px)' }}
+        >
+          {'Luku ni\nPrime Siku Zote'}
+        </h1>
+
+        {/* Sub */}
+        <p
+          className="font-sans font-light text-white/75 mb-[clamp(18px,3vw,36px)] max-w-[420px] leading-[1.75]"
+          style={{ fontSize: 'clamp(12px,1.8vw,14px)' }}
+        >
+          Premium fashion arrivals crafted for those who demand the finest —
+          delivered across Kenya.
+        </p>
+
+        {/* CTA */}
+        <button
+          onClick={() => navigate('/?category=All')}
+          className="w-fit font-sans font-bold tracking-[2px] uppercase text-black bg-white px-6 py-3 rounded transition-opacity hover:opacity-80"
+          style={{ fontSize: 'clamp(10px,1.4vw,12px)' }}
+        >
+          Shop Now →
+        </button>
       </div>
     </div>
   );

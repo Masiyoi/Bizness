@@ -5,33 +5,33 @@
 // (e.g. dynamic gradient strings, rgba() values in JS, canvas drawing, etc.)
 //
 // For everything else — use the Tailwind classes defined in tailwind.config.js:
-//   bg-navy, text-gold, border-cream-deep, etc.
+//   bg-black, text-white, border-gray-300, etc.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const T = {
   // ── Core palette ───────────────────────────────────────────────
-  navy:      '#0D1B3E',
-  navyMid:   '#152348',
-  navyLight: '#1E2F5A',
+  navy:      '#000000',   // was #0D1B3E → pure black
+  navyMid:   '#111111',   // was #152348 → near-black
+  navyLight: '#222222',   // was #1E2F5A → dark charcoal
 
-  gold:      '#C8A951',
-  goldLight: '#DEC06A',
-  goldPale:  '#F0D98A',
+  gold:      '#FFFFFF',   // was #C8A951 → pure white (primary accent)
+  goldLight: '#E0E0E0',   // was #DEC06A → light grey
+  goldPale:  '#F5F5F5',   // was #F0D98A → off-white
 
-  cream:     '#F9F5EC',
-  creamMid:  '#F0EAD8',
-  creamDeep: '#E4D9C0',
+  cream:     '#F9F9F9',   // was #F9F5EC → near-white
+  creamMid:  '#EFEFEF',   // was #F0EAD8 → light grey
+  creamDeep: '#D9D9D9',   // was #E4D9C0 → mid grey
 
   white:     '#FFFFFF',
-  text:      '#0D1B3E',
-  muted:     '#7A7A8A',
+  text:      '#000000',   // was #0D1B3E → pure black
+  muted:     '#6B6B6B',   // was #7A7A8A → neutral grey
 } as const;
 
 // ── Avatar colour pool (cycles by id) ──────────────────────────────────────
 export const AVATAR_COLORS = [
-  '#0D1B3E', '#1E2F5A', '#8A6A20',
-  '#3A6EA8', '#4A7A4A', '#5A3E8A',
-  '#C0392B', '#2D6A9F',
+  '#000000', '#111111', '#222222',
+  '#444444', '#555555', '#777777',
+  '#999999', '#BBBBBB',
 ] as const;
 
 // ── Delivery zone labels ────────────────────────────────────────────────────
@@ -44,12 +44,12 @@ export const DELIVERY_ZONE_LABELS: Record<string, string> = {
 
 // ── Order status config ─────────────────────────────────────────────────────
 export const STATUS_CONFIG = {
-  pending:    { label:'Pending',    color:'#8A6A20', bg:'rgba(200,169,81,0.1)',  border:'rgba(200,169,81,0.3)',  icon:'⏳', step:0 },
-  processing: { label:'Processing', color:'#0D1B3E', bg:'rgba(13,27,62,0.07)',   border:'rgba(13,27,62,0.15)',   icon:'🔄', step:1 },
-  confirmed:  { label:'Confirmed',  color:'#2D6A9F', bg:'rgba(45,106,159,0.08)', border:'rgba(45,106,159,0.25)', icon:'✅', step:2 },
-  shipped:    { label:'Shipped',    color:'#5A3E8A', bg:'rgba(90,62,138,0.08)',  border:'rgba(90,62,138,0.25)',  icon:'🚚', step:3 },
-  delivered:  { label:'Delivered',  color:'#4A7A4A', bg:'rgba(74,122,74,0.1)',   border:'rgba(74,122,74,0.25)',  icon:'🎉', step:4 },
-  cancelled:  { label:'Cancelled',  color:'#C0392B', bg:'#FDF0EE',              border:'#F5C6C0',               icon:'✕',  step:-1 },
+  pending:    { label:'Pending',    color:'#555555', bg:'rgba(0,0,0,0.05)',   border:'rgba(0,0,0,0.15)',   icon:'⏳', step:0 },
+  processing: { label:'Processing', color:'#000000', bg:'rgba(0,0,0,0.07)',   border:'rgba(0,0,0,0.20)',   icon:'🔄', step:1 },
+  confirmed:  { label:'Confirmed',  color:'#000000', bg:'rgba(0,0,0,0.08)',   border:'rgba(0,0,0,0.30)',   icon:'✅', step:2 },
+  shipped:    { label:'Shipped',    color:'#333333', bg:'rgba(0,0,0,0.06)',   border:'rgba(0,0,0,0.25)',   icon:'🚚', step:3 },
+  delivered:  { label:'Delivered',  color:'#000000', bg:'rgba(0,0,0,0.10)',   border:'rgba(0,0,0,0.35)',   icon:'🎉', step:4 },
+  cancelled:  { label:'Cancelled',  color:'#888888', bg:'#F5F5F5',           border:'#CCCCCC',            icon:'✕',  step:-1 },
 } as const;
 
 // ── Announcement bar items ──────────────────────────────────────────────────
@@ -73,22 +73,22 @@ export const SOCIAL_LINKS = [
     name:    'Instagram',
     url:     'https://www.instagram.com/lukuprimeshoesbagsthrift?igsh=MWxmazlvM2JseWNzeQ==',
     label:   '@lukuprimeshoesbagsthrift',
-    color:   '#E1306C',
-    hoverBg: 'rgba(225,48,108,0.12)',
+    color:   '#000000',
+    hoverBg: 'rgba(0,0,0,0.08)',
   },
   {
     name:    'TikTok',
     url:     'https://tiktok.com/@lifewith_heels_bags',
     label:   '@lifewith_heels_bags',
-    color:   '#ffffff',
-    hoverBg: 'rgba(255,255,255,0.1)',
+    color:   '#000000',
+    hoverBg: 'rgba(0,0,0,0.08)',
   },
   {
     name:    'YouTube',
     url:     'https://www.youtube.com/@Lukuprime254',
     label:   '@Lukuprime254',
-    color:   '#FF0000',
-    hoverBg: 'rgba(255,0,0,0.12)',
+    color:   '#000000',
+    hoverBg: 'rgba(0,0,0,0.08)',
   },
 ] as const;
 
