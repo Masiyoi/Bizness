@@ -9,7 +9,7 @@ import axios                                  from 'axios';
 
 import Navbar          from '../components/common/Navbar';
 import Footer          from '../components/common/Footer';
-import InstagramStrip from '../components/common/InstagramStrip';
+import InstagramStrip  from '../components/common/InstagramStrip';
 import Hero            from '../components/home/Hero';
 import SlidingProductStrip from '../components/home/SlidingProductStrip';
 import CategorySection from '../components/home/CategorySection';
@@ -53,24 +53,30 @@ export default function Homepage() {
 
   // ── Fetch products ──────────────────────────────────────────────
   useEffect(() => {
-    // Swapped fetch for axios.get
     axios.get('/api/products')
       .then(res => { setProducts(res.data); setProductsLoading(false); })
       .catch(()  => setProductsLoading(false));
   }, []);
 
   // ── Fetch reviews ─────────────────────────────────────────────
- useEffect(() => {
-    // Swapped fetch for axios.get
+  useEffect(() => {
     axios.get('/api/reviews/homepage?limit=12')
       .then(res => { setReviews(Array.isArray(res.data) ? res.data : []); setReviewsLoading(false); })
       .catch(()  => setReviewsLoading(false));
   }, []);
-  
+
+  // ── Sync category & search from URL search params ─────────────
+  useEffect(() => {
+    const cat    = searchParams.get('category');
+    const q      = searchParams.get('search');
+    if (cat) setActiveCategory(decodeURIComponent(cat));
+    if (q   !== null) setSearch(q);
+  }, [searchParams]);
+
   // ── Fetch cart ────────────────────────────────────────────────
-const fetchCart = useCallback(() => {
-  if (!user || user.role === 'admin') { setCartIds([]); setCartCount(0); return; }
-  axios.get('/api/cart')
+  const fetchCart = useCallback(() => {
+    if (!user || user.role === 'admin') { setCartIds([]); setCartCount(0); return; }
+    axios.get('/api/cart')
       .then(res => {
         setCartIds(res.data.map((i: any) => i.product_id));
         setCartCount(res.data.reduce((s: number, i: any) => s + i.quantity, 0));
@@ -84,9 +90,9 @@ const fetchCart = useCallback(() => {
   }, [fetchCart]);
 
   // ── Fetch wishlist ────────────────────────────────────────────
-const fetchWishlist = useCallback(() => {
-  if (!user || user.role === 'admin') { setWishlist([]); return; }
-  axios.get('/api/wishlist')
+  const fetchWishlist = useCallback(() => {
+    if (!user || user.role === 'admin') { setWishlist([]); return; }
+    axios.get('/api/wishlist')
       .then(res => setWishlist(res.data.map((i: any) => i.product_id)))
       .catch(() => {});
   }, [user?.id]);
@@ -94,11 +100,11 @@ const fetchWishlist = useCallback(() => {
   useEffect(() => { fetchWishlist(); }, [fetchWishlist]);
 
   // ── Cart toggle ───────────────────────────────────────────────
-const toggleCart = async (productId: number) => {
-  if (!user) { navigate('/login'); return; }
-  if (cartIds.includes(productId)) {
-    try {
-      await axios.delete(`/api/cart/${productId}`);
+  const toggleCart = async (productId: number) => {
+    if (!user) { navigate('/login'); return; }
+    if (cartIds.includes(productId)) {
+      try {
+        await axios.delete(`/api/cart/${productId}`);
         setCartIds(p => p.filter(id => id !== productId));
         setCartCount(p => Math.max(0, p - 1));
       } catch (e: any) { if (e.response?.status === 401) navigate('/login'); }
@@ -120,7 +126,7 @@ const toggleCart = async (productId: number) => {
       catch { fetchWishlist(); }
     } else {
       setWishlist(p => [...p, productId]);
-     try { await axios.post('/api/wishlist', { product_id: productId }); }
+      try { await axios.post('/api/wishlist', { product_id: productId }); }
       catch { fetchWishlist(); }
     }
   };
@@ -131,6 +137,11 @@ const toggleCart = async (productId: number) => {
     setCartCount(0);
     setWishlist([]);
   };
+
+  // ── Derive unique categories from products (sorted) ───────────
+  const categories = Array.from(
+    new Set(products.map(p => p.category).filter(Boolean))
+  ).sort() as string[];
 
   // ── Filtered product list ─────────────────────────────────────
   const filtered = products.filter(p =>
@@ -148,11 +159,9 @@ const toggleCart = async (productId: number) => {
 
   const goToPage = (page: number) => {
     setCurrentPage(page);
-    // Scroll back up to the product grid smoothly
     document.getElementById('product-grid-top')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  // Build page number list with ellipsis e.g. [1, '...', 4, 5, 6, '...', 12]
   const getPageNumbers = (): (number | '...')[] => {
     if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
     const pages: (number | '...')[] = [1];
@@ -172,6 +181,12 @@ const toggleCart = async (productId: number) => {
         cartCount={cartCount}
         wishlistCount={wishlist.length}
         onLogout={handleLogout}
+        categories={categories}
+        activeCategory={activeCategory}
+        onCategorySelect={cat => {
+          setActiveCategory(cat);
+          setSearch('');
+        }}
       />
 
       <Hero />
@@ -188,7 +203,7 @@ const toggleCart = async (productId: number) => {
       {/* ── Products grid ── */}
       <div className="px-[5%] pb-[clamp(40px,6vw,80px)]">
 
-        {/* Scroll anchor — sits above the header so the heading is visible after page change */}
+        {/* Scroll anchor */}
         <div id="product-grid-top" style={{ scrollMarginTop: 80 }} />
 
         <div className="flex justify-between items-end mb-5 gap-3 flex-wrap">
@@ -400,9 +415,9 @@ const toggleCart = async (productId: number) => {
       </div>
 
       <InstagramStrip
-  handle="@lukuprime"
-  profileUrl="https://instagram.com/lukuprime"
-  limit={12}
+        handle="@lukuprime"
+        profileUrl="https://instagram.com/lukuprime"
+        limit={12}
       />
 
       <ReviewSection

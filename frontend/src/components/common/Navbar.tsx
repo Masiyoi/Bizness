@@ -10,20 +10,34 @@ interface NavbarProps {
   cartCount?: number;
   wishlistCount?: number;
   onLogout?: () => void;
+  categories?: string[];
+  activeCategory?: string;
+  onCategorySelect?: (cat: string) => void;
 }
 
-export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishlistCountProp, onLogout }: NavbarProps) {
+export default function Navbar({
+  cartCount: cartCountProp,
+  wishlistCount: wishlistCountProp,
+  onLogout,
+  categories = [],
+  activeCategory = 'All',
+  onCategorySelect,
+}: NavbarProps) {
   const navigate = useNavigate();
-  const menuRef  = useRef<HTMLDivElement>(null);
+  const menuRef     = useRef<HTMLDivElement>(null);
+  const shopMenuRef = useRef<HTMLDivElement>(null);
 
   const [user,           setUser]           = useState<User | null>(readUser);
   const [showMenu,       setShowMenu]       = useState(false);
+  const [showShopMenu,   setShowShopMenu]   = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSearch,     setShowSearch]     = useState(false);
   const [search,         setSearch]         = useState('');
   const [cartCount,      setCartCount]      = useState(cartCountProp ?? 0);
   const [wishlistCount,  setWishlistCount]  = useState(wishlistCountProp ?? 0);
+  const [navCategories,  setNavCategories]  = useState<string[]>(categories);
 
+  // Close avatar dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node))
@@ -33,8 +47,34 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  useEffect(() => { if (cartCountProp     !== undefined) setCartCount(cartCountProp);      }, [cartCountProp]);
+  // Close shop dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (shopMenuRef.current && !shopMenuRef.current.contains(e.target as Node))
+        setShowShopMenu(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  useEffect(() => { if (cartCountProp     !== undefined) setCartCount(cartCountProp);         }, [cartCountProp]);
   useEffect(() => { if (wishlistCountProp !== undefined) setWishlistCount(wishlistCountProp); }, [wishlistCountProp]);
+
+  // Sync navCategories from prop, or self-fetch if prop is empty
+  useEffect(() => {
+    if (categories.length > 0) {
+      setNavCategories(categories);
+      return;
+    }
+    axios.get('/api/products')
+      .then(res => {
+        const cats = Array.from(
+          new Set((res.data as any[]).map((p: any) => p.category).filter(Boolean))
+        ).sort() as string[];
+        setNavCategories(cats);
+      })
+      .catch(() => {});
+  }, [categories.length]);
 
   const fetchCounts = useCallback(() => {
     const token = localStorage.getItem('token');
@@ -64,6 +104,40 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
 
   const go = (path: string) => { navigate(path); setShowMenu(false); setMobileMenuOpen(false); };
 
+  const goCategory = (cat: string) => {
+    onCategorySelect?.(cat);
+    navigate(cat === 'All' ? '/' : `/?category=${encodeURIComponent(cat)}`);
+    setShowShopMenu(false);
+    setMobileMenuOpen(false);
+  };
+
+  // Category emoji map — fallback to 🏷️
+  const catEmoji: Record<string, string> = {
+    'All': '🗂️',
+    'Dresses': '👗',
+    'Tops': '👚',
+    'Bottoms': '👖',
+    'Shoes': '👟',
+    'Sneakers': '👟',
+    'Heels': '👠',
+    'Boots': '🥾',
+    'Accessories': '💍',
+    'Bags': '👜',
+    'Jackets': '🧥',
+    'Coats': '🧥',
+    'Suits': '🤵',
+    'Swimwear': '🩱',
+    'Activewear': '🏃',
+    'Lingerie': '🩲',
+    'Kids': '🧒',
+    'Men': '🧔',
+    'Women': '👩',
+    'Sale': '🔖',
+  };
+
+  const getEmoji = (cat: string) =>
+    catEmoji[cat] ?? Object.entries(catEmoji).find(([k]) => cat.toLowerCase().includes(k.toLowerCase()))?.[1] ?? '🏷️';
+
   return (
     <>
       {/* ── Announcement marquee ── */}
@@ -86,24 +160,24 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
         className="bg-white px-[5%] h-[70px] flex items-center justify-between sticky top-0 z-[100] shadow-nav border-b border-black/15"
         style={{ fontFamily: "'Playfair Display', serif" }}
       >
-     {/* Logo + Brand Name */}
-<div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
-  <img
-    src={logo} alt="Luku Prime"
-    className="h-[54px] w-auto object-contain drop-shadow-md"
-  />
-  <div className="flex flex-col leading-tight">
-    <span
-      className="text-gold font-bold tracking-[2px] uppercase text-[15px]"
-      style={{ fontFamily: "'Playfair Display', serif" }}
-    >
-      Luku Prime
-    </span>
-    <span className="text-white/40 font-sans text-[8px] tracking-[3px] uppercase">
-      Walk prime Live Prime
-    </span>
-  </div>
-</div>
+        {/* Logo + Brand Name */}
+        <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
+          <img
+            src={logo} alt="Luku Prime"
+            className="h-[54px] w-auto object-contain drop-shadow-md"
+          />
+          <div className="flex flex-col leading-tight">
+            <span
+              className="text-gold font-bold tracking-[2px] uppercase text-[15px]"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              Luku Prime
+            </span>
+            <span className="text-white/40 font-sans text-[8px] tracking-[3px] uppercase">
+              Walk Prime Live Prime
+            </span>
+          </div>
+        </div>
 
         {/* Desktop search */}
         <div className="hidden md:flex items-center bg-black/[0.04] rounded border border-black/15 px-3.5 py-2 gap-2 w-[300px]">
@@ -119,6 +193,58 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
 
         {/* Desktop right side */}
         <div className="hidden md:flex items-center gap-5">
+
+          {/* ── Shop by Category dropdown ── */}
+          {navCategories.length > 0 && (
+            <div ref={shopMenuRef} className="relative">
+              <span
+                className="font-sans text-[11px] font-semibold tracking-[1.5px] uppercase cursor-pointer text-black/75 transition-colors hover:text-black flex items-center gap-1 select-none"
+                onClick={() => setShowShopMenu(s => !s)}
+              >
+                Shop
+                <svg
+                  width="8" height="5" viewBox="0 0 8 5" fill="none"
+                  style={{
+                    transition: 'transform 0.2s',
+                    transform: showShopMenu ? 'rotate(180deg)' : 'rotate(0deg)',
+                  }}
+                >
+                  <path d="M1 1l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
+
+              {showShopMenu && (
+                <div className="absolute top-[calc(100%+12px)] left-1/2 -translate-x-1/2 bg-white border border-black/10 rounded-[14px] p-2 min-w-[200px] shadow-modal animate-modal-in z-[200]">
+                  {/* All Products */}
+                  <div
+                    className="mitem"
+                    style={{ fontWeight: activeCategory === 'All' ? 700 : undefined, color: activeCategory === 'All' ? '#000' : undefined }}
+                    onClick={() => goCategory('All')}
+                  >
+                    <span className="mr-1">🗂️</span> All Products
+                    {activeCategory === 'All' && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                  </div>
+
+                  {/* Divider */}
+                  <div className="mx-3 my-1.5 border-t border-black/[0.06]" />
+
+                  {/* Dynamic categories */}
+                  {navCategories.map(cat => (
+                    <div
+                      key={cat}
+                      className="mitem"
+                      style={{ fontWeight: activeCategory === cat ? 700 : undefined, color: activeCategory === cat ? '#000' : undefined }}
+                      onClick={() => goCategory(cat)}
+                    >
+                      <span className="mr-1">{getEmoji(cat)}</span> {cat}
+                      {activeCategory === cat && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <span
             className="font-sans text-[11px] font-semibold tracking-[1.5px] uppercase cursor-pointer text-black/75 transition-colors hover:text-black"
             onClick={() => navigate('/new-drops')}
@@ -217,6 +343,36 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
                     </>
                   )}
 
+                  {/* ── Shop by Category (inside avatar dropdown) ── */}
+                  {navCategories.length > 0 && (
+                    <>
+                      <div className="border-t border-black/10 mt-1.5 pt-1.5 mb-1">
+                        <span className="px-3.5 font-sans text-[9px] font-extrabold tracking-[2px] uppercase text-black/30">
+                          Shop by Category
+                        </span>
+                      </div>
+                      <div
+                        className="mitem"
+                        style={{ fontWeight: activeCategory === 'All' ? 700 : undefined }}
+                        onClick={() => { goCategory('All'); setShowMenu(false); }}
+                      >
+                        🗂️ All Products
+                        {activeCategory === 'All' && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                      </div>
+                      {navCategories.map(cat => (
+                        <div
+                          key={cat}
+                          className="mitem"
+                          style={{ fontWeight: activeCategory === cat ? 700 : undefined, color: activeCategory === cat ? '#000' : undefined }}
+                          onClick={() => { goCategory(cat); setShowMenu(false); }}
+                        >
+                          {getEmoji(cat)} {cat}
+                          {activeCategory === cat && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                        </div>
+                      ))}
+                    </>
+                  )}
+
                   <div className="border-t border-black/10 mt-1.5 pt-1.5">
                     <div className="mitem mitem-danger" onClick={handleLogout}>🚪 Sign Out</div>
                   </div>
@@ -306,22 +462,80 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
                   👑 Admin Dashboard
                 </button>
               )}
+
+              {/* ── Mobile categories ── */}
+              {navCategories.length > 0 && (
+                <>
+                  <div className="pt-3 pb-1.5 border-t border-black/10 mt-1">
+                    <span className="font-sans text-[9px] font-extrabold tracking-[2px] uppercase text-black/30">
+                      Shop by Category
+                    </span>
+                  </div>
+                  <button
+                    className={`bg-none border-none cursor-pointer font-sans text-sm py-2.5 text-left w-full border-b border-black/[0.06] transition-colors hover:text-black flex items-center gap-2.5 ${activeCategory === 'All' ? 'font-bold text-black' : 'font-medium text-black/70'}`}
+                    onClick={() => goCategory('All')}
+                  >
+                    🗂️ All Products {activeCategory === 'All' && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                  </button>
+                  {navCategories.map(cat => (
+                    <button
+                      key={cat}
+                      className={`bg-none border-none cursor-pointer font-sans text-sm py-2.5 text-left w-full border-b border-black/[0.06] transition-colors hover:text-black flex items-center gap-2.5 last:border-b-0 ${activeCategory === cat ? 'font-bold text-black' : 'font-medium text-black/70'}`}
+                      onClick={() => goCategory(cat)}
+                    >
+                      {getEmoji(cat)} {cat}
+                      {activeCategory === cat && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                    </button>
+                  ))}
+                </>
+              )}
+
               <button className="bg-none border-none cursor-pointer font-sans text-sm font-medium text-red-500 py-3 mt-2 text-left w-full flex items-center gap-2.5 transition-colors hover:text-red-600"
                 onClick={handleLogout}>
                 🚪 Sign Out
               </button>
             </>
           ) : (
-            <div className="flex gap-2.5 pt-1">
-              <button onClick={() => go('/login')}
-                className="flex-1 font-sans text-[11px] font-semibold tracking-[1.5px] uppercase rounded border border-black/30 px-4 py-2.5 cursor-pointer text-black bg-transparent">
-                Sign In
-              </button>
-              <button onClick={() => go('/register')}
-                className="flex-1 font-sans text-[11px] font-bold tracking-[1.5px] uppercase rounded border-none px-4 py-2.5 cursor-pointer bg-black text-white">
-                Join Free
-              </button>
-            </div>
+            <>
+              {/* ── Mobile categories for guests ── */}
+              {navCategories.length > 0 && (
+                <>
+                  <div className="pb-1.5 mb-1">
+                    <span className="font-sans text-[9px] font-extrabold tracking-[2px] uppercase text-black/30">
+                      Shop by Category
+                    </span>
+                  </div>
+                  <button
+                    className={`bg-none border-none cursor-pointer font-sans text-sm py-2.5 text-left w-full border-b border-black/[0.06] transition-colors hover:text-black flex items-center gap-2.5 ${activeCategory === 'All' ? 'font-bold text-black' : 'font-medium text-black/70'}`}
+                    onClick={() => goCategory('All')}
+                  >
+                    🗂️ All Products {activeCategory === 'All' && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                  </button>
+                  {navCategories.map(cat => (
+                    <button
+                      key={cat}
+                      className={`bg-none border-none cursor-pointer font-sans text-sm py-2.5 text-left w-full border-b border-black/[0.06] transition-colors hover:text-black flex items-center gap-2.5 ${activeCategory === cat ? 'font-bold text-black' : 'font-medium text-black/70'}`}
+                      onClick={() => goCategory(cat)}
+                    >
+                      {getEmoji(cat)} {cat}
+                      {activeCategory === cat && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                    </button>
+                  ))}
+                  <div className="border-t border-black/10 mt-2 mb-2" />
+                </>
+              )}
+
+              <div className="flex gap-2.5 pt-1">
+                <button onClick={() => go('/login')}
+                  className="flex-1 font-sans text-[11px] font-semibold tracking-[1.5px] uppercase rounded border border-black/30 px-4 py-2.5 cursor-pointer text-black bg-transparent">
+                  Sign In
+                </button>
+                <button onClick={() => go('/register')}
+                  className="flex-1 font-sans text-[11px] font-bold tracking-[1.5px] uppercase rounded border-none px-4 py-2.5 cursor-pointer bg-black text-white">
+                  Join Free
+                </button>
+              </div>
+            </>
           )}
         </div>
       )}
