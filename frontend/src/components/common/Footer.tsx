@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import logo from '../../assets/logo.png';
-import { SOCIAL_LINKS } from '../../constants/theme';
+import { T, SOCIAL_LINKS } from '../../constants/theme';
 
 // ── Social icons ──────────────────────────────
 const SOCIAL_ICONS: Record<string, React.ReactNode> = {
@@ -78,8 +78,13 @@ export default function Footer() {
   const [message, setMessage] = useState('');
 
   const handleSubscribe = async () => {
+    // Auth guard
     const user = localStorage.getItem('user');
-    if (!user) { navigate('/login'); return; }
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
     if (!email || !email.includes('@')) {
       setStatus('error');
       setMessage('Please enter a valid email address.');
@@ -89,6 +94,7 @@ export default function Footer() {
     setMessage('');
     try {
       const res = await axios.post('/api/subscribers', { email });
+
       setStatus('success');
       setMessage(res.data.msg || 'Subscribed successfully!');
       setEmail('');
@@ -108,7 +114,7 @@ export default function Footer() {
     status === 'success' ? 'rgba(46,204,113,0.6)' :
     'rgba(255,255,255,0.20)';
 
-  const btnBg = status === 'success' ? '#2ecc71' : '#ffffff';
+  const btnBg    = status === 'success' ? '#2ecc71' : '#ffffff';
   const btnColor = status === 'success' ? '#fff' : '#000000';
 
   return (
