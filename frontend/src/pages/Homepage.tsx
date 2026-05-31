@@ -11,7 +11,7 @@ import Navbar          from '../components/common/Navbar';
 import Footer          from '../components/common/Footer';
 import InstagramStrip from '../components/common/InstagramStrip';
 import Hero            from '../components/home/Hero';
-import TrustStrip      from '../components/home/TrustStrip';
+import SlidingProductStrip from '../components/home/SlidingProductStrip';
 import CategorySection from '../components/home/CategorySection';
 import ProductCard     from '../components/home/ProductCard';
 import ReviewSection   from '../components/home/ReviewSection';
@@ -175,7 +175,8 @@ const toggleCart = async (productId: number) => {
       />
 
       <Hero />
-      <TrustStrip />
+
+      <SlidingProductStrip products={products} loading={productsLoading} />
 
       {/* ── Top video carousel ── */}
       <div style={{ padding: 'clamp(24px, 4vw, 48px) 0' }}>

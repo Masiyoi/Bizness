@@ -2,10 +2,43 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Primary SEO -->
+    <!-- ═══════════════════════════════════════════
+         FAVICON SUITE
+         Place all these files in your /public folder.
+         The SVG favicon below is inline-compatible but
+         you should also export your logo as:
+           • /public/favicon.ico          (32×32, legacy browsers)
+           • /public/favicon-96x96.png    (standard)
+           • /public/apple-touch-icon.png (180×180, iOS home screen)
+           • /public/web-app-manifest-192x192.png
+           • /public/web-app-manifest-512x512.png
+    ════════════════════════════════════════════ -->
+
+    <!-- SVG favicon (modern browsers — crisp at any size) -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- PNG fallback for older browsers -->
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+
+    <!-- Legacy .ico fallback (IE / very old Chrome) -->
+    <link rel="shortcut icon" href="/favicon.ico" />
+
+    <!-- Apple home-screen icon (no transparency) -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <!-- Web App Manifest (PWA + Android home-screen) -->
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Theme color — matches your navy brand color -->
+    <meta name="theme-color" content="#1B2B5E" />
+    <meta name="msapplication-TileColor" content="#1B2B5E" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+
+    <!-- ═══════════════════════════════════════════
+         PRIMARY SEO
+    ════════════════════════════════════════════ -->
     <title>Luku Prime | Online Fashion Store Kenya — Nairobi Delivery</title>
     <meta name="description" content="Kenya's best online fashion store. Shop sneakers, dresses, bags, heels & designer wear with fast Nairobi CBD delivery from KSh 100. Authentic fashion at the best prices." />
     <meta name="keywords" content="online fashion Kenya, buy clothes Nairobi, sneakers Kenya, dresses Kenya, designer wear Nairobi, bags Kenya, heels Kenya, affordable fashion Kenya, Luku Prime, online shopping Kenya" />
@@ -13,22 +46,44 @@
     <meta name="author" content="Luku Prime" />
     <link rel="canonical" href="https://lukuprime.co.ke" />
 
-    <!-- Open Graph (Facebook, WhatsApp previews) -->
+    <!-- ═══════════════════════════════════════════
+         OPEN GRAPH (Facebook, WhatsApp, LinkedIn)
+    ════════════════════════════════════════════ -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://lukuprime.co.ke" />
     <meta property="og:title" content="Luku Prime | Kenya's Premier Online Fashion Store" />
     <meta property="og:description" content="Authentic drops, fast Nairobi CBD delivery from KSh 100, and style that speaks before you do." />
     <meta property="og:image" content="https://lukuprime.co.ke/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Luku Prime — Shop The Finest" />
     <meta property="og:locale" content="en_KE" />
     <meta property="og:site_name" content="Luku Prime" />
 
-    <!-- Twitter / X Card -->
+    <!-- ═══════════════════════════════════════════
+         TWITTER / X CARD
+    ════════════════════════════════════════════ -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@lukuprime" />
     <meta name="twitter:title" content="Luku Prime | Online Fashion Store Kenya" />
     <meta name="twitter:description" content="Shop sneakers, dresses, bags & designer wear in Kenya. Fast Nairobi delivery from KSh 100." />
     <meta name="twitter:image" content="https://lukuprime.co.ke/og-image.jpg" />
+    <meta name="twitter:image:alt" content="Luku Prime — Shop The Finest" />
 
-    <!-- Schema.org Structured Data -->
+    <!-- ═══════════════════════════════════════════
+         PERFORMANCE — DNS PREFETCH & PRECONNECT
+         Add domains your app fetches from (fonts,
+         APIs, CDNs) so the browser resolves them early.
+    ════════════════════════════════════════════ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://accounts.google.com" />
+
+    <!-- ═══════════════════════════════════════════
+         SCHEMA.ORG STRUCTURED DATA
+         Helps Google show rich results (ratings,
+         opening hours, location) in search.
+    ════════════════════════════════════════════ -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -71,10 +126,15 @@
       ]
     }
     </script>
+
+    <!-- ═══════════════════════════════════════════
+         GOOGLE SIGN-IN (deferred — non-blocking)
+    ════════════════════════════════════════════ -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
   </body>
 </html>

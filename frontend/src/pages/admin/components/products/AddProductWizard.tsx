@@ -18,6 +18,21 @@ interface WizardProps {
   editProduct?: (Product & { variants?: Variant[] }) | null;
 }
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Stable key for a variant so every lookup uses the same string */
+const variantKey = (color: string, size: string) => `${color}||${size}`;
+
+/**
+ * Build a lookup map from the variant array.
+ * Using a Map keyed by variantKey avoids === comparison bugs.
+ */
+const buildVariantMap = (variants: Variant[]): Map<string, Variant> => {
+  const map = new Map<string, Variant>();
+  for (const v of variants) map.set(variantKey(v.color, v.size), v);
+  return map;
+};
+
 // ── Tag pill ─────────────────────────────────────────────────────────────────
 function TagPill({ label, dot, onRemove }: { label: string; dot?: string; onRemove: () => void }) {
   return (
@@ -38,33 +53,47 @@ function VariantGrid({
   variants: Variant[];
   onChange: (variants: Variant[]) => void;
 }) {
-  const updateStock = (color: string, size: string, stock: number) =>
-    onChange(variants.map(v => v.color === color && v.size === size ? { ...v, stock } : v));
+  /**
+   * FIX: Instead of using .find() (which can silently return undefined on any
+   * whitespace / case mismatch and then reset stock to 0), we build a Map
+   * keyed by variantKey and do O(1) exact lookups. The updater also uses the
+   * same key so the replace is guaranteed to hit the right element.
+   */
+  const updateStock = (color: string, size: string, stock: number) => {
+    const key = variantKey(color, size);
+    onChange(variants.map(v => variantKey(v.color, v.size) === key ? { ...v, stock } : v));
+  };
 
-  const updateSku = (color: string, size: string, sku: string) =>
-    onChange(variants.map(v => v.color === color && v.size === size ? { ...v, sku } : v));
+  const updateSku = (color: string, size: string, sku: string) => {
+    const key = variantKey(color, size);
+    onChange(variants.map(v => variantKey(v.color, v.size) === key ? { ...v, sku } : v));
+  };
+
+  const variantMap = buildVariantMap(variants);
 
   const stockColor = (stock: number) =>
     stock === 0 ? { bg:'#FDF0EE', border:'#F5C6C0', text:'#C0392B' } :
     stock <= 5  ? { bg:'#FDF8EC', border:'#F6E4A0', text:'#B7791F' } :
                   { bg:'#EEF5EE', border:'#C8DFC8', text:'#2E7D32' };
 
-  // Color-only (no sizes)
+  // ── Color-only (no sizes) ─────────────────────────────────────────────────
   if (colors.length > 0 && sizes.length === 0) {
     return (
       <div>
         <div style={sectionLabel}>Stock per colour</div>
         <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
           {colors.map(color => {
-            const v = variants.find(x => x.color === color && !x.size);
+            const v     = variantMap.get(variantKey(color, ''));
             const stock = v?.stock ?? 0;
-            const c = stockColor(stock);
+            const c     = stockColor(stock);
             return (
               <div key={color} style={{ display:'flex', alignItems:'center', gap:12, background:T.cream, border:`1.5px solid ${T.cream3}`, borderRadius:10, padding:'10px 14px' }}>
                 <div style={{ width:18, height:18, borderRadius:'50%', background:color, border:'1.5px solid rgba(0,0,0,0.12)', flexShrink:0 }}/>
                 <span style={{ fontFamily:'Jost,sans-serif', fontSize:13, fontWeight:600, color:T.navy, flex:1 }}>{color}</span>
                 <input
-                  type="number" min={0} value={stock}
+                  type="number"
+                  min={0}
+                  value={stock}
                   onChange={e => updateStock(color, '', Number(e.target.value))}
                   style={{ width:72, textAlign:'center', background:c.bg, border:`1.5px solid ${c.border}`, borderRadius:8, padding:'7px 4px', fontFamily:'Jost,sans-serif', fontWeight:700, fontSize:15, color:c.text, outline:'none' }}
                 />
@@ -80,21 +109,23 @@ function VariantGrid({
     );
   }
 
-  // Size-only (no colors)
+  // ── Size-only (no colors) ─────────────────────────────────────────────────
   if (sizes.length > 0 && colors.length === 0) {
     return (
       <div>
         <div style={sectionLabel}>Stock per size</div>
         <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
           {sizes.map(size => {
-            const v = variants.find(x => x.size === size && !x.color);
+            const v     = variantMap.get(variantKey('', size));
             const stock = v?.stock ?? 0;
-            const c = stockColor(stock);
+            const c     = stockColor(stock);
             return (
               <div key={size} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, background:T.cream, border:`1.5px solid ${T.cream3}`, borderRadius:10, padding:'10px 12px', minWidth:80 }}>
                 <span style={{ fontFamily:'Jost,sans-serif', fontSize:12, fontWeight:700, color:T.navy }}>{size}</span>
                 <input
-                  type="number" min={0} value={stock}
+                  type="number"
+                  min={0}
+                  value={stock}
                   onChange={e => updateStock('', size, Number(e.target.value))}
                   style={{ width:60, textAlign:'center', background:c.bg, border:`1.5px solid ${c.border}`, borderRadius:8, padding:'6px 2px', fontFamily:'Jost,sans-serif', fontWeight:700, fontSize:14, color:c.text, outline:'none' }}
                 />
@@ -109,7 +140,7 @@ function VariantGrid({
     );
   }
 
-  // Full color × size matrix
+  // ── Full color × size matrix ──────────────────────────────────────────────
   const totalStock = variants.reduce((s, v) => s + v.stock, 0);
 
   return (
@@ -164,15 +195,17 @@ function VariantGrid({
                     </div>
                   </td>
 
-                  {/* Stock input per size */}
+                  {/* Stock input per size — FIX: use variantMap for lookup */}
                   {sizes.map(size => {
-                    const v     = variants.find(x => x.color === color && x.size === size);
+                    const v     = variantMap.get(variantKey(color, size));
                     const stock = v?.stock ?? 0;
                     const c     = stockColor(stock);
                     return (
                       <td key={size} style={{ padding:'6px 8px', textAlign:'center', borderBottom:`1px solid ${T.cream3}` }}>
                         <input
-                          type="number" min={0} value={stock}
+                          type="number"
+                          min={0}
+                          value={stock}
                           onChange={e => updateStock(color, size, Number(e.target.value))}
                           style={{
                             width:64, textAlign:'center',
@@ -280,23 +313,30 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
   const [sizes,      setSizes]      = useState<string[]>(editProduct?.sizes  || []);
   const [sizeInput,  setSizeInput]  = useState('');
 
-  // Variants — built from existing or initialised as empty matrix
+  // Variants
   const initVariants = useCallback((): Variant[] => {
     if (editProduct?.variants?.length) return editProduct.variants;
     return [];
   }, [editProduct]);
   const [variants, setVariants] = useState<Variant[]>(initVariants);
 
-  // ── Rebuild variant matrix when colors/sizes change ─────────────────────
+  // ── Rebuild variant matrix when colors/sizes change ──────────────────────
+  /**
+   * FIX: Use variantKey-based Map lookup instead of .find() so that
+   * existing stock values are always preserved when dimensions change.
+   */
   const syncVariants = useCallback((newColors: string[], newSizes: string[]) => {
     setVariants(prev => {
+      const prevMap = buildVariantMap(prev);
+
       // Neither dimension set — clear
       if (newColors.length === 0 && newSizes.length === 0) return [];
 
       // Color only
       if (newColors.length > 0 && newSizes.length === 0) {
         return newColors.map(color => {
-          const existing = prev.find(v => v.color === color && !v.size);
+          const key      = variantKey(color, '');
+          const existing = prevMap.get(key);
           return existing ?? { color, size:'', stock:0, sku:'' };
         });
       }
@@ -304,7 +344,8 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
       // Size only
       if (newSizes.length > 0 && newColors.length === 0) {
         return newSizes.map(size => {
-          const existing = prev.find(v => v.size === size && !v.color);
+          const key      = variantKey('', size);
+          const existing = prevMap.get(key);
           return existing ?? { color:'', size, stock:0, sku:'' };
         });
       }
@@ -313,7 +354,8 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
       const rows: Variant[] = [];
       for (const color of newColors) {
         for (const size of newSizes) {
-          const existing = prev.find(v => v.color === color && v.size === size);
+          const key      = variantKey(color, size);
+          const existing = prevMap.get(key);
           rows.push(existing ?? { color, size, stock:0, sku:'' });
         }
       }
@@ -321,7 +363,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
     });
   }, []);
 
-  // ── Color management ─────────────────────────────────────────────────────
+  // ── Color management ──────────────────────────────────────────────────────
   const addColor = () => {
     const val = colorInput.trim().replace(/,$/, '');
     if (!val || colors.includes(val)) { setColorInput(''); return; }
@@ -336,7 +378,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
     syncVariants(next, sizes);
   };
 
-  // ── Size management ──────────────────────────────────────────────────────
+  // ── Size management ───────────────────────────────────────────────────────
   const addSize = () => {
     const val = sizeInput.trim().toUpperCase().replace(/,$/, '');
     if (!val || sizes.includes(val)) { setSizeInput(''); return; }
@@ -356,7 +398,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
     syncVariants(colors, next);
   };
 
-  // ── Images ───────────────────────────────────────────────────────────────
+  // ── Images ────────────────────────────────────────────────────────────────
   const addFiles = (newFiles: File[]) => {
     const valid = newFiles.filter(f => f.type.startsWith('image/'));
     setFiles(prev => [...prev, ...valid].slice(0, 8));
@@ -374,7 +416,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
   const totalVariantStock = variants.reduce((s, v) => s + v.stock, 0);
   const hasVariants       = variants.length > 0;
 
-  // ── Save ─────────────────────────────────────────────────────────────────
+  // ── Save ──────────────────────────────────────────────────────────────────
   const handleSave = async () => {
     if (!step2Ok) { setError('Name and a valid price are required.'); return; }
     setSaving(true); setError('');
@@ -388,7 +430,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
       fd.append('features',    JSON.stringify([]));
       fd.append('colors',      JSON.stringify(colors));
       fd.append('sizes',       JSON.stringify(sizes));
-      fd.append('variants', JSON.stringify(variantsToSave));
+      fd.append('variants',    JSON.stringify(variantsToSave));
 
       if (editProduct) fd.append('existingImages', JSON.stringify(existingImgs));
       files.forEach(f => fd.append('images', f));
@@ -407,7 +449,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
     }
   };
 
-  // ── Styles ───────────────────────────────────────────────────────────────
+  // ── Styles ────────────────────────────────────────────────────────────────
   const stepBtnStyle = (active: boolean): React.CSSProperties => ({
     flex:1, borderRadius:10, border:'none', padding:'13px',
     fontFamily:'Jost,sans-serif', fontWeight:700, fontSize:14,
@@ -474,9 +516,9 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
 
         <div style={{ padding:'0 32px 32px' }}>
 
-          {/* ════════════════════════════════════════════════════════
+          {/* ══════════════════════════════════════════════════════
               STEP 1 — Photos
-          ════════════════════════════════════════════════════════ */}
+          ══════════════════════════════════════════════════════ */}
           {step === 1 && (
             <div style={{ animation:'fadeUp 0.28s ease both' }}>
               <p style={{ fontFamily:'Jost,sans-serif', fontSize:14, color:T.muted, marginBottom:20, lineHeight:1.65 }}>
@@ -546,9 +588,9 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
             </div>
           )}
 
-          {/* ════════════════════════════════════════════════════════
+          {/* ══════════════════════════════════════════════════════
               STEP 2 — Product Info + Variants
-          ════════════════════════════════════════════════════════ */}
+          ══════════════════════════════════════════════════════ */}
           {step === 2 && (
             <div style={{ animation:'fadeUp 0.28s ease both' }}>
               {(existingImgs.length > 0 || previews.length > 0) && !editProduct && (
@@ -594,7 +636,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
                   </div>
                 </div>
 
-                {/* ── COLOURS ─────────────────────────────────────── */}
+                {/* ── COLOURS ────────────────────────────────────── */}
                 <div>
                   <label style={lbl}>
                     Available Colours
@@ -620,7 +662,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
                   </div>
                 </div>
 
-                {/* ── SIZES ───────────────────────────────────────── */}
+                {/* ── SIZES ──────────────────────────────────────── */}
                 <div>
                   <label style={lbl}>
                     Available Sizes
@@ -654,7 +696,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
                   </div>
                 </div>
 
-                {/* ── VARIANT STOCK GRID ──────────────────────────── */}
+                {/* ── VARIANT STOCK GRID ─────────────────────────── */}
                 {(colors.length > 0 || sizes.length > 0) && (
                   <div style={{ background:T.cream, border:`1.5px solid ${T.cream3}`, borderRadius:14, padding:'18px 16px' }}>
                     <VariantGrid
@@ -679,7 +721,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
                   <div>
                     <label style={lbl}>Stock (total units)</label>
                     <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                      <button onClick={() => { const cur = parseInt(variants[0]?.stock as any || '0'); const next = Math.max(0, cur-1); setVariants([{ color:'', size:'', stock:next, sku:'' }]); }} style={{ width:44, height:44, borderRadius:8, border:`1.5px solid ${T.cream3}`, background:T.cream, fontSize:18, cursor:'pointer', color:T.navy, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>−</button>
+                      <button onClick={() => { const cur = variants[0]?.stock ?? 0; setVariants([{ color:'', size:'', stock:Math.max(0, cur-1), sku:'' }]); }} style={{ width:44, height:44, borderRadius:8, border:`1.5px solid ${T.cream3}`, background:T.cream, fontSize:18, cursor:'pointer', color:T.navy, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>−</button>
                       <input
                         className="wz-num"
                         type="number" min="0"
@@ -687,7 +729,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
                         onChange={e => setVariants([{ color:'', size:'', stock:Number(e.target.value), sku:'' }])}
                         style={{ ...inp, textAlign:'center', fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:20, flex:1 }}
                       />
-                      <button onClick={() => { const cur = parseInt(variants[0]?.stock as any || '0'); setVariants([{ color:'', size:'', stock:cur+1, sku:'' }]); }} style={{ width:44, height:44, borderRadius:8, border:`1.5px solid ${T.cream3}`, background:T.cream, fontSize:18, cursor:'pointer', color:T.navy, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
+                      <button onClick={() => { const cur = variants[0]?.stock ?? 0; setVariants([{ color:'', size:'', stock:cur+1, sku:'' }]); }} style={{ width:44, height:44, borderRadius:8, border:`1.5px solid ${T.cream3}`, background:T.cream, fontSize:18, cursor:'pointer', color:T.navy, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
                     </div>
                     <div style={{ fontFamily:'Jost,sans-serif', fontSize:11, color:T.muted, marginTop:6 }}>
                       Add colours or sizes above to set per-variant stock
@@ -733,9 +775,9 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
             </div>
           )}
 
-          {/* ════════════════════════════════════════════════════════
+          {/* ══════════════════════════════════════════════════════
               STEP 3 — Review
-          ════════════════════════════════════════════════════════ */}
+          ══════════════════════════════════════════════════════ */}
           {step === 3 && (
             <div style={{ animation:'fadeUp 0.28s ease both' }}>
               <p style={{ fontFamily:'Jost,sans-serif', fontSize:14, color:T.muted, marginBottom:18, lineHeight:1.65 }}>
