@@ -1,19 +1,4 @@
 // src/components/home/VideoCarousel.tsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Styled video tile component.
-// • Accepts an optional `tiles` prop so Homepage can split top / bottom
-// • Accepts an optional `bordered` prop (default: true) for gold frame
-// • Edge-to-edge layout within frame (no border-radius on tiles)
-// • Cinematic playback (1.0×)
-// • Unmuted by default — user can mute with the sound button
-// • Clicking tile navigates to tileHref (no play/pause toggle)
-// • Play/pause overlay removed
-// • Responsive aspect ratio: 16/7 desktop → 9/16 mobile
-// • Full original styling: serif headline, gold CTA, badge typography,
-//   gradient overlay, frosted-glass sound button
-// • Auto-mutes AND auto-pauses when tile scrolls past 50% visibility;
-//   re-mutes on return so user must intentionally unmute each visit
-// ─────────────────────────────────────────────────────────────────────────────
 import { useRef, useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -27,14 +12,13 @@ export interface VideoTile {
   ctaLabel: string;
   ctaHref: string;
   accentLight: boolean;
-  /** Clicking anywhere on the tile navigates here */
   tileHref?: string;
 }
 
 export const VIDEO_TILES: VideoTile[] = [
   {
     id: 1,
-    src: 'https://res.cloudinary.com/dfiy43f01/video/upload/v1776335332/vid1_xuoo4c.mp4',
+    src: 'https://res.cloudinary.com/dfiy43f01/video/upload/v1780227245/Effortless_Bridal_Makeup_Looks_to_Refresh_Your_Routine_-_Pin-1145251380255199740_lsbslj.mp4',
     poster: '/images/street-style-01-poster.jpg',
     badge: 'New Drop',
     headline: 'Streets Never Sleep',
@@ -64,25 +48,8 @@ const TILE_STYLES = `
   @media (max-width: 640px) {
     .video-tile { aspect-ratio: 9 / 16; }
   }
-  .vc-sound-btn {
-    transition: background 0.2s, transform 0.15s;
-  }
-  .vc-sound-btn:hover {
-    background: rgba(255,255,255,0.32) !important;
-    transform: scale(1.08);
-  }
   .vc-cta { transition: opacity 0.2s; }
   .vc-cta:hover { opacity: 0.72 !important; }
-`;
-
-const FRAME_STYLES = `
-  .vc-frame {
-    border: 1.5px solid #C8A951;
-    outline: 1px solid rgba(200, 169, 81, 0.18);
-    outline-offset: 4px;
-    margin: 0 5%;
-    overflow: hidden;
-  }
 `;
 
 // ─── Individual tile ──────────────────────────────────────────────────────────
@@ -91,14 +58,16 @@ function Tile({ tile }: { tile: VideoTile }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate     = useNavigate();
   const [hovered, setHovered] = useState(false);
-  const [muted,   setMuted]   = useState(false); // unmuted on first view
 
   useEffect(() => {
     const v = videoRef.current;
-    if (v) v.playbackRate = 1.0;
+    if (v) {
+      v.playbackRate = 1.0;
+      v.muted = true;
+    }
   }, []);
 
-  // ── Intersection Observer: mute + pause when < 50 % visible ──────────────
+  // ── Intersection Observer: pause when < 50 % visible ──────────────
   useEffect(() => {
     const container = containerRef.current;
     const v         = videoRef.current;
@@ -107,16 +76,9 @@ function Tile({ tile }: { tile: VideoTile }) {
     const observer = new IntersectionObserver(
       ([entry]) => {
         const visible = entry.isIntersecting && entry.intersectionRatio >= 0.5;
-
         if (!visible) {
-          // Scrolled away — mute and pause regardless of user preference
-          v.muted = true;
-          setMuted(true);
           if (!v.paused) v.pause();
         } else {
-          // Back in view — resume but muted so user re-unmutes intentionally
-          v.muted = true;
-          setMuted(true);
           if (v.paused) v.play().catch(() => {});
         }
       },
@@ -131,17 +93,17 @@ function Tile({ tile }: { tile: VideoTile }) {
     if (tile.tileHref) navigate(tile.tileHref);
   };
 
-  const toggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const next = !muted;
-    setMuted(next);
-    if (videoRef.current) videoRef.current.muted = next;
-  };
-
   const textColor = tile.accentLight ? '#FFFFFF' : '#0A1628';
   const overlayBg = tile.accentLight
     ? 'linear-gradient(to top, rgba(10,22,40,0.78) 0%, rgba(10,22,40,0.22) 55%, transparent 100%)'
     : 'linear-gradient(to top, rgba(250,247,242,0.88) 0%, rgba(250,247,242,0.28) 55%, transparent 100%)';
+
+  // Badge colours: white text on dark semi-transparent pill
+  const badgeBg   = tile.accentLight ? 'rgba(255,255,255,0.18)' : 'rgba(10,22,40,0.18)';
+  const badgeText = tile.accentLight ? '#FFFFFF' : '#0A1628';
+
+  // CTA colour: white on dark tiles, near-black on light tiles
+  const ctaColor = tile.accentLight ? '#FFFFFF' : '#0A1628';
 
   return (
     <div
@@ -164,7 +126,7 @@ function Tile({ tile }: { tile: VideoTile }) {
         src={tile.src}
         poster={tile.poster}
         autoPlay
-        muted={muted}
+        muted
         loop
         playsInline
         style={{
@@ -187,8 +149,11 @@ function Tile({ tile }: { tile: VideoTile }) {
           position: 'absolute',
           top: 18,
           left: 22,
-          background: 'rgba(200,169,81,0.92)',
-          color: '#0A1628',
+          background: badgeBg,
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
+          color: badgeText,
+          border: `1px solid ${tile.accentLight ? 'rgba(255,255,255,0.3)' : 'rgba(10,22,40,0.3)'}`,
           fontFamily: 'sans-serif',
           fontSize: 11,
           fontWeight: 700,
@@ -200,48 +165,6 @@ function Tile({ tile }: { tile: VideoTile }) {
       >
         {tile.badge}
       </div>
-
-      {/* ── Sound toggle (top-right) ── */}
-      <button
-        className="vc-sound-btn"
-        onClick={toggleMute}
-        aria-label={muted ? 'Unmute video' : 'Mute video'}
-        style={{
-          position: 'absolute',
-          top: 14,
-          right: 16,
-          width: 38,
-          height: 38,
-          borderRadius: '50%',
-          background: 'rgba(255,255,255,0.18)',
-          backdropFilter: 'blur(6px)',
-          WebkitBackdropFilter: 'blur(6px)',
-          border: '1px solid rgba(255,255,255,0.22)',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 0,
-        }}
-      >
-        {muted ? (
-          /* Speaker with X — muted */
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-            <line x1="23" y1="9" x2="17" y2="15"/>
-            <line x1="17" y1="9" x2="23" y2="15"/>
-          </svg>
-        ) : (
-          /* Speaker with waves — unmuted */
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-          </svg>
-        )}
-      </button>
 
       {/* ── Text block (bottom-left) ── */}
       <div
@@ -278,28 +201,28 @@ function Tile({ tile }: { tile: VideoTile }) {
           {tile.sub}
         </p>
 
-       <Link
-      to={tile.ctaHref}
-       className="vc-cta"
-  onClick={e => e.stopPropagation()}
-  style={{
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 7,
-    fontFamily: 'sans-serif',
-    fontSize: 12,
-    fontWeight: 700,
-    letterSpacing: '1.6px',
-    textTransform: 'uppercase',
-    textDecoration: 'none',
-    color: '#C8A951',
-    borderBottom: '1.5px solid #C8A951',
-    paddingBottom: 2,
-    opacity: 1,
-  }}
->
-  {tile.ctaLabel} <span style={{ fontSize: 14 }}>→</span>
-</Link>
+        <Link
+          to={tile.ctaHref}
+          className="vc-cta"
+          onClick={e => e.stopPropagation()}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 7,
+            fontFamily: 'sans-serif',
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: '1.6px',
+            textTransform: 'uppercase',
+            textDecoration: 'none',
+            color: ctaColor,
+            borderBottom: `1.5px solid ${ctaColor}`,
+            paddingBottom: 2,
+            opacity: 1,
+          }}
+        >
+          {tile.ctaLabel} <span style={{ fontSize: 14 }}>→</span>
+        </Link>
       </div>
     </div>
   );
@@ -319,7 +242,6 @@ export default function VideoCarousel({
   return (
     <>
       <style>{TILE_STYLES}</style>
-      {bordered && <style>{FRAME_STYLES}</style>}
 
       <section
         aria-label="Street style video features"
@@ -335,7 +257,7 @@ export default function VideoCarousel({
                 style={{
                   width: 28,
                   height: 1.5,
-                  background: '#C8A951',
+                  background: '#0A1628',
                   display: 'inline-block',
                 }}
               />
@@ -346,7 +268,7 @@ export default function VideoCarousel({
                   fontWeight: 700,
                   letterSpacing: '2.5px',
                   textTransform: 'uppercase',
-                  color: '#C8A951',
+                  color: '#0A1628',
                 }}
               >
                 Style in Motion
@@ -366,10 +288,8 @@ export default function VideoCarousel({
           </div>
         )}
 
-        <div
-          className={bordered ? 'vc-frame' : undefined}
-          style={{ display: 'flex', flexDirection: 'column', gap: 0 }}
-        >
+        {/* No vc-frame class — tiles render edge-to-edge */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {displayTiles.map(tile => (
             <Tile key={tile.id} tile={tile} />
           ))}

@@ -100,26 +100,12 @@ export default function Footer() {
     setStatus('loading');
     setMessage('');
     try {
-      const res = await fetch(`${API_BASE}/api/subscribers`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ email }),
-      });
+      const res = await axios.post('/api/subscribers', { email });
 
-      const data = await res.json();
-
-      if (res.ok) {
-        setStatus('success');
-        setMessage(data.msg);
-        setEmail('');
-      } else {
-        setStatus('error');
-        setMessage(data.msg ?? 'Something went wrong.');
-      }
-    } catch (err: any) {
+      setStatus('success');
+      setMessage(res.data.msg || 'Subscribed successfully!');
+      setEmail('');
+    } catch (error: any) {
       setStatus('error');
       setMessage(err?.response?.data?.msg ?? 'Network error. Please try again.');
     }
@@ -135,7 +121,7 @@ export default function Footer() {
     status === 'success' ? 'rgba(46,204,113,0.6)' :
     'rgba(255,255,255,0.20)';
 
-  const btnBg = status === 'success' ? '#2ecc71' : '#ffffff';
+  const btnBg    = status === 'success' ? '#2ecc71' : '#ffffff';
   const btnColor = status === 'success' ? '#fff' : '#000000';
 
   return (
@@ -340,8 +326,16 @@ export default function Footer() {
               <div className="ft-col-title">Get in Touch</div>
               <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.50)', lineHeight: 2.2 }}>
                 📍 Nairobi CBD, Kenya<br/>
-                📞 +254 714 022 882<br/>
-                ✉️ masiyoiisaac@gmail.com<br/>
+                📞 <a href="tel:+254707099935" style={{ color: 'rgba(255,255,255,0.75)', textDecoration: 'underline', textUnderlineOffset: 3, transition: 'color 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}>
+                  +254 707 099 935
+                </a><br/>
+                ✉️ <a href="mailto:lukuprime254@gmail.com" style={{ color: 'rgba(255,255,255,0.75)', textDecoration: 'underline', textUnderlineOffset: 3, transition: 'color 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}>
+                  lukuprime254@gmail.com
+                </a><br/>
                 🕐 Mon–Sat, 9am – 6pm
               </div>
             </div>

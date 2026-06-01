@@ -7,25 +7,37 @@ import { T, ANNOUNCEMENTS, getInitials, readUser } from '../../constants/theme';
 import type { User } from '../../constants/theme';
 
 interface NavbarProps {
-  /** Lift cart count up if the parent already manages it, otherwise Navbar fetches it */
   cartCount?: number;
   wishlistCount?: number;
   onLogout?: () => void;
+  categories?: string[];
+  activeCategory?: string;
+  onCategorySelect?: (cat: string) => void;
 }
 
-export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishlistCountProp, onLogout }: NavbarProps) {
+export default function Navbar({
+  cartCount: cartCountProp,
+  wishlistCount: wishlistCountProp,
+  onLogout,
+  categories = [],
+  activeCategory = 'All',
+  onCategorySelect,
+}: NavbarProps) {
   const navigate = useNavigate();
-  const menuRef  = useRef<HTMLDivElement>(null);
+  const menuRef     = useRef<HTMLDivElement>(null);
+  const shopMenuRef = useRef<HTMLDivElement>(null);
 
   const [user,           setUser]           = useState<User | null>(readUser);
   const [showMenu,       setShowMenu]       = useState(false);
+  const [showShopMenu,   setShowShopMenu]   = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSearch,     setShowSearch]     = useState(false);
   const [search,         setSearch]         = useState('');
   const [cartCount,      setCartCount]      = useState(cartCountProp ?? 0);
   const [wishlistCount,  setWishlistCount]  = useState(wishlistCountProp ?? 0);
+  const [navCategories,  setNavCategories]  = useState<string[]>(categories);
 
-  // Close menu when clicking outside
+  // Close avatar dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node))
@@ -35,11 +47,35 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Sync props if parent passes updated counts
-  useEffect(() => { if (cartCountProp      !== undefined) setCartCount(cartCountProp);      }, [cartCountProp]);
-  useEffect(() => { if (wishlistCountProp  !== undefined) setWishlistCount(wishlistCountProp); }, [wishlistCountProp]);
+  // Close shop dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (shopMenuRef.current && !shopMenuRef.current.contains(e.target as Node))
+        setShowShopMenu(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
-  // Self-fetch counts when no prop is provided
+  useEffect(() => { if (cartCountProp     !== undefined) setCartCount(cartCountProp);         }, [cartCountProp]);
+  useEffect(() => { if (wishlistCountProp !== undefined) setWishlistCount(wishlistCountProp); }, [wishlistCountProp]);
+
+  // Sync navCategories from prop, or self-fetch if prop is empty
+  useEffect(() => {
+    if (categories.length > 0) {
+      setNavCategories(categories);
+      return;
+    }
+    axios.get('/api/products')
+      .then(res => {
+        const cats = Array.from(
+          new Set((res.data as any[]).map((p: any) => p.category).filter(Boolean))
+        ).sort() as string[];
+        setNavCategories(cats);
+      })
+      .catch(() => {});
+  }, [categories.length]);
+
   const fetchCounts = useCallback(() => {
     const token = localStorage.getItem('token');
     if (!token || !user || user.role === 'admin') return;
@@ -48,10 +84,7 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
     axios.get('/api/wishlist', h).then(r => setWishlistCount(r.data.length)).catch(() => {});
   }, [user?.id]);
 
-  useEffect(() => {
-    if (cartCountProp === undefined) fetchCounts();
-  }, [fetchCounts, cartCountProp]);
-
+  useEffect(() => { if (cartCountProp === undefined) fetchCounts(); }, [fetchCounts, cartCountProp]);
   useEffect(() => {
     window.addEventListener('focus', fetchCounts);
     return () => window.removeEventListener('focus', fetchCounts);
@@ -71,15 +104,49 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
 
   const go = (path: string) => { navigate(path); setShowMenu(false); setMobileMenuOpen(false); };
 
+  const goCategory = (cat: string) => {
+    onCategorySelect?.(cat);
+    navigate(cat === 'All' ? '/' : `/?category=${encodeURIComponent(cat)}`);
+    setShowShopMenu(false);
+    setMobileMenuOpen(false);
+  };
+
+  // Category emoji map — fallback to 🏷️
+  const catEmoji: Record<string, string> = {
+    'All': '🗂️',
+    'Dresses': '👗',
+    'Tops': '👚',
+    'Bottoms': '👖',
+    'Shoes': '👟',
+    'Sneakers': '👟',
+    'Heels': '👠',
+    'Boots': '🥾',
+    'Accessories': '💍',
+    'Bags': '👜',
+    'Jackets': '🧥',
+    'Coats': '🧥',
+    'Suits': '🤵',
+    'Swimwear': '🩱',
+    'Activewear': '🏃',
+    'Lingerie': '🩲',
+    'Kids': '🧒',
+    'Men': '🧔',
+    'Women': '👩',
+    'Sale': '🔖',
+  };
+
+  const getEmoji = (cat: string) =>
+    catEmoji[cat] ?? Object.entries(catEmoji).find(([k]) => cat.toLowerCase().includes(k.toLowerCase()))?.[1] ?? '🏷️';
+
   return (
     <>
       {/* ── Announcement marquee ── */}
-      <div className="bg-navy h-8 overflow-hidden flex items-center border-b border-gold/20">
+      <div className="bg-black h-8 overflow-hidden flex items-center border-b border-white/20">
         <div className="overflow-hidden w-full">
           <div className="flex gap-14 animate-marquee whitespace-nowrap">
             {[...Array(2)].map((_, r) =>
               ANNOUNCEMENTS.map((t, i) => (
-                <span key={`${r}-${i}`} className="font-sans text-[9px] font-semibold tracking-[2px] text-gold/85">
+                <span key={`${r}-${i}`} className="font-sans text-[9px] font-semibold tracking-[2px] text-white/85">
                   {t}
                 </span>
               ))
@@ -90,41 +157,115 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
 
       {/* ── Main navbar ── */}
       <nav
-        className="bg-navy px-[5%] h-[70px] flex items-center justify-between sticky top-0 z-[100] shadow-nav border-b border-gold/25"
+        className="bg-white px-[5%] h-[70px] flex items-center justify-between sticky top-0 z-[100] shadow-nav border-b border-black/15"
         style={{ fontFamily: "'Playfair Display', serif" }}
       >
-        {/* Logo */}
-        <img
-          src={logo} alt="Luku Prime"
-          className="h-[54px] w-auto object-contain cursor-pointer drop-shadow-md"
-          onClick={() => navigate('/')}
-        />
+        {/* Logo + Brand Name */}
+        <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
+          <img
+            src={logo} alt="Luku Prime"
+            className="h-[54px] w-auto object-contain drop-shadow-md"
+          />
+          <div className="flex flex-col leading-tight">
+            <span
+              className="text-gold font-bold tracking-[2px] uppercase text-[15px]"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              Luku Prime
+            </span>
+            <span className="text-white/40 font-sans text-[8px] tracking-[3px] uppercase">
+              Walk Prime Live Prime
+            </span>
+          </div>
+        </div>
 
         {/* Desktop search */}
-        <div className="hidden md:flex items-center bg-white/[0.06] rounded border border-gold/20 px-3.5 py-2 gap-2 w-[300px]">
-          <span className="text-gold/70 text-[13px]">⌕</span>
+        <div className="hidden md:flex items-center bg-black/[0.04] rounded border border-black/15 px-3.5 py-2 gap-2 w-[300px]">
+          <span className="text-black/50 text-[13px]">⌕</span>
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && navigate(`/?search=${search}`)}
             placeholder="Search Luku Prime fashion…"
-            className="bg-transparent border-none outline-none text-[13px] w-full text-white/85 font-sans placeholder:text-white/30"
+            className="bg-transparent border-none outline-none text-[13px] w-full text-black/80 font-sans placeholder:text-black/30"
           />
         </div>
 
         {/* Desktop right side */}
         <div className="hidden md:flex items-center gap-5">
-          <span className="nav-link" onClick={() => navigate('/new-drops')}>New Drops</span>
-          <span className="nav-link" onClick={() => navigate('/sale')}>Sale</span>
+
+          {/* ── Shop by Category dropdown ── */}
+          {navCategories.length > 0 && (
+            <div ref={shopMenuRef} className="relative">
+              <span
+                className="font-sans text-[11px] font-semibold tracking-[1.5px] uppercase cursor-pointer text-black/75 transition-colors hover:text-black flex items-center gap-1 select-none"
+                onClick={() => setShowShopMenu(s => !s)}
+              >
+                Shop
+                <svg
+                  width="8" height="5" viewBox="0 0 8 5" fill="none"
+                  style={{
+                    transition: 'transform 0.2s',
+                    transform: showShopMenu ? 'rotate(180deg)' : 'rotate(0deg)',
+                  }}
+                >
+                  <path d="M1 1l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
+
+              {showShopMenu && (
+                <div className="absolute top-[calc(100%+12px)] left-1/2 -translate-x-1/2 bg-white border border-black/10 rounded-[14px] p-2 min-w-[200px] shadow-modal animate-modal-in z-[200]">
+                  {/* All Products */}
+                  <div
+                    className="mitem"
+                    style={{ fontWeight: activeCategory === 'All' ? 700 : undefined, color: activeCategory === 'All' ? '#000' : undefined }}
+                    onClick={() => goCategory('All')}
+                  >
+                    <span className="mr-1">🗂️</span> All Products
+                    {activeCategory === 'All' && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                  </div>
+
+                  {/* Divider */}
+                  <div className="mx-3 my-1.5 border-t border-black/[0.06]" />
+
+                  {/* Dynamic categories */}
+                  {navCategories.map(cat => (
+                    <div
+                      key={cat}
+                      className="mitem"
+                      style={{ fontWeight: activeCategory === cat ? 700 : undefined, color: activeCategory === cat ? '#000' : undefined }}
+                      onClick={() => goCategory(cat)}
+                    >
+                      <span className="mr-1">{getEmoji(cat)}</span> {cat}
+                      {activeCategory === cat && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <span
+            className="font-sans text-[11px] font-semibold tracking-[1.5px] uppercase cursor-pointer text-black/75 transition-colors hover:text-black"
+            onClick={() => navigate('/new-drops')}
+          >
+            New Drops
+          </span>
+          <span
+            className="font-sans text-[11px] font-semibold tracking-[1.5px] uppercase cursor-pointer text-black/75 transition-colors hover:text-black"
+            onClick={() => navigate('/sale')}
+          >
+            Sale
+          </span>
 
           {/* Cart icon */}
           {user?.role !== 'admin' && (
-            <div className="relative cursor-pointer text-white/75 text-lg" onClick={() => navigate('/cart')}>
+            <div className="relative cursor-pointer text-black/70 text-lg" onClick={() => navigate('/cart')}>
               🛒
               {cartCount > 0 && (
                 <span
                   key={cartCount}
-                  className="absolute -top-1.5 -right-2 bg-gold text-navy rounded-full w-4 h-4 text-[9px] font-extrabold font-sans flex items-center justify-center animate-pop"
+                  className="absolute -top-1.5 -right-2 bg-black text-white rounded-full w-4 h-4 text-[9px] font-extrabold font-sans flex items-center justify-center animate-pop"
                 >
                   {cartCount}
                 </span>
@@ -142,11 +283,11 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
                 style={{
                   background: user.role === 'admin'
                     ? 'linear-gradient(135deg,#7C3AED,#A855F7)'
-                    : `linear-gradient(135deg,${T.gold},${T.goldLight})`,
-                  color:      user.role === 'admin' ? '#fff' : T.navy,
+                    : '#000000',
+                  color:      user.role === 'admin' ? '#fff' : '#ffffff',
                   border:     showMenu
-                    ? user.role === 'admin' ? '2px solid #C084FC' : `2px solid ${T.goldPale}`
-                    : user.role === 'admin' ? '2px solid rgba(168,85,247,0.5)' : `2px solid rgba(200,169,81,0.4)`,
+                    ? user.role === 'admin' ? '2px solid #C084FC' : '2px solid #555555'
+                    : user.role === 'admin' ? '2px solid rgba(168,85,247,0.5)' : '2px solid rgba(0,0,0,0.3)',
                   boxShadow: user.role === 'admin' ? '0 0 12px rgba(124,58,237,0.4)' : 'none',
                 }}
               >
@@ -155,11 +296,11 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
 
               {/* Dropdown */}
               {showMenu && (
-                <div className="absolute top-[calc(100%+10px)] right-0 bg-white border border-cream-deep rounded-[14px] p-2 min-w-[220px] shadow-modal animate-modal-in z-[200]">
+                <div className="absolute top-[calc(100%+10px)] right-0 bg-white border border-black/10 rounded-[14px] p-2 min-w-[220px] shadow-modal animate-modal-in z-[200]">
                   {/* User info */}
-                  <div className="px-3.5 py-2.5 border-b border-cream-deep mb-1.5">
+                  <div className="px-3.5 py-2.5 border-b border-black/10 mb-1.5">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-sans font-bold text-[13px] text-navy">{user.full_name}</span>
+                      <span className="font-sans font-bold text-[13px] text-black">{user.full_name}</span>
                       {user.role === 'admin' && (
                         <span className="font-sans text-[9px] font-extrabold px-2 py-0.5 rounded-full text-white tracking-[1px] uppercase"
                           style={{ background:'linear-gradient(135deg,#7C3AED,#A855F7)' }}>
@@ -167,16 +308,15 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
                         </span>
                       )}
                     </div>
-                    <div className="font-sans text-[11px] text-muted">{user.email}</div>
+                    <div className="font-sans text-[11px] text-black/50">{user.email}</div>
                     <div className="mt-1.5">
                       {user.is_verified
-                        ? <span className="font-sans text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EEF5EE] text-[#5A8A5A]">✓ Verified</span>
-                        : <span className="font-sans text-[10px] font-semibold text-gold">⚠️ Verify email</span>
+                        ? <span className="font-sans text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/[0.06] text-black/60">✓ Verified</span>
+                        : <span className="font-sans text-[10px] font-semibold text-black/50">⚠️ Verify email</span>
                       }
                     </div>
                   </div>
 
-                  {/* Admin notice */}
                   {user.role === 'admin' && (
                     <>
                       <div className="mitem text-purple-600 font-bold" onClick={() => go('/admin')}>👑 Admin Dashboard</div>
@@ -188,14 +328,13 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
                     </>
                   )}
 
-                  {/* Buyer links */}
                   {user.role !== 'admin' && (
                     <>
                       <div className="mitem" onClick={() => go('/orders')}>📦 My Orders</div>
                       <div className="mitem" onClick={() => go('/wishlist')}>
                         🤍 Wishlist
                         {wishlistCount > 0 && (
-                          <span className="ml-auto bg-gold text-navy rounded-[10px] px-1.5 py-px text-[10px] font-extrabold font-sans">
+                          <span className="ml-auto bg-black text-white rounded-[10px] px-1.5 py-px text-[10px] font-extrabold font-sans">
                             {wishlistCount}
                           </span>
                         )}
@@ -204,7 +343,37 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
                     </>
                   )}
 
-                  <div className="border-t border-cream-deep mt-1.5 pt-1.5">
+                  {/* ── Shop by Category (inside avatar dropdown) ── */}
+                  {navCategories.length > 0 && (
+                    <>
+                      <div className="border-t border-black/10 mt-1.5 pt-1.5 mb-1">
+                        <span className="px-3.5 font-sans text-[9px] font-extrabold tracking-[2px] uppercase text-black/30">
+                          Shop by Category
+                        </span>
+                      </div>
+                      <div
+                        className="mitem"
+                        style={{ fontWeight: activeCategory === 'All' ? 700 : undefined }}
+                        onClick={() => { goCategory('All'); setShowMenu(false); }}
+                      >
+                        🗂️ All Products
+                        {activeCategory === 'All' && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                      </div>
+                      {navCategories.map(cat => (
+                        <div
+                          key={cat}
+                          className="mitem"
+                          style={{ fontWeight: activeCategory === cat ? 700 : undefined, color: activeCategory === cat ? '#000' : undefined }}
+                          onClick={() => { goCategory(cat); setShowMenu(false); }}
+                        >
+                          {getEmoji(cat)} {cat}
+                          {activeCategory === cat && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                        </div>
+                      ))}
+                    </>
+                  )}
+
+                  <div className="border-t border-black/10 mt-1.5 pt-1.5">
                     <div className="mitem mitem-danger" onClick={handleLogout}>🚪 Sign Out</div>
                   </div>
                 </div>
@@ -213,11 +382,11 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
           ) : (
             <div className="flex gap-2">
               <button onClick={() => navigate('/login')}
-                className="font-sans text-[11px] font-semibold tracking-[1.5px] uppercase rounded border border-gold/45 px-4 py-2 cursor-pointer transition-all hover:-translate-y-px text-gold-light bg-transparent">
+                className="font-sans text-[11px] font-semibold tracking-[1.5px] uppercase rounded border border-black/30 px-4 py-2 cursor-pointer transition-all hover:-translate-y-px text-black bg-transparent">
                 Sign In
               </button>
               <button onClick={() => navigate('/register')}
-                className="font-sans text-[11px] font-bold tracking-[1.5px] uppercase rounded border-none px-4 py-2 cursor-pointer transition-all hover:-translate-y-px bg-gold text-navy">
+                className="font-sans text-[11px] font-bold tracking-[1.5px] uppercase rounded border-none px-4 py-2 cursor-pointer transition-all hover:-translate-y-px bg-black text-white">
                 Join Free
               </button>
             </div>
@@ -226,21 +395,21 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
 
         {/* Mobile controls */}
         <div className="flex md:hidden items-center gap-3.5">
-          <button className="bg-none border-none cursor-pointer text-xl text-white/80 p-1 leading-none transition-colors hover:text-gold"
+          <button className="bg-none border-none cursor-pointer text-xl text-black/70 p-1 leading-none transition-colors hover:text-black"
             onClick={() => setShowSearch(x => !x)}>⌕</button>
 
           {user?.role !== 'admin' && (
             <div className="relative cursor-pointer" onClick={() => navigate('/cart')}>
-              <span className="text-xl text-white/80">🛒</span>
+              <span className="text-xl text-black/70">🛒</span>
               {cartCount > 0 && (
-                <span key={cartCount} className="absolute -top-1.5 -right-1.5 bg-gold text-navy rounded-full w-[15px] h-[15px] text-[8px] font-extrabold font-sans flex items-center justify-center animate-pop">
+                <span key={cartCount} className="absolute -top-1.5 -right-1.5 bg-black text-white rounded-full w-[15px] h-[15px] text-[8px] font-extrabold font-sans flex items-center justify-center animate-pop">
                   {cartCount}
                 </span>
               )}
             </div>
           )}
 
-          <button className="bg-none border-none cursor-pointer text-xl text-white/80 p-1 leading-none transition-colors hover:text-gold"
+          <button className="bg-none border-none cursor-pointer text-xl text-black/70 p-1 leading-none transition-colors hover:text-black"
             onClick={() => setMobileMenuOpen(x => !x)}>
             {mobileMenuOpen ? '✕' : '☰'}
           </button>
@@ -249,19 +418,19 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
 
       {/* Mobile search bar */}
       {showSearch && (
-        <div className="bg-navy-mid px-[5%] py-2.5 border-b border-gold/15">
-          <div className="flex items-center bg-white/[0.06] rounded-md px-3.5 py-2.5 gap-2 border border-gold/20">
-            <span className="text-gold/70 text-sm">⌕</span>
+        <div className="bg-white px-[5%] py-2.5 border-b border-black/10">
+          <div className="flex items-center bg-black/[0.04] rounded-md px-3.5 py-2.5 gap-2 border border-black/15">
+            <span className="text-black/50 text-sm">⌕</span>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && navigate(`/?search=${search}`)}
               placeholder="Search fashion…"
               autoFocus
-              className="bg-transparent border-none outline-none text-sm w-full text-white/85 font-sans placeholder:text-white/30"
+              className="bg-transparent border-none outline-none text-sm w-full text-black/80 font-sans placeholder:text-black/30"
             />
             {search && (
-              <button onClick={() => setSearch('')} className="bg-none border-none text-gold/60 cursor-pointer text-sm p-0">✕</button>
+              <button onClick={() => setSearch('')} className="bg-none border-none text-black/40 cursor-pointer text-sm p-0">✕</button>
             )}
           </div>
         </div>
@@ -269,46 +438,104 @@ export default function Navbar({ cartCount: cartCountProp, wishlistCount: wishli
 
       {/* Mobile slide-down menu */}
       {mobileMenuOpen && (
-        <div className="bg-navy border-b border-gold/20 px-[5%] py-4 flex flex-col">
+        <div className="bg-white border-b border-black/10 px-[5%] py-4 flex flex-col">
           {user ? (
             <>
-              <div className="py-3 border-b border-gold/10 mb-2">
-                <div className="font-sans font-bold text-sm text-white">{user.full_name}</div>
-                <div className="font-sans text-[11px] text-white/40 mt-0.5">{user.email}</div>
+              <div className="py-3 border-b border-black/10 mb-2">
+                <div className="font-sans font-bold text-sm text-black">{user.full_name}</div>
+                <div className="font-sans text-[11px] text-black/40 mt-0.5">{user.email}</div>
               </div>
               {[
-                ['📦', 'My Orders',   '/orders'],
-                ['🤍', 'Wishlist',    '/wishlist'],
-                ['⭐', 'My Reviews',  '/reviews'],
+                ['📦', 'My Orders',  '/orders'],
+                ['🤍', 'Wishlist',   '/wishlist'],
+                ['⭐', 'My Reviews', '/reviews'],
               ].map(([icon, label, path]) => (
                 <button key={label}
-                  className="bg-none border-none cursor-pointer font-sans text-sm font-medium text-white/75 py-3 text-left w-full border-b border-gold/[0.08] transition-colors hover:text-gold flex items-center gap-2.5 last:border-b-0"
+                  className="bg-none border-none cursor-pointer font-sans text-sm font-medium text-black/70 py-3 text-left w-full border-b border-black/[0.06] transition-colors hover:text-black flex items-center gap-2.5 last:border-b-0"
                   onClick={() => go(path)}>
                   {icon} {label}
                 </button>
               ))}
               {user.role === 'admin' && (
-                <button className="bg-none border-none cursor-pointer font-sans text-sm font-medium py-3 text-left w-full text-gold flex items-center gap-2.5 transition-colors hover:text-gold-light"
+                <button className="bg-none border-none cursor-pointer font-sans text-sm font-medium py-3 text-left w-full text-black flex items-center gap-2.5 transition-colors hover:text-black/70"
                   onClick={() => go('/admin')}>
                   👑 Admin Dashboard
                 </button>
               )}
-              <button className="bg-none border-none cursor-pointer font-sans text-sm font-medium text-red-300 py-3 mt-2 text-left w-full flex items-center gap-2.5 transition-colors hover:text-red-400"
+
+              {/* ── Mobile categories ── */}
+              {navCategories.length > 0 && (
+                <>
+                  <div className="pt-3 pb-1.5 border-t border-black/10 mt-1">
+                    <span className="font-sans text-[9px] font-extrabold tracking-[2px] uppercase text-black/30">
+                      Shop by Category
+                    </span>
+                  </div>
+                  <button
+                    className={`bg-none border-none cursor-pointer font-sans text-sm py-2.5 text-left w-full border-b border-black/[0.06] transition-colors hover:text-black flex items-center gap-2.5 ${activeCategory === 'All' ? 'font-bold text-black' : 'font-medium text-black/70'}`}
+                    onClick={() => goCategory('All')}
+                  >
+                    🗂️ All Products {activeCategory === 'All' && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                  </button>
+                  {navCategories.map(cat => (
+                    <button
+                      key={cat}
+                      className={`bg-none border-none cursor-pointer font-sans text-sm py-2.5 text-left w-full border-b border-black/[0.06] transition-colors hover:text-black flex items-center gap-2.5 last:border-b-0 ${activeCategory === cat ? 'font-bold text-black' : 'font-medium text-black/70'}`}
+                      onClick={() => goCategory(cat)}
+                    >
+                      {getEmoji(cat)} {cat}
+                      {activeCategory === cat && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                    </button>
+                  ))}
+                </>
+              )}
+
+              <button className="bg-none border-none cursor-pointer font-sans text-sm font-medium text-red-500 py-3 mt-2 text-left w-full flex items-center gap-2.5 transition-colors hover:text-red-600"
                 onClick={handleLogout}>
                 🚪 Sign Out
               </button>
             </>
           ) : (
-            <div className="flex gap-2.5 pt-1">
-              <button onClick={() => go('/login')}
-                className="flex-1 font-sans text-[11px] font-semibold tracking-[1.5px] uppercase rounded border border-gold/45 px-4 py-2.5 cursor-pointer text-gold-light bg-transparent">
-                Sign In
-              </button>
-              <button onClick={() => go('/register')}
-                className="flex-1 font-sans text-[11px] font-bold tracking-[1.5px] uppercase rounded border-none px-4 py-2.5 cursor-pointer bg-gold text-navy">
-                Join Free
-              </button>
-            </div>
+            <>
+              {/* ── Mobile categories for guests ── */}
+              {navCategories.length > 0 && (
+                <>
+                  <div className="pb-1.5 mb-1">
+                    <span className="font-sans text-[9px] font-extrabold tracking-[2px] uppercase text-black/30">
+                      Shop by Category
+                    </span>
+                  </div>
+                  <button
+                    className={`bg-none border-none cursor-pointer font-sans text-sm py-2.5 text-left w-full border-b border-black/[0.06] transition-colors hover:text-black flex items-center gap-2.5 ${activeCategory === 'All' ? 'font-bold text-black' : 'font-medium text-black/70'}`}
+                    onClick={() => goCategory('All')}
+                  >
+                    🗂️ All Products {activeCategory === 'All' && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                  </button>
+                  {navCategories.map(cat => (
+                    <button
+                      key={cat}
+                      className={`bg-none border-none cursor-pointer font-sans text-sm py-2.5 text-left w-full border-b border-black/[0.06] transition-colors hover:text-black flex items-center gap-2.5 ${activeCategory === cat ? 'font-bold text-black' : 'font-medium text-black/70'}`}
+                      onClick={() => goCategory(cat)}
+                    >
+                      {getEmoji(cat)} {cat}
+                      {activeCategory === cat && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                    </button>
+                  ))}
+                  <div className="border-t border-black/10 mt-2 mb-2" />
+                </>
+              )}
+
+              <div className="flex gap-2.5 pt-1">
+                <button onClick={() => go('/login')}
+                  className="flex-1 font-sans text-[11px] font-semibold tracking-[1.5px] uppercase rounded border border-black/30 px-4 py-2.5 cursor-pointer text-black bg-transparent">
+                  Sign In
+                </button>
+                <button onClick={() => go('/register')}
+                  className="flex-1 font-sans text-[11px] font-bold tracking-[1.5px] uppercase rounded border-none px-4 py-2.5 cursor-pointer bg-black text-white">
+                  Join Free
+                </button>
+              </div>
+            </>
           )}
         </div>
       )}

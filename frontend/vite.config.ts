@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:5000',
+        target: 'https://stunning-space-umbrella-pjgqwxrx5q9vcr77w-5000.app.github.dev',
         changeOrigin: true,
         secure: false,
       }
