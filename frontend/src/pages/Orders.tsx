@@ -32,19 +32,19 @@ interface Order {
 }
 
 const T = {
-  navy:'#0D1B3E', navyMid:'#152348', navyLight:'#1E2F5A',
-  gold:'#C8A951', goldLight:'#DEC06A', goldPale:'#F0D98A',
-  cream:'#F9F5EC', creamMid:'#F0EAD8', creamDeep:'#E4D9C0',
-  white:'#FFFFFF', text:'#0D1B3E', muted:'#7A7A8A',
+  navy:'#000000', navyMid:'#111111', navyLight:'#222222',
+  gold:'#000000', goldLight:'#333333', goldPale:'#555555',
+  cream:'#FFFFFF', creamMid:'#F5F5F5', creamDeep:'#E0E0E0',
+  white:'#FFFFFF', text:'#000000', muted:'#888888',
 };
 
 const STATUS_CONFIG: Record<Order['status'], { label: string; color: string; bg: string; border: string; icon: string; step: number }> = {
-  pending:    { label:'Pending',    color:'#8A6A20', bg:'rgba(200,169,81,0.1)',  border:'rgba(200,169,81,0.3)',  icon:'⏳', step:0 },
+  pending:    { label:'Pending',    color:'#333333', bg:'rgba(0,0,0,0.05)',      border:'rgba(0,0,0,0.15)',  icon:'⏳', step:0 },
   processing: { label:'Processing', color:T.navy,    bg:'rgba(13,27,62,0.07)',   border:'rgba(13,27,62,0.15)',   icon:'🔄', step:1 },
-  confirmed:  { label:'Confirmed',  color:'#2D6A9F', bg:'rgba(45,106,159,0.08)', border:'rgba(45,106,159,0.25)', icon:'✅', step:2 },
-  shipped:    { label:'Shipped',    color:'#5A3E8A', bg:'rgba(90,62,138,0.08)',  border:'rgba(90,62,138,0.25)', icon:'🚚', step:3 },
-  delivered:  { label:'Delivered',  color:'#4A7A4A', bg:'rgba(74,122,74,0.1)',   border:'rgba(74,122,74,0.25)', icon:'🎉', step:4 },
-  cancelled:  { label:'Cancelled',  color:'#C0392B', bg:'#FDF0EE',              border:'#F5C6C0',              icon:'✕',  step:-1 },
+  confirmed:  { label:'Confirmed',  color:'#000000', bg:'rgba(0,0,0,0.06)',       border:'rgba(0,0,0,0.2)', icon:'✅', step:2 },
+  shipped:    { label:'Shipped',    color:'#111111', bg:'rgba(0,0,0,0.07)',       border:'rgba(0,0,0,0.2)', icon:'🚚', step:3 },
+  delivered:  { label:'Delivered',  color:'#000000', bg:'rgba(0,0,0,0.06)',       border:'rgba(0,0,0,0.18)', icon:'🎉', step:4 },
+  cancelled:  { label:'Cancelled',  color:'#555555', bg:'#F5F5F5',              border:'#CCCCCC',              icon:'✕',  step:-1 },
 };
 
 const DELIVERY_ZONE_LABELS: Record<string, string> = {
@@ -85,27 +85,27 @@ function ReviewModal({
 
   return (
     <div
-      style={{ position:'fixed', inset:0, background:'rgba(13,27,62,0.72)', zIndex:300, display:'flex', alignItems:'center', justifyContent:'center', padding:16, backdropFilter:'blur(4px)' }}
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.72)', zIndex:300, display:'flex', alignItems:'center', justifyContent:'center', padding:16, backdropFilter:'blur(4px)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ background:T.white, borderRadius:20, width:'100%', maxWidth:460, boxShadow:'0 32px 80px rgba(13,27,62,0.3)', overflow:'hidden', animation:'modalIn 0.22s ease' }}>
+      <div style={{ background:T.white, borderRadius:20, width:'100%', maxWidth:460, boxShadow:'0 32px 80px rgba(0,0,0,0.25)', overflow:'hidden', animation:'modalIn 0.22s ease' }}>
 
         {/* Header */}
-        <div style={{ background:T.navy, padding:'18px 22px', display:'flex', alignItems:'center', gap:12 }}>
+        <div style={{ background:'#FFFFFF', padding:'18px 22px', display:'flex', alignItems:'center', gap:12, borderBottom:'1px solid #E0E0E0' }}>
           <img
             src={item.image_url} alt={item.name}
-            onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/52x52/152348/C8A951?text=LP`; }}
-            style={{ width:52, height:52, objectFit:'cover', borderRadius:8, border:`2px solid rgba(200,169,81,0.3)`, flexShrink:0 }}
+            onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/52x52/F5F5F5/000000?text=LP`; }}
+            style={{ width:52, height:52, objectFit:'cover', borderRadius:8, border:'2px solid #E0E0E0', flexShrink:0 }}
           />
           <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:14, color:T.white, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.name}</div>
+            <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:14, color:'#000000', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.name}</div>
             {item.category && (
-              <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:`rgba(200,169,81,0.7)`, letterSpacing:'1.5px', textTransform:'uppercase', marginTop:3 }}>{item.category}</div>
+              <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'#888888', letterSpacing:'1.5px', textTransform:'uppercase', marginTop:3 }}>{item.category}</div>
             )}
           </div>
           <button
             onClick={onClose}
-            style={{ background:'rgba(255,255,255,0.08)', border:'none', color:'rgba(255,255,255,0.6)', width:28, height:28, borderRadius:7, cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}
+            style={{ background:'#F5F5F5', border:'none', color:'#555555', width:28, height:28, borderRadius:7, cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}
           >✕</button>
         </div>
 
@@ -120,11 +120,11 @@ function ReviewModal({
                   onClick={() => setRating(s)}
                   onMouseEnter={() => setHover(s)}
                   onMouseLeave={() => setHover(0)}
-                  style={{ fontSize:30, cursor:'pointer', color:s<=(hover||rating)?T.gold:T.creamDeep, transition:'all 0.15s', transform:s<=(hover||rating)?'scale(1.2)':'scale(1)', display:'inline-block', userSelect:'none' }}
+                  style={{ fontSize:30, cursor:'pointer', color:s<=(hover||rating)?'#000000':'#DDDDDD', transition:'all 0.15s', transform:s<=(hover||rating)?'scale(1.2)':'scale(1)', display:'inline-block', userSelect:'none' }}
                 >★</span>
               ))}
             </div>
-            <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:T.gold, marginTop:6, fontWeight:600, minHeight:18 }}>
+            <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:'#333333', marginTop:6, fontWeight:600, minHeight:18 }}>
               {['','Terrible','Poor','Average','Good','Excellent!'][rating] || ''}
             </div>
           </div>
@@ -145,17 +145,17 @@ function ReviewModal({
           </div>
 
           {error && (
-            <div style={{ fontFamily:"'Jost',sans-serif", fontSize:12, color:'#C0392B', background:'#FDF0EE', border:'1px solid #F5C6C0', borderRadius:8, padding:'8px 12px', marginBottom:14 }}>{error}</div>
+            <div style={{ fontFamily:"'Jost',sans-serif", fontSize:12, color:'#333333', background:'#F5F5F5', border:'1px solid #E0E0E0', borderRadius:8, padding:'8px 12px', marginBottom:14 }}>{error}</div>
           )}
 
           <div style={{ display:'flex', gap:10 }}>
             <button
               onClick={onClose}
-              style={{ flex:1, background:T.creamMid, color:T.navy, border:'none', borderRadius:10, padding:'11px 0', fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer' }}
+              style={{ flex:1, background:'#F0F0F0', color:'#000000', border:'none', borderRadius:10, padding:'11px 0', fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer' }}
             >Cancel</button>
             <button
               onClick={handleSubmit} disabled={saving}
-              style={{ flex:2, background:saving?T.creamDeep:T.gold, color:saving?T.muted:T.navy, border:'none', borderRadius:10, padding:'11px 0', fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:saving?'not-allowed':'pointer', transition:'background 0.2s' }}
+              style={{ flex:2, background:saving?'#E0E0E0':'#000000', color:saving?'#888888':'#FFFFFF', border:'none', borderRadius:10, padding:'11px 0', fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:saving?'not-allowed':'pointer', transition:'background 0.2s' }}
             >{saving ? 'Submitting…' : '★ Submit Review'}</button>
           </div>
         </div>
@@ -245,26 +245,26 @@ export default function Orders() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Jost:wght@300;400;500;600;700&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        body{background:${T.cream}}
+        body{background:#FFFFFF}
         a{text-decoration:none;color:inherit}
         .topbar-marquee{display:flex;gap:64px;animation:marquee 32s linear infinite;white-space:nowrap}
         @keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-        .back-btn{background:none;border:none;cursor:pointer;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:${T.gold};padding:8px 0;display:flex;align-items:center;gap:8px;transition:opacity 0.2s;min-height:44px}
+        .back-btn{background:none;border:none;cursor:pointer;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#000000;padding:8px 0;display:flex;align-items:center;gap:8px;transition:opacity 0.2s;min-height:44px}
         .back-btn:hover{opacity:0.75}
         .ornament{display:flex;align-items:center;gap:14px;margin-bottom:8px}
-        .ornament-line{flex:0 0 32px;height:1px;background:${T.gold}}
-        .ornament-diamond{width:5px;height:5px;background:${T.gold};transform:rotate(45deg);flex-shrink:0}
-        .order-card{background:#fff;border:1px solid ${T.creamDeep};border-radius:18px;overflow:hidden;transition:all 0.25s;margin-bottom:16px}
-        .order-card:hover{border-color:${T.gold};box-shadow:0 12px 36px rgba(13,27,62,0.1)}
+        .ornament-line{flex:0 0 32px;height:1px;background:#CCCCCC}
+        .ornament-diamond{width:5px;height:5px;background:#CCCCCC;transform:rotate(45deg);flex-shrink:0}
+        .order-card{background:#FFFFFF;border:1px solid #E0E0E0;border-radius:18px;overflow:hidden;transition:all 0.25s;margin-bottom:16px}
+        .order-card:hover{border-color:#000000;box-shadow:0 12px 36px rgba(0,0,0,0.08)}
         .order-header{padding:clamp(14px,4vw,20px) clamp(14px,4vw,24px);cursor:pointer;display:flex;align-items:center;gap:12px;transition:background 0.15s;min-height:72px}
-        .order-header:hover{background:rgba(200,169,81,0.03)}
-        .order-header:active{background:rgba(200,169,81,0.07)}
+        .order-header:hover{background:rgba(0,0,0,0.02)}
+        .order-header:active{background:rgba(0,0,0,0.05)}
         .item-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid ${T.creamDeep}}
         .item-row:last-child{border-bottom:none}
-        .cta-gold{font-family:'Jost',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;border:none;border-radius:8px;padding:clamp(12px,3vw,14px) clamp(16px,4vw,28px);cursor:pointer;transition:all 0.25s;background:${T.gold};color:${T.navy};min-height:44px;flex:1}
-        .cta-gold:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,169,81,0.35)}
+        .cta-gold{font-family:'Jost',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;border:none;border-radius:8px;padding:clamp(12px,3vw,14px) clamp(16px,4vw,28px);cursor:pointer;transition:all 0.25s;background:#000000;color:#FFFFFF;min-height:44px;flex:1}
+        .cta-gold:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.15)}
         .cta-outline{font-family:'Jost',sans-serif;font-weight:600;font-size:11px;letter-spacing:2px;text-transform:uppercase;border:1px solid ${T.creamDeep};border-radius:8px;padding:clamp(12px,3vw,12px) clamp(16px,4vw,24px);cursor:pointer;transition:all 0.2s;background:#fff;color:${T.navy};min-height:44px;flex:1}
-        .cta-outline:hover{border-color:${T.gold};background:${T.cream}}
+        .cta-outline:hover{border-color:#555555;background:#F5F5F5}
         .fade-in{animation:fadeIn 0.35s ease forwards}
         @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
         .expand-arrow{transition:transform 0.25s ease;display:inline-block;font-size:11px;color:${T.muted}}
@@ -272,9 +272,9 @@ export default function Orders() {
         .order-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px}
         .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
         .actions-row{display:flex;gap:10px;flex-wrap:wrap}
-        .review-btn{font-family:'Jost',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border:none;border-radius:6px;padding:7px 14px;cursor:pointer;transition:all 0.18s;white-space:nowrap;background:${T.gold};color:${T.navy}}
-        .review-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(200,169,81,0.35)}
-        .reviewed-badge{font-family:'Jost',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:5px 12px;border-radius:6px;background:#EEF3EE;color:#4A7A4A;border:1px solid #C8DFC8;white-space:nowrap}
+        .review-btn{font-family:'Jost',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border:none;border-radius:6px;padding:7px 14px;cursor:pointer;transition:all 0.18s;white-space:nowrap;background:#000000;color:#FFFFFF}
+        .review-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+        .reviewed-badge{font-family:'Jost',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:5px 12px;border-radius:6px;background:#F0F0F0;color:#333333;border:1px solid #E0E0E0;white-space:nowrap}
         @keyframes modalIn{from{opacity:0;transform:scale(0.94) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
         @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
         @media(max-width:380px){.order-thumbnails{display:none!important}}
@@ -284,7 +284,7 @@ export default function Orders() {
 
       {/* Toast */}
       {toast && (
-        <div style={{ position:'fixed', bottom:24, left:'50%', transform:'translateX(-50%)', background:T.navy, color:T.goldLight, fontFamily:"'Jost',sans-serif", fontSize:12, fontWeight:700, padding:'12px 24px', borderRadius:50, zIndex:999, letterSpacing:'1px', boxShadow:'0 8px 32px rgba(13,27,62,0.3)', animation:'toastIn 0.3s ease', whiteSpace:'nowrap' }}>
+        <div style={{ position:'fixed', bottom:24, left:'50%', transform:'translateX(-50%)', background:'#1a1a1a', color:'#FFFFFF', fontFamily:"'Jost',sans-serif", fontSize:12, fontWeight:700, padding:'12px 24px', borderRadius:50, zIndex:999, letterSpacing:'1px', boxShadow:'0 8px 32px rgba(0,0,0,0.2)', animation:'toastIn 0.3s ease', whiteSpace:'nowrap' }}>
           {toast}
         </div>
       )}
@@ -304,16 +304,16 @@ export default function Orders() {
       <div style={{ padding:`clamp(24px,5vw,40px) clamp(14px,5%,5%) clamp(60px,10vw,80px)`, maxWidth:860, margin:'0 auto' }}>
 
         {error && (
-          <div style={{ fontFamily:"'Jost',sans-serif", background:'#FDF0EE', border:'1px solid #F5C6C0', borderRadius:10, padding:'12px 18px', color:'#C0392B', fontSize:13, marginBottom:24 }}>{error}</div>
+          <div style={{ fontFamily:"'Jost',sans-serif", background:'#F5F5F5', border:'1px solid #E0E0E0', borderRadius:10, padding:'12px 18px', color:'#333333', fontSize:13, marginBottom:24 }}>{error}</div>
         )}
 
         <div style={{ marginBottom:28 }}>
           <div className="ornament">
             <div className="ornament-line"/><div className="ornament-diamond"/>
-            <span style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:'3px', color:T.gold, textTransform:'uppercase' }}>History</span>
+            <span style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:900, letterSpacing:'3px', color:'#000000', textTransform:'uppercase' }}>History</span>
             <div className="ornament-diamond"/><div className="ornament-line"/>
           </div>
-          <h1 style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:'clamp(22px,5vw,30px)', color:T.navy }}>Your Orders</h1>
+          <h1 style={{ fontFamily:"'Playfair Display',serif", fontWeight:800, fontSize:'clamp(22px,5vw,30px)', color:'#000000' }}>Your Orders</h1>
           {orders.length > 0 && (
             <p style={{ fontFamily:"'Jost',sans-serif", fontSize:13, color:T.muted, marginTop:6, fontWeight:300 }}>
               {orders.length} order{orders.length !== 1 ? 's' : ''} · tap any order to see details
@@ -372,7 +372,7 @@ export default function Orders() {
                   </div>
                   <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:T.muted }}>{formatDate(order.created_at)} · {formatTime(order.created_at)}</div>
                   {order.tracking_status && (
-                    <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:T.gold, fontWeight:600, marginTop:3 }}>🚦 {order.tracking_status}</div>
+                    <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:'#555555', fontWeight:600, marginTop:3 }}>🚦 {order.tracking_status}</div>
                   )}
                 </div>
 
@@ -381,7 +381,7 @@ export default function Orders() {
                   {order.items.slice(0, 3).map((item, i) => (
                     <div key={i} style={{ width:40, height:40, borderRadius:8, overflow:'hidden', background:T.creamMid, border:`1px solid ${T.creamDeep}`, flexShrink:0 }}>
                       <img src={item.image_url} alt={item.name} style={{ width:'100%', height:'100%', objectFit:'cover' }}
-                        onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/40x40/F0EAD8/0D1B3E?text=LP`; }}/>
+                        onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/40x40/F5F5F5/000000?text=LP`; }}/>
                     </div>
                   ))}
                   {order.items.length > 3 && (
@@ -406,15 +406,15 @@ export default function Orders() {
                   {/* Progress tracker */}
                   {!isCancelled && (
                     <div style={{ padding:'clamp(16px,4vw,20px) clamp(14px,4vw,24px)', borderBottom:`1px solid ${T.creamDeep}` }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:18, background:T.cream, borderRadius:10, padding:'10px 14px', border:`1px solid ${T.creamDeep}` }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:18, background:'#FAFAFA', borderRadius:10, padding:'10px 14px', border:'1px solid #E0E0E0' }}>
                         <span style={{ fontSize:18 }}>{TRACKING_STEPS[currentTrackIdx]?.icon}</span>
                         <div style={{ flex:1, minWidth:0 }}>
-                          <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, color:T.muted, letterSpacing:'1.5px', textTransform:'uppercase', marginBottom:2 }}>Current Status</div>
+                          <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:900, color:'#000000', letterSpacing:'1.5px', textTransform:'uppercase', marginBottom:2 }}>Current Status</div>
                           <div style={{ fontFamily:"'Jost',sans-serif", fontSize:13, fontWeight:700, color:T.navy }}>{order.tracking_status || TRACKING_STEPS[currentTrackIdx]?.label}</div>
                         </div>
                         <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:T.muted, flexShrink:0 }}>Step {currentTrackIdx + 1}/{TRACKING_STEPS.length}</div>
                         {order.status === 'delivered' && (
-                          <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:700, color:'#4A7A4A', background:'#EEF3EE', border:'1px solid #C8DFC8', borderRadius:20, padding:'3px 12px', flexShrink:0 }}>✓ Complete</div>
+                          <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:700, color:'#000000', background:'#F0F0F0', border:'1px solid #CCCCCC', borderRadius:20, padding:'3px 12px', flexShrink:0 }}>✓ Complete</div>
                         )}
                       </div>
                       <div style={{ display:'flex', alignItems:'flex-start', gap:0 }}>
@@ -423,22 +423,22 @@ export default function Orders() {
                           const isCurrent = i === currentTrackIdx;
                           return (
                             <div key={s.label} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', position:'relative' }}>
-                              {i > 0 && <div style={{ position:'absolute', left:0, top:12, width:'50%', height:2, background:isPast||isCurrent?T.gold:T.creamDeep, transition:'background 0.4s' }}/>}
-                              {i < TRACKING_STEPS.length - 1 && <div style={{ position:'absolute', right:0, top:12, width:'50%', height:2, background:isPast?T.gold:T.creamDeep, transition:'background 0.4s' }}/>}
+                              {i > 0 && <div style={{ position:'absolute', left:0, top:12, width:'50%', height:2, background:isPast||isCurrent?'#000000':'#E0E0E0', transition:'background 0.4s' }}/>}
+                              {i < TRACKING_STEPS.length - 1 && <div style={{ position:'absolute', right:0, top:12, width:'50%', height:2, background:isPast?'#000000':'#E0E0E0', transition:'background 0.4s' }}/>}
                               <div
                                 className="track-circle"
-                                style={{ width:26, height:26, borderRadius:'50%', zIndex:1, background:isPast?T.gold:isCurrent?T.navy:'#fff', border:isCurrent||isPast?`2px solid ${T.gold}`:`2px solid ${T.creamDeep}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:isPast?10:isCurrent?12:9, boxShadow:isCurrent?`0 0 0 4px rgba(200,169,81,0.2)`:'none', transition:'all 0.4s', flexShrink:0 }}
+                                style={{ width:26, height:26, borderRadius:'50%', zIndex:1, background:isPast?'#000000':isCurrent?'#000000':'#FFFFFF', border:isCurrent||isPast?'2px solid #000000':'2px solid #E0E0E0', display:'flex', alignItems:'center', justifyContent:'center', fontSize:isPast?10:isCurrent?12:9, boxShadow:isCurrent?'0 0 0 4px rgba(0,0,0,0.1)':'none', transition:'all 0.4s', flexShrink:0 }}
                               >
                                 {isPast
-                                  ? <span style={{ color:T.navy }}>✓</span>
+                                  ? <span style={{ color:'#FFFFFF' }}>✓</span>
                                   : isCurrent
-                                  ? <span>{s.icon}</span>
-                                  : <span style={{ color:T.muted, fontFamily:"'Jost',sans-serif", fontWeight:700 }}>{i + 1}</span>
+                                  ? <span style={{ color:'#FFFFFF' }}>{s.icon}</span>
+                                  : <span style={{ color:'#AAAAAA', fontFamily:"'Jost',sans-serif", fontWeight:700 }}>{i + 1}</span>
                                 }
                               </div>
                               <div
                                 className="track-label"
-                                style={{ fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:isCurrent?700:500, color:isCurrent?T.navy:isPast?T.gold:T.muted, marginTop:6, letterSpacing:'0.3px', textAlign:'center', lineHeight:1.3, opacity:isPast||isCurrent||i===currentTrackIdx+1?1:0.45 }}
+                                style={{ fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:isCurrent?700:500, color:isCurrent?'#000000':isPast?'#000000':'#AAAAAA', marginTop:6, letterSpacing:'0.3px', textAlign:'center', lineHeight:1.3, opacity:isPast||isCurrent||i===currentTrackIdx+1?1:0.45 }}
                               >{s.label}</div>
                             </div>
                           );
@@ -449,17 +449,17 @@ export default function Orders() {
 
                   {/* Cancelled banner */}
                   {isCancelled && (
-                    <div style={{ padding:'14px clamp(14px,4vw,24px)', background:'#FDF0EE', borderBottom:'1px solid #F5C6C0' }}>
-                      <p style={{ fontFamily:"'Jost',sans-serif", fontSize:13, color:'#C0392B', fontWeight:600 }}>✕ This order was cancelled.</p>
+                    <div style={{ padding:'14px clamp(14px,4vw,24px)', background:'#F5F5F5', borderBottom:'1px solid #E0E0E0' }}>
+                      <p style={{ fontFamily:"'Jost',sans-serif", fontSize:13, color:'#555555', fontWeight:600 }}>✕ This order was cancelled.</p>
                     </div>
                   )}
 
                   {/* Items list */}
                   <div style={{ padding:`clamp(16px,4vw,20px) clamp(14px,4vw,24px)` }}>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12, flexWrap:'wrap', gap:8 }}>
-                      <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:'2px', textTransform:'uppercase', color:T.muted }}>Items Ordered</div>
+                      <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:900, letterSpacing:'2px', textTransform:'uppercase', color:'#000000' }}>Items Ordered</div>
                       {eligible && (
-                        <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:T.gold, fontWeight:600 }}>★ Tap a product to leave a review</div>
+                        <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'#555555', fontWeight:600 }}>★ Tap a product to leave a review</div>
                       )}
                     </div>
                     <div>
@@ -470,17 +470,17 @@ export default function Orders() {
                           <div key={item.id} className="item-row">
                             <div style={{ width:52, height:52, borderRadius:10, overflow:'hidden', flexShrink:0, background:T.creamMid }}>
                               <img src={item.image_url} alt={item.name} style={{ width:'100%', height:'100%', objectFit:'cover' }}
-                                onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/52x52/F0EAD8/0D1B3E?text=LP`; }}/>
+                                onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/52x52/F5F5F5/000000?text=LP`; }}/>
                             </div>
                             <div style={{ flex:1, minWidth:0 }}>
                               {item.category && (
-                                <div style={{ display:'inline-block', background:T.navy, color:T.gold, borderRadius:3, padding:'1px 7px', fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', marginBottom:4 }}>{item.category}</div>
+                                <div style={{ display:'inline-block', background:'#000000', color:'#FFFFFF', borderRadius:3, padding:'1px 7px', fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', marginBottom:4 }}>{item.category}</div>
                               )}
                               <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:600, fontSize:'clamp(12px,3vw,14px)', color:T.navy, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.name}</div>
                               <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:T.muted, marginTop:2 }}>Qty: {item.quantity} · KSh {Number(item.price).toLocaleString()} each</div>
                             </div>
                             <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:6, flexShrink:0 }}>
-                              <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:700, fontSize:'clamp(12px,3.5vw,15px)', color:T.gold }}>
+                              <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:700, fontSize:'clamp(12px,3.5vw,15px)', color:'#000000' }}>
                                 KSh {(Number(item.price) * item.quantity).toLocaleString()}
                               </div>
                               {eligible && (
@@ -499,41 +499,41 @@ export default function Orders() {
                   <div style={{ padding:`0 clamp(14px,4vw,24px) clamp(16px,4vw,24px)` }}>
                     <div className="summary-grid">
                       <div style={{ background:T.cream, border:`1px solid ${T.creamDeep}`, borderRadius:14, padding:'clamp(12px,3vw,16px) clamp(12px,3vw,18px)' }}>
-                        <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:'2px', textTransform:'uppercase', color:T.muted, marginBottom:12 }}>Cost Breakdown</div>
+                        <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:900, letterSpacing:'2px', textTransform:'uppercase', color:'#000000', marginBottom:12 }}>Cost Breakdown</div>
                         <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
                           <span style={{ fontFamily:"'Jost',sans-serif", fontSize:12, color:T.muted }}>Subtotal</span>
                           <span style={{ fontFamily:"'Jost',sans-serif", fontSize:12, fontWeight:600, color:T.navy }}>KSh {subtotal.toLocaleString()}</span>
                         </div>
                         <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8, gap:8 }}>
-                          <span style={{ fontFamily:"'Jost',sans-serif", fontSize:12, color:T.muted }}>Delivery · <span style={{ color:T.gold }}>{zoneLabel}</span></span>
-                          <span style={{ fontFamily:"'Jost',sans-serif", fontSize:12, fontWeight:600, color:Number(order.delivery_fee??'0')===0?'#4A7A4A':T.navy, flexShrink:0 }}>
+                          <span style={{ fontFamily:"'Jost',sans-serif", fontSize:12, color:T.muted }}>Delivery · <span style={{ color:'#555555' }}>{zoneLabel}</span></span>
+                          <span style={{ fontFamily:"'Jost',sans-serif", fontSize:12, fontWeight:600, color:Number(order.delivery_fee??'0')===0?'#000000':T.navy, flexShrink:0 }}>
                             {Number(order.delivery_fee??'0')===0 ? 'FREE' : `KSh ${Number(order.delivery_fee).toLocaleString()}`}
                           </span>
                         </div>
-                        <div style={{ height:1, background:`linear-gradient(90deg,transparent,${T.gold},transparent)`, margin:'10px 0' }}/>
+                        <div style={{ height:1, background:'linear-gradient(90deg,transparent,#CCCCCC,transparent)', margin:'10px 0' }}/>
                         <div style={{ display:'flex', justifyContent:'space-between' }}>
                           <span style={{ fontFamily:"'Jost',sans-serif", fontSize:13, fontWeight:700, color:T.navy, textTransform:'uppercase', letterSpacing:'0.5px' }}>Total</span>
                           <span style={{ fontFamily:"'Jost',sans-serif", fontSize:15, fontWeight:800, color:T.navy }}>KSh {Number(order.total_amount).toLocaleString()}</span>
                         </div>
                       </div>
 
-                      <div style={{ background:T.navy, border:`1px solid rgba(200,169,81,0.2)`, borderRadius:14, padding:'clamp(12px,3vw,16px) clamp(12px,3vw,18px)' }}>
-                        <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:'2px', textTransform:'uppercase', color:'rgba(200,169,81,0.7)', marginBottom:12 }}>Payment & Delivery</div>
+                      <div style={{ background:'#FFFFFF', border:'1px solid #E0E0E0', borderRadius:14, padding:'clamp(12px,3vw,16px) clamp(12px,3vw,18px)' }}>
+                        <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:'2px', textTransform:'uppercase', color:'#888888', marginBottom:12 }}>Payment & Delivery</div>
                         {order.mpesa_receipt && (
                           <div style={{ marginBottom:10 }}>
-                            <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'rgba(255,255,255,0.4)', letterSpacing:'1px', textTransform:'uppercase', marginBottom:3 }}>M-Pesa Receipt</div>
-                            <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:800, fontSize:'clamp(12px,3.5vw,15px)', color:T.gold, letterSpacing:'2px' }}>{order.mpesa_receipt}</div>
+                            <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'#AAAAAA', letterSpacing:'1px', textTransform:'uppercase', marginBottom:3 }}>M-Pesa Receipt</div>
+                            <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:800, fontSize:'clamp(12px,3.5vw,15px)', color:'#000000', letterSpacing:'2px' }}>{order.mpesa_receipt}</div>
                           </div>
                         )}
                         {order.phone && (
                           <div style={{ marginBottom:10 }}>
-                            <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'rgba(255,255,255,0.4)', letterSpacing:'1px', textTransform:'uppercase', marginBottom:3 }}>Phone</div>
-                            <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:600, fontSize:13, color:T.white }}>{order.phone}</div>
+                            <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'#AAAAAA', letterSpacing:'1px', textTransform:'uppercase', marginBottom:3 }}>Phone</div>
+                            <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:600, fontSize:13, color:'#000000' }}>{order.phone}</div>
                           </div>
                         )}
                         <div>
-                          <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'rgba(255,255,255,0.4)', letterSpacing:'1px', textTransform:'uppercase', marginBottom:3 }}>Delivery</div>
-                          <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:600, fontSize:13, color:T.goldLight }}>{zoneLabel}</div>
+                          <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'#AAAAAA', letterSpacing:'1px', textTransform:'uppercase', marginBottom:3 }}>Delivery</div>
+                          <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:600, fontSize:13, color:'#000000' }}>{zoneLabel}</div>
                         </div>
                       </div>
                     </div>
@@ -542,8 +542,19 @@ export default function Orders() {
                   {/* Actions */}
                   <div style={{ padding:`0 clamp(14px,4vw,24px) clamp(16px,4vw,24px)` }}>
                     <div className="actions-row">
-                      <button className="cta-gold" onClick={() => navigate('/')}>🛍️ Shop Again</button>
-                      <button className="cta-outline" onClick={() => navigate('/reviews')}>⭐ My Reviews</button>
+                      <button className="cta-gold" onClick={() => navigate('/')} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                        </svg>
+                        Shop Again
+                      </button>
+                      <button className="cta-outline" onClick={() => navigate('/reviews')} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        My Reviews
+                      </button>
                     </div>
                   </div>
 

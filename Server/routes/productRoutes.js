@@ -1,18 +1,19 @@
 // Server/routes/productRoutes.js
-const express   = require('express');
-const router    = express.Router();
+const express = require('express');
+const router  = express.Router();
 
 const {
   getProducts,
   getProductById,
   getNewArrivals,
   getBestSellers,
+  getFlashSales,
 } = require('../controllers/productController');
 
-// ── Public ─────────────────────────────────────────────────────────
 // Named routes MUST come before /:id
 router.get('/new-arrivals', getNewArrivals);
 router.get('/best-sellers', getBestSellers);
+router.get('/flash-sales',  getFlashSales);
 router.get('/',             getProducts);
 router.get('/:id',          getProductById);
 

@@ -16,6 +16,8 @@ const normaliseProduct = (p) => ({
   features: parseJson(p.features),
   colors:   parseJson(p.colors),
   sizes:    parseJson(p.sizes),
+  sale_price:   p.sale_price   ? parseFloat(p.sale_price)  : null,
+  sale_ends_at: p.sale_ends_at ?? null,
 });
 
 // ── GET /api/products  (public) ───────────────────────────────────────────────
@@ -174,6 +176,25 @@ exports.getBestSellers = async (req, res) => {
 
   } catch (err) {
     console.error('getBestSellers error:', err.message);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+// ── GET /api/products/flash-sales  (public) ───────────────────────────────────
+exports.getFlashSales = async (req, res) => {
+  try {
+    const { limit = 20 } = req.query;
+    const result = await db.query(
+      `SELECT * FROM products
+       WHERE sale_price IS NOT NULL
+         AND sale_price < price
+         AND (sale_ends_at IS NULL OR sale_ends_at > NOW())
+       ORDER BY (price - sale_price) DESC
+       LIMIT $1`,
+      [parseInt(limit)]
+    );
+    res.json(result.rows.map(normaliseProduct));
+  } catch (err) {
+    console.error('getFlashSales error:', err.message);
     res.status(500).json({ msg: 'Server error' });
   }
 };

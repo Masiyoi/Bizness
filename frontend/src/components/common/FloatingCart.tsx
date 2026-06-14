@@ -2,9 +2,9 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const T = {
-  navy: '#0D1B3E',
-  gold: '#C8A951',
-  goldLight: '#DEC06A',
+  navy: '#000000',
+  gold: '#FFFFFF',
+  goldLight: '#E5E5E5',
 };
 
 interface FloatingCartProps {
@@ -108,8 +108,8 @@ export default function FloatingCart({ count }: FloatingCartProps) {
           height: 52px;
           border-radius: 50%;
           border: none;
-          background: ${T.navy};
-          box-shadow: 0 4px 20px rgba(13,27,62,0.35), 0 0 0 1.5px rgba(200,169,81,0.35);
+          background: #FFFFFF;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.15), 0 0 0 1.5px rgba(0,0,0,0.12);
           cursor: grab;
           display: flex;
           align-items: center;
@@ -119,8 +119,8 @@ export default function FloatingCart({ count }: FloatingCartProps) {
           user-select: none;
         }
         .fc-btn:hover {
-          background: #1E2F5A;
-          box-shadow: 0 6px 28px rgba(13,27,62,0.45), 0 0 0 2px rgba(200,169,81,0.55);
+          background: #F5F5F5;
+          box-shadow: 0 6px 28px rgba(0,0,0,0.2), 0 0 0 2px rgba(0,0,0,0.2);
         }
         .fc-btn:active { cursor: grabbing; }
         .fc-icon {
@@ -136,8 +136,8 @@ export default function FloatingCart({ count }: FloatingCartProps) {
           min-width: 18px;
           height: 18px;
           border-radius: 9px;
-          background: ${T.gold};
-          color: ${T.navy};
+          background: #000000;
+          color: #FFFFFF;
           font-family: 'Jost', sans-serif;
           font-size: 10px;
           font-weight: 800;
@@ -156,8 +156,8 @@ export default function FloatingCart({ count }: FloatingCartProps) {
           right: 60px;
           bottom: 50%;
           transform: translateY(50%);
-          background: ${T.navy};
-          color: ${T.gold};
+          background: #FFFFFF;
+          color: #FFFFFF;
           font-family: 'Jost', sans-serif;
           font-size: 11px;
           font-weight: 700;

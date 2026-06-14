@@ -79,12 +79,15 @@ const toJsonString = (val) => {
 };
 
 // ── Normalise a product row before sending to the client ─────────────────────
+// REPLACE the existing normaliseProduct in adminController.js
 const normaliseProduct = (p) => ({
   ...p,
-  images:   Array.isArray(p.images)   ? p.images   : [],
-  features: Array.isArray(p.features) ? p.features : [],
-  colors:   Array.isArray(p.colors)   ? p.colors   : [],
-  sizes:    Array.isArray(p.sizes)    ? p.sizes    : [],
+  images:       Array.isArray(p.images)   ? p.images   : [],
+  features:     Array.isArray(p.features) ? p.features : [],
+  colors:       Array.isArray(p.colors)   ? p.colors   : [],
+  sizes:        Array.isArray(p.sizes)    ? p.sizes    : [],
+  sale_price:   p.sale_price   ? parseFloat(p.sale_price)  : null,
+  sale_ends_at: p.sale_ends_at ?? null,
 });
 
 // ── GET /api/products  (public) ───────────────────────────────────────────────
@@ -147,6 +150,7 @@ exports.getProductById = async (req, res) => {
   }
 };
 // ── POST /api/admin/products ──────────────────────────────────────────────────
+// ── POST /api/admin/products ──────────────────────────────────────────────────
 exports.createProduct = async (req, res) => {
   try {
     const {
@@ -157,7 +161,9 @@ exports.createProduct = async (req, res) => {
       features    = '[]',
       colors      = '[]',
       sizes       = '[]',
-      variants    = '[]',   // ← add this
+      variants    = '[]',
+      sale_price   = null,
+      sale_ends_at = null,
     } = req.body;
 
     if (!name || !price) return res.status(400).json({ msg: 'Name and price are required' });
@@ -168,7 +174,6 @@ exports.createProduct = async (req, res) => {
       imageUrls = uploads.map(u => u.secure_url);
     }
 
-    // Compute stock from variants if provided, else default to 0
     let parsedVariants = [];
     try { parsedVariants = JSON.parse(variants); } catch { parsedVariants = []; }
     const stockValue = parsedVariants.length ? sumVariantStock(parsedVariants) : 0;
@@ -180,8 +185,8 @@ exports.createProduct = async (req, res) => {
 
     const result = await db.query(
       `INSERT INTO products
-         (name, price, category, description, features, stock, images, image_url, colors, sizes)
-       VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7::jsonb, $8, $9::jsonb, $10::jsonb)
+         (name, price, category, description, features, stock, images, image_url, colors, sizes, sale_price, sale_ends_at)
+       VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7::jsonb, $8, $9::jsonb, $10::jsonb, $11, $12)
        RETURNING *`,
       [
         name,
@@ -189,17 +194,18 @@ exports.createProduct = async (req, res) => {
         category    || null,
         description || null,
         featuresJson,
-        stockValue,          // ← computed from variants
+        stockValue,
         imagesJson,
         imageUrls[0] || null,
         colorsJson,
         sizesJson,
+        sale_price   || null,
+        sale_ends_at || null,
       ]
     );
 
     const newProduct = normaliseProduct(result.rows[0]);
 
-    // Save variants linked to the new product id
     await saveVariants(newProduct.id, variants);
     newProduct.variants = await getVariants(newProduct.id);
 
@@ -223,6 +229,8 @@ exports.updateProduct = async (req, res) => {
       colors         = '[]',
       sizes          = '[]',
       variants       = '[]',   // ← add this
+      sale_price     = null,   // ← ADD
+      sale_ends_at   = null,   // ← ADD
     } = req.body;
 
     const productId = req.params.id;
@@ -251,35 +259,40 @@ exports.updateProduct = async (req, res) => {
     const sizesJson    = toJsonString(sizes);
     const imagesJson   = JSON.stringify(allImgs);
 
-    const result = await db.query(
-      `UPDATE products
-       SET name        = $1,
-           price       = $2,
-           category    = $3,
-           description = $4,
-           features    = $5::jsonb,
-           stock       = $6,
-           images      = $7::jsonb,
-           image_url   = $8,
-           colors      = $9::jsonb,
-           sizes       = $10::jsonb,
-           updated_at  = NOW()
-       WHERE id = $11
-       RETURNING *`,
-      [
-        name,
-        price,
-        category    || null,
-        description || null,
-        featuresJson,
-        stockValue,          // ← computed from variants
-        imagesJson,
-        allImgs[0] || null,
-        colorsJson,
-        sizesJson,
-        productId,
-      ]
-    );
+    // Replace the UPDATE query:
+const result = await db.query(
+  `UPDATE products
+   SET name         = $1,
+       price        = $2,
+       category     = $3,
+       description  = $4,
+       features     = $5::jsonb,
+       stock        = $6,
+       images       = $7::jsonb,
+       image_url    = $8,
+       colors       = $9::jsonb,
+       sizes        = $10::jsonb,
+       sale_price   = $11,
+       sale_ends_at = $12,
+       updated_at   = NOW()
+   WHERE id = $13
+   RETURNING *`,
+  [
+    name,
+    price,
+    category    || null,
+    description || null,
+    featuresJson,
+    stockValue,
+    imagesJson,
+    allImgs[0] || null,
+    colorsJson,
+    sizesJson,
+    sale_price   || null,
+    sale_ends_at || null,
+    productId,
+  ]
+);
 
     if (!result.rows.length) return res.status(404).json({ msg: 'Product not found' });
 
