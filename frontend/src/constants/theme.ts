@@ -149,6 +149,8 @@ export interface Product {
   category?:   string;
   stock?:      number;
   created_at?: string;
+  sale_price?:   number | null;
+  sale_ends_at?: string | null;
 }
 
 export interface User {

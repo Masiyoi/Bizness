@@ -32,10 +32,10 @@ interface User {
 }
 
 const T = {
-  navy:'#0D1B3E', navyMid:'#152348', navyLight:'#1E2F5A',
-  gold:'#C8A951', goldLight:'#DEC06A', goldPale:'#F0D98A',
-  cream:'#F9F5EC', creamMid:'#F0EAD8', creamDeep:'#E4D9C0',
-  white:'#FFFFFF', text:'#0D1B3E', muted:'#7A7A8A',
+  navy:'#1a1a1a', navyMid:'#111111', navyLight:'#222222',
+  gold:'#000000', goldLight:'#333333', goldPale:'#555555',
+  cream:'#FFFFFF', creamMid:'#F5F5F5', creamDeep:'#E0E0E0',
+  white:'#FFFFFF', text:'#000000', muted:'#888888',
 };
 
 const readUser = (): User | null => {
@@ -58,7 +58,7 @@ function Stars({ rating, size = 16, interactive = false, onRate }: {
           onMouseLeave={() => interactive && setHover(0)}
           style={{
             fontSize: size, cursor: interactive ? 'pointer' : 'default',
-            color: s <= (hover || rating) ? T.gold : T.creamDeep,
+            color: s <= (hover || rating) ? '#000000' : '#DDDDDD',
             transition: 'color 0.15s, transform 0.15s',
             transform: interactive && s <= (hover || rating) ? 'scale(1.25)' : 'scale(1)',
             display: 'inline-block', userSelect: 'none',
@@ -96,26 +96,26 @@ function ReviewModal({
   };
 
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(13,27,62,0.72)', zIndex:300, display:'flex', alignItems:'center', justifyContent:'center', padding:16, backdropFilter:'blur(4px)' }}
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:300, display:'flex', alignItems:'center', justifyContent:'center', padding:16, backdropFilter:'blur(4px)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background:T.white, borderRadius:20, width:'100%', maxWidth:480, boxShadow:'0 32px 80px rgba(13,27,62,0.3)', overflow:'hidden', animation:'modalIn 0.22s ease' }}>
+      <div style={{ background:T.white, borderRadius:20, width:'100%', maxWidth:480, boxShadow:'0 32px 80px rgba(0,0,0,0.2)', overflow:'hidden', animation:'modalIn 0.22s ease' }}>
 
-        <div style={{ background:T.navy, padding:'20px 24px', display:'flex', alignItems:'center', gap:14 }}>
+        <div style={{ background:'#FFFFFF', padding:'20px 24px', display:'flex', alignItems:'center', gap:14, borderBottom:'1px solid #E0E0E0' }}>
           <img src={productImage} alt={productName}
-            onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/56x56/152348/C8A951?text=LP`; }}
-            style={{ width:56, height:56, objectFit:'cover', borderRadius:10, border:`2px solid rgba(200,169,81,0.3)`, flexShrink:0 }}/>
+            onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/56x56/F5F5F5/000000?text=LP`; }}
+            style={{ width:56, height:56, objectFit:'cover', borderRadius:10, border:'2px solid #E0E0E0', flexShrink:0 }}/>
           <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:15, color:T.white, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{productName}</div>
-            <div className="jost" style={{ fontSize:10, color:`rgba(200,169,81,0.7)`, letterSpacing:'1.5px', textTransform:'uppercase', marginTop:3 }}>{productCategory || 'Fashion'}</div>
+            <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:15, color:'#000000', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{productName}</div>
+            <div className="jost" style={{ fontSize:10, color:'#888888', letterSpacing:'1.5px', textTransform:'uppercase', marginTop:3 }}>{productCategory || 'Fashion'}</div>
           </div>
-          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.08)', border:'none', color:'rgba(255,255,255,0.6)', width:30, height:30, borderRadius:8, cursor:'pointer', fontSize:14, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+          <button onClick={onClose} style={{ background:'#F5F5F5', border:'none', color:'#555555', width:30, height:30, borderRadius:8, cursor:'pointer', fontSize:14, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
         </div>
 
         <div style={{ padding:24 }}>
           <div style={{ marginBottom:20 }}>
             <div className="jost" style={{ fontSize:11, fontWeight:700, letterSpacing:'2px', textTransform:'uppercase', color:T.muted, marginBottom:10 }}>Your Rating</div>
             <Stars rating={rating} size={32} interactive onRate={setRating}/>
-            <div className="jost" style={{ fontSize:11, color:T.gold, marginTop:6, fontWeight:600 }}>
+            <div className="jost" style={{ fontSize:11, color:'#333333', marginTop:6, fontWeight:600 }}>
               {['','Terrible','Poor','Average','Good','Excellent!'][rating] || ''}
             </div>
           </div>
@@ -125,16 +125,16 @@ function ReviewModal({
             </div>
             <textarea value={comment} onChange={e => setComment(e.target.value)} maxLength={1000} rows={4}
               placeholder="Share your experience — fit, quality, style…"
-              style={{ width:'100%', border:`1.5px solid ${T.creamDeep}`, borderRadius:10, padding:'11px 14px', fontFamily:"'Jost',sans-serif", fontSize:13, color:T.navy, resize:'vertical', outline:'none', background:T.cream, lineHeight:1.6, transition:'border-color 0.2s', boxSizing:'border-box' }}
-              onFocus={e => e.currentTarget.style.borderColor = T.gold}
-              onBlur={e  => e.currentTarget.style.borderColor = T.creamDeep}/>
+              style={{ width:'100%', border:'1.5px solid #E0E0E0', borderRadius:10, padding:'11px 14px', fontFamily:"'Jost',sans-serif", fontSize:13, color:'#000000', resize:'vertical', outline:'none', background:'#FAFAFA', lineHeight:1.6, transition:'border-color 0.2s', boxSizing:'border-box' }}
+              onFocus={e => e.currentTarget.style.borderColor = '#000000'}
+              onBlur={e  => e.currentTarget.style.borderColor = '#E0E0E0'}/>
             <div className="jost" style={{ fontSize:10, color:T.muted, textAlign:'right', marginTop:4 }}>{comment.length}/1000</div>
           </div>
-          {error && <div className="jost" style={{ fontSize:12, color:'#C0392B', background:'#FDF0EE', border:'1px solid #F5C6C0', borderRadius:8, padding:'9px 13px', marginBottom:16 }}>{error}</div>}
+          {error && <div className="jost" style={{ fontSize:12, color:'#555555', background:'#F5F5F5', border:'1px solid #E0E0E0', borderRadius:8, padding:'9px 13px', marginBottom:16 }}>{error}</div>}
           <div style={{ display:'flex', gap:10 }}>
-            <button onClick={onClose} className="jost" style={{ flex:1, background:T.creamMid, color:T.navy, border:'none', borderRadius:10, padding:'11px 0', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer' }}>Cancel</button>
+            <button onClick={onClose} className="jost" style={{ flex:1, background:'#F0F0F0', color:'#000000', border:'none', borderRadius:10, padding:'11px 0', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer' }}>Cancel</button>
             <button onClick={handleSave} disabled={saving} className="jost"
-              style={{ flex:2, background:saving?T.creamDeep:T.gold, color:saving?T.muted:T.navy, border:'none', borderRadius:10, padding:'11px 0', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:saving?'not-allowed':'pointer', transition:'background 0.2s' }}>
+              style={{ flex:2, background:saving?'#E0E0E0':'#000000', color:saving?'#888888':'#FFFFFF', border:'none', borderRadius:10, padding:'11px 0', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:saving?'not-allowed':'pointer', transition:'background 0.2s' }}>
               {saving ? 'Saving…' : existingId ? '★ Update Review' : '★ Submit Review'}
             </button>
           </div>
@@ -217,12 +217,12 @@ export default function ReviewPage() {
   if (!user) return null;
 
   return (
-    <div style={{ fontFamily:"'Playfair Display','Georgia',serif", background:T.cream, minHeight:'100vh', color:T.text }}>
+    <div style={{ fontFamily:"'Playfair Display','Georgia',serif", background:'#FFFFFF', minHeight:'100vh', color:'#000000' }}>
       <style>{css}</style>
 
       {/* Toast */}
       {toast && (
-        <div style={{ position:'fixed', bottom:24, left:'50%', transform:'translateX(-50%)', background:T.navy, color:T.goldLight, fontFamily:"'Jost',sans-serif", fontSize:12, fontWeight:700, padding:'12px 24px', borderRadius:50, zIndex:999, letterSpacing:'1px', boxShadow:'0 8px 32px rgba(13,27,62,0.3)', animation:'toastIn 0.3s ease' }}>
+        <div style={{ position:'fixed', bottom:24, left:'50%', transform:'translateX(-50%)', background:'#1a1a1a', color:'#FFFFFF', fontFamily:"'Jost',sans-serif", fontSize:12, fontWeight:700, padding:'12px 24px', borderRadius:50, zIndex:999, letterSpacing:'1px', boxShadow:'0 8px 32px rgba(0,0,0,0.2)', animation:'toastIn 0.3s ease' }}>
           {toast}
         </div>
       )}
@@ -244,13 +244,13 @@ export default function ReviewPage() {
 
       {/* Delete confirm */}
       {deleteId !== null && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(13,27,62,0.7)', zIndex:300, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
-          <div style={{ background:T.white, borderRadius:16, padding:28, maxWidth:360, width:'100%', boxShadow:'0 24px 60px rgba(13,27,62,0.25)' }}>
-            <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:18, color:T.navy, marginBottom:10 }}>Delete Review?</div>
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:300, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
+          <div style={{ background:T.white, borderRadius:16, padding:28, maxWidth:360, width:'100%', boxShadow:'0 24px 60px rgba(0,0,0,0.18)' }}>
+            <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:18, color:'#000000', marginBottom:10 }}>Delete Review?</div>
             <p className="jost" style={{ fontSize:13, color:T.muted, lineHeight:1.7, marginBottom:22 }}>This cannot be undone. Your rating will be removed from the product.</p>
             <div style={{ display:'flex', gap:10 }}>
-              <button onClick={() => setDeleteId(null)} className="jost" style={{ flex:1, background:T.creamMid, color:T.navy, border:'none', borderRadius:8, padding:'10px 0', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer' }}>Cancel</button>
-              <button onClick={() => handleDelete(deleteId)} className="jost" style={{ flex:1, background:'#C0392B', color:'#fff', border:'none', borderRadius:8, padding:'10px 0', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer' }}>Delete</button>
+              <button onClick={() => setDeleteId(null)} className="jost" style={{ flex:1, background:'#F0F0F0', color:'#000000', border:'none', borderRadius:8, padding:'10px 0', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer' }}>Cancel</button>
+              <button onClick={() => handleDelete(deleteId)} className="jost" style={{ flex:1, background:'#1a1a1a', color:'#FFFFFF', border:'none', borderRadius:8, padding:'10px 0', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer' }}>Delete</button>
             </div>
           </div>
         </div>
@@ -260,16 +260,16 @@ export default function ReviewPage() {
       <Navbar />
 
       {/* Page header */}
-      <div style={{ background:T.navy, padding:'40px 5% 48px', position:'relative', overflow:'hidden' }}>
-        <div style={{ position:'absolute', inset:0, background:`radial-gradient(ellipse at 70% 50%, rgba(200,169,81,0.06) 0%, transparent 60%)`, pointerEvents:'none' }}/>
+      <div style={{ background:'#FFFFFF', padding:'40px 5% 48px', position:'relative', overflow:'hidden', borderBottom:'1px solid #E0E0E0' }}>
+        <div style={{ position:'absolute', inset:0, background:'transparent', pointerEvents:'none' }}/>
         <div style={{ maxWidth:900, margin:'0 auto', position:'relative' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
-            <div style={{ width:24, height:1, background:T.gold }}/>
-            <span className="jost" style={{ fontSize:9, fontWeight:700, letterSpacing:'3px', color:T.gold, textTransform:'uppercase' }}>Your Voice</span>
-            <div style={{ width:24, height:1, background:T.gold }}/>
+            <div style={{ width:24, height:1, background:'rgba(0,0,0,0.2)' }}/>
+            <span className="jost" style={{ fontSize:9, fontWeight:900, letterSpacing:'3px', color:'#000000', textTransform:'uppercase' }}>Your Voice</span>
+            <div style={{ width:24, height:1, background:'rgba(0,0,0,0.2)' }}/>
           </div>
-          <h1 style={{ fontFamily:"'Playfair Display',serif", fontWeight:800, fontSize:'clamp(26px,4vw,40px)', color:T.white, marginBottom:8 }}>Reviews & Ratings</h1>
-          <p className="jost" style={{ fontSize:13, color:'rgba(255,255,255,0.45)', fontWeight:300, maxWidth:500, lineHeight:1.8 }}>
+          <h1 style={{ fontFamily:"'Playfair Display',serif", fontWeight:800, fontSize:'clamp(26px,4vw,40px)', color:'#000000', marginBottom:8 }}>Reviews & Ratings</h1>
+          <p className="jost" style={{ fontSize:13, color:'#888888', fontWeight:300, maxWidth:500, lineHeight:1.8 }}>
             Your honest feedback shapes the Luku Prime community.
           </p>
           {reviews.length > 0 && (
@@ -279,9 +279,9 @@ export default function ReviewPage() {
                 { label:'Average Rating', value: avgRating },
                 { label:'5-Star Reviews', value: reviews.filter(r=>r.rating===5).length },
               ].map(s => (
-                <div key={s.label} style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(200,169,81,0.15)', borderRadius:12, padding:'14px 20px', minWidth:100 }}>
-                  <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:22, color:T.gold }}>{s.value}</div>
-                  <div className="jost" style={{ fontSize:10, color:'rgba(255,255,255,0.4)', marginTop:3, letterSpacing:'1px' }}>{s.label.toUpperCase()}</div>
+                <div key={s.label} style={{ background:'#F5F5F5', border:'1px solid #E0E0E0', borderRadius:12, padding:'14px 20px', minWidth:100 }}>
+                  <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:22, color:'#000000' }}>{s.value}</div>
+                  <div className="jost" style={{ fontSize:10, color:'#888888', marginTop:3, letterSpacing:'1px' }}>{s.label.toUpperCase()}</div>
                 </div>
               ))}
             </div>
@@ -310,18 +310,24 @@ export default function ReviewPage() {
         {/* ── NO ORDERS AT ALL ── */}
         {!loading && purchasable.length === 0 && reviews.length === 0 && (
           <div style={{ textAlign:'center', padding:'70px 0' }}>
-            <div style={{ fontSize:54, marginBottom:16 }}>⭐</div>
-            <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:20, color:T.navy, marginBottom:8 }}>No Reviews Yet</div>
+            <div style={{ marginBottom:20, display:'flex', alignItems:'flex-end', justifyContent:'center', gap:4 }}>
+              {[20, 28, 36, 28, 20].map((size, i) => (
+                <svg key={i} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+              ))}
+            </div>
+            <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:20, color:'#000000', marginBottom:8 }}>No Reviews Yet</div>
             <p className="jost" style={{ fontSize:13, color:T.muted, lineHeight:1.8, marginBottom:24, maxWidth:360, margin:'0 auto 24px' }}>
               Once you place and receive an order, you can leave reviews here.
             </p>
             <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
               <button onClick={() => navigate('/')} className="jost"
-                style={{ background:T.gold, color:T.navy, border:'none', borderRadius:8, padding:'11px 28px', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer' }}>
+                style={{ background:'#000000', color:'#FFFFFF', border:'none', borderRadius:8, padding:'11px 28px', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer' }}>
                 Shop Now →
               </button>
               <button onClick={() => navigate('/orders')} className="jost"
-                style={{ background:'transparent', color:T.navy, border:`1.5px solid ${T.creamDeep}`, borderRadius:8, padding:'11px 28px', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer' }}>
+                style={{ background:'transparent', color:'#000000', border:'1.5px solid #E0E0E0', borderRadius:8, padding:'11px 28px', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer' }}>
                 My Orders
               </button>
             </div>
@@ -336,21 +342,21 @@ export default function ReviewPage() {
             {purchasable.length > 0 && (
               <div style={{ marginBottom:44 }}>
                 {/* Banner CTA */}
-                <div style={{ background:T.navy, borderRadius:16, padding:'20px 24px', marginBottom:20, display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
+                <div style={{ background:'#1a1a1a', borderRadius:16, padding:'20px 24px', marginBottom:20, display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
                   <div style={{ flex:1, minWidth:200 }}>
                     <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
-                      <span style={{ fontSize:20 }}>⭐</span>
-                      <span className="jost" style={{ fontSize:9, fontWeight:700, letterSpacing:'3px', color:T.gold, textTransform:'uppercase' }}>Awaiting Your Feedback</span>
+                      <span style={{ fontSize:20, filter:'grayscale(1)' }}>⭐</span>
+                      <span className="jost" style={{ fontSize:9, fontWeight:900, letterSpacing:'3px', color:'#000000', textTransform:'uppercase' }}>Awaiting Your Feedback</span>
                     </div>
-                    <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:18, color:T.white }}>
+                    <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:18, color:'#FFFFFF' }}>
                       You have {purchasable.length} product{purchasable.length !== 1 ? 's' : ''} to review
                     </div>
-                    <div className="jost" style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginTop:4 }}>
+                    <div className="jost" style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:4 }}>
                       Your honest reviews help other shoppers make better decisions
                     </div>
                   </div>
                   <button onClick={() => navigate('/orders')} className="jost"
-                    style={{ background:'rgba(200,169,81,0.15)', border:`1px solid rgba(200,169,81,0.35)`, color:T.goldLight, borderRadius:8, padding:'10px 20px', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer', flexShrink:0 }}>
+                    style={{ background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.2)', color:'#FFFFFF', borderRadius:8, padding:'10px 20px', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer', flexShrink:0 }}>
                     View Orders →
                   </button>
                 </div>
@@ -360,20 +366,20 @@ export default function ReviewPage() {
                   {purchasable.map(product => (
                     <div key={product.id} style={{
                       background:T.white, borderRadius:14, padding:'16px 18px',
-                      border:`1.5px solid ${T.gold}`, display:'flex', alignItems:'center',
-                      gap:14, boxShadow:`0 4px 16px rgba(200,169,81,0.1)`,
+                      border:'1.5px solid #E0E0E0', display:'flex', alignItems:'center',
+                      gap:14, boxShadow:'0 4px 16px rgba(0,0,0,0.06)',
                     }}>
                       <Link to={`/product/${product.id}`}>
                         <img src={product.image_url} alt={product.name}
-                          onError={e => { (e.target as HTMLImageElement).src=`https://placehold.co/68x68/F0EAD8/0D1B3E?text=LP`; }}
-                          style={{ width:68, height:68, objectFit:'cover', borderRadius:10, border:`1.5px solid ${T.creamDeep}`, flexShrink:0 }}/>
+                          onError={e => { (e.target as HTMLImageElement).src=`https://placehold.co/68x68/F5F5F5/000000?text=LP`; }}
+                          style={{ width:68, height:68, objectFit:'cover', borderRadius:10, border:'1.5px solid #E0E0E0', flexShrink:0 }}/>
                       </Link>
                       <div style={{ flex:1, minWidth:0 }}>
                         <Link to={`/product/${product.id}`}>
-                          <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:14, color:T.navy, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:4 }}>{product.name}</div>
+                          <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:14, color:'#000000', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:4 }}>{product.name}</div>
                         </Link>
                         {product.category && (
-                          <span className="jost" style={{ fontSize:9, fontWeight:700, background:T.creamMid, color:T.muted, borderRadius:3, padding:'2px 8px', letterSpacing:'1.5px', textTransform:'uppercase' }}>{product.category}</span>
+                          <span className="jost" style={{ fontSize:9, fontWeight:700, background:'#F0F0F0', color:'#888888', borderRadius:3, padding:'2px 8px', letterSpacing:'1.5px', textTransform:'uppercase' }}>{product.category}</span>
                         )}
                         <div className="jost" style={{ fontSize:12, color:T.muted, marginTop:6 }}>
                           KSh {Number(product.price).toLocaleString()}
@@ -382,8 +388,8 @@ export default function ReviewPage() {
                       <button
                         onClick={() => setActiveModal({ type:'write', product, review:null })}
                         className="jost"
-                        style={{ background:T.gold, color:T.navy, border:'none', borderRadius:8, padding:'11px 22px', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer', flexShrink:0, transition:'all 0.2s', whiteSpace:'nowrap' }}
-                        onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow=`0 6px 20px rgba(200,169,81,0.35)`; }}
+                        style={{ background:'#000000', color:'#FFFFFF', border:'none', borderRadius:8, padding:'11px 22px', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer', flexShrink:0, transition:'all 0.2s', whiteSpace:'nowrap' }}
+                        onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 6px 20px rgba(0,0,0,0.15)'; }}
                         onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='none'; }}
                       >
                         ★ Write Review
@@ -397,9 +403,9 @@ export default function ReviewPage() {
             {/* Divider between sections */}
             {purchasable.length > 0 && reviews.length > 0 && (
               <div style={{ display:'flex', alignItems:'center', gap:14, margin:'0 0 32px' }}>
-                <div style={{ flex:1, height:1, background:T.creamDeep }}/>
+                <div style={{ flex:1, height:1, background:'#E0E0E0' }}/>
                 <span className="jost" style={{ fontSize:9, fontWeight:700, letterSpacing:'3px', color:T.muted, textTransform:'uppercase' }}>Past Reviews</span>
-                <div style={{ flex:1, height:1, background:T.creamDeep }}/>
+                <div style={{ flex:1, height:1, background:'#E0E0E0' }}/>
               </div>
             )}
 
@@ -409,11 +415,11 @@ export default function ReviewPage() {
             {reviews.length > 0 && (
               <>
                 {/* Filter bar */}
-                <div style={{ background:T.white, border:`1px solid ${T.creamDeep}`, borderRadius:12, padding:'12px 16px', marginBottom:20, display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+                <div style={{ background:'#FFFFFF', border:'1px solid #E0E0E0', borderRadius:12, padding:'12px 16px', marginBottom:20, display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
                   <span className="jost" style={{ fontSize:10, fontWeight:700, letterSpacing:'2px', color:T.muted, textTransform:'uppercase', marginRight:4 }}>Filter:</span>
                   {(['all', 5, 4, 3, 2, 1] as (number|'all')[]).map(f => (
                     <button key={f} onClick={() => setFilter(f)} className="jost"
-                      style={{ background:filter===f ? T.navy : T.cream, color:filter===f ? T.gold : T.navy, border:`1.5px solid ${filter===f ? T.navyLight : T.creamDeep}`, borderRadius:50, padding:'5px 14px', fontSize:11, fontWeight:700, cursor:'pointer', transition:'all 0.18s' }}>
+                      style={{ background:filter===f ? '#000000' : '#F5F5F5', color:filter===f ? '#FFFFFF' : '#000000', border:`1.5px solid ${filter===f ? '#000000' : '#E0E0E0'}`, borderRadius:50, padding:'5px 14px', fontSize:11, fontWeight:700, cursor:'pointer', transition:'all 0.18s' }}>
                       {f === 'all' ? 'All' : `${'★'.repeat(f)} ${f}`}
                     </button>
                   ))}
@@ -430,32 +436,32 @@ export default function ReviewPage() {
                       <div key={review.id} className="rcard">
                         <Link to={`/product/${review.product_id}`}>
                           <img src={review.product_image} alt={review.product_name}
-                            onError={e => { (e.target as HTMLImageElement).src=`https://placehold.co/80x80/F0EAD8/0D1B3E?text=LP`; }}
-                            style={{ width:80, height:80, objectFit:'cover', borderRadius:12, border:`1.5px solid ${T.creamDeep}`, flexShrink:0, transition:'transform 0.3s' }}
+                            onError={e => { (e.target as HTMLImageElement).src=`https://placehold.co/80x80/F5F5F5/000000?text=LP`; }}
+                            style={{ width:80, height:80, objectFit:'cover', borderRadius:12, border:'1.5px solid #E0E0E0', flexShrink:0, transition:'transform 0.3s' }}
                             className="rcard-img"/>
                         </Link>
                         <div style={{ flex:1, minWidth:0 }}>
                           <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:8, flexWrap:'wrap', marginBottom:6 }}>
                             <div style={{ minWidth:0, flex:1 }}>
                               <Link to={`/product/${review.product_id}`}>
-                                <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:15, color:T.navy, marginBottom:4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{review.product_name}</div>
+                                <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:15, color:'#000000', marginBottom:4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{review.product_name}</div>
                               </Link>
                               {review.product_category && (
-                                <span className="jost" style={{ fontSize:9, fontWeight:700, background:T.creamMid, color:T.muted, borderRadius:3, padding:'2px 8px', letterSpacing:'1.5px', textTransform:'uppercase' }}>{review.product_category}</span>
+                                <span className="jost" style={{ fontSize:9, fontWeight:700, background:'#F0F0F0', color:'#888888', borderRadius:3, padding:'2px 8px', letterSpacing:'1.5px', textTransform:'uppercase' }}>{review.product_category}</span>
                               )}
                             </div>
                             <div style={{ display:'flex', gap:8, flexShrink:0 }}>
                               <button onClick={() => setActiveModal({ type:'edit', product:null, review })} className="jost rcard-btn"
-                                style={{ background:T.creamMid, color:T.navy, border:`1px solid ${T.creamDeep}` }}>✎ Edit</button>
+                                style={{ background:'#F0F0F0', color:'#000000', border:'1px solid #E0E0E0' }}>✎ Edit</button>
                               <button onClick={() => setDeleteId(review.id)} className="jost rcard-btn"
-                                style={{ background:'#FDF0EE', color:'#C0392B', border:'1px solid #F5C6C0' }}>✕ Delete</button>
+                                style={{ background:'#F0F0F0', color:'#555555', border:'1px solid #E0E0E0' }}>✕ Delete</button>
                             </div>
                           </div>
                           <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
                             <Stars rating={review.rating} size={14}/>
                             <span className="jost" style={{ fontSize:10, color:T.muted }}>{formatDate(review.updated_at)}</span>
                             {review.updated_at !== review.created_at && (
-                              <span className="jost" style={{ fontSize:9, color:T.muted, background:T.creamMid, padding:'1px 7px', borderRadius:10 }}>edited</span>
+                              <span className="jost" style={{ fontSize:9, color:'#888888', background:'#F0F0F0', padding:'1px 7px', borderRadius:10 }}>edited</span>
                             )}
                           </div>
                           {review.comment
@@ -488,14 +494,14 @@ const css = `
   .jost{font-family:'Jost',sans-serif}
   a{text-decoration:none;color:inherit}
 
-  .rcard{background:#fff;border-radius:16px;padding:18px 20px;border:1px solid #E4D9C0;display:flex;gap:16px;align-items:flex-start;transition:all 0.25s}
-  .rcard:hover{border-color:#C8A951;box-shadow:0 10px 32px rgba(13,27,62,0.09);transform:translateY(-2px)}
+  .rcard{background:#fff;border-radius:16px;padding:18px 20px;border:1px solid #E0E0E0;display:flex;gap:16px;align-items:flex-start;transition:all 0.25s}
+  .rcard:hover{border-color:#000000;box-shadow:0 10px 32px rgba(0,0,0,0.08);transform:translateY(-2px)}
   .rcard:hover .rcard-img{transform:scale(1.04)}
 
   .rcard-btn{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border-radius:6px;padding:6px 12px;cursor:pointer;transition:all 0.18s;white-space:nowrap}
   .rcard-btn:hover{filter:brightness(0.93);transform:translateY(-1px)}
 
-  .skel{background:linear-gradient(90deg,#F0EAD8 25%,#F9F5EC 50%,#F0EAD8 75%);background-size:200% 100%;animation:sk 1.4s infinite;border-radius:6px}
+  .skel{background:linear-gradient(90deg,#EEEEEE 25%,#F5F5F5 50%,#EEEEEE 75%);background-size:200% 100%;animation:sk 1.4s infinite;border-radius:6px}
   @keyframes sk{0%{background-position:-200% 0}100%{background-position:200% 0}}
   @keyframes modalIn{from{opacity:0;transform:scale(0.94) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
   @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}

@@ -2,8 +2,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { useNavigate }  from 'react-router-dom';
 import axios            from 'axios';
-import logo             from '../../assets/logo.png';
-import { T, ANNOUNCEMENTS, getInitials, readUser } from '../../constants/theme';
+import { ANNOUNCEMENTS, getInitials, readUser } from '../../constants/theme';
 import type { User } from '../../constants/theme';
 
 interface NavbarProps {
@@ -13,6 +12,7 @@ interface NavbarProps {
   categories?: string[];
   activeCategory?: string;
   onCategorySelect?: (cat: string) => void;
+  transparentOnTop?: boolean;
 }
 
 export default function Navbar({
@@ -22,8 +22,9 @@ export default function Navbar({
   categories = [],
   activeCategory = 'All',
   onCategorySelect,
+  transparentOnTop = false,
 }: NavbarProps) {
-  const navigate = useNavigate();
+  const navigate    = useNavigate();
   const menuRef     = useRef<HTMLDivElement>(null);
   const shopMenuRef = useRef<HTMLDivElement>(null);
 
@@ -36,44 +37,49 @@ export default function Navbar({
   const [cartCount,      setCartCount]      = useState(cartCountProp ?? 0);
   const [wishlistCount,  setWishlistCount]  = useState(wishlistCountProp ?? 0);
   const [navCategories,  setNavCategories]  = useState<string[]>(categories);
+  const [scrolled,       setScrolled]       = useState(false);
 
-  // Close avatar dropdown on outside click
+  // ── Scroll detection ──────────────────────────────────────────────────────
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node))
-        setShowMenu(false);
+    if (!transparentOnTop) return;
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [transparentOnTop]);
+
+  // Transparent when: prop enabled, not scrolled, no overlays open
+  const isTransparent = transparentOnTop && !scrolled && !mobileMenuOpen && !showSearch && !showMenu;
+
+  // ── Outside-click closers ─────────────────────────────────────────────────
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowMenu(false);
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
   }, []);
 
-  // Close shop dropdown on outside click
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (shopMenuRef.current && !shopMenuRef.current.contains(e.target as Node))
-        setShowShopMenu(false);
+    const h = (e: MouseEvent) => {
+      if (shopMenuRef.current && !shopMenuRef.current.contains(e.target as Node)) setShowShopMenu(false);
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
   }, []);
 
   useEffect(() => { if (cartCountProp     !== undefined) setCartCount(cartCountProp);         }, [cartCountProp]);
   useEffect(() => { if (wishlistCountProp !== undefined) setWishlistCount(wishlistCountProp); }, [wishlistCountProp]);
 
-  // Sync navCategories from prop, or self-fetch if prop is empty
   useEffect(() => {
-    if (categories.length > 0) {
-      setNavCategories(categories);
-      return;
-    }
+    if (categories.length > 0) { setNavCategories(categories); return; }
     axios.get('/api/products')
       .then(res => {
         const cats = Array.from(
           new Set((res.data as any[]).map((p: any) => p.category).filter(Boolean))
         ).sort() as string[];
         setNavCategories(cats);
-      })
-      .catch(() => {});
+      }).catch(() => {});
   }, [categories.length]);
 
   const fetchCounts = useCallback(() => {
@@ -93,60 +99,85 @@ export default function Navbar({
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    setUser(null);
-    setCartCount(0);
-    setWishlistCount(0);
-    setShowMenu(false);
-    setMobileMenuOpen(false);
+    setUser(null); setCartCount(0); setWishlistCount(0);
+    setShowMenu(false); setMobileMenuOpen(false);
     onLogout?.();
     navigate('/');
   };
 
   const go = (path: string) => { navigate(path); setShowMenu(false); setMobileMenuOpen(false); };
 
+  const categorySlugMap: Record<string, string> = {
+    'Dresses': 'dresses', 'New Arrivals': 'new-arrivals', 'Sneakers': 'sneakers',
+    'Bags': 'bags', 'Best Sellers': 'best-sellers', 'Designer Wear': 'designer-wear',
+    'Shoes': 'shoes', 'Heels': 'heels',
+  };
+
   const goCategory = (cat: string) => {
     onCategorySelect?.(cat);
-    navigate(cat === 'All' ? '/' : `/?category=${encodeURIComponent(cat)}`);
+    if (cat === 'All') navigate('/');
+    else {
+      const slug = categorySlugMap[cat] ?? cat.toLowerCase().replace(/\s+/g, '-');
+      navigate(`/categories/${slug}`);
+    }
     setShowShopMenu(false);
     setMobileMenuOpen(false);
   };
 
-  // Category emoji map — fallback to 🏷️
-  const catEmoji: Record<string, string> = {
-    'All': '🗂️',
-    'Dresses': '👗',
-    'Tops': '👚',
-    'Bottoms': '👖',
-    'Shoes': '👟',
-    'Sneakers': '👟',
-    'Heels': '👠',
-    'Boots': '🥾',
-    'Accessories': '💍',
-    'Bags': '👜',
-    'Jackets': '🧥',
-    'Coats': '🧥',
-    'Suits': '🤵',
-    'Swimwear': '🩱',
-    'Activewear': '🏃',
-    'Lingerie': '🩲',
-    'Kids': '🧒',
-    'Men': '🧔',
-    'Women': '👩',
-    'Sale': '🔖',
-  };
-
-  const getEmoji = (cat: string) =>
-    catEmoji[cat] ?? Object.entries(catEmoji).find(([k]) => cat.toLowerCase().includes(k.toLowerCase()))?.[1] ?? '🏷️';
+  // ── Colour tokens ─────────────────────────────────────────────────────────
+  const ink       = isTransparent ? '#fff'                  : '#111';
+  const inkFaint  = isTransparent ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.45)';
+  const badgeBg   = isTransparent ? 'rgba(255,255,255,0.9)' : '#111';
+  const badgeFg   = isTransparent ? '#111'                  : '#fff';
 
   return (
     <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap');
+
+        .nav-link {
+          font-family: 'Jost', sans-serif; font-size: 11px; font-weight: 400;
+          letter-spacing: 2px; text-transform: uppercase;
+          cursor: pointer; text-decoration: none; position: relative;
+          transition: opacity 0.2s, color 0.3s;
+        }
+        .nav-link::after {
+          content: ''; position: absolute; bottom: -2px; left: 0;
+          width: 0; height: 1px; transition: width 0.25s ease;
+        }
+        .nav-link:hover::after { width: 100%; }
+        .nav-link:hover { opacity: 0.6; }
+
+        .nav-icon-btn {
+          background: none; border: none; cursor: pointer; padding: 4px;
+          display: flex; align-items: center; justify-content: center;
+          transition: opacity 0.2s;
+        }
+        .nav-icon-btn:hover { opacity: 0.5; }
+
+        .mitem {
+          display: flex; align-items: center; gap: 8px; padding: 9px 14px;
+          font-family: 'Jost', sans-serif; font-size: 12px; letter-spacing: 1px;
+          color: #333; cursor: pointer; border-radius: 8px; transition: background 0.15s;
+          width: 100%; background: none; border: none; text-align: left;
+        }
+        .mitem:hover { background: rgba(0,0,0,0.04); }
+        .mitem-danger { color: #dc2626; }
+        .mitem-danger:hover { background: rgba(220,38,38,0.06); }
+
+        @keyframes fadeInDown {
+          from { opacity: 0; transform: translateY(-6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
       {/* ── Announcement marquee ── */}
-      <div className="bg-black h-8 overflow-hidden flex items-center border-b border-white/20">
-        <div className="overflow-hidden w-full">
+      <div style={{ background: '#000', height: 32, overflow: 'hidden', display: 'flex', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ overflow: 'hidden', width: '100%' }}>
           <div className="flex gap-14 animate-marquee whitespace-nowrap">
             {[...Array(2)].map((_, r) =>
               ANNOUNCEMENTS.map((t, i) => (
-                <span key={`${r}-${i}`} className="font-sans text-[9px] font-semibold tracking-[2px] text-white/85">
+                <span key={`${r}-${i}`} style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 400, letterSpacing: '3px', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}>
                   {t}
                 </span>
               ))
@@ -156,386 +187,244 @@ export default function Navbar({
       </div>
 
       {/* ── Main navbar ── */}
-      <nav
-        className="bg-white px-[5%] h-[70px] flex items-center justify-between sticky top-0 z-[100] shadow-nav border-b border-black/15"
-        style={{ fontFamily: "'Playfair Display', serif" }}
-      >
-        {/* Logo + Brand Name */}
-        <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
-          <img
-            src={logo} alt="Luku Prime"
-            className="h-[54px] w-auto object-contain drop-shadow-md"
-          />
-          <div className="flex flex-col leading-tight">
-            <span
-              className="text-gold font-bold tracking-[2px] uppercase text-[15px]"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
+      <nav style={{
+        position: 'sticky', top: 0, zIndex: 100,
+        background: isTransparent ? 'transparent' : '#fff',
+        borderBottom: isTransparent ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.09)',
+        transition: 'background 0.4s ease, border-color 0.4s ease',
+        // Pull hero up behind nav when transparent
+        ...(transparentOnTop && isTransparent ? { marginBottom: '-96px' } : {}),
+      }}>
+
+        <div style={{ padding: '0 5%', height: 64, display: 'flex', alignItems: 'center', position: 'relative' }}>
+
+          {/* ── LEFT ── */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+
+            {/* Desktop: Shop dropdown + nav links */}
+            <div className="hidden md:flex items-center gap-8">
+              {navCategories.length > 0 ? (
+                <div ref={shopMenuRef} style={{ position: 'relative' }}>
+                  <span className="nav-link flex items-center gap-1" style={{ color: ink }}
+                    onClick={() => setShowShopMenu(s => !s)}>
+                    Shop
+                    <svg width="7" height="4" viewBox="0 0 7 4" fill="none"
+                      style={{ transition: 'transform 0.2s', transform: showShopMenu ? 'rotate(180deg)' : 'none' }}>
+                      <path d="M1 1l2.5 2L6 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </span>
+                  {showShopMenu && (
+                    <div style={{ position: 'absolute', top: 'calc(100% + 16px)', left: '50%', transform: 'translateX(-50%)', background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, padding: 8, minWidth: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 200, animation: 'fadeInDown 0.15s ease' }}>
+                      <button className="mitem" style={{ fontWeight: activeCategory === 'All' ? 600 : undefined }} onClick={() => goCategory('All')}>
+                        All Products {activeCategory === 'All' && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
+                      </button>
+                      <div style={{ margin: '4px 12px', borderTop: '1px solid rgba(0,0,0,0.06)' }} />
+                      {navCategories.map(cat => (
+                        <button key={cat} className="mitem" style={{ fontWeight: activeCategory === cat ? 600 : undefined }} onClick={() => goCategory(cat)}>
+                          {cat} {activeCategory === cat && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <span className="nav-link" style={{ color: ink }} onClick={() => navigate('/')}>Shop</span>
+              )}
+              <span className="nav-link" style={{ color: ink }} onClick={() => navigate('/new-drops')}>New in</span>
+              <span className="nav-link" style={{ color: ink }} onClick={() => navigate('/sale')}>Sale</span>
+            </div>
+
+            {/* Mobile: hamburger only (categories) */}
+            <div className="flex md:hidden">
+              <button className="nav-icon-btn" style={{ color: ink }} onClick={() => setMobileMenuOpen(x => !x)}>
+                {mobileMenuOpen
+                  ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                }
+              </button>
+            </div>
+          </div>
+
+          {/* ── CENTER: Brand ── */}
+          <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', cursor: 'pointer', userSelect: 'none' }}
+            onClick={() => navigate('/')}>
+            <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 300, letterSpacing: '6px', textTransform: 'uppercase', color: ink, lineHeight: 1, transition: 'color 0.4s ease' }}>
               Luku Prime
             </span>
-            <span className="text-white/40 font-sans text-[8px] tracking-[3px] uppercase">
-              Walk Prime Live Prime
-            </span>
           </div>
-        </div>
 
-        {/* Desktop search */}
-        <div className="hidden md:flex items-center bg-black/[0.04] rounded border border-black/15 px-3.5 py-2 gap-2 w-[300px]">
-          <span className="text-black/50 text-[13px]">⌕</span>
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && navigate(`/?search=${search}`)}
-            placeholder="Search Luku Prime fashion…"
-            className="bg-transparent border-none outline-none text-[13px] w-full text-black/80 font-sans placeholder:text-black/30"
-          />
-        </div>
+          {/* ── RIGHT ── */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
 
-        {/* Desktop right side */}
-        <div className="hidden md:flex items-center gap-5">
+            {/* Desktop search */}
+            <button className="nav-icon-btn hidden md:flex" style={{ color: ink }} onClick={() => setShowSearch(x => !x)} title="Search">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+            </button>
 
-          {/* ── Shop by Category dropdown ── */}
-          {navCategories.length > 0 && (
-            <div ref={shopMenuRef} className="relative">
-              <span
-                className="font-sans text-[11px] font-semibold tracking-[1.5px] uppercase cursor-pointer text-black/75 transition-colors hover:text-black flex items-center gap-1 select-none"
-                onClick={() => setShowShopMenu(s => !s)}
-              >
-                Shop
-                <svg
-                  width="8" height="5" viewBox="0 0 8 5" fill="none"
+            {/* Wishlist — desktop only */}
+            {user?.role !== 'admin' && (
+              <button className="nav-icon-btn relative hidden md:flex" style={{ color: ink }} onClick={() => navigate('/wishlist')} title="Wishlist">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+                {wishlistCount > 0 && (
+                  <span style={{ position: 'absolute', top: -4, right: -4, background: badgeBg, color: badgeFg, borderRadius: '50%', width: 14, height: 14, fontSize: 8, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Jost', sans-serif", transition: 'background 0.3s, color 0.3s' }}>
+                    {wishlistCount}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Cart — desktop + mobile */}
+            {user?.role !== 'admin' && (
+              <button className="nav-icon-btn relative" style={{ color: ink }} onClick={() => navigate('/cart')} title="Cart">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+                </svg>
+                {cartCount > 0 && (
+                  <span key={cartCount} style={{ position: 'absolute', top: -4, right: -4, background: badgeBg, color: badgeFg, borderRadius: '50%', width: 14, height: 14, fontSize: 8, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Jost', sans-serif", transition: 'background 0.3s, color 0.3s' }}>
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Profile avatar / auth */}
+            {user ? (
+              <div ref={menuRef} style={{ position: 'relative' }}>
+                <div
+                  onClick={() => setShowMenu(s => !s)}
+                  title={user.full_name}
                   style={{
-                    transition: 'transform 0.2s',
-                    transform: showShopMenu ? 'rotate(180deg)' : 'rotate(0deg)',
+                    width: 32, height: 32, borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', userSelect: 'none',
+                    background: user.role === 'admin' ? 'linear-gradient(135deg,#7C3AED,#A855F7)' : (isTransparent ? 'rgba(255,255,255,0.2)' : '#111'),
+                    color: '#fff',
+                    fontFamily: "'Jost', sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: '1px',
+                    border: showMenu
+                      ? (isTransparent ? '2px solid rgba(255,255,255,0.8)' : '2px solid #555')
+                      : (isTransparent ? '2px solid rgba(255,255,255,0.35)' : '2px solid transparent'),
+                    transition: 'background 0.3s, border-color 0.3s',
                   }}
                 >
-                  <path d="M1 1l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </span>
-
-              {showShopMenu && (
-                <div className="absolute top-[calc(100%+12px)] left-1/2 -translate-x-1/2 bg-white border border-black/10 rounded-[14px] p-2 min-w-[200px] shadow-modal animate-modal-in z-[200]">
-                  {/* All Products */}
-                  <div
-                    className="mitem"
-                    style={{ fontWeight: activeCategory === 'All' ? 700 : undefined, color: activeCategory === 'All' ? '#000' : undefined }}
-                    onClick={() => goCategory('All')}
-                  >
-                    <span className="mr-1">🗂️</span> All Products
-                    {activeCategory === 'All' && <span className="ml-auto text-[10px] text-black/40">✓</span>}
-                  </div>
-
-                  {/* Divider */}
-                  <div className="mx-3 my-1.5 border-t border-black/[0.06]" />
-
-                  {/* Dynamic categories */}
-                  {navCategories.map(cat => (
-                    <div
-                      key={cat}
-                      className="mitem"
-                      style={{ fontWeight: activeCategory === cat ? 700 : undefined, color: activeCategory === cat ? '#000' : undefined }}
-                      onClick={() => goCategory(cat)}
-                    >
-                      <span className="mr-1">{getEmoji(cat)}</span> {cat}
-                      {activeCategory === cat && <span className="ml-auto text-[10px] text-black/40">✓</span>}
-                    </div>
-                  ))}
+                  {getInitials(user.full_name)}
                 </div>
-              )}
-            </div>
-          )}
 
-          <span
-            className="font-sans text-[11px] font-semibold tracking-[1.5px] uppercase cursor-pointer text-black/75 transition-colors hover:text-black"
-            onClick={() => navigate('/new-drops')}
-          >
-            New Drops
-          </span>
-          <span
-            className="font-sans text-[11px] font-semibold tracking-[1.5px] uppercase cursor-pointer text-black/75 transition-colors hover:text-black"
-            onClick={() => navigate('/sale')}
-          >
-            Sale
-          </span>
-
-          {/* Cart icon */}
-          {user?.role !== 'admin' && (
-            <div className="relative cursor-pointer text-black/70 text-lg" onClick={() => navigate('/cart')}>
-              🛒
-              {cartCount > 0 && (
-                <span
-                  key={cartCount}
-                  className="absolute -top-1.5 -right-2 bg-black text-white rounded-full w-4 h-4 text-[9px] font-extrabold font-sans flex items-center justify-center animate-pop"
-                >
-                  {cartCount}
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* User avatar / auth buttons */}
-          {user ? (
-            <div ref={menuRef} className="relative">
-              <div
-                onClick={() => setShowMenu(s => !s)}
-                title={user.full_name}
-                className="w-9 h-9 rounded-full flex items-center justify-center font-extrabold text-[12px] cursor-pointer font-sans select-none transition-all duration-200"
-                style={{
-                  background: user.role === 'admin'
-                    ? 'linear-gradient(135deg,#7C3AED,#A855F7)'
-                    : '#000000',
-                  color:      user.role === 'admin' ? '#fff' : '#ffffff',
-                  border:     showMenu
-                    ? user.role === 'admin' ? '2px solid #C084FC' : '2px solid #555555'
-                    : user.role === 'admin' ? '2px solid rgba(168,85,247,0.5)' : '2px solid rgba(0,0,0,0.3)',
-                  boxShadow: user.role === 'admin' ? '0 0 12px rgba(124,58,237,0.4)' : 'none',
-                }}
-              >
-                {getInitials(user.full_name)}
-              </div>
-
-              {/* Dropdown */}
-              {showMenu && (
-                <div className="absolute top-[calc(100%+10px)] right-0 bg-white border border-black/10 rounded-[14px] p-2 min-w-[220px] shadow-modal animate-modal-in z-[200]">
-                  {/* User info */}
-                  <div className="px-3.5 py-2.5 border-b border-black/10 mb-1.5">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-sans font-bold text-[13px] text-black">{user.full_name}</span>
-                      {user.role === 'admin' && (
-                        <span className="font-sans text-[9px] font-extrabold px-2 py-0.5 rounded-full text-white tracking-[1px] uppercase"
-                          style={{ background:'linear-gradient(135deg,#7C3AED,#A855F7)' }}>
-                          Admin
-                        </span>
-                      )}
-                    </div>
-                    <div className="font-sans text-[11px] text-black/50">{user.email}</div>
-                    <div className="mt-1.5">
-                      {user.is_verified
-                        ? <span className="font-sans text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/[0.06] text-black/60">✓ Verified</span>
-                        : <span className="font-sans text-[10px] font-semibold text-black/50">⚠️ Verify email</span>
-                      }
-                    </div>
-                  </div>
-
-                  {user.role === 'admin' && (
-                    <>
-                      <div className="mitem text-purple-600 font-bold" onClick={() => go('/admin')}>👑 Admin Dashboard</div>
-                      <div className="mx-3 my-1.5 px-2.5 py-2 rounded-lg bg-purple-50 border border-purple-200">
-                        <span className="font-sans text-[10px] text-purple-500 font-semibold">
-                          👁️ Browsing as admin — cart & ordering disabled
-                        </span>
-                      </div>
-                    </>
-                  )}
-
-                  {user.role !== 'admin' && (
-                    <>
-                      <div className="mitem" onClick={() => go('/orders')}>📦 My Orders</div>
-                      <div className="mitem" onClick={() => go('/wishlist')}>
-                        🤍 Wishlist
-                        {wishlistCount > 0 && (
-                          <span className="ml-auto bg-black text-white rounded-[10px] px-1.5 py-px text-[10px] font-extrabold font-sans">
-                            {wishlistCount}
-                          </span>
+                {showMenu && (
+                  <div style={{ position: 'absolute', top: 'calc(100% + 10px)', right: 0, background: '#fff', border: '1px solid rgba(0,0,0,0.09)', borderRadius: 12, padding: 8, minWidth: 210, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 200, animation: 'fadeInDown 0.15s ease' }}>
+                    {/* User header */}
+                    <div style={{ padding: '10px 14px 12px', borderBottom: '1px solid rgba(0,0,0,0.07)', marginBottom: 6 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                        <span style={{ fontFamily: "'Jost', sans-serif", fontWeight: 600, fontSize: 13, color: '#111' }}>{user.full_name}</span>
+                        {user.role === 'admin' && (
+                          <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'linear-gradient(135deg,#7C3AED,#A855F7)', color: '#fff', letterSpacing: '1px', textTransform: 'uppercase' }}>Admin</span>
                         )}
                       </div>
-                      <div className="mitem" onClick={() => go('/reviews')}>⭐ My Reviews</div>
-                    </>
-                  )}
+                      <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: 'rgba(0,0,0,0.4)' }}>{user.email}</div>
+                    </div>
 
-                  {/* ── Shop by Category (inside avatar dropdown) ── */}
-                  {navCategories.length > 0 && (
-                    <>
-                      <div className="border-t border-black/10 mt-1.5 pt-1.5 mb-1">
-                        <span className="px-3.5 font-sans text-[9px] font-extrabold tracking-[2px] uppercase text-black/30">
-                          Shop by Category
-                        </span>
-                      </div>
-                      <div
-                        className="mitem"
-                        style={{ fontWeight: activeCategory === 'All' ? 700 : undefined }}
-                        onClick={() => { goCategory('All'); setShowMenu(false); }}
-                      >
-                        🗂️ All Products
-                        {activeCategory === 'All' && <span className="ml-auto text-[10px] text-black/40">✓</span>}
-                      </div>
-                      {navCategories.map(cat => (
-                        <div
-                          key={cat}
-                          className="mitem"
-                          style={{ fontWeight: activeCategory === cat ? 700 : undefined, color: activeCategory === cat ? '#000' : undefined }}
-                          onClick={() => { goCategory(cat); setShowMenu(false); }}
-                        >
-                          {getEmoji(cat)} {cat}
-                          {activeCategory === cat && <span className="ml-auto text-[10px] text-black/40">✓</span>}
+                    {/* Admin */}
+                    {user.role === 'admin' && (
+                      <>
+                        <button className="mitem" style={{ color: '#7C3AED', fontWeight: 600 }} onClick={() => go('/admin')}>Admin Dashboard</button>
+                        <div style={{ margin: '6px 12px', padding: '8px 10px', borderRadius: 8, background: '#faf5ff', border: '1px solid #ede9fe' }}>
+                          <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 10, color: '#9333ea' }}>Browsing as admin — cart disabled</span>
                         </div>
-                      ))}
-                    </>
-                  )}
+                      </>
+                    )}
 
-                  <div className="border-t border-black/10 mt-1.5 pt-1.5">
-                    <div className="mitem mitem-danger" onClick={handleLogout}>🚪 Sign Out</div>
+                    {/* Regular user account actions only */}
+                    {user.role !== 'admin' && (
+                      <>
+                        <button className="mitem" onClick={() => go('/orders')}>My Orders</button>
+                        <button className="mitem" onClick={() => go('/wishlist')}>
+                          Wishlist
+                          {wishlistCount > 0 && <span style={{ marginLeft: 'auto', background: '#111', color: '#fff', borderRadius: 6, padding: '1px 6px', fontSize: 10, fontWeight: 700, fontFamily: "'Jost', sans-serif" }}>{wishlistCount}</span>}
+                        </button>
+                        <button className="mitem" onClick={() => go('/reviews')}>My Reviews</button>
+                      </>
+                    )}
+
+                    <div style={{ borderTop: '1px solid rgba(0,0,0,0.07)', marginTop: 6, paddingTop: 6 }}>
+                      <button className="mitem mitem-danger" onClick={handleLogout}>Sign Out</button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <button onClick={() => navigate('/login')}
-                className="font-sans text-[11px] font-semibold tracking-[1.5px] uppercase rounded border border-black/30 px-4 py-2 cursor-pointer transition-all hover:-translate-y-px text-black bg-transparent">
-                Sign In
-              </button>
-              <button onClick={() => navigate('/register')}
-                className="font-sans text-[11px] font-bold tracking-[1.5px] uppercase rounded border-none px-4 py-2 cursor-pointer transition-all hover:-translate-y-px bg-black text-white">
-                Join Free
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Mobile controls */}
-        <div className="flex md:hidden items-center gap-3.5">
-          <button className="bg-none border-none cursor-pointer text-xl text-black/70 p-1 leading-none transition-colors hover:text-black"
-            onClick={() => setShowSearch(x => !x)}>⌕</button>
-
-          {user?.role !== 'admin' && (
-            <div className="relative cursor-pointer" onClick={() => navigate('/cart')}>
-              <span className="text-xl text-black/70">🛒</span>
-              {cartCount > 0 && (
-                <span key={cartCount} className="absolute -top-1.5 -right-1.5 bg-black text-white rounded-full w-[15px] h-[15px] text-[8px] font-extrabold font-sans flex items-center justify-center animate-pop">
-                  {cartCount}
-                </span>
-              )}
-            </div>
-          )}
-
-          <button className="bg-none border-none cursor-pointer text-xl text-black/70 p-1 leading-none transition-colors hover:text-black"
-            onClick={() => setMobileMenuOpen(x => !x)}>
-            {mobileMenuOpen ? '✕' : '☰'}
-          </button>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span className="nav-link hidden md:block" style={{ color: ink }} onClick={() => navigate('/login')}>Sign In</span>
+                <button onClick={() => navigate('/register')}
+                  style={{ fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '2px', textTransform: 'uppercase', padding: '8px 16px', background: isTransparent ? 'rgba(255,255,255,0.15)' : '#111', color: '#fff', border: isTransparent ? '1px solid rgba(255,255,255,0.4)' : 'none', cursor: 'pointer', transition: 'opacity 0.2s, background 0.3s', backdropFilter: isTransparent ? 'blur(4px)' : 'none' }}
+                  onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
+                  onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+                  Join
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 
-      {/* Mobile search bar */}
+      {/* ── Search bar (desktop) ── */}
       {showSearch && (
-        <div className="bg-white px-[5%] py-2.5 border-b border-black/10">
-          <div className="flex items-center bg-black/[0.04] rounded-md px-3.5 py-2.5 gap-2 border border-black/15">
-            <span className="text-black/50 text-sm">⌕</span>
+        <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.09)', padding: '12px 5%', position: 'sticky', top: 64, zIndex: 99 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, maxWidth: 520, margin: '0 auto', borderBottom: '1px solid rgba(0,0,0,0.18)', paddingBottom: 8 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(0,0,0,0.35)', flexShrink: 0 }}>
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && navigate(`/?search=${search}`)}
-              placeholder="Search fashion…"
+              placeholder="Search Luku Prime…"
               autoFocus
-              className="bg-transparent border-none outline-none text-sm w-full text-black/80 font-sans placeholder:text-black/30"
+              style={{ fontFamily: "'Jost', sans-serif", fontSize: 13, letterSpacing: '1px', background: 'transparent', border: 'none', outline: 'none', flex: 1, color: '#111' }}
             />
-            {search && (
-              <button onClick={() => setSearch('')} className="bg-none border-none text-black/40 cursor-pointer text-sm p-0">✕</button>
-            )}
+            {search && <button onClick={() => setSearch('')} className="nav-icon-btn" style={{ color: 'rgba(0,0,0,0.3)', fontSize: 12 }}>✕</button>}
           </div>
         </div>
       )}
 
-      {/* Mobile slide-down menu */}
+      {/* ── Mobile category menu (hamburger) — categories only ── */}
       {mobileMenuOpen && (
-        <div className="bg-white border-b border-black/10 px-[5%] py-4 flex flex-col">
-          {user ? (
-            <>
-              <div className="py-3 border-b border-black/10 mb-2">
-                <div className="font-sans font-bold text-sm text-black">{user.full_name}</div>
-                <div className="font-sans text-[11px] text-black/40 mt-0.5">{user.email}</div>
-              </div>
-              {[
-                ['📦', 'My Orders',  '/orders'],
-                ['🤍', 'Wishlist',   '/wishlist'],
-                ['⭐', 'My Reviews', '/reviews'],
-              ].map(([icon, label, path]) => (
-                <button key={label}
-                  className="bg-none border-none cursor-pointer font-sans text-sm font-medium text-black/70 py-3 text-left w-full border-b border-black/[0.06] transition-colors hover:text-black flex items-center gap-2.5 last:border-b-0"
-                  onClick={() => go(path)}>
-                  {icon} {label}
-                </button>
-              ))}
-              {user.role === 'admin' && (
-                <button className="bg-none border-none cursor-pointer font-sans text-sm font-medium py-3 text-left w-full text-black flex items-center gap-2.5 transition-colors hover:text-black/70"
-                  onClick={() => go('/admin')}>
-                  👑 Admin Dashboard
-                </button>
-              )}
+        <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.09)', padding: '16px 5%', position: 'sticky', top: 64, zIndex: 99 }}>
+          <div style={{ marginBottom: 8 }}>
+            <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '2.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)' }}>Shop by Category</span>
+          </div>
+          <button
+            className="mitem"
+            style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', borderRadius: 0, padding: '11px 14px', fontWeight: activeCategory === 'All' ? 600 : undefined }}
+            onClick={() => goCategory('All')}
+          >
+            All Products {activeCategory === 'All' && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
+          </button>
+          {navCategories.map(cat => (
+            <button
+              key={cat}
+              className="mitem"
+              style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', borderRadius: 0, padding: '11px 14px', fontWeight: activeCategory === cat ? 600 : undefined }}
+              onClick={() => goCategory(cat)}
+            >
+              {cat} {activeCategory === cat && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
+            </button>
+          ))}
 
-              {/* ── Mobile categories ── */}
-              {navCategories.length > 0 && (
-                <>
-                  <div className="pt-3 pb-1.5 border-t border-black/10 mt-1">
-                    <span className="font-sans text-[9px] font-extrabold tracking-[2px] uppercase text-black/30">
-                      Shop by Category
-                    </span>
-                  </div>
-                  <button
-                    className={`bg-none border-none cursor-pointer font-sans text-sm py-2.5 text-left w-full border-b border-black/[0.06] transition-colors hover:text-black flex items-center gap-2.5 ${activeCategory === 'All' ? 'font-bold text-black' : 'font-medium text-black/70'}`}
-                    onClick={() => goCategory('All')}
-                  >
-                    🗂️ All Products {activeCategory === 'All' && <span className="ml-auto text-[10px] text-black/40">✓</span>}
-                  </button>
-                  {navCategories.map(cat => (
-                    <button
-                      key={cat}
-                      className={`bg-none border-none cursor-pointer font-sans text-sm py-2.5 text-left w-full border-b border-black/[0.06] transition-colors hover:text-black flex items-center gap-2.5 last:border-b-0 ${activeCategory === cat ? 'font-bold text-black' : 'font-medium text-black/70'}`}
-                      onClick={() => goCategory(cat)}
-                    >
-                      {getEmoji(cat)} {cat}
-                      {activeCategory === cat && <span className="ml-auto text-[10px] text-black/40">✓</span>}
-                    </button>
-                  ))}
-                </>
-              )}
-
-              <button className="bg-none border-none cursor-pointer font-sans text-sm font-medium text-red-500 py-3 mt-2 text-left w-full flex items-center gap-2.5 transition-colors hover:text-red-600"
-                onClick={handleLogout}>
-                🚪 Sign Out
+          {/* Sign in / join for guests in mobile menu too */}
+          {!user && (
+            <div style={{ display: 'flex', gap: 10, marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(0,0,0,0.07)' }}>
+              <button onClick={() => go('/login')}
+                style={{ flex: 1, fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '2px', textTransform: 'uppercase', padding: 10, background: 'transparent', color: '#111', border: '1px solid rgba(0,0,0,0.25)', cursor: 'pointer' }}>
+                Sign In
               </button>
-            </>
-          ) : (
-            <>
-              {/* ── Mobile categories for guests ── */}
-              {navCategories.length > 0 && (
-                <>
-                  <div className="pb-1.5 mb-1">
-                    <span className="font-sans text-[9px] font-extrabold tracking-[2px] uppercase text-black/30">
-                      Shop by Category
-                    </span>
-                  </div>
-                  <button
-                    className={`bg-none border-none cursor-pointer font-sans text-sm py-2.5 text-left w-full border-b border-black/[0.06] transition-colors hover:text-black flex items-center gap-2.5 ${activeCategory === 'All' ? 'font-bold text-black' : 'font-medium text-black/70'}`}
-                    onClick={() => goCategory('All')}
-                  >
-                    🗂️ All Products {activeCategory === 'All' && <span className="ml-auto text-[10px] text-black/40">✓</span>}
-                  </button>
-                  {navCategories.map(cat => (
-                    <button
-                      key={cat}
-                      className={`bg-none border-none cursor-pointer font-sans text-sm py-2.5 text-left w-full border-b border-black/[0.06] transition-colors hover:text-black flex items-center gap-2.5 ${activeCategory === cat ? 'font-bold text-black' : 'font-medium text-black/70'}`}
-                      onClick={() => goCategory(cat)}
-                    >
-                      {getEmoji(cat)} {cat}
-                      {activeCategory === cat && <span className="ml-auto text-[10px] text-black/40">✓</span>}
-                    </button>
-                  ))}
-                  <div className="border-t border-black/10 mt-2 mb-2" />
-                </>
-              )}
-
-              <div className="flex gap-2.5 pt-1">
-                <button onClick={() => go('/login')}
-                  className="flex-1 font-sans text-[11px] font-semibold tracking-[1.5px] uppercase rounded border border-black/30 px-4 py-2.5 cursor-pointer text-black bg-transparent">
-                  Sign In
-                </button>
-                <button onClick={() => go('/register')}
-                  className="flex-1 font-sans text-[11px] font-bold tracking-[1.5px] uppercase rounded border-none px-4 py-2.5 cursor-pointer bg-black text-white">
-                  Join Free
-                </button>
-              </div>
-            </>
+              <button onClick={() => go('/register')}
+                style={{ flex: 1, fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '2px', textTransform: 'uppercase', padding: 10, background: '#111', color: '#fff', border: 'none', cursor: 'pointer' }}>
+                Join Free
+              </button>
+            </div>
           )}
         </div>
       )}
