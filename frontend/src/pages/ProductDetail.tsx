@@ -51,14 +51,14 @@ interface ReviewStats {
 
 // ── Theme ─────────────────────────────────────────────────────────────────────
 const T = {
-  navy:      '#0D1B3E',
-  navyLight: '#1E2F5A',
-  gold:      '#C8A951',
-  goldLight: '#DEC06A',
-  cream:     '#F9F5EC',
-  creamMid:  '#F0EAD8',
-  creamDeep: '#E4D9C0',
-  muted:     '#7A7A8A',
+  navy:      '#000000',
+  navyLight: '#1A1A1A',
+  gold:      '#000000',
+  goldLight: '#1A1A1A',
+  cream:     '#FFFFFF',
+  creamMid:  '#F5F5F5',
+  creamDeep: '#E0E0E0',
+  muted:     '#666666',
 };
 
 // ── Social proof messages ──────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ function Stars({ rating, size = 13 }: { rating: number; size?: number }) {
   return (
     <div style={{ display:'flex', gap:1 }}>
       {[1,2,3,4,5].map(i => (
-        <span key={i} style={{ fontSize:size, color: i<=Math.round(rating)?T.gold:T.creamDeep, lineHeight:1 }}>
+        <span key={i} style={{ fontSize:size, color: i<=Math.round(rating)?'#111111':'#DDDDDD', lineHeight:1 }}>
           {i <= Math.round(rating) ? '★' : '☆'}
         </span>
       ))}
@@ -108,171 +108,89 @@ function Stars({ rating, size = 13 }: { rating: number; size?: number }) {
 function Slideshow({ images, productName, stock }: {
   images:      string[];
   productName: string;
-  stock:       number;   // -1 = pending selection
+  stock:       number;
 }) {
-  const [active,      setActive]      = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [direction,   setDirection]   = useState<'left'|'right'>('right');
-  const intervalRef = useRef<ReturnType<typeof setInterval>|null>(null);
-
-  const go = useCallback((idx: number, dir: 'left'|'right') => {
-    if (isAnimating || idx === active) return;
-    setDirection(dir);
-    setIsAnimating(true);
-    setTimeout(() => { setActive(idx); setIsAnimating(false); }, 280);
-  }, [active, isAnimating]);
-
-  const prev = () => go((active - 1 + images.length) % images.length, 'left');
-  const next = () => go((active + 1) % images.length, 'right');
-
-  useEffect(() => {
-    if (images.length <= 1) return;
-    intervalRef.current = setInterval(() => {
-      setActive(a => { setDirection('right'); return (a+1) % images.length; });
-    }, 4000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [images.length]);
-
-  const resetInterval = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => setActive(a => (a+1) % images.length), 4000);
+  const [active, setActive] = useState(0);
+  const touchStartX = useRef(0);
+  const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
+  const onTouchEnd   = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) < 40) return;
+    if (dx < 0) setActive(a => (a + 1) % images.length);
+    else        setActive(a => (a - 1 + images.length) % images.length);
   };
 
-  // Determine natural aspect ratio from image (fit to image, no whitespace)
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-      {/* Main image — natural aspect ratio, no fixed square */}
-      <div style={{
-        position:'relative', borderRadius:16, overflow:'hidden',
-        background:'#fff', border:`1px solid ${T.creamDeep}`,
-        boxShadow:`0 16px 48px rgba(13,27,62,0.12)`,
-        lineHeight:0,   // removes bottom gap from inline img
-      }}>
-        <img
-          key={active}
-          src={images[active]}
-          alt={productName}
-          style={{
-            width:'100%',
-            height:'auto',           // natural height — no whitespace
-            display:'block',         // removes inline baseline gap
-            objectFit:'cover',
-            transition:'opacity 0.28s ease, transform 0.28s ease',
-            opacity:   isAnimating ? 0 : 1,
-            transform: isAnimating
-              ? `translateX(${direction === 'right' ? '24px' : '-24px'})`
-              : 'translateX(0)',
-          }}
-          onError={e => {
-            (e.target as HTMLImageElement).src =
-              'https://placehold.co/600x600/F0EAD8/0D1B3E?text=LP';
-          }}
-        />
-
-        {images.length > 1 && (
-          <div style={{
-            position:'absolute', bottom:12, right:12,
-            background:'rgba(13,27,62,0.6)', backdropFilter:'blur(6px)',
-            color:'#fff', fontFamily:"'Jost',sans-serif", fontSize:10,
-            fontWeight:700, borderRadius:20, padding:'4px 10px', letterSpacing:'0.5px',
-          }}>
-            {active+1} / {images.length}
-          </div>
-        )}
-
-        {images.length > 1 && (
-          <>
-            <button onClick={() => { prev(); resetInterval(); }} style={arrowStyle('left')}>‹</button>
-            <button onClick={() => { next(); resetInterval(); }} style={arrowStyle('right')}>›</button>
-          </>
-        )}
-
-        {/* FIX: only show overlays when stock is not -1 (pending selection) */}
-        {stock !== -1 && stock <= 5 && stock > 0 && (
-          <div style={{
-            position:'absolute', top:12, left:12,
-            background:T.gold, color:T.navy,
-            fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:800,
-            borderRadius:3, padding:'4px 10px', letterSpacing:'1.5px', textTransform:'uppercase',
-          }}>
-            Only {stock} left
-          </div>
-        )}
-        {stock !== -1 && stock === 0 && (
-          <div style={{
-            position:'absolute', inset:0,
-            background:'rgba(13,27,62,0.6)',
-            display:'flex', alignItems:'center', justifyContent:'center',
-          }}>
-            <span style={{
-              background:'rgba(255,255,255,0.95)', color:T.navy,
-              fontFamily:"'Jost',sans-serif", fontWeight:800, fontSize:10,
-              padding:'7px 18px', borderRadius:3, letterSpacing:'2px', textTransform:'uppercase',
-            }}>
-              Sold Out
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Dots */}
+    <div style={{ display:'flex', gap:0 }}>
+      {/* ── Left vertical thumbnail strip (desktop only) ── */}
       {images.length > 1 && (
-        <div style={{ display:'flex', justifyContent:'center', gap:6 }}>
-          {images.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => { go(i, i > active ? 'right' : 'left'); resetInterval(); }}
-              style={{
-                width: i === active ? 20 : 6, height:6, borderRadius:3,
-                border:'none',
-                background: i === active ? T.gold : T.creamDeep,
-                cursor:'pointer', transition:'all 0.3s ease', padding:0,
-              }}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Thumbnails */}
-      {images.length > 1 && (
-        <div style={{ display:'flex', gap:8, overflowX:'auto', paddingBottom:4 }}>
+        <div className="lp-thumb-strip" style={{
+          display:'flex', flexDirection:'column', gap:4,
+          marginRight:8, flexShrink:0, width:80,
+        }}>
           {images.map((img, i) => (
-            <div
-              key={i}
-              onClick={() => { go(i, i > active ? 'right' : 'left'); resetInterval(); }}
-              style={{
-                width:60, height:60, flexShrink:0, background:'#fff',
-                border:`2px solid ${i === active ? T.gold : T.creamDeep}`,
-                borderRadius:8, overflow:'hidden', cursor:'pointer',
-                transition:'border-color 0.2s, transform 0.15s',
-                transform: i === active ? 'scale(1.05)' : 'scale(1)',
-              }}
-            >
-              <img
-                src={img} alt=""
-                style={{ width:'100%', height:'100%', objectFit:'cover' }}
-                onError={e => {
-                  (e.target as HTMLImageElement).src =
-                    'https://placehold.co/60x60/F0EAD8/0D1B3E?text=LP';
-                }}
+            <div key={i} onClick={() => setActive(i)} style={{
+              width:80, height:80, flexShrink:0, cursor:'pointer',
+              border:`2px solid ${i === active ? '#000' : 'transparent'}`,
+              overflow:'hidden', background:'#f2f2f2',
+            }}>
+              <img src={img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}
+                onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/80x80/f2f2f2/000?text=LP'; }}
               />
             </div>
           ))}
         </div>
       )}
+
+      {/* ── Main image ── */}
+      <div style={{ flex:1, position:'relative' }}>
+        <div
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          style={{ overflow:'hidden', background:'#f2f2f2', lineHeight:0, aspectRatio:'1/1' }}
+        >
+          <img
+            key={active}
+            src={images[active]}
+            alt={productName}
+            style={{
+              width:'100%', height:'100%', display:'block',
+              objectFit:'cover', transition:'opacity 0.18s ease',
+            }}
+            onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/600x600/f2f2f2/000?text=LP'; }}
+          />
+          {stock !== -1 && stock === 0 && (
+            <div style={{
+              position:'absolute', inset:0, background:'rgba(255,255,255,0.65)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+            }}>
+              <span style={{
+                background:'#000', color:'#fff', fontFamily:"'Jost',sans-serif",
+                fontWeight:700, fontSize:10, padding:'8px 24px',
+                letterSpacing:'3px', textTransform:'uppercase',
+              }}>Sold Out</span>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile dot indicators */}
+        {images.length > 1 && (
+          <div className="lp-mobile-dots" style={{
+            display:'none', justifyContent:'center', gap:5, marginTop:10,
+          }}>
+            {images.map((_, i) => (
+              <div key={i} onClick={() => setActive(i)} style={{
+                width: i === active ? 18 : 5, height:5,
+                background: i === active ? '#000' : '#CCC',
+                cursor:'pointer', transition:'all 0.25s',
+              }}/>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-
-const arrowStyle = (side: 'left'|'right'): React.CSSProperties => ({
-  position:'absolute', top:'50%', [side]:10,
-  transform:'translateY(-50%)',
-  background:'rgba(255,255,255,0.92)', backdropFilter:'blur(4px)',
-  border:`1px solid ${T.creamDeep}`, borderRadius:'50%',
-  width:36, height:36, display:'flex', alignItems:'center', justifyContent:'center',
-  fontSize:20, lineHeight:1, cursor:'pointer', color:T.navy,
-  transition:'background 0.15s, transform 0.15s', zIndex:2,
-});
 
 // ── Social Proof Badge ────────────────────────────────────────────────────────
 function SocialProofBadge() {
@@ -290,8 +208,8 @@ function SocialProofBadge() {
   return (
     <div style={{
       display:'flex', alignItems:'center', gap:10,
-      background:'rgba(200,169,81,0.08)', border:`1px solid rgba(200,169,81,0.25)`,
-      borderRadius:8, padding:'10px 14px', marginBottom:20,
+      background:'#fff', border:'1.5px solid #000',
+      borderRadius:0, padding:'10px 14px', marginBottom:20,
       opacity: visible ? 1 : 0,
       transform: visible ? 'translateY(0)' : 'translateY(-4px)',
       transition:'opacity 0.35s ease, transform 0.35s ease',
@@ -320,9 +238,9 @@ function VariantStockBadge({ variant, hasVariants, selectionComplete, productSto
   if (hasVariants && !selectionComplete) {
     return (
       <span style={{
-        background:'rgba(200,169,81,0.1)', border:'1px solid rgba(200,169,81,0.3)',
-        color:T.gold, borderRadius:3, padding:'4px 12px',
-        fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700,
+        background:'#fff', border:'1.5px solid #000',
+        color:'#000', borderRadius:0, padding:'5px 12px',
+        fontFamily:"'Inter',sans-serif", fontSize:10, fontWeight:700,
         letterSpacing:'1px', textTransform:'uppercase' as const,
       }}>
         {selectedColor && hasSizeDim ? 'Select a size' : 'Select options'}
@@ -334,9 +252,9 @@ function VariantStockBadge({ variant, hasVariants, selectionComplete, productSto
   if (hasVariants && selectionComplete && !variant) {
     return (
       <span style={{
-        background:'#FDF0EE', border:'1px solid #F5C6C0', color:'#C0392B',
-        borderRadius:3, padding:'4px 12px',
-        fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700,
+        background:'#000', border:'1.5px solid #000', color:'#fff',
+        borderRadius:0, padding:'5px 12px',
+        fontFamily:"'Inter',sans-serif", fontSize:10, fontWeight:700,
         letterSpacing:'1px', textTransform:'uppercase' as const,
       }}>
         Sold Out
@@ -348,9 +266,9 @@ function VariantStockBadge({ variant, hasVariants, selectionComplete, productSto
 
   if (stock === 0) return (
     <span style={{
-      background:'#FDF0EE', border:'1px solid #F5C6C0', color:'#C0392B',
-      borderRadius:3, padding:'4px 12px',
-      fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700,
+      background:'#000', border:'1.5px solid #000', color:'#fff',
+      borderRadius:0, padding:'5px 12px',
+      fontFamily:"'Inter',sans-serif", fontSize:10, fontWeight:700,
       letterSpacing:'1px', textTransform:'uppercase' as const,
     }}>
       Sold Out
@@ -359,8 +277,8 @@ function VariantStockBadge({ variant, hasVariants, selectionComplete, productSto
 
   if (stock <= 5) return (
     <span style={{
-      background:'#FDF8EC', border:'1px solid #F6E4A0', color:'#B7791F',
-      borderRadius:3, padding:'4px 12px',
+      background:'#000', border:'1.5px solid #000', color:'#fff',
+      borderRadius:0, padding:'4px 12px',
       fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700,
       letterSpacing:'1px', textTransform:'uppercase' as const,
     }}>
@@ -370,12 +288,12 @@ function VariantStockBadge({ variant, hasVariants, selectionComplete, productSto
 
   return (
     <span style={{
-      background:'#EEF3EE', border:'1px solid #C8DFC8', color:'#4A7A4A',
-      borderRadius:3, padding:'4px 12px',
-      fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700,
+      background:'#fff', border:'1.5px solid #000', color:'#000',
+      borderRadius:0, padding:'5px 12px',
+      fontFamily:"'Inter',sans-serif", fontSize:10, fontWeight:700,
       letterSpacing:'1px', textTransform:'uppercase' as const,
     }}>
-      ✓ In Stock — {stock} available
+      In Stock — {stock} available
     </span>
   );
 }
@@ -406,18 +324,18 @@ function RelatedProducts({ category, currentId }: { category: string; currentId:
     <div style={{ marginTop:56 }}>
       <div style={{ marginBottom:24 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
-          <div style={{ width:28, height:1, background:T.gold }}/>
+          <div style={{ width:28, height:1, background:'#111111' }}/>
           <span style={{
             fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700,
-            letterSpacing:'2.5px', textTransform:'uppercase', color:'rgba(200,169,81,0.8)',
+            letterSpacing:'2.5px', textTransform:'uppercase', color:'rgba(0,0,0,0.4)',
           }}>
             You may also like
           </span>
-          <div style={{ flex:1, height:1, background:`linear-gradient(90deg,${T.gold}44,transparent)` }}/>
+          <div style={{ flex:1, height:1, background:'#E8E8E8' }}/>
         </div>
         <h2 style={{
-          fontFamily:"'Playfair Display',serif", fontWeight:700,
-          fontSize:'clamp(18px,3vw,24px)', color:T.navy,
+          fontFamily:"'Jost',sans-serif", fontWeight:700,
+          fontSize:'clamp(16px,2.5vw,22px)', color:'#000000', letterSpacing:'-0.2px',
         }}>
           Related Products
         </h2>
@@ -433,8 +351,8 @@ function RelatedProducts({ category, currentId }: { category: string; currentId:
           >
             {/* FIX: image fills naturally, no fixed padding-bottom trick */}
             <div style={{
-              width:'100%', overflow:'hidden', borderRadius:10,
-              background:'#f5f5f5', border:`1px solid ${T.creamDeep}`, marginBottom:10,
+              width:'100%', overflow:'hidden', borderRadius:0,
+              background:'#f5f5f5', border:'1px solid #E8E8E8', marginBottom:10,
               lineHeight:0,
             }}>
               <img
@@ -538,8 +456,8 @@ function ReviewsSection({ productId }: { productId: number }) {
 
       <div style={{ overflow:'hidden', maxHeight: open ? 3000 : 0, transition:'max-height 0.4s ease' }}>
         <div style={{
-          background:T.cream, border:`1px solid ${T.creamDeep}`,
-          borderTop:'none', borderRadius:'0 0 10px 10px', padding:'22px 22px 20px',
+          background:'#fff', border:'1px solid #E8E8E8',
+          borderTop:'none', borderRadius:0, padding:'22px 22px 20px',
         }}>
           {loading && (
             <div style={{ textAlign:'center', padding:'28px 0', color:T.muted, fontSize:13 }}>
@@ -560,7 +478,7 @@ function ReviewsSection({ productId }: { productId: number }) {
                         </span>
                         <div style={{ flex:1, height:6, background:T.creamDeep, borderRadius:3, overflow:'hidden' }}>
                           <div style={{
-                            width:`${pct}%`, height:'100%', background:T.gold,
+                            width:`${pct}%`, height:'100%', background:'#111111',
                             borderRadius:3, transition:'width 0.5s ease',
                           }}/>
                         </div>
@@ -572,7 +490,7 @@ function ReviewsSection({ productId }: { productId: number }) {
               )}
               <div style={{
                 height:1,
-                background:'linear-gradient(90deg,transparent,rgba(200,169,81,0.25),transparent)',
+                background:'#E8E8E8',
                 margin:'18px 0',
               }}/>
               {reviews.length === 0 ? (
@@ -583,8 +501,8 @@ function ReviewsSection({ productId }: { productId: number }) {
                 <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
                   {reviews.map(r => (
                     <div key={r.id} style={{
-                      background:'#fff', border:`1px solid ${T.creamDeep}`,
-                      borderRadius:10, padding:'16px 18px',
+                      background:'#fff', border:'1px solid #E8E8E8',
+                      borderRadius:0, padding:'16px 18px',
                     }}>
                       <div style={{
                         display:'flex', alignItems:'flex-start',
@@ -886,17 +804,17 @@ export default function ProductDetail() {
   // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) return (
     <div style={{
-      minHeight:'100vh', background:T.navy,
+      minHeight:'100vh', background:'#FFFFFF',
       display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
     }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       <div style={{
         width:38, height:38,
-        border:`3px solid rgba(200,169,81,0.2)`, borderTopColor:T.gold,
+        border:`3px solid rgba(0,0,0,0.1)`, borderTopColor:'#111111',
         borderRadius:'50%', animation:'spin 0.8s linear infinite',
       }}/>
       <p style={{
-        color:'rgba(200,169,81,0.6)', fontFamily:"'Jost',sans-serif",
+        color:'rgba(0,0,0,0.45)', fontFamily:"'Jost',sans-serif",
         fontSize:13, letterSpacing:'1px', marginTop:16, textTransform:'uppercase',
       }}>
         Loading…
@@ -925,7 +843,7 @@ export default function ProductDetail() {
         onLogout={() => { setCartCount(0); setWishlistCount(0); }}
       />
 
-      <div className="lp-fade" style={{
+      <div className="lp-fade lp-page-wrap" style={{
         maxWidth:1100, margin:'0 auto',
         padding:'clamp(20px,4vw,48px) clamp(16px,5%,5%) 80px',
       }}>
@@ -935,13 +853,13 @@ export default function ProductDetail() {
           marginBottom:'clamp(18px,3vw,32px)', flexWrap:'wrap',
         }}>
           <button className="lp-back" onClick={() => navigate(-1)}>← Back</button>
-          <span style={{ color:T.creamDeep }}>·</span>
+          <span style={{ color:'#CCC', fontSize:10 }}>/</span>
           <button className="lp-back" style={{ color:T.muted }} onClick={() => navigate('/')}>Home</button>
-          <span style={{ color:T.creamDeep }}>·</span>
+          <span style={{ color:'#CCC', fontSize:10 }}>/</span>
           <span style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:T.muted }}>
             {product.category || 'Product'}
           </span>
-          <span style={{ color:T.creamDeep }}>·</span>
+          <span style={{ color:'#CCC', fontSize:10 }}>/</span>
           <span style={{
             fontFamily:"'Jost',sans-serif", fontSize:11, color:T.navy, fontWeight:600,
             overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
@@ -954,12 +872,13 @@ export default function ProductDetail() {
         <div className="lp-grid">
 
           {/* ── Slideshow ── */}
-          {/* FIX: pass slideshowStock (-1 when pending) so overlays hide until selection done */}
-          <Slideshow
-            images={images}
-            productName={product.name}
-            stock={slideshowStock}
-          />
+          <div className="lp-img-bleed">
+            <Slideshow
+              images={images}
+              productName={product.name}
+              stock={slideshowStock}
+            />
+          </div>
 
           {/* ── Info panel ── */}
           <div>
@@ -999,18 +918,13 @@ export default function ProductDetail() {
               </button>
             </div>
 
-            {/* Decorative divider */}
-            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
-              <div style={{ width:24, height:1, background:T.gold }}/>
-              <div style={{ width:4, height:4, background:T.gold, transform:'rotate(45deg)' }}/>
-              <div style={{ flex:1, height:1, background:`linear-gradient(90deg,${T.gold}44,transparent)` }}/>
-            </div>
+
 
             {/* Price + stock badge */}
             <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20, flexWrap:'wrap' }}>
               <span style={{
-                fontFamily:"'Playfair Display',serif", fontWeight:700,
-                fontSize:'clamp(20px,3vw,30px)', color:T.navy,
+                fontFamily:"'Inter',sans-serif", fontWeight:700,
+                fontSize:'clamp(18px,2.5vw,24px)', color:'#000000',
               }}>
                 KSh {Number(product.price).toLocaleString()}
               </span>
@@ -1045,11 +959,11 @@ export default function ProductDetail() {
                   {product.features.map((f, i) => (
                     <div key={i} style={{
                       display:'inline-flex', alignItems:'center', gap:6,
-                      background:'rgba(200,169,81,0.08)', border:'1px solid rgba(200,169,81,0.22)',
-                      borderRadius:20, padding:'6px 12px',
+                      background:'#f5f5f5', border:'1px solid #E0E0E0',
+                      borderRadius:0, padding:'6px 12px',
                       fontFamily:"'Jost',sans-serif", fontSize:12, color:T.navy, fontWeight:500,
                     }}>
-                      <span style={{ color:T.gold }}>✦</span>{f}
+                      <span style={{ color:'#111111' }}>✦</span>{f}
                     </div>
                   ))}
                 </div>
@@ -1117,7 +1031,7 @@ export default function ProductDetail() {
                             }}>✕</span>
                           )}
                         </button>
-                        {colorStock !== null && (
+                        {colorStock !== null && active && (
                           <span style={{
                             fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700,
                             textAlign:'center', lineHeight:1.2,
@@ -1126,7 +1040,7 @@ export default function ProductDetail() {
                               : colorStock === 0
                                 ? '#C0392B'
                                 : colorStock <= 5
-                                  ? '#B7791F'
+                                  ? '#555555'
                                   : '#4A7A4A',
                           }}>
                             {soldOut || colorStock === 0
@@ -1156,7 +1070,7 @@ export default function ProductDetail() {
                       value={selectedColor}
                       onChange={e => handleColorChange(e.target.value)}
                       style={{
-                        width:'100%', background:T.cream,
+                        width:'100%', background:'#fff',
                         border:`1.5px solid ${colorError ? '#C0392B' : selectedColor ? T.gold : T.creamDeep}`,
                         borderRadius:10,
                         padding:`11px 36px 11px ${selectedColor ? '36px' : '14px'}`,
@@ -1235,12 +1149,12 @@ export default function ProductDetail() {
                                 ? `${size} — ${sizeStock} available`
                                 : size}
                             style={{
-                              width:'100%', padding:'8px 14px', borderRadius:8,
-                              border: active ? `2px solid ${T.gold}` : `1.5px solid ${T.creamDeep}`,
-                              background: soldOut ? T.creamMid : active ? 'rgba(200,169,81,0.12)' : '#fff',
-                              fontFamily:"'Jost',sans-serif", fontSize:13,
+                              width:'100%', padding:'10px 14px', borderRadius:0,
+                              border: active ? '2px solid #000' : '1.5px solid #D0D0D0',
+                              background: soldOut ? '#F5F5F5' : active ? '#000' : '#fff',
+                              fontFamily:"'Inter',sans-serif", fontSize:12,
                               fontWeight: active ? 700 : 500,
-                              color: soldOut ? T.muted : active ? T.navy : T.muted,
+                              color: soldOut ? '#AAA' : active ? '#fff' : '#000',
                               cursor: soldOut ? 'not-allowed' : 'pointer',
                               opacity: soldOut ? 0.5 : 1,
                               transition:'all 0.15s',
@@ -1252,11 +1166,11 @@ export default function ProductDetail() {
                             {!soldOut && sizeStock !== null && sizeStock > 0 && sizeStock <= 5 && (
                               <span style={{
                                 position:'absolute', top:4, right:4,
-                                width:5, height:5, borderRadius:'50%', background:'#B7791F',
+                                width:5, height:5, borderRadius:'50%', background:'#111111',
                               }}/>
                             )}
                           </button>
-                          {sizeStock !== null && (
+                          {sizeStock !== null && active && (
                             <span style={{
                               fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700,
                               textAlign:'center', lineHeight:1.2,
@@ -1265,7 +1179,7 @@ export default function ProductDetail() {
                                 : sizeStock === 0
                                   ? '#C0392B'
                                   : sizeStock <= 5
-                                    ? '#B7791F'
+                                    ? '#555555'
                                     : '#4A7A4A',
                             }}>
                               {soldOut || sizeStock === 0
@@ -1290,7 +1204,7 @@ export default function ProductDetail() {
                     color: variantHint.includes('sold out') || variantHint.includes('Sold')
                       ? '#C0392B'
                       : variantHint.includes('Only')
-                        ? '#B7791F'
+                        ? '#555555'
                         : '#4A7A4A',
                   }}>
                     {variantHint.includes('sold out') ? '✕' : variantHint.includes('Only') ? '⚠' : '✓'} {variantHint}
@@ -1349,7 +1263,7 @@ export default function ProductDetail() {
               ) : (
                 <button
                   className="lp-btn"
-                  style={{ background:`linear-gradient(135deg,${T.gold},${T.goldLight})`, color:T.navy }}
+                  style={{ background:`linear-gradient(135deg,#111111,#333333)`, color:'#FFFFFF' }}
                   onClick={handleCartToggle}
                   disabled={adding || (hasVariants && !selectedVariant)}
                 >
@@ -1378,7 +1292,7 @@ export default function ProductDetail() {
 
 // ── CSS ────────────────────────────────────────────────────────────────────────
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Jost:wght@300;400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Jost:wght@300;400;500;600;700&display=swap');
   *,*::before,*::after { box-sizing:border-box; margin:0; padding:0 }
 
   @keyframes fadeUp  { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
@@ -1392,7 +1306,7 @@ const css = `
 
   .lp-toast {
     position:fixed; top:18px; left:50%; transform:translateX(-50%);
-    background:#0D1B3E; color:#DEC06A;
+    background:#111111; color:#FFFFFF;
     font-family:'Jost',sans-serif; font-size:13px; font-weight:700; letter-spacing:1px;
     border-radius:8px; padding:12px 24px; z-index:9999;
     box-shadow:0 8px 28px rgba(13,27,62,0.3); border:1px solid rgba(200,169,81,0.25);
@@ -1401,30 +1315,46 @@ const css = `
   .lp-back {
     background:none; border:none; cursor:pointer;
     font-family:'Jost',sans-serif; font-size:10px; font-weight:700;
-    color:rgba(200,169,81,0.7); display:flex; align-items:center; gap:5px;
+    color:rgba(0,0,0,0.5); display:flex; align-items:center; gap:5px;
     padding:0; transition:color 0.15s; letter-spacing:1px; text-transform:uppercase; white-space:nowrap;
   }
-  .lp-back:hover { color:#C8A951 }
+  .lp-back:hover { color:#111111 }
   .lp-qty {
-    background:rgba(200,169,81,0.08); border:1px solid rgba(200,169,81,0.25);
-    border-radius:6px; width:36px; height:36px; font-size:18px; cursor:pointer;
+    background:#fff; border:1.5px solid #000;
+    border-radius:0; width:36px; height:36px; font-size:18px; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
     transition:background 0.15s; color:#0D1B3E; flex-shrink:0;
   }
-  .lp-qty:hover { background:rgba(200,169,81,0.18) }
+  .lp-qty:hover { background:rgba(0,0,0,0.12) }
   .lp-btn {
-    border:none; border-radius:6px; padding:14px 16px;
-    font-family:'Jost',sans-serif; font-size:11px; font-weight:700;
-    letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.25s; width:100%;
+    border:none; border-radius:0; padding:16px 16px;
+    font-family:'Inter',sans-serif; font-size:11px; font-weight:700;
+    letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; width:100%;
   }
-  .lp-btn:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 10px 28px rgba(200,169,81,0.3) }
+  .lp-btn:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 10px 28px rgba(0,0,0,0.18) }
   .lp-btn:disabled { opacity:0.6; cursor:not-allowed }
-  .lp-btn-green   { background:linear-gradient(135deg,#2E6B2E,#3E8A3E); color:#fff }
-  .lp-btn-outline { background:transparent !important; border:1.5px solid rgba(200,169,81,0.4); color:#0D1B3E }
-  .lp-btn-outline:hover:not(:disabled) { border-color:#C8A951; background:rgba(200,169,81,0.05) !important }
+  .lp-btn-green   { background:#000; color:#fff }
+  .lp-btn-outline { background:transparent !important; border:1.5px solid rgba(0,0,0,0.25); color:#111111 }
+  .lp-btn-outline:hover:not(:disabled) { border-color:#111111; background:rgba(0,0,0,0.04) !important }
 
-  .lp-grid { display:grid; grid-template-columns:1fr 1fr; gap:clamp(24px,4vw,56px); align-items:start }
-  @media(max-width:768px) { .lp-grid { grid-template-columns:1fr; gap:24px } }
+  /* ── Grid ── */
+  .lp-grid { display:grid; grid-template-columns:1fr 1fr; gap:clamp(24px,4vw,48px); align-items:start }
+
+  /* ── Desktop: thumbnail strip layout ── */
+  .lp-thumb-strip { display:flex }
+
+  /* ── Mobile overrides ── */
+  @media(max-width:768px) {
+    .lp-grid { grid-template-columns:1fr; gap:0 }
+    .lp-page-wrap { padding-left:0 !important; padding-right:0 !important }
+    .lp-img-bleed { width:100vw }
+    .lp-thumb-strip { display:none !important }
+    .lp-mobile-dots { display:flex !important }
+    .lp-grid > div:last-child { padding:20px 16px 0 }
+  }
+  @media(min-width:769px) {
+    .lp-mobile-dots { display:none !important }
+  }
 
   /* Related card — image scales naturally, hover lifts it */
   .related-card:hover .related-img { transform:scale(1.04) }
@@ -1437,7 +1367,7 @@ const css = `
 const s: Record<string, React.CSSProperties> = {
   lbl: {
     fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700,
-    letterSpacing:'2.5px', color:'rgba(200,169,81,0.8)',
+    letterSpacing:'2.5px', color:'rgba(0,0,0,0.45)',
     textTransform:'uppercase', marginBottom:10,
   },
 };

@@ -14,7 +14,10 @@ const uploadToCloudinary = (buffer) =>
     const stream = cloudinary.uploader.upload_stream(
       {
         folder: 'bizna_products',
-        transformation: [{ width: 1200, crop: 'limit' }, { quality: 'auto' }],
+        transformation: [
+          { width: 800, height: 1000, crop: 'pad', background: 'white', gravity: 'center' },
+          { quality: 'auto', fetch_format: 'auto' },
+        ],
       },
       (err, result) => (err ? reject(err) : resolve(result))
     );
