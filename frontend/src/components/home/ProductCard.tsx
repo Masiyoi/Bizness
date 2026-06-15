@@ -17,7 +17,7 @@ const isTouchDevice = () =>
   typeof window !== 'undefined' &&
   window.matchMedia('(hover: none) and (pointer: coarse)').matches;
 
-const IMG_ASPECT = '118%';
+const IMG_ASPECT = '125%';
 
 const S = {
   card: {
@@ -26,15 +26,16 @@ const S = {
     width:     '100%',
     alignSelf: 'start' as const,
     minWidth:  0,
-    overflow:  'hidden' as const,
+    overflow:  'visible' as const,
   } as React.CSSProperties,
 
   imgOuter: {
     position:   'relative' as const,
     width:      '100%',
     paddingTop: IMG_ASPECT,
-    overflow:   'hidden' as const,
-    background: '#EFEFEF',
+    boxShadow:  '0 1px 6px rgba(0,0,0,0.07)',
+    overflow:   'visible' as const,
+    background: '#ffffff',
     flexShrink: 0,
   } as React.CSSProperties,
 
@@ -58,14 +59,14 @@ const S = {
     flex:       `0 0 ${100 / count}%`,
     height:     '100%',
     position:   'relative' as const,
-    background: '#EFEFEF',
+    background: '#ffffff',
   }),
 
   img: (): React.CSSProperties => ({
     position:       'absolute',
-    inset:          0,
-    width:          '100%',
-    height:         '100%',
+    inset:          '6%',
+    width:          '88%',
+    height:         '88%',
     objectFit:      'contain' as const,
     objectPosition: 'center center',
     pointerEvents:  'none' as const,
@@ -138,11 +139,12 @@ const S = {
     display:        'flex',
     alignItems:     'center',
     justifyContent: 'center',
-    zIndex:         5,
-    opacity:        isTouch || visible ? 1 : 0,
-    transform:      isTouch || visible ? 'scale(1)' : 'scale(0.75)',
-    transition:     isTouch ? 'background 0.15s' : 'opacity 0.2s ease, transform 0.2s ease, background 0.15s',
+    zIndex:         10,
+    opacity:        visible || isTouch ? 1 : 0,
+    transform:      visible || isTouch ? 'scale(1)' : 'scale(0.75)',
+    transition:     'opacity 0.2s ease, transform 0.2s ease, background 0.15s',
     boxShadow:      '0 2px 10px rgba(0,0,0,0.18)',
+    pointerEvents:  'auto' as const,
   }),
 
   quickView: (visible: boolean): React.CSSProperties => ({
@@ -296,7 +298,7 @@ export default function ProductCard({
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [activeIdx,     setActiveIdx]     = useState(0);
   const [dragOffset,    setDragOffset]    = useState(0);
-  const [isTouch,       setIsTouch]       = useState(false);
+  const [isTouch,       setIsTouch]       = useState(isTouchDevice);
 
   useEffect(() => { setIsTouch(isTouchDevice()); }, []);
 
@@ -363,6 +365,13 @@ export default function ProductCard({
   const showLowStock = stock > 0 && stock <= 5;
 
   const handleActionBtn = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setQuickViewOpen(true);
+  };
+
+  // Force show button on touch tap
+  const handleTouchBtn = (e: React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setQuickViewOpen(true);
@@ -443,6 +452,7 @@ export default function ProductCard({
             <button
               style={S.actionBtn(hovered, inCart, isTouch)}
               onClick={handleActionBtn}
+              onTouchEnd={handleTouchBtn}
               aria-label={inCart ? 'View in bag' : 'Quick add'}
             >
               {inCart ? <CartIcon /> : (

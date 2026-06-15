@@ -17,8 +17,8 @@ interface FieldError {
 }
 
 const T = {
-  navy:'#0D1B3E', navyMid:'#152348', navyLight:'#1E2F5A',
-  gold:'#C8A951', goldLight:'#DEC06A', cream:'#F9F5EC', muted:'rgba(255,255,255,0.38)',
+  navy:'#000000', navyMid:'#111111', navyLight:'#1a1a1a',
+  gold:'#ffffff', goldLight:'#e0e0e0', cream:'#F9F5EC', muted:'rgba(255,255,255,0.38)',
 };
 
 const getPasswordStrength = (p: string) => {
@@ -152,7 +152,7 @@ useEffect(() => {
         <div style={{ fontSize:48, marginBottom:14 }}>📬</div>
         <h1 style={{ ...s.heading, textAlign:"center", fontSize:"clamp(17px,4vw,21px)", marginBottom:10 }}>Check your inbox!</h1>
         <p style={s.sub}>We sent a verification link to</p>
-        <div style={{ background:T.navyLight, border:`1px solid rgba(200,169,81,0.25)`, borderRadius:8, padding:"9px 16px", color:T.goldLight, fontWeight:700, fontSize:13, marginBottom:22, display:"inline-block", fontFamily:"'Jost',sans-serif", wordBreak:"break-all" as const }}>
+        <div style={{ background:"rgba(255,255,255,0.05)", border:`1px solid rgba(255,255,255,0.18)`, borderRadius:3, padding:"9px 16px", color:"rgba(255,255,255,0.7)", fontWeight:400, fontSize:13, marginBottom:22, display:"inline-block", fontFamily:"'DM Sans',sans-serif", wordBreak:"break-all" as const }}>
           {registeredEmail}
         </div>
         <p style={{ ...s.sub, marginBottom:22 }}>Click the link to activate your account. Check your <strong style={{ color:"rgba(255,255,255,0.5)" }}>spam folder</strong> too.</p>
@@ -160,8 +160,8 @@ useEffect(() => {
         <button onClick={handleResend} disabled={resendLoading} className="lp-outline-btn" style={{ opacity:resendLoading?0.6:1, cursor:resendLoading?"not-allowed":"pointer", marginBottom:16 }}>
           {resendLoading ? "Sending…" : "Resend verification email"}
         </button>
-        <p style={{ color:"rgba(255,255,255,0.25)", fontSize:13, fontFamily:"'Jost',sans-serif" }}>
-          Already verified? <Link to="/login" style={{ color:T.goldLight, fontWeight:600, textDecoration:"none" }}>Sign in here</Link>
+        <p style={{ color:"rgba(255,255,255,0.25)", fontSize:13, fontFamily:"'DM Sans',sans-serif" }}>
+          Already verified? <Link to="/login" style={{ color:"rgba(255,255,255,0.7)", fontWeight:600, textDecoration:"none" }}>Sign in here</Link>
         </p>
       </div>
     </div>
@@ -175,25 +175,25 @@ useEffect(() => {
 
       {/* Left brand panel — hidden on mobile */}
       <div className="lp-left">
-        <div style={{ position:"absolute", top:28, left:28, width:80, height:80, border:`1px solid rgba(200,169,81,0.12)`, borderRadius:4, pointerEvents:"none" }}/>
-        <div style={{ position:"absolute", bottom:28, right:28, width:60, height:60, border:`1px solid rgba(200,169,81,0.08)`, borderRadius:4, pointerEvents:"none" }}/>
-        <div style={s.logoMark}><span style={{ fontFamily:"'Playfair Display',serif", fontWeight:800, fontSize:22, color:T.navy }}>LP</span></div>
+        <div style={{ position:"absolute", top:28, left:28, width:80, height:80, border:`1px solid rgba(255,255,255,0.08)`, borderRadius:4, pointerEvents:"none" }}/>
+        <div style={{ position:"absolute", bottom:28, right:28, width:60, height:60, border:`1px solid rgba(255,255,255,0.06)`, borderRadius:4, pointerEvents:"none" }}/>
+        <div style={s.logoMark}><span style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:300, fontSize:22, color:"#000" }}>LP</span></div>
         <div style={{ display:"flex", alignItems:"center", gap:10, width:"100%", marginBottom:22, zIndex:1, position:"relative" }}>
-          <div style={{ flex:1, height:1, background:`linear-gradient(90deg,transparent,${T.gold}88)` }}/>
-          <div style={{ width:5, height:5, background:T.gold, transform:"rotate(45deg)", flexShrink:0 }}/>
-          <div style={{ flex:1, height:1, background:`linear-gradient(90deg,${T.gold}88,transparent)` }}/>
+          <div style={{ flex:1, height:1, background:`linear-gradient(90deg,transparent,${"rgba(255,255,255,0.5)"}88)` }}/>
+          <div style={{ width:5, height:5, background:"rgba(255,255,255,0.5)", transform:"rotate(45deg)", flexShrink:0 }}/>
+          <div style={{ flex:1, height:1, background:`linear-gradient(90deg,${"rgba(255,255,255,0.5)"}88,transparent)` }}/>
         </div>
-        <h2 style={{ fontFamily:"'Playfair Display',serif", fontWeight:800, fontSize:28, color:"#fff", textAlign:"center", lineHeight:1.2, marginBottom:14, zIndex:1, position:"relative" }}>
-          Join<br/><span style={{ color:T.goldLight }}>Luku Prime Shop</span>
+        <h2 style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:300, fontSize:28, color:"#fff", textAlign:"center", lineHeight:1.2, marginBottom:14, zIndex:1, position:"relative" }}>
+          Join<br/><span style={{ color:"rgba(255,255,255,0.6)" }}>Luku Prime Shop</span>
         </h2>
-        <p style={{ fontFamily:"'Jost',sans-serif", fontWeight:300, fontSize:13, color:"rgba(255,255,255,0.42)", textAlign:"center", lineHeight:1.8, maxWidth:260, zIndex:1, position:"relative" }}>
+        <p style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:300, fontSize:13, color:"rgba(255,255,255,0.42)", textAlign:"center", lineHeight:1.8, maxWidth:260, zIndex:1, position:"relative" }}>
           Kenya's premium destination for the finest fashion.
         </p>
         <div style={{ marginTop:40, display:"flex", flexDirection:"column", gap:14, width:"100%", zIndex:1, position:"relative" }}>
           {[["👑","Exclusive drops & deals"],["🚚","Fast delivery across Kenya"],["🔒","Secure M-Pesa checkout"],["↩️","30-day hassle-free returns"]].map(([icon,text]) => (
             <div key={text} style={{ display:"flex", alignItems:"center", gap:12 }}>
-              <div style={{ width:32, height:32, borderRadius:8, flexShrink:0, background:"rgba(200,169,81,0.09)", border:"1px solid rgba(200,169,81,0.18)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13 }}>{icon}</div>
-              <span style={{ fontFamily:"'Jost',sans-serif", fontSize:12, color:"rgba(255,255,255,0.4)" }}>{text}</span>
+              <div style={{ width:32, height:32, borderRadius:3, flexShrink:0, background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.12)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13 }}>{icon}</div>
+              <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"rgba(255,255,255,0.4)" }}>{text}</span>
             </div>
           ))}
         </div>
@@ -206,10 +206,10 @@ useEffect(() => {
 
           {/* Mobile-only logo — hidden on desktop */}
           <div className="lp-mobile-logo">
-            <div style={{ width:40, height:40, borderRadius:10, background:`linear-gradient(135deg,${T.gold},${T.goldLight})`, display:"flex", alignItems:"center", justifyContent:"center" }}>
-              <span style={{ fontFamily:"'Playfair Display',serif", fontWeight:800, fontSize:13, color:T.navy }}>LP</span>
+            <div style={{ width:40, height:40, borderRadius:3, background:`linear-gradient(135deg,${"rgba(255,255,255,0.5)"},rgba(255,255,255,0.05))`, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <span style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:300, fontSize:13, color:"#000" }}>LP</span>
             </div>
-            <span style={{ fontFamily:"'Playfair Display',serif", fontWeight:800, fontSize:15, color:"#fff" }}>Luku Prime Shop</span>
+            <span style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:300, fontSize:15, color:"#fff" }}>Luku Prime Shop</span>
           </div>
 
           <div style={{ marginBottom:22 }}>
@@ -238,7 +238,7 @@ useEffect(() => {
                 autoComplete="name"
                 maxLength={100}
                 className="lp-inp"
-                style={{ borderColor: errors.full_name ? "#ef4444" : "rgba(200,169,81,0.22)" }}
+                style={{ borderColor: errors.full_name ? "#ef4444" : "rgba(255,255,255,0.15)" }}
               />
               {errors.full_name && <span style={s.err}>{errors.full_name}</span>}
             </div>
@@ -254,7 +254,7 @@ useEffect(() => {
                 autoComplete="email"
                 maxLength={254}
                 className="lp-inp"
-                style={{ borderColor: errors.email ? "#ef4444" : "rgba(200,169,81,0.22)" }}
+                style={{ borderColor: errors.email ? "#ef4444" : "rgba(255,255,255,0.15)" }}
               />
               {errors.email && <span style={s.err}>{errors.email}</span>}
             </div>
@@ -271,7 +271,7 @@ useEffect(() => {
                   autoComplete="new-password"
                   maxLength={128}
                   className="lp-inp"
-                  style={{ paddingRight:50, borderColor: errors.password ? "#ef4444" : "rgba(200,169,81,0.22)" }}
+                  style={{ paddingRight:50, borderColor: errors.password ? "#ef4444" : "rgba(255,255,255,0.15)" }}
                 />
                 <button type="button" onClick={() => setShowPassword(x => !x)} className="lp-eye">
                   {showPassword ? "🙈" : "👁️"}
@@ -284,7 +284,7 @@ useEffect(() => {
                       <div key={i} style={{ flex:1, height:3, borderRadius:3, transition:"background 0.3s", backgroundColor: passwordStrength >= i ? strengthColor[passwordStrength] : "rgba(255,255,255,0.1)" }}/>
                     ))}
                   </div>
-                  <span style={{ fontSize:11, color:strengthColor[passwordStrength], fontWeight:700, fontFamily:"'Jost',sans-serif" }}>{strengthLabel[passwordStrength]}</span>
+                  <span style={{ fontSize:11, color:strengthColor[passwordStrength], fontWeight:400, fontFamily:"'DM Sans',sans-serif" }}>{strengthLabel[passwordStrength]}</span>
                 </div>
               )}
               {errors.password && <span style={s.err}>{errors.password}</span>}
@@ -301,7 +301,7 @@ useEffect(() => {
                 autoComplete="new-password"
                 maxLength={128}
                 className="lp-inp"
-                style={{ borderColor: errors.confirm_password ? "#ef4444" : "rgba(200,169,81,0.22)" }}
+                style={{ borderColor: errors.confirm_password ? "#ef4444" : "rgba(255,255,255,0.15)" }}
               />
               {errors.confirm_password && <span style={s.err}>{errors.confirm_password}</span>}
             </div>
@@ -316,12 +316,12 @@ useEffect(() => {
             </button>
           </form>
 
-          <div style={{ height:1, background:"linear-gradient(90deg,transparent,rgba(200,169,81,0.18),transparent)", margin:"20px 0" }}/>
-          <p style={{ fontFamily:"'Jost',sans-serif", fontSize:13, color:"rgba(255,255,255,0.32)", textAlign:"center", marginBottom:14 }}>
+          <div style={{ height:1, background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent)", margin:"20px 0" }}/>
+          <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"rgba(255,255,255,0.4)", textAlign:"center", marginBottom:14 }}>
             Already have an account? <span className="lp-link" onClick={() => navigate("/login")}>Sign In</span>
           </p>
-          <p style={{ textAlign:"center", color:"rgba(255,255,255,0.18)", fontSize:11, fontFamily:"'Jost',sans-serif" }}>
-            By signing up you agree to our <Link to="/terms" style={{ color:T.gold, textDecoration:"none" }}>Terms</Link> &amp; <Link to="/privacy" style={{ color:T.gold, textDecoration:"none" }}>Privacy Policy</Link>.
+          <p style={{ textAlign:"center", color:"rgba(255,255,255,0.18)", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}>
+            By signing up you agree to our <Link to="/terms" style={{ color:"rgba(255,255,255,0.5)", textDecoration:"none" }}>Terms</Link> &amp; <Link to="/privacy" style={{ color:"rgba(255,255,255,0.5)", textDecoration:"none" }}>Privacy Policy</Link>.
           </p>
         </div>
       </div>
@@ -331,29 +331,27 @@ useEffect(() => {
 
 // ── Global CSS ─────────────────────────────────────────────────────────────
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Jost:wght@300;400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-  .lp-inp{background:rgba(255,255,255,0.05);border:1px solid rgba(200,169,81,0.22);border-radius:8px;padding:13px 16px;color:#fff;font-size:14px;font-family:'Jost',sans-serif;width:100%;outline:none;transition:border-color 0.2s,background 0.2s}
-  .lp-inp:focus{border-color:#C8A951;background:rgba(200,169,81,0.07)}
-  .lp-inp::placeholder{color:rgba(255,255,255,0.22)}
+  .lp-inp{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);border-radius:3px;padding:13px 16px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;width:100%;outline:none;letter-spacing:0.2px;transition:border-color 0.2s,background 0.2s}
+  .lp-inp:focus{border-color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.1)}
+  .lp-inp::placeholder{color:rgba(255,255,255,0.25)}
 
-  .lp-submit{width:100%;border:none;border-radius:6px;padding:14px;font-family:'Jost',sans-serif;font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;background:linear-gradient(135deg,#C8A951,#DEC06A);color:#0D1B3E;transition:all 0.25s;margin-top:4px}
-  .lp-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 28px rgba(200,169,81,0.35)}
+  .lp-submit{width:100%;border:none;border-radius:3px;padding:14px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;cursor:pointer;background:#fff;color:#000;transition:all 0.22s;margin-top:4px}
+  .lp-submit:hover:not(:disabled){background:#e8e8e8;transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,0.5)}
+  .lp-submit:disabled{opacity:0.45;cursor:not-allowed}
 
-  .lp-outline-btn{width:100%;border:1px solid rgba(200,169,81,0.35);border-radius:6px;padding:13px;font-family:'Jost',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;background:transparent;color:rgba(200,169,81,0.75);transition:all 0.2s}
-  .lp-outline-btn:hover:not(:disabled){border-color:#C8A951;color:#C8A951;background:rgba(200,169,81,0.06)}
+  .lp-link{color:#fff;cursor:pointer;font-weight:500;font-family:'DM Sans',sans-serif;font-size:12px;transition:opacity 0.2s;opacity:0.7}
+  .lp-link:hover{opacity:1}
 
-  .lp-link{color:#DEC06A;cursor:pointer;font-weight:600;font-family:'Jost',sans-serif;transition:color 0.2s}
-  .lp-link:hover{color:#fff}
+  .lp-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;color:rgba(255,255,255,0.35);transition:color 0.2s;padding:0}
+  .lp-eye:hover{color:#fff}
 
-  .lp-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;color:rgba(255,255,255,0.3);transition:color 0.2s;padding:0}
-  .lp-eye:hover{color:#C8A951}
+  @keyframes lpFadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+  .lp-card{animation:lpFadeUp 0.45s ease both}
 
-  @keyframes lpFadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-  .lp-card{animation:lpFadeUp 0.5s ease both}
-
-  .lp-left{width:400px;flex-shrink:0;background:linear-gradient(155deg,#152348 0%,#091325 100%);border-right:1px solid rgba(200,169,81,0.12);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 44px;position:relative;overflow:hidden}
+  .lp-left{width:420px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 44px;position:relative;overflow:hidden;border-right:1px solid rgba(255,255,255,0.07)}
 
   .lp-mobile-logo{display:none;align-items:center;gap:12px;margin-bottom:26px}
 
@@ -361,30 +359,33 @@ const css = `
     .lp-left{display:none !important}
     .lp-mobile-logo{display:flex !important}
   }
+
+  .lp-outline-btn{width:100%;border:1px solid rgba(255,255,255,0.25);border-radius:3px;padding:13px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;background:transparent;color:rgba(255,255,255,0.7);transition:all 0.2s}
+  .lp-outline-btn:hover:not(:disabled){border-color:#fff;color:#fff;background:rgba(255,255,255,0.06)}
 `;
 
 const s: Record<string, React.CSSProperties> = {
-  page:       { minHeight:"100vh", display:"flex", fontFamily:"'Jost',sans-serif", background:"#0D1B3E", overflow:"hidden" },
-  orb1:       { position:"fixed", width:500, height:500, borderRadius:"50%", background:"radial-gradient(circle,rgba(200,169,81,0.07) 0%,transparent 70%)", top:-120, left:-120, pointerEvents:"none" },
-  orb2:       { position:"fixed", width:400, height:400, borderRadius:"50%", background:"radial-gradient(circle,rgba(200,169,81,0.04) 0%,transparent 70%)", bottom:-100, right:-100, pointerEvents:"none" },
-  dots:       { position:"fixed", inset:0, pointerEvents:"none", zIndex:0, backgroundImage:"radial-gradient(rgba(200,169,81,0.04) 1px,transparent 1px)", backgroundSize:"28px 28px" },
-  logoMark:   { width:80, height:80, borderRadius:16, marginBottom:36, background:"linear-gradient(135deg,#C8A951,#DEC06A)", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 8px 28px rgba(200,169,81,0.3)", position:"relative", zIndex:1 },
-  right:      { flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"clamp(20px,4vw,40px) clamp(16px,4vw,24px)", background:"linear-gradient(135deg,#0D1B3E 0%,#091325 100%)", position:"relative", overflow:"hidden" },
-  ring1:      { position:"absolute", bottom:-140, right:-140, width:420, height:420, borderRadius:"50%", border:"1px solid rgba(200,169,81,0.06)", pointerEvents:"none" },
-  ring2:      { position:"absolute", bottom:-100, right:-100, width:300, height:300, borderRadius:"50%", border:"1px solid rgba(200,169,81,0.04)", pointerEvents:"none" },
-  card:       { width:"100%", maxWidth:440, background:"rgba(255,255,255,0.03)", border:"1px solid rgba(200,169,81,0.15)", borderRadius:20, padding:"clamp(24px,5vw,44px) clamp(18px,5vw,40px)", backdropFilter:"blur(8px)", position:"relative", zIndex:1 },
-  tag:        { fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:"3px", color:"#C8A951", textTransform:"uppercase" as const, marginBottom:10 },
-  heading:    { fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:"clamp(20px,4vw,26px)" as any, color:"#fff", marginBottom:6 },
-  sub:        { fontFamily:"'Jost',sans-serif", fontSize:13, color:"rgba(255,255,255,0.35)", marginBottom:0 },
-  label:      { display:"block", fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:"2px", color:"rgba(200,169,81,0.75)", textTransform:"uppercase" as const, marginBottom:8 },
-  err:        { color:"#f87171", fontSize:11, fontFamily:"'Jost',sans-serif", marginTop:4, display:"block" },
-  errorBox:   { background:"rgba(192,57,43,0.1)", border:"1px solid rgba(192,57,43,0.3)", borderRadius:8, padding:"12px 16px", color:"#fca5a5", fontFamily:"'Jost',sans-serif", fontSize:13, marginBottom:18 },
-  successBox: { background:"rgba(90,138,90,0.12)", border:"1px solid rgba(90,138,90,0.3)", borderRadius:8, padding:"12px 16px", color:"#86efac", fontFamily:"'Jost',sans-serif", fontSize:13, marginBottom:18 },
-  gLoad:      { background:"rgba(255,255,255,0.04)", border:"1px solid rgba(200,169,81,0.2)", borderRadius:8, padding:"12px", color:"rgba(255,255,255,0.28)", fontFamily:"'Jost',sans-serif", fontSize:13, textAlign:"center" as const },
+  page:       { minHeight:"100vh", display:"flex", fontFamily:"'DM Sans',sans-serif", background:"#000000", overflow:"hidden" },
+  orb1:       { position:"fixed", width:500, height:500, borderRadius:"50%", background:"radial-gradient(circle,rgba(255,255,255,0.05) 0%,transparent 70%)", top:-120, left:-120, pointerEvents:"none" },
+  orb2:       { position:"fixed", width:400, height:400, borderRadius:"50%", background:"radial-gradient(circle,rgba(255,255,255,0.03) 0%,transparent 70%)", bottom:-100, right:-100, pointerEvents:"none" },
+  dots:       { position:"fixed", inset:0, pointerEvents:"none", zIndex:0, backgroundImage:"radial-gradient(rgba(255,255,255,0.03) 1px,transparent 1px)", backgroundSize:"28px 28px" },
+  logoMark:   { width:80, height:80, borderRadius:3, marginBottom:36, background:"#fff", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 8px 28px rgba(255,255,255,0.25)", position:"relative", zIndex:1 },
+  right:      { flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"clamp(20px,4vw,40px) clamp(16px,4vw,24px)", background:"transparent", position:"relative", overflow:"hidden" },
+  ring1:      { position:"absolute", bottom:-140, right:-140, width:420, height:420, borderRadius:"50%", border:"1px solid rgba(255,255,255,0.05)", pointerEvents:"none" },
+  ring2:      { position:"absolute", bottom:-100, right:-100, width:300, height:300, borderRadius:"50%", border:"1px solid rgba(255,255,255,0.03)", pointerEvents:"none" },
+  card:       { width:"100%", maxWidth:440, background:"rgba(0,0,0,0.52)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:3, padding:"clamp(24px,5vw,44px) clamp(18px,5vw,40px)", backdropFilter:"blur(8px)", position:"relative", zIndex:1 },
+  tag:        { fontFamily:"'DM Sans',sans-serif", fontSize:10, fontWeight:400, letterSpacing:"3px", color:"#ffffff", textTransform:"uppercase" as const, marginBottom:10 },
+  heading:    { fontFamily:"'DM Sans',sans-serif", fontWeight:400, fontSize:"clamp(20px,4vw,26px)" as any, color:"#fff", marginBottom:6 },
+  sub:        { fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"rgba(255,255,255,0.35)", marginBottom:0 },
+  label:      { display:"block", fontFamily:"'DM Sans',sans-serif", fontSize:10, fontWeight:400, letterSpacing:"2px", color:"rgba(255,255,255,0.5)", textTransform:"uppercase" as const, marginBottom:8 },
+  err:        { color:"#f87171", fontSize:11, fontFamily:"'DM Sans',sans-serif", marginTop:4, display:"block" },
+  errorBox:   { background:"rgba(192,57,43,0.1)", border:"1px solid rgba(192,57,43,0.3)", borderRadius:3, padding:"12px 16px", color:"#fca5a5", fontFamily:"'DM Sans',sans-serif", fontSize:13, marginBottom:18 },
+  successBox: { background:"rgba(90,138,90,0.12)", border:"1px solid rgba(90,138,90,0.3)", borderRadius:3, padding:"12px 16px", color:"#86efac", fontFamily:"'DM Sans',sans-serif", fontSize:13, marginBottom:18 },
+  gLoad:      { background:"rgba(255,255,255,0.04)", border:"1px solid rgba(200,169,81,0.2)", borderRadius:3, padding:"12px", color:"rgba(255,255,255,0.28)", fontFamily:"'DM Sans',sans-serif", fontSize:13, textAlign:"center" as const },
   divider:    { display:"flex", alignItems:"center", gap:12, marginBottom:18 },
-  divLine:    { flex:1, height:1, background:"linear-gradient(90deg,transparent,rgba(200,169,81,0.2),transparent)", display:"block" },
-  divText:    { fontFamily:"'Jost',sans-serif", fontSize:10, color:"rgba(255,255,255,0.22)", letterSpacing:"1.5px", textTransform:"uppercase" as const, whiteSpace:"nowrap" as const },
+  divLine:    { flex:1, height:1, background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent)", display:"block" },
+  divText:    { fontFamily:"'DM Sans',sans-serif", fontSize:10, color:"rgba(255,255,255,0.22)", letterSpacing:"1.5px", textTransform:"uppercase" as const, whiteSpace:"nowrap" as const },
   ornRow:     { display:"flex", alignItems:"center", gap:10, marginBottom:22, width:"100%" },
-  ornLine:    { flex:1, height:1, background:"linear-gradient(90deg,transparent,rgba(200,169,81,0.4),transparent)" },
-  ornDiamond: { width:5, height:5, background:"#C8A951", transform:"rotate(45deg)", flexShrink:0 },
+  ornLine:    { flex:1, height:1, background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)" },
+  ornDiamond: { width:5, height:5, background:"#ffffff", transform:"rotate(45deg)", flexShrink:0 },
 };

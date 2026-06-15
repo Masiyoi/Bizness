@@ -20,18 +20,18 @@ interface CartItem {
 }
 
 const T = {
-  navy:      '#0D1B3E',
-  navyMid:   '#152348',
-  navyLight: '#1E2F5A',
-  gold:      '#C8A951',
-  goldLight: '#DEC06A',
-  goldPale:  '#F0D98A',
-  cream:     '#F9F5EC',
-  creamMid:  '#F0EAD8',
-  creamDeep: '#E4D9C0',
+  navy:      '#000000',
+  navyMid:   '#111111',
+  navyLight: '#1A1A1A',
+  gold:      '#000000',
+  goldLight: '#333333',
+  goldPale:  '#555555',
+  cream:     '#FFFFFF',
+  creamMid:  '#F5F5F5',
+  creamDeep: '#E0E0E0',
   white:     '#FFFFFF',
-  text:      '#0D1B3E',
-  muted:     '#7A7A8A',
+  text:      '#000000',
+  muted:     '#888888',
 };
 
 type DeliveryZone = 'pickup' | 'cbd' | 'environs' | 'county';
@@ -329,11 +329,11 @@ export default function Cart() {
 
   const inputStyle = (field: keyof ShippingInfo): React.CSSProperties => ({
     width: '100%',
-    fontFamily: "'Jost',sans-serif",
+    fontFamily: "'DM Sans',sans-serif",
     fontSize: 14,
     color: T.navy,
     background: '#fff',
-    border: `1.5px solid ${formErrors[field] && formTouched[field] ? '#E74C3C' : formTouched[field] && shipping[field] ? T.gold : T.creamDeep}`,
+    border: `1.5px solid ${formErrors[field] && formTouched[field] ? '#CC0000' : formTouched[field] && shipping[field] ? '#000' : '#E0E0E0'}`,
     borderRadius: 10,
     padding: '12px 14px',
     outline: 'none',
@@ -345,35 +345,35 @@ export default function Cart() {
   if (loading) return (
     <div style={{ background: T.cream, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
       <div style={{ fontSize: 40 }}>🛒</div>
-      <p style={{ fontFamily: "'Jost',sans-serif", color: T.muted, letterSpacing: '1px', fontSize: 13 }}>Loading your cart…</p>
+      <p style={{ fontFamily: "'DM Sans',sans-serif", color: T.muted, letterSpacing: '1px', fontSize: 13 }}>Loading your cart…</p>
     </div>
   );
 
   return (
-    <div style={{ fontFamily: "'Playfair Display','Georgia',serif", background: T.cream, minHeight: '100vh', color: T.text, overflowX: 'hidden' }}>
+    <div style={{ fontFamily: "'Cormorant Garamond','Georgia',serif", background: T.cream, minHeight: '100vh', color: T.text, overflowX: 'hidden', width: '100%' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Jost:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap');
         *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: ${T.cream}; }
-        .jost { font-family: 'Jost', sans-serif; }
+        .jost { font-family: 'DM Sans', sans-serif; }
         a { text-decoration: none; color: inherit; }
-        .back-btn { background: none; border: none; cursor: pointer; font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: ${T.gold}; padding: 8px 0; display: flex; align-items: center; gap: 8px; transition: opacity 0.2s; min-height: 44px; }
+        .back-btn { background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: ${T.gold}; padding: 8px 0; display: flex; align-items: center; gap: 8px; transition: opacity 0.2s; min-height: 44px; }
         .back-btn:hover { opacity: 0.75; }
         .item-card { background: #fff; border-radius: 16px; border: 1px solid ${T.creamDeep}; transition: all 0.25s; display: flex; align-items: flex-start; gap: 16px; padding: 16px; }
-        .item-card:hover { border-color: ${T.gold}; box-shadow: 0 12px 32px rgba(13,27,62,0.1); }
-        .qty-btn { border: 1px solid ${T.creamDeep}; background: ${T.cream}; border-radius: 8px; width: 36px; height: 36px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; font-family: 'Jost', sans-serif; font-weight: 600; transition: all 0.15s; color: ${T.navy}; flex-shrink: 0; }
-        .qty-btn:hover:not(:disabled) { background: ${T.navy}; color: ${T.goldLight}; border-color: ${T.navy}; }
+        .item-card:hover { border-color: ${T.gold}; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+        .qty-btn { border: 1px solid ${T.creamDeep}; background: ${T.cream}; border-radius: 8px; width: 36px; height: 36px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; font-family: 'DM Sans', sans-serif; font-weight: 600; transition: all 0.15s; color: #000; flex-shrink: 0; }
+        .qty-btn:hover:not(:disabled) { background: #000; color: #fff; border-color: #000; }
         .qty-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .remove-btn { background: none; border: none; cursor: pointer; color: ${T.muted}; font-size: 16px; transition: color 0.15s; padding: 8px; border-radius: 6px; flex-shrink: 0; min-height: 44px; min-width: 44px; display: flex; align-items: center; justify-content: center; }
         .remove-btn:hover { color: #C0392B; background: #FDF0EE; }
-        .cta-primary { font-family: 'Jost', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; border: none; border-radius: 10px; padding: 16px; width: 100%; cursor: pointer; transition: all 0.25s; background: ${T.gold}; color: ${T.navy}; position: relative; overflow: hidden; min-height: 52px; }
+        .cta-primary { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; border: none; border-radius: 10px; padding: 16px; width: 100%; cursor: pointer; transition: all 0.25s; background: ${T.gold}; color: #fff; position: relative; overflow: hidden; min-height: 52px; }
         .cta-primary::before { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.12); transform: translateX(-100%); transition: transform 0.3s; }
         .cta-primary:hover::before { transform: translateX(0); }
-        .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(200,169,81,0.35); }
+        .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.18); }
         .cta-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        .cta-secondary { font-family: 'Jost', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; border: 1px solid ${T.creamDeep}; border-radius: 10px; padding: 14px; width: 100%; cursor: pointer; transition: all 0.2s; background: #fff; color: ${T.navy}; margin-top: 10px; min-height: 48px; }
+        .cta-secondary { font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; border: 1px solid ${T.creamDeep}; border-radius: 10px; padding: 14px; width: 100%; cursor: pointer; transition: all 0.2s; background: #fff; color: #000; margin-top: 10px; min-height: 48px; }
         .cta-secondary:hover { border-color: ${T.gold}; background: ${T.cream}; }
-        .clear-btn { background: none; border: 1px solid ${T.creamDeep}; border-radius: 6px; cursor: pointer; font-family: 'Jost', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: ${T.muted}; padding: 9px 16px; transition: all 0.15s; white-space: nowrap; min-height: 44px; }
+        .clear-btn { background: none; border: 1px solid ${T.creamDeep}; border-radius: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: ${T.muted}; padding: 9px 16px; transition: all 0.15s; white-space: nowrap; min-height: 44px; }
         .clear-btn:hover { border-color: #C0392B; color: #C0392B; }
         .ornament { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
         .ornament-line { flex: 0 0 28px; height: 1px; background: ${T.gold}; }
@@ -382,22 +382,22 @@ export default function Cart() {
         .shipping-card { background: #fff; border: 1px solid ${T.creamDeep}; border-radius: 20px; padding: clamp(18px,4vw,28px); margin-top: 24px; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
         .form-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-        .field-label { font-family: 'Jost', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: ${T.navy}; }
-        .field-error { font-family: 'Jost', sans-serif; font-size: 11px; color: #E74C3C; margin-top: 3px; }
-        input:focus, select:focus, textarea:focus { border-color: ${T.gold} !important; box-shadow: 0 0 0 3px rgba(200,169,81,0.12); }
-        select option { color: ${T.navy}; }
-        .color-select { font-family: 'Jost', sans-serif; font-size: 12px; font-weight: 600; color: ${T.navy}; background: ${T.cream}; border-radius: 8px; padding: 6px 30px 6px 10px; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%230D1B3E' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; transition: border-color 0.2s, box-shadow 0.2s; }
-        .color-select:focus { border-color: ${T.gold} !important; box-shadow: 0 0 0 3px rgba(200,169,81,0.12); }
+        .field-label { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #000; }
+        .field-error { font-family: 'DM Sans', sans-serif; font-size: 11px; color: #E74C3C; margin-top: 3px; }
+        input:focus, select:focus, textarea:focus { border-color: ${T.gold} !important; box-shadow: 0 0 0 3px rgba(0,0,0,0.08); }
+        select option { color: #000; }
+        .color-select { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; color: #000; background: ${T.cream}; border-radius: 8px; padding: 6px 30px 6px 10px; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%230D1B3E' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; transition: border-color 0.2s, box-shadow 0.2s; }
+        .color-select:focus { border-color: ${T.gold} !important; box-shadow: 0 0 0 3px rgba(0,0,0,0.08); }
         .color-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 4px 0 8px; }
-        .color-swatch-pill { display: inline-flex; align-items: center; gap: 5px; background: ${T.cream}; border: 1px solid ${T.creamDeep}; border-radius: 20px; padding: 3px 10px 3px 6px; font-family: 'Jost', sans-serif; font-size: 11px; font-weight: 600; color: ${T.navy}; }
-        .color-nudge { font-family: 'Jost', sans-serif; font-size: 10px; font-weight: 600; color: #B7791F; }
-        .size-nudge { font-family: 'Jost', sans-serif; font-size: 10px; font-weight: 600; color: #B7791F; display: block; margin-top: 4px; }
-        .mobile-checkout-bar { display: none; }
+        .color-swatch-pill { display: inline-flex; align-items: center; gap: 5px; background: ${T.cream}; border: 1px solid ${T.creamDeep}; border-radius: 20px; padding: 3px 10px 3px 6px; font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600; color: #000; }
+        .color-nudge { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 600; color: #555; }
+        .size-nudge { font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 600; color: #555; display: block; margin-top: 4px; }
+        .mobile-checkout-bar { display: none; justify-content: center; }
         .cart-layout { display: grid; grid-template-columns: 1fr 400px; gap: 32px; align-items: start; }
         .sidebar-sticky { position: sticky; top: 24px; }
         .item-thumb { width: 88px; height: 88px; border-radius: 12px; overflow: hidden; flex-shrink: 0; background: ${T.creamMid}; }
         @media (max-width: 768px) {
-          .cart-layout { grid-template-columns: 1fr; gap: 0; }
+          .cart-layout { grid-template-columns: 1fr; gap: 0; width: 100%; }
           .sidebar-sticky { position: static; }
           .item-thumb { width: 68px; height: 68px; border-radius: 10px; }
           .item-card { padding: 12px; gap: 12px; }
@@ -406,7 +406,7 @@ export default function Cart() {
           .form-row { grid-template-columns: 1fr; gap: 0; }
           .shipping-card { border-radius: 16px; margin-top: 16px; }
           .summary-card { border-radius: 16px; }
-          .mobile-checkout-bar { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: ${T.navy}; border-top: 1px solid rgba(200,169,81,0.25); padding: 12px 5%; gap: 12px; align-items: center; z-index: 200; box-shadow: 0 -8px 32px rgba(13,27,62,0.3); }
+          .mobile-checkout-bar { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: #000; border-top: 1px solid #333; padding: 14px 5%; gap: 12px; align-items: center; justify-content: space-between; z-index: 200; box-shadow: 0 -4px 20px rgba(0,0,0,0.2); }
           .cart-body-pad { padding-bottom: 100px !important; }
           .desktop-ctas { display: none; }
         }
@@ -423,7 +423,7 @@ export default function Cart() {
      <Navbar />
 
       {/* ── PAGE BODY ── */}
-      <div className="cart-body-pad" style={{ padding: 'clamp(20px,4vw,40px) clamp(16px,5%,5%) 80px', maxWidth: 1160, margin: '0 auto' }}>
+      <div className="cart-body-pad" style={{ padding: 'clamp(20px,4vw,40px) clamp(16px,4%,5%) 80px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
 
         {error && (
           <div className="jost" style={{ background: '#FDF0EE', border: '1px solid #F5C6C0', borderRadius: 10, padding: '12px 18px', color: '#C0392B', fontSize: 13, marginBottom: 24 }}>
@@ -439,7 +439,7 @@ export default function Cart() {
               <span className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '3px', color: T.gold, textTransform: 'uppercase' }}>Empty</span>
               <div className="ornament-diamond" /><div className="ornament-line" />
             </div>
-            <h2 style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 'clamp(22px,5vw,30px)', color: T.navy, marginBottom: 12 }}>Your cart is empty</h2>
+            <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 'clamp(22px,5vw,30px)', color: T.navy, marginBottom: 12 }}>Your cart is empty</h2>
             <p className="jost" style={{ fontSize: 14, color: T.muted, marginBottom: 32, lineHeight: 1.7, fontWeight: 300 }}>
               Looks like you haven't added anything yet.<br />Discover our premium collection.
             </p>
@@ -459,7 +459,7 @@ export default function Cart() {
                     <span className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '3px', color: T.gold, textTransform: 'uppercase' }}>Cart</span>
                     <div className="ornament-diamond" /><div className="ornament-line" />
                   </div>
-                  <h2 style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 'clamp(18px,4vw,24px)', color: T.navy }}>Your Items</h2>
+                  <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 'clamp(18px,4vw,24px)', color: T.navy }}>Your Items</h2>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <span className="jost" style={{ fontSize: 12, color: T.muted }}>{items.length} item{items.length !== 1 ? 's' : ''}</span>
@@ -492,12 +492,12 @@ export default function Cart() {
                       {/* info */}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         {item.category && (
-                          <div className="item-cat-badge jost" style={{ display: 'inline-block', background: T.navy, color: T.gold, borderRadius: 3, padding: '2px 7px', fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: 5 }}>
+                          <div className="item-cat-badge jost" style={{ display: 'inline-block', background: '#000', color: '#fff', borderRadius: 2, padding: '2px 8px', fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: 5 }}>
                             {item.category}
                           </div>
                         )}
 
-                        <div className="item-name" style={{ fontFamily: "'Playfair Display',serif", fontWeight: 600, fontSize: 15, color: T.navy, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 6 }}>
+                        <div className="item-name" style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 15, color: T.navy, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 6 }}>
                           {item.name}
                         </div>
 
@@ -509,7 +509,7 @@ export default function Cart() {
                               value={chosen}
                               onChange={e => handleColorChange(item.id, e.target.value)}
                               disabled={isBusy}
-                              style={{ border: `1.5px solid ${chosen ? T.gold : T.creamDeep}` }}
+                              style={{ border: `1.5px solid ${chosen ? '#000' : '#E0E0E0'}` }}
                             >
                               <option value="">Select colour…</option>
                               {item.colors.map(c => (
@@ -541,9 +541,9 @@ export default function Cart() {
                                     style={{
                                       padding: '5px 12px',
                                       borderRadius: 7,
-                                      border: active ? `2px solid ${T.gold}` : `1.5px solid ${T.creamDeep}`,
-                                      background: active ? `rgba(200,169,81,0.1)` : T.cream,
-                                      fontFamily: "'Jost',sans-serif",
+                                      border: active ? '2px solid #000' : '1.5px solid #E0E0E0',
+                                      background: active ? '#F0F0F0' : '#fff',
+                                      fontFamily: "'DM Sans',sans-serif",
                                       fontSize: 11,
                                       fontWeight: active ? 700 : 500,
                                       color: active ? T.navy : T.muted,
@@ -593,7 +593,7 @@ export default function Cart() {
                   <span className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '3px', color: T.gold, textTransform: 'uppercase' }}>Delivery Info</span>
                   <div className="ornament-diamond" /><div className="ornament-line" />
                 </div>
-                <h2 style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 'clamp(18px,4vw,22px)', color: T.navy, marginBottom: 6 }}>Shipping Information</h2>
+                <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 'clamp(18px,4vw,22px)', color: T.navy, marginBottom: 6 }}>Shipping Information</h2>
                 <p className="jost" style={{ fontSize: 12, color: T.muted, marginBottom: 24, fontWeight: 300, lineHeight: 1.6 }}>
                   Tell us where to deliver or who's picking up your order.
                 </p>
@@ -635,11 +635,11 @@ export default function Cart() {
                     {DELIVERY_OPTIONS.map(opt => (
                       <div key={opt.value}
                         onClick={() => { setDeliveryZone(opt.value); sessionStorage.setItem('luku_zone', opt.value); }}
-                        style={{ border: `1.5px solid ${deliveryZone === opt.value ? T.gold : T.creamDeep}`, background: deliveryZone === opt.value ? 'rgba(200,169,81,0.07)' : '#fff', borderRadius: 12, padding: '12px 14px', cursor: 'pointer', transition: 'all 0.18s' }}>
+                        style={{ border: `1.5px solid ${deliveryZone === opt.value ? '#000' : '#E0E0E0'}`, background: deliveryZone === opt.value ? '#F5F5F5' : '#fff', borderRadius: 12, padding: '12px 14px', cursor: 'pointer', transition: 'all 0.18s' }}>
                         <div style={{ fontSize: 20, marginBottom: 6 }}>{opt.icon}</div>
                         <div className="jost" style={{ fontSize: 12, fontWeight: 700, color: T.navy, marginBottom: 2 }}>{opt.label}</div>
                         <div className="jost" style={{ fontSize: 10, color: T.muted, lineHeight: 1.4 }}>{opt.sub}</div>
-                        <div className="jost" style={{ fontSize: 13, fontWeight: 800, color: opt.fee === 0 ? '#4A7A4A' : T.gold, marginTop: 6 }}>
+                        <div className="jost" style={{ fontSize: 13, fontWeight: 800, color: opt.fee === 0 ? '#2D6A2D' : '#000', marginTop: 6 }}>
                           {opt.fee === 0 ? 'FREE' : `KSh ${opt.fee}`}
                         </div>
                       </div>
@@ -696,7 +696,7 @@ export default function Cart() {
                   <span className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '3px', color: T.gold, textTransform: 'uppercase' }}>Summary</span>
                   <div className="ornament-diamond" /><div className="ornament-line" />
                 </div>
-                <h2 style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 'clamp(18px,3vw,22px)', color: T.navy, marginBottom: 20 }}>Order Summary</h2>
+                <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 'clamp(18px,3vw,22px)', color: T.navy, marginBottom: 20 }}>Order Summary</h2>
 
                 {(shipping.firstName || shipping.county || shipping.pickupLocation) && (
                   <div style={{ background: T.cream, border: `1px solid ${T.creamDeep}`, borderRadius: 12, padding: '12px 14px', marginBottom: 18 }}>
@@ -739,7 +739,7 @@ export default function Cart() {
                                     <span className="jost" style={{ fontSize: 11, fontWeight: 700, color: T.navy }}>{color}</span>
                                   </div>
                                 ) : (
-                                  <span className="jost" style={{ fontSize: 10, color: '#B7791F', fontWeight: 600 }}>⚠ Not chosen</span>
+                                  <span className="jost" style={{ fontSize: 10, color: '#555', fontWeight: 600 }}>⚠ Not chosen</span>
                                 )}
                               </div>
                             )}
@@ -749,7 +749,7 @@ export default function Cart() {
                                 {size ? (
                                   <span className="jost" style={{ fontSize: 11, fontWeight: 700, color: T.navy }}>{size}</span>
                                 ) : (
-                                  <span className="jost" style={{ fontSize: 10, color: '#B7791F', fontWeight: 600 }}>⚠ Not chosen</span>
+                                  <span className="jost" style={{ fontSize: 10, color: '#555', fontWeight: 600 }}>⚠ Not chosen</span>
                                 )}
                               </div>
                             )}
@@ -766,7 +766,7 @@ export default function Cart() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                   <span className="jost" style={{ fontSize: 13, color: T.muted }}>Delivery</span>
-                  <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: deliveryFee === 0 ? '#4A7A4A' : T.navy }}>
+                  <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: deliveryFee === 0 ? '#2D6A2D' : '#000' }}>
                     {deliveryFee === 0 ? 'FREE 🎉' : `KSh ${deliveryFee}`}
                   </span>
                 </div>
@@ -776,11 +776,15 @@ export default function Cart() {
                   <span className="jost" style={{ fontWeight: 800, fontSize: 22, color: T.navy, letterSpacing: '-0.5px' }}>KSh {total.toLocaleString()}</span>
                 </div>
 
-                <div style={{ background: T.navy, borderRadius: 12, padding: '12px 16px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 12, border: `1px solid rgba(200,169,81,0.2)` }}>
-                  <span style={{ fontSize: 20 }}>📱</span>
-                  <div>
-                    <div className="jost" style={{ fontSize: 12, fontWeight: 700, color: T.goldLight }}>Pay with M-Pesa</div>
-                    <div className="jost" style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>Fast & secure mobile payments</div>
+                <div style={{ border: '1px solid #E0E0E0', borderRadius: 8, padding: '12px 16px', marginBottom: 18 }}>
+                  <div className="jost" style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#888', marginBottom: 10, textAlign: 'center' }}>We Accept</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+                    <img src="/src/assets/M-PESA_LOGO-01.svg" alt="M-Pesa" style={{ height: 22, objectFit: 'contain' }} />
+                    <img src="/src/assets/Airtel_logo.svg" alt="Airtel Money" style={{ height: 22, objectFit: 'contain' }} />
+                    <img src="/src/assets/Visa.png" alt="Visa" style={{ height: 20, objectFit: 'contain' }} />
+                    <img src="/src/assets/MasterCard-Logo.svg" alt="Mastercard" style={{ height: 28, objectFit: 'contain' }} />
+                    <img src="/src/assets/Apple_Pay_logo.svg" alt="Apple Pay" style={{ height: 20, objectFit: 'contain' }} />
+                    <img src="/src/assets/Google_Pay_Logo.svg" alt="Google Pay" style={{ height: 24, objectFit: 'contain' }} />
                   </div>
                 </div>
 
@@ -804,8 +808,8 @@ export default function Cart() {
       {items.length > 0 && (
         <div className="mobile-checkout-bar">
           <div style={{ flex: 1 }}>
-            <div className="jost" style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Total</div>
-            <div className="jost" style={{ fontWeight: 800, fontSize: 18, color: T.white }}>KSh {total.toLocaleString()}</div>
+            <div className="jost" style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', letterSpacing: '1px', textTransform: 'uppercase' }}>Total</div>
+            <div className="jost" style={{ fontWeight: 800, fontSize: 18, color: '#fff' }}>KSh {total.toLocaleString()}</div>
           </div>
           <button className="cta-primary" style={{ width: 'auto', padding: '14px 24px', flex: 1 }} onClick={handleCheckout}>
             Checkout →

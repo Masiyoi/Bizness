@@ -3,8 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
 const T = {
-  navy: "#0D1B3E", navyMid: "#152348", navyLight: "#1E2F5A",
-  gold: "#C8A951", goldLight: "#DEC06A",
+  navy: "#000000", navyMid: "#111111", navyLight: "#1a1a1a",
+  gold: "#ffffff", goldLight: "#e0e0e0",
 };
 
 const getPasswordStrength = (p: string) => {
@@ -72,7 +72,7 @@ export default function ResetPassword() {
       <style>{css}</style>
       <div style={s.orb1} /><div style={s.orb2} /><div style={s.dots} />
       <div style={s.spinner} />
-      <p style={{ fontFamily: "'Jost',sans-serif", color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
+      <p style={{ fontFamily: "'DM Sans',sans-serif", color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
         Validating your reset link…
       </p>
     </div>
@@ -146,9 +146,9 @@ export default function ResetPassword() {
           {/* Icon */}
           <div style={{
             width: 64, height: 64, borderRadius: 16, marginBottom: 24,
-            background: `linear-gradient(135deg,${T.gold},${T.goldLight})`,
+            background: "linear-gradient(135deg,rgba(255,255,255,0.15),rgba(255,255,255,0.05))",
             display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 8px 28px rgba(200,169,81,0.3)", fontSize: 26,
+            boxShadow: "0 8px 28px rgba(255,255,255,0.25)", fontSize: 26,
           }}>
             🔒
           </div>
@@ -163,10 +163,10 @@ export default function ResetPassword() {
 
           {/* Password requirements */}
           <div style={{
-            background: "rgba(200,169,81,0.06)", border: "1px solid rgba(200,169,81,0.18)",
+            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)",
             borderRadius: 10, padding: "12px 16px", marginBottom: 22,
           }}>
-            <div style={{ fontFamily: "'Jost',sans-serif", fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: "1.5px", textTransform: "uppercase" as const, marginBottom: 8 }}>
+            <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "1.5px", textTransform: "uppercase" as const, marginBottom: 8 }}>
               Password Requirements
             </div>
             {[
@@ -179,7 +179,7 @@ export default function ResetPassword() {
                   {req.met ? "✓" : "○"}
                 </span>
                 <span style={{
-                  fontFamily: "'Jost',sans-serif", fontSize: 12,
+                  fontFamily: "'DM Sans',sans-serif", fontSize: 12,
                   color: req.met ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.28)",
                   transition: "color 0.2s",
                 }}>
@@ -206,7 +206,7 @@ export default function ResetPassword() {
                   autoFocus
                   maxLength={128}
                   className="lp-inp"
-                  style={{ paddingRight: 50, borderColor: fieldErrors.password ? "#ef4444" : "rgba(200,169,81,0.22)" }}
+                  style={{ paddingRight: 50, borderColor: fieldErrors.password ? "#ef4444" : "rgba(255,255,255,0.15)" }}
                 />
                 <button
                   type="button"
@@ -227,7 +227,7 @@ export default function ResetPassword() {
                       }} />
                     ))}
                   </div>
-                  <span style={{ fontSize: 11, color: strengthColor[strength], fontWeight: 700, fontFamily: "'Jost',sans-serif", minWidth: 36 }}>
+                  <span style={{ fontSize: 11, color: strengthColor[strength], fontWeight: 700, fontFamily: "'DM Sans',sans-serif", minWidth: 36 }}>
                     {strengthLabel[strength]}
                   </span>
                 </div>
@@ -253,7 +253,7 @@ export default function ResetPassword() {
                       ? "#ef4444"
                       : confirm && confirm === password
                         ? "#22c55e"
-                        : "rgba(200,169,81,0.22)",
+                        : "rgba(255,255,255,0.15)",
                   }}
                 />
                 {/* Match indicator */}
@@ -276,8 +276,8 @@ export default function ResetPassword() {
             </button>
           </form>
 
-          <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(200,169,81,0.18),transparent)", margin: "24px 0" }} />
-          <p style={{ fontFamily: "'Jost',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.28)", textAlign: "center" }}>
+          <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent)", margin: "24px 0" }} />
+          <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.28)", textAlign: "center" }}>
             <span className="lp-link" onClick={() => navigate("/login")}>← Back to Sign In</span>
           </p>
         </div>
@@ -287,51 +287,60 @@ export default function ResetPassword() {
 }
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Jost:wght@300;400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-  .lp-inp{background:rgba(255,255,255,0.05);border:1px solid rgba(200,169,81,0.22);border-radius:8px;padding:13px 16px;color:#fff;font-size:14px;font-family:'Jost',sans-serif;width:100%;outline:none;letter-spacing:0.2px;transition:border-color 0.2s,background 0.2s}
-  .lp-inp:focus{border-color:#C8A951;background:rgba(200,169,81,0.07)}
-  .lp-inp::placeholder{color:rgba(255,255,255,0.22)}
+  .lp-inp{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);border-radius:3px;padding:13px 16px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;width:100%;outline:none;letter-spacing:0.2px;transition:border-color 0.2s,background 0.2s}
+  .lp-inp:focus{border-color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.1)}
+  .lp-inp::placeholder{color:rgba(255,255,255,0.25)}
 
-  .lp-submit{width:100%;border:none;border-radius:6px;padding:14px;font-family:'Jost',sans-serif;font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;background:linear-gradient(135deg,#C8A951,#DEC06A);color:#0D1B3E;transition:all 0.25s}
-  .lp-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 28px rgba(200,169,81,0.35)}
-  .lp-submit:disabled{opacity:0.6;cursor:not-allowed}
+  .lp-submit{width:100%;border:none;border-radius:3px;padding:14px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;cursor:pointer;background:#fff;color:#000;transition:all 0.22s;margin-top:4px}
+  .lp-submit:hover:not(:disabled){background:#e8e8e8;transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,0.5)}
+  .lp-submit:disabled{opacity:0.45;cursor:not-allowed}
 
-  .lp-link{color:#DEC06A;cursor:pointer;font-weight:600;font-family:'Jost',sans-serif;transition:color 0.2s}
-  .lp-link:hover{color:#fff}
+  .lp-link{color:#fff;cursor:pointer;font-weight:500;font-family:'DM Sans',sans-serif;font-size:12px;transition:opacity 0.2s;opacity:0.7}
+  .lp-link:hover{opacity:1}
 
-  @keyframes lpFadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-  .lp-card{animation:lpFadeUp 0.5s ease both}
+  .lp-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;color:rgba(255,255,255,0.35);transition:color 0.2s;padding:0}
+  .lp-eye:hover{color:#fff}
 
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .lp-spinner{width:32px;height:32px;border:3px solid rgba(200,169,81,0.15);border-top-color:#C8A951;border-radius:50%;animation:spin 0.8s linear infinite}
+  @keyframes lpFadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+  .lp-card{animation:lpFadeUp 0.45s ease both}
+
+  .lp-left{width:420px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 44px;position:relative;overflow:hidden;border-right:1px solid rgba(255,255,255,0.07)}
+
+  .lp-mobile-logo{display:none;align-items:center;gap:12px;margin-bottom:26px}
+
+  @media(max-width:768px){
+    .lp-left{display:none !important}
+    .lp-mobile-logo{display:flex !important}
+  }
 `;
 
 const s: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-    fontFamily: "'Jost',sans-serif", background: "#0D1B3E", overflow: "hidden",
+    fontFamily: "'DM Sans',sans-serif", background: "#000000", overflow: "hidden",
     padding: "clamp(20px,4vw,40px) clamp(16px,4vw,24px)", position: "relative",
   },
-  orb1: { position: "fixed", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle,rgba(200,169,81,0.07) 0%,transparent 70%)", top: -120, left: -120, pointerEvents: "none" },
-  orb2: { position: "fixed", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle,rgba(200,169,81,0.04) 0%,transparent 70%)", bottom: -100, right: -100, pointerEvents: "none" },
-  dots: { position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, backgroundImage: "radial-gradient(rgba(200,169,81,0.04) 1px,transparent 1px)", backgroundSize: "28px 28px" },
+  orb1: { position: "fixed", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle,rgba(255,255,255,0.05) 0%,transparent 70%)", top: -120, left: -120, pointerEvents: "none" },
+  orb2: { position: "fixed", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle,rgba(255,255,255,0.03) 0%,transparent 70%)", bottom: -100, right: -100, pointerEvents: "none" },
+  dots: { position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, backgroundImage: "radial-gradient(rgba(255,255,255,0.03) 1px,transparent 1px)", backgroundSize: "28px 28px" },
   centerWrap: { width: "100%", maxWidth: 460, position: "relative", zIndex: 1 },
   card: {
     width: "100%", background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(200,169,81,0.15)", borderRadius: 20,
+    border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20,
     padding: "clamp(28px,5vw,48px) clamp(20px,5vw,42px)",
     backdropFilter: "blur(8px)", position: "relative", zIndex: 1,
   },
-  tag: { fontFamily: "'Jost',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "3px", color: "#C8A951", textTransform: "uppercase" as const, marginBottom: 10 },
-  heading: { fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: "clamp(20px,4vw,26px)" as any, color: "#fff", marginBottom: 0 },
-  sub: { fontFamily: "'Jost',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.35)" },
-  label: { display: "block", fontFamily: "'Jost',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "2px", color: "rgba(200,169,81,0.75)", textTransform: "uppercase" as const, marginBottom: 8 },
-  err: { color: "#f87171", fontSize: 11, fontFamily: "'Jost',sans-serif", marginTop: 5, display: "block" },
-  errorBox: { background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.3)", borderRadius: 8, padding: "12px 16px", color: "#fca5a5", fontFamily: "'Jost',sans-serif", fontSize: 13, marginBottom: 18 },
-  spinner: { width: 32, height: 32, border: "3px solid rgba(200,169,81,0.15)", borderTopColor: "#C8A951", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
+  tag: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "3px", color: "#ffffff", textTransform: "uppercase" as const, marginBottom: 10 },
+  heading: { fontFamily: "'DM Sans',sans-serif", fontWeight: 700, fontSize: "clamp(20px,4vw,26px)" as any, color: "#fff", marginBottom: 0 },
+  sub: { fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.35)" },
+  label: { display: "block", fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "2px", color: "rgba(255,255,255,0.5)", textTransform: "uppercase" as const, marginBottom: 8 },
+  err: { color: "#f87171", fontSize: 11, fontFamily: "'DM Sans',sans-serif", marginTop: 5, display: "block" },
+  errorBox: { background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.3)", borderRadius: 8, padding: "12px 16px", color: "#fca5a5", fontFamily: "'DM Sans',sans-serif", fontSize: 13, marginBottom: 18 },
+  spinner: { width: 32, height: 32, border: "3px solid rgba(255,255,255,0.1)", borderTopColor: "#ffffff", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
   ornRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 24, width: "100%" },
-  ornLine: { flex: 1, height: 1, background: "linear-gradient(90deg,transparent,rgba(200,169,81,0.4),transparent)" },
-  ornDiamond: { width: 5, height: 5, background: "#C8A951", transform: "rotate(45deg)", flexShrink: 0 },
+  ornLine: { flex: 1, height: 1, background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)" },
+  ornDiamond: { width: 5, height: 5, background: "#ffffff", transform: "rotate(45deg)", flexShrink: 0 },
 };

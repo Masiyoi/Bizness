@@ -1,53 +1,55 @@
-// src/pages/PageShell.tsx
-// Shared wrapper: navy hero banner + white content area + footer
+// src/components/common/PageShell.tsx
 import { useNavigate } from 'react-router-dom';
 
 interface PageShellProps {
-  badge:       string;
-  title:       string;
-  subtitle:    string;
-  children:    React.ReactNode;
+  badge:    string;
+  title:    string;
+  subtitle: string;
+  children: React.ReactNode;
 }
 
 export default function PageShell({ badge, title, subtitle, children }: PageShellProps) {
   const navigate = useNavigate();
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F9F6F1', fontFamily: "'Jost','DM Sans',sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: '#f9f9f9', fontFamily: "'DM Sans',sans-serif" }}>
 
       {/* ── Hero banner ── */}
       <div style={{
-        background: '#0A1628',
-        borderBottom: '2px solid #C8A951',
+        background: '#000',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
         padding: 'clamp(48px,8vw,80px) clamp(20px,6%,80px) clamp(32px,5vw,52px)',
         position: 'relative',
         overflow: 'hidden',
       }}>
-        {/* Decorative grid lines */}
+        {/* Dot grid */}
         <div style={{
-          position: 'absolute', inset: 0, opacity: 0.04,
-          backgroundImage: 'repeating-linear-gradient(0deg,#C8A951 0,#C8A951 1px,transparent 1px,transparent 60px),repeating-linear-gradient(90deg,#C8A951 0,#C8A951 1px,transparent 1px,transparent 60px)',
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px,transparent 1px)',
+          backgroundSize: '28px 28px',
         }}/>
+        {/* Subtle orbs */}
+        <div style={{ position:'absolute', width:400, height:400, borderRadius:'50%', background:'radial-gradient(circle,rgba(255,255,255,0.04) 0%,transparent 70%)', top:-100, right:-80, pointerEvents:'none' }}/>
 
         <div style={{ maxWidth: 800, position: 'relative' }}>
-          {/* Back button */}
           <button
             onClick={() => navigate(-1)}
             style={{
-              background: 'rgba(200,169,81,0.1)',
-              border: '1px solid rgba(200,169,81,0.3)',
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.14)',
               borderRadius: 20,
               padding: '5px 14px',
               fontSize: 11,
               fontWeight: 700,
               letterSpacing: '1.5px',
-              color: '#C8A951',
+              color: 'rgba(255,255,255,0.6)',
               cursor: 'pointer',
               textTransform: 'uppercase',
               marginBottom: 24,
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
+              transition: 'all 0.2s',
             }}
           >
             ← Back
@@ -55,33 +57,35 @@ export default function PageShell({ badge, title, subtitle, children }: PageShel
 
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: 'rgba(200,169,81,0.12)',
-            border: '1px solid rgba(200,169,81,0.3)',
+            background: 'rgba(255,255,255,0.07)',
+            border: '1px solid rgba(255,255,255,0.14)',
             borderRadius: 20, padding: '4px 14px',
             fontSize: 10, fontWeight: 700, letterSpacing: '2px',
-            color: '#C8A951', textTransform: 'uppercase',
-            marginBottom: 16,
+            color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase',
+            marginBottom: 16, marginLeft: 10,
           }}>
             {badge}
           </div>
 
           <h1 style={{
-            fontFamily: "'Lora','Georgia',serif",
+            fontFamily: "'DM Sans',sans-serif",
             fontSize: 'clamp(28px,5vw,48px)',
             fontWeight: 700,
             color: '#fff',
             margin: '12px 0 16px',
             lineHeight: 1.1,
+            letterSpacing: '-0.5px',
           }}>
             {title}
           </h1>
 
           <p style={{
-            fontSize: 'clamp(13px,1.6vw,16px)',
-            color: 'rgba(255,255,255,0.45)',
-            maxWidth: 560,
-            lineHeight: 1.8,
+            fontSize: 'clamp(13px,1.6vw,15px)',
+            color: 'rgba(255,255,255,0.38)',
+            maxWidth: 520,
+            lineHeight: 1.85,
             margin: 0,
+            fontWeight: 300,
           }}>
             {subtitle}
           </p>
@@ -100,17 +104,16 @@ export default function PageShell({ badge, title, subtitle, children }: PageShel
 
 export function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 40 }}>
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20,
-      }}>
-        <span style={{ width: 3, height: 22, background: '#C8A951', borderRadius: 2, flexShrink: 0 }}/>
+    <div style={{ marginBottom: 44 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22 }}>
+        <span style={{ width: 2, height: 20, background: '#000', borderRadius: 2, flexShrink: 0 }}/>
         <h2 style={{
-          fontFamily: "'Lora','Georgia',serif",
-          fontSize: 'clamp(16px,2.2vw,20px)',
+          fontFamily: "'DM Sans',sans-serif",
+          fontSize: 'clamp(15px,2.2vw,18px)',
           fontWeight: 700,
-          color: '#0A1628',
+          color: '#0a0a0a',
           margin: 0,
+          letterSpacing: '-0.2px',
         }}>
           {title}
         </h2>
@@ -124,8 +127,9 @@ export function Prose({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       fontSize: 14,
-      color: '#4A4035',
-      lineHeight: 1.9,
+      color: '#444',
+      lineHeight: 1.95,
+      fontWeight: 300,
     }}>
       {children}
     </div>
@@ -135,13 +139,14 @@ export function Prose({ children }: { children: React.ReactNode }) {
 export function AccentCard({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
-      background: 'rgba(200,169,81,0.07)',
-      border: '1px solid rgba(200,169,81,0.25)',
-      borderRadius: 12,
+      background: '#fff',
+      border: '1px solid rgba(0,0,0,0.09)',
+      borderRadius: 10,
       padding: '18px 22px',
       fontSize: 13,
-      color: '#4A4035',
-      lineHeight: 1.8,
+      color: '#444',
+      lineHeight: 1.85,
+      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
     }}>
       {children}
     </div>
@@ -151,26 +156,27 @@ export function AccentCard({ children }: { children: React.ReactNode }) {
 export function FAQItem({ q, a }: { q: string; a: string }) {
   return (
     <div style={{
-      borderBottom: '1px solid rgba(10,22,40,0.08)',
-      padding: '18px 0',
+      borderBottom: '1px solid rgba(0,0,0,0.07)',
+      padding: '20px 0',
     }}>
       <div style={{
-        fontWeight: 700,
+        fontWeight: 600,
         fontSize: 14,
-        color: '#0A1628',
+        color: '#0a0a0a',
         marginBottom: 8,
         display: 'flex',
         alignItems: 'flex-start',
         gap: 10,
       }}>
-        <span style={{ color: '#C8A951', flexShrink: 0 }}>Q.</span>
+        <span style={{ color: 'rgba(0,0,0,0.3)', flexShrink: 0, fontWeight: 300 }}>Q.</span>
         {q}
       </div>
       <div style={{
         fontSize: 13,
-        color: '#5C5048',
-        lineHeight: 1.85,
-        paddingLeft: 20,
+        color: '#666',
+        lineHeight: 1.9,
+        paddingLeft: 22,
+        fontWeight: 300,
       }}>
         {a}
       </div>
@@ -183,22 +189,23 @@ export function InfoGrid({ items }: { items: { icon: string; label: string; valu
     <div style={{
       display: 'grid',
       gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))',
-      gap: 14,
+      gap: 12,
     }}>
       {items.map(item => (
         <div key={item.label} style={{
           background: '#fff',
-          border: '1px solid rgba(10,22,40,0.08)',
-          borderRadius: 12,
+          border: '1px solid rgba(0,0,0,0.08)',
+          borderRadius: 10,
           padding: '16px 18px',
           display: 'flex',
           alignItems: 'flex-start',
           gap: 12,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
         }}>
-          <span style={{ fontSize: 22 }}>{item.icon}</span>
+          <span style={{ fontSize: 20 }}>{item.icon}</span>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: '#C8A951', textTransform: 'uppercase', marginBottom: 4 }}>{item.label}</div>
-            <div style={{ fontSize: 13, color: '#0A1628', fontWeight: 600 }}>{item.value}</div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'rgba(0,0,0,0.35)', textTransform: 'uppercase', marginBottom: 4 }}>{item.label}</div>
+            <div style={{ fontSize: 13, color: '#0a0a0a', fontWeight: 600 }}>{item.value}</div>
           </div>
         </div>
       ))}
