@@ -1,98 +1,192 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { T } from '../constants';
-
-type Tab = 'overview' | 'products' | 'orders' | 'customers';
+import { T, NAV_ITEMS } from '../constants';
+import type { Tab } from '../constants';
 
 interface AdminSidebarProps {
-  tab: Tab;
-  setTab: (t: Tab) => void;
-  productCount: number;
-  activeOrders: number;
+  tab:           Tab;
+  setTab:        (t: Tab) => void;
+  productCount:  number;
+  activeOrders:  number;
   customerCount: number;
-  onRefresh: () => void;
+  onRefresh:     () => void;
 }
+
+const BADGES: Partial<Record<Tab, (p: AdminSidebarProps) => number | null>> = {
+  products:  (p) => p.productCount  || null,
+  orders:    (p) => p.activeOrders  || null,
+  customers: (p) => p.customerCount || null,
+};
 
 export function AdminSidebar({
   tab, setTab, productCount, activeOrders, customerCount, onRefresh,
 }: AdminSidebarProps) {
   const navigate = useNavigate();
-
-  const NAV_ITEMS: { id: Tab; icon: string; label: string; badge: number | null }[] = [
-    { id: 'overview', icon: '📊', label: 'Overview',  badge: null            },
-    { id: 'products', icon: '📦', label: 'Products',  badge: productCount || null },
-    { id: 'orders',   icon: '🧾', label: 'Orders',    badge: activeOrders || null },
-    { id: 'customers', icon: '👥', label: 'Customers', badge: customerCount || null },
-  ];
+  const props    = { tab, setTab, productCount, activeOrders, customerCount, onRefresh };
 
   return (
     <aside
       className="admin-sidebar"
       style={{
-        width:        232,
-        background:   T.navy,
-        padding:      '24px 14px',
+        width:        220,
+        background:   T.black,
+        display:      'flex',
         flexDirection: 'column',
-        gap:          4,
         position:     'sticky',
         top:          0,
         height:       '100vh',
         flexShrink:   0,
-        borderRight:  '1px solid rgba(200,169,81,0.15)',
+        borderRight:  `1px solid ${T.black3}`,
+        overflow:     'hidden',
       }}
     >
-      {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 30, paddingLeft: 4 }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: 10,
-          background: `linear-gradient(135deg,${T.gold},${T.gold2})`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: "'Playfair Display',serif", fontWeight: 800, fontSize: 14,
-          color: T.navy, flexShrink: 0,
-        }}>L</div>
-        <div>
-          <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 15, color: '#fff' }}>Luku Prime</div>
-          <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, color: 'rgba(200,169,81,0.55)', letterSpacing: '1px', textTransform: 'uppercase', marginTop: 1 }}>Control Panel</div>
+      {/* ── Logo ── */}
+      <div style={{
+        padding:      '28px 20px 20px',
+        borderBottom: `1px solid ${T.black3}`,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8,
+            background: T.white,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: "'Cormorant Garamond', serif",
+            fontWeight: 700, fontSize: 16, color: T.black, flexShrink: 0,
+          }}>L</div>
+          <div>
+            <div style={{
+              fontFamily:    "'Cormorant Garamond', serif",
+              fontWeight:    700,
+              fontSize:      15,
+              color:         T.white,
+              letterSpacing: '0.5px',
+            }}>Luku Prime</div>
+            <div style={{
+              fontFamily:    'Jost, sans-serif',
+              fontSize:      9,
+              color:         T.grey1,
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              marginTop:     2,
+            }}>Admin Panel</div>
+          </div>
         </div>
       </div>
 
-      <div style={{ height: 1, background: 'linear-gradient(90deg,transparent,rgba(200,169,81,0.3),transparent)', margin: '0 4px 16px' }}/>
+      {/* ── Nav ── */}
+      <nav style={{ flex: 1, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}>
+        {NAV_ITEMS.map(item => {
+          const isActive = tab === item.id;
+          const badgeFn  = BADGES[item.id];
+          const badge    = badgeFn ? badgeFn(props) : null;
 
-      {/* Nav items */}
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: 3, flex: 1 }}>
-        {NAV_ITEMS.map(t => (
-          <button
-            key={t.id}
-            className={`tbtn ${tab === t.id ? 'on' : 'off'}`}
-            onClick={() => setTab(t.id)}
-          >
-            <span>{t.icon}</span>
-            <span style={{ flex: 1 }}>{t.label}</span>
-            {t.badge !== null && (
-              <span style={{
-                background:   tab === t.id ? 'rgba(13,27,62,0.2)' : T.gold,
-                color:        tab === t.id ? T.navy : '#fff',
-                borderRadius: 20,
-                padding:      '1px 8px',
-                fontSize:     10,
-                fontWeight:   800,
-              }}>{t.badge}</span>
-            )}
-          </button>
-        ))}
+          return (
+            <button
+              key={item.id}
+              onClick={() => setTab(item.id)}
+              style={{
+                display:        'flex',
+                alignItems:     'center',
+                gap:            10,
+                width:          '100%',
+                padding:        '10px 12px',
+                borderRadius:   8,
+                border:         'none',
+                cursor:         'pointer',
+                background:     isActive ? T.white : 'transparent',
+                color:          isActive ? T.black : T.grey1,
+                fontFamily:     'Jost, sans-serif',
+                fontSize:       13,
+                fontWeight:     isActive ? 700 : 500,
+                letterSpacing:  '0.2px',
+                textAlign:      'left',
+                transition:     'all 0.15s',
+                position:       'relative',
+              }}
+              onMouseEnter={e => {
+                if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = T.black2;
+              }}
+              onMouseLeave={e => {
+                if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
+              }}
+            >
+              {/* Active left bar */}
+              {isActive && (
+                <div style={{
+                  position:     'absolute',
+                  left:         0,
+                  top:          '20%',
+                  height:       '60%',
+                  width:        3,
+                  borderRadius: '0 2px 2px 0',
+                  background:   T.white,
+                }}/>
+              )}
+              <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>{item.icon}</span>
+              <span style={{ flex: 1 }}>{item.label}</span>
+              {badge !== null && (
+                <span style={{
+                  background:   isActive ? T.black : T.white,
+                  color:        isActive ? T.white : T.black,
+                  borderRadius: 20,
+                  padding:      '1px 7px',
+                  fontSize:     10,
+                  fontWeight:   700,
+                  fontFamily:   'Jost, sans-serif',
+                  flexShrink:   0,
+                }}>{badge}</span>
+              )}
+            </button>
+          );
+        })}
       </nav>
 
-      {/* Footer buttons */}
-      <div style={{ borderTop: '1px solid rgba(200,169,81,0.15)', paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* ── Footer ── */}
+      <div style={{
+        padding:    '14px 10px',
+        borderTop:  `1px solid ${T.black3}`,
+        display:    'flex',
+        flexDirection: 'column',
+        gap:        6,
+      }}>
         <button
-          className="btn"
-          style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.55)', border: '1px solid rgba(255,255,255,0.1)', width: '100%', justifyContent: 'center', padding: '10px' }}
           onClick={onRefresh}
-        >🔄 Refresh</button>
+          style={{
+            width:       '100%',
+            padding:     '9px 12px',
+            borderRadius: 8,
+            border:      `1px solid ${T.black3}`,
+            background:  'transparent',
+            color:       T.grey1,
+            fontFamily:  'Jost, sans-serif',
+            fontSize:    12,
+            fontWeight:  600,
+            cursor:      'pointer',
+            display:     'flex',
+            alignItems:  'center',
+            gap:         8,
+            letterSpacing: '0.3px',
+          }}
+        >↺ Refresh data</button>
+
         <button
-          className="btn"
-          style={{ background: 'rgba(200,169,81,0.1)', color: T.gold2, border: '1px solid rgba(200,169,81,0.2)', width: '100%', justifyContent: 'center', padding: '10px' }}
           onClick={() => navigate('/')}
+          style={{
+            width:       '100%',
+            padding:     '9px 12px',
+            borderRadius: 8,
+            border:      `1px solid ${T.black3}`,
+            background:  'transparent',
+            color:       T.grey1,
+            fontFamily:  'Jost, sans-serif',
+            fontSize:    12,
+            fontWeight:  600,
+            cursor:      'pointer',
+            display:     'flex',
+            alignItems:  'center',
+            gap:         8,
+            letterSpacing: '0.3px',
+          }}
         >← Back to Store</button>
       </div>
     </aside>

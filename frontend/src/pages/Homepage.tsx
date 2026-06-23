@@ -6,11 +6,13 @@ import axios                                  from 'axios';
 import Navbar          from '../components/common/Navbar';
 import Footer          from '../components/common/Footer';
 import InstagramStrip  from '../components/common/InstagramStrip';
+import AuthPopup from '../components/common/AuthPopup';
 import ProductCard     from '../components/home/ProductCard';
 import ReviewSection   from '../components/home/ReviewSection';
 import VideoCarousel, { VIDEO_TILES } from '../components/home/VideoCarousel';
 
 import { readUser } from '../constants/theme';
+import WhatsAppLogo from '../assets/Whatsapplogo.jpg';
 import type { Product, HomepageReview, User } from '../constants/theme';
 
 const PRODUCTS_PER_PAGE = 8;
@@ -28,12 +30,13 @@ const css = `
     --rule:  rgba(0,0,0,0.10);
     --f-display: 'Cormorant Garamond', Georgia, serif;
     --f-sans:    'DM Sans', system-ui, sans-serif;
-    --nav-h: 96px; /* announcement (32px) + nav (64px) */
+    --nav-h: 64px; /* fixed nav height */
   }
 
   @keyframes fadeUp { from { opacity:0; transform:translateY(28px) } to { opacity:1; transform:translateY(0) } }
   @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
   @keyframes slideL { from { transform:translateX(0) } to { transform:translateX(-50%) } }
+  @keyframes marqueeScroll { from { transform:translateX(0) } to { transform:translateX(-50%) } }
   @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
   .lp-fade-up { animation: fadeUp 0.6s cubic-bezier(.22,.68,0,1.2) both }
@@ -42,86 +45,89 @@ const css = `
   .lp-d3 { animation-delay: 0.25s }
   .lp-d4 { animation-delay: 0.35s }
 
-  /* ── Hero — pulls up behind the sticky navbar ── */
-  .lp-hero {
-    min-height: 100vh;
-    /* negative margin pulls section up by the total navbar height so image
-       bleeds underneath the transparent nav; padding-top compensates so
-       text content stays below the nav bar */
-    margin-top: calc(-1 * var(--nav-h));
-    padding-top: var(--nav-h);
+  /* ── Split Hero (Vicinity-style) ── */
+  .lp-hero-split {
     display: grid; grid-template-columns: 1fr 1fr;
-    position: relative; overflow: hidden;
+    min-height: 100vh;
     border-bottom: 1px solid var(--rule);
   }
-  .lp-hero-left {
-    display: flex; flex-direction: column; justify-content: flex-end;
-    padding: clamp(36px,6vw,96px);
-    background: var(--paper);
-    position: relative; z-index: 1;
+  @media(max-width:640px) {
+    .lp-hero-split { grid-template-columns: 1fr 1fr; min-height: auto }
   }
-  .lp-hero-right {
-    position: relative; overflow: hidden; background: var(--ink);
+
+  .lp-hero-panel {
+    position: relative; overflow: hidden;
+    min-height: 100vh; cursor: pointer;
   }
-  .lp-hero-right img {
+  @media(max-width:640px) { .lp-hero-panel { min-height: 72vw } }
+
+  .lp-hero-panel-img {
+    position: absolute; inset: 0;
     width: 100%; height: 100%; object-fit: cover;
-    filter: grayscale(100%) contrast(1.1);
-    opacity: 0.85; transition: transform 8s ease;
+    transition: transform 7s ease; will-change: transform;
+    filter: brightness(0.72);
   }
-  .lp-hero-right:hover img { transform: scale(1.04) }
+  .lp-hero-panel:hover .lp-hero-panel-img { transform: scale(1.05) }
 
-  /* Mobile hero — image behind text, full bleed */
-  @media(max-width:768px) {
-    .lp-hero {
-      grid-template-columns: 1fr;
-      min-height: 100vh;
-    }
-    .lp-hero-right {
-      position: absolute; inset: 0; z-index: 0;
-    }
-    .lp-hero-right img { opacity: 0.38; }
-    .lp-hero-left {
-      position: relative; z-index: 1;
-      justify-content: flex-end;
-      min-height: 100vh;
-      padding: 32px 24px 56px;
-      background: transparent;
-    }
+  .lp-hero-panel-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.1) 55%, transparent 100%);
+    pointer-events: none;
   }
 
-  .lp-hero-eyebrow {
-    font-family: var(--f-sans); font-size: 10px; font-weight: 500;
+  .lp-hero-panel + .lp-hero-panel {
+    border-left: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .lp-hero-panel-content {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: clamp(14px,3vw,56px);
+    display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+  }
+
+  .lp-hero-panel-eyebrow {
+    font-family: var(--f-sans); font-size: 10px; font-weight: 600;
     letter-spacing: 4px; text-transform: uppercase;
-    color: var(--mid); margin-bottom: 20px;
-    display: flex; align-items: center; gap: 12px;
+    color: rgba(255,255,255,0.65);
   }
-  .lp-hero-eyebrow::before { content: ''; width: 32px; height: 1px; background: var(--mid) }
-  @media(max-width:768px) {
-    .lp-hero-eyebrow { color: rgba(255,255,255,0.7) }
-    .lp-hero-eyebrow::before { background: rgba(255,255,255,0.5) }
+  @media(max-width:640px) { .lp-hero-panel-eyebrow { display: none } }
+
+  .lp-hero-panel-title {
+    font-family: var(--f-sans); font-size: clamp(22px, 5vw, 80px);
+    font-weight: 800; text-transform: uppercase;
+    color: #fff; line-height: 0.92; letter-spacing: -1px;
+    text-shadow: 0 2px 24px rgba(0,0,0,0.4);
   }
-  .lp-hero-title {
-    font-family: var(--f-display); font-weight: 300;
-    font-size: clamp(52px, 11vw, 108px); line-height: 0.95;
-    color: var(--ink); letter-spacing: -2px;
-    margin-bottom: 24px;
+
+  .lp-hero-panel-ctas {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px;
   }
-  .lp-hero-title em { font-style: italic; color: var(--mid) }
-  @media(max-width:768px) {
-    .lp-hero-title { color: #fff; letter-spacing: -1px }
-    .lp-hero-title em { color: rgba(255,255,255,0.6) }
+
+  .lp-hero-cta-primary {
+    font-family: var(--f-sans); font-size: 11px; font-weight: 700;
+    letter-spacing: 3px; text-transform: uppercase;
+    background: #fff; color: #000;
+    border: none; padding: 14px 28px; cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
   }
-  .lp-hero-sub {
-    font-family: var(--f-sans); font-size: 14px; font-weight: 300;
-    color: var(--mid); line-height: 1.7; max-width: 380px;
-    margin-bottom: 36px;
+  @media(max-width:640px) {
+    .lp-hero-cta-primary { font-size: 9px; letter-spacing: 1.5px; padding: 10px 14px }
   }
-  @media(max-width:768px) { .lp-hero-sub { color: rgba(255,255,255,0.75); font-size: 13px } }
-  .lp-hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; align-items: center }
-  @media(max-width:768px) {
-    .lp-hero-ctas { flex-direction: column; align-items: stretch }
-    .lp-hero-ctas button { text-align: center; width: 100% }
+  .lp-hero-cta-primary:hover { background: #e5e5e5; transform: translateY(-1px) }
+
+  .lp-hero-cta-ghost {
+    font-family: var(--f-sans); font-size: 11px; font-weight: 600;
+    letter-spacing: 3px; text-transform: uppercase;
+    background: transparent; color: #fff;
+    border: 1px solid rgba(255,255,255,0.5); padding: 14px 28px; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
   }
+  @media(max-width:640px) {
+    .lp-hero-cta-ghost { font-size: 9px; letter-spacing: 1.5px; padding: 10px 14px }
+  }
+  .lp-hero-cta-ghost:hover { border-color: #fff; background: rgba(255,255,255,0.08) }
+
+  /* keep .lp-btn-primary / .lp-btn-ghost for other sections */
   .lp-btn-primary {
     font-family: var(--f-sans); font-size: 11px; font-weight: 500;
     letter-spacing: 3px; text-transform: uppercase;
@@ -129,7 +135,6 @@ const css = `
     border: none; padding: 16px 36px; cursor: pointer;
     transition: background 0.2s, transform 0.15s;
   }
-  @media(max-width:768px) { .lp-btn-primary { background: #fff; color: #000 } }
   .lp-btn-primary:hover { background: #222; transform: translateY(-1px) }
   .lp-btn-ghost {
     font-family: var(--f-sans); font-size: 11px; font-weight: 500;
@@ -138,23 +143,7 @@ const css = `
     border: 1px solid rgba(0,0,0,0.25); padding: 16px 36px; cursor: pointer;
     transition: border-color 0.2s, background 0.2s;
   }
-  @media(max-width:768px) { .lp-btn-ghost { color: #fff; border-color: rgba(255,255,255,0.4) } }
   .lp-btn-ghost:hover { border-color: var(--ink); background: rgba(0,0,0,0.03) }
-  .lp-hero-counter {
-    position: absolute; bottom: clamp(48px,6vw,96px); right: clamp(48px,6vw,96px);
-    font-family: var(--f-sans); font-size: 10px; font-weight: 500;
-    letter-spacing: 2px; color: rgba(255,255,255,0.5);
-    display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
-  }
-  @media(max-width:768px) { .lp-hero-counter { display: none } }
-  .lp-hero-counter-line {
-    width: 48px; height: 1px; background: rgba(255,255,255,0.3);
-    position: relative; overflow: hidden;
-  }
-  .lp-hero-counter-line::after {
-    content: ''; position: absolute; left: 0; top: 0;
-    width: 40%; height: 100%; background: rgba(255,255,255,0.8);
-  }
 
   /* ── Stats bar ── */
   .lp-stats {
@@ -162,20 +151,26 @@ const css = `
     border-bottom: 1px solid var(--rule);
   }
   .lp-stat {
-    padding: clamp(24px,4vw,56px) clamp(20px,4vw,48px);
-    border-right: 1px solid var(--rule); text-align: center;
+    padding: clamp(20px,3.5vw,48px) clamp(16px,3vw,40px);
+    border-right: 1px solid var(--rule);
+    display: flex; align-items: center; justify-content: center;
+    gap: clamp(10px,1.5vw,20px);
   }
   .lp-stat:last-child { border-right: none }
-  .lp-stat-num {
-    font-family: var(--f-display); font-weight: 300;
-    font-size: clamp(36px,6vw,72px); color: var(--ink); line-height: 1;
-    margin-bottom: 6px;
+  .lp-stat-icon {
+    color: var(--ink); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
   }
   .lp-stat-label {
-    font-family: var(--f-sans); font-size: 10px; font-weight: 500;
-    letter-spacing: 2px; text-transform: uppercase; color: var(--mid);
+    font-family: var(--f-sans); font-size: clamp(10px,1.1vw,13px);
+    font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--ink); line-height: 1.4;
   }
-  @media(max-width:400px) { .lp-stat-label { font-size: 9px; letter-spacing: 1px } }
+  @media(max-width:640px) {
+    .lp-stat { flex-direction: column; text-align: center; gap: 8px; padding: 20px 10px }
+    .lp-stat-icon svg { width: 28px; height: 28px }
+    .lp-stat-label { font-size: 9px; letter-spacing: 1px }
+  }
 
   /* ── Section header ── */
   .lp-section-head {
@@ -340,10 +335,48 @@ const css = `
     outline: none; appearance: none; -webkit-appearance: none;
   }
   .lp-sort:hover { border-color: var(--ink) }
+
+  /* ── Floating WhatsApp Button ── */
+  .lp-wa-fab {
+    position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+    width: 58px; height: 58px; border-radius: 50%;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+    cursor: pointer; border: none; background: none; padding: 0;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lp-wa-fab:hover {
+    transform: translateY(-3px) scale(1.06);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.22);
+  }
+  .lp-wa-fab img {
+    width: 58px; height: 58px;
+    border-radius: 50%; object-fit: cover; display: block;
+  }
+  .lp-wa-tooltip {
+    position: fixed; bottom: 96px; right: 28px; z-index: 9999;
+    background: #0a0a0a; color: #fff;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 11px; font-weight: 500; letter-spacing: 1px;
+    padding: 7px 14px; border-radius: 4px;
+    white-space: nowrap; pointer-events: none;
+    opacity: 0; transform: translateY(4px);
+    transition: opacity 0.18s, transform 0.18s;
+  }
+  .lp-wa-fab:hover + .lp-wa-tooltip,
+  .lp-wa-fab:focus + .lp-wa-tooltip {
+    opacity: 1; transform: translateY(0);
+  }
+  @media(max-width:640px) {
+    .lp-wa-fab { width: 50px; height: 50px; bottom: 20px; right: 20px; }
+    .lp-wa-fab img { width: 50px; height: 50px; }
+    .lp-wa-tooltip { display: none; }
+  }
 `;
 
 /* ─── Announcement Bar ───────────────────────────────────────────────────── */
 const ITEMS = [
+  'FAST SHIPPING ACROSS KENYA →',
   'NAIROBI CBD DELIVERY — KSH 100',
   'FREE SHOP PICKUP',
   'NEW DROPS EVERY FRIDAY',
@@ -352,36 +385,48 @@ const ITEMS = [
   'SECURE M-PESA CHECKOUT',
   '30-DAY EASY RETURNS',
   'EXCLUSIVE SNEAKER DROPS',
+  'WORLDWIDE SHIPPING AVAILABLE',
 ];
 
 /* ─── Hero ───────────────────────────────────────────────────────────────── */
-function Hero({ onShop }: { onShop: () => void }) {
+function Hero({ onShop }: { onShop: (cat?: string) => void }) {
+  const navigate = useNavigate();
   return (
-    <section className="lp-hero">
-      <div className="lp-hero-left lp-fade-up">
-        <p className="lp-hero-eyebrow lp-fade-up lp-d1">New Collection 2025</p>
-        <h1 className="lp-hero-title lp-fade-up lp-d2">
-          Luku<br/>ni Prime<br/><em>Siku Zote</em>
-        </h1>
-        <p className="lp-hero-sub lp-fade-up lp-d3">
-          Premium fashion arrivals curated for those who demand the finest —
-          delivered across Kenya.
-        </p>
-        <div className="lp-hero-ctas lp-fade-up lp-d4">
-          <button className="lp-btn-primary" onClick={onShop}>Shop Collection</button>
-          <button className="lp-btn-ghost" onClick={() => document.getElementById('editorial')?.scrollIntoView({behavior:'smooth'})}>
-            Explore Lookbook
-          </button>
+    <section className="lp-hero-split">
+      {/* Panel 1 — New Collection */}
+      <div className="lp-hero-panel lp-fade-up lp-d1">
+        <img
+          src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=1200&q=85"
+          alt="New Collection"
+          className="lp-hero-panel-img"
+        />
+        <div className="lp-hero-panel-overlay" />
+        <div className="lp-hero-panel-content">
+          <p className="lp-hero-panel-eyebrow">New Collection 2025</p>
+          <h2 className="lp-hero-panel-title">New<br/>Arrivals</h2>
+          <div className="lp-hero-panel-ctas">
+            <button className="lp-hero-cta-primary" onClick={() => onShop()}>Shop Collection</button>
+            <button className="lp-hero-cta-ghost" onClick={() => document.getElementById('editorial')?.scrollIntoView({behavior:'smooth'})}>
+              Explore Lookbook
+            </button>
+          </div>
         </div>
       </div>
-      <div className="lp-hero-right">
+
+      {/* Panel 2 — Most Wanted */}
+      <div className="lp-hero-panel lp-fade-up lp-d2">
         <img
-          src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200&q=80"
-          alt="Luku Prime Collection"
+          src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200&q=85"
+          alt="Most Wanted"
+          className="lp-hero-panel-img"
         />
-        <div className="lp-hero-counter">
-          <span>01 / 03</span>
-          <div className="lp-hero-counter-line"/>
+        <div className="lp-hero-panel-overlay" />
+        <div className="lp-hero-panel-content">
+          <p className="lp-hero-panel-eyebrow">Top Picks</p>
+          <h2 className="lp-hero-panel-title">Most<br/>Wanted</h2>
+          <div className="lp-hero-panel-ctas">
+            <button className="lp-hero-cta-primary" onClick={() => navigate('/categories/best-sellers')}>Shop Now</button>
+          </div>
         </div>
       </div>
     </section>
@@ -390,18 +435,20 @@ function Hero({ onShop }: { onShop: () => void }) {
 
 /* ─── Stats bar ──────────────────────────────────────────────────────────── */
 function StatsBar({ productCount }: { productCount: number }) {
+  const items = [
+    { line1: 'WORLDWIDE', line2: 'SHIPPING', icon: (<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>) },
+    { line1: '30-DAY EASY', line2: 'RETURNS', icon: (<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.56"/></svg>) },
+    { line1: 'OVER 4,200', line2: 'CUSTOMERS', icon: (<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>) },
+  ];
   return (
     <div className="lp-stats">
-      {[
-        { num: `${productCount}+`, label: 'Products Available' },
-        { num: '47',               label: 'Brands Carried'     },
-        { num: '4,200+',           label: 'Happy Customers'    },
-      ].map(({ num, label }) => (
-        <div key={label} className="lp-stat">
-          <div className="lp-stat-num">{num}</div>
-          <div className="lp-stat-label">{label}</div>
+      {items.map(({ icon, line1, line2 }) => (
+        <div key={line1} className="lp-stat">
+          <div className="lp-stat-icon">{icon}</div>
+          <div className="lp-stat-label"><span>{line1}</span><br/><span>{line2}</span></div>
         </div>
       ))}
+
     </div>
   );
 }
@@ -559,6 +606,8 @@ export default function Homepage() {
     <div style={{ background:'#FAFAFA', minHeight:'100vh', color:'#0A0A0A', overflowX:'hidden' }}>
       <style>{css}</style>
 
+      <AuthPopup onAuthSuccess={(u) => { setUser(u); fetchCart(); fetchWishlist(); }} />
+
       {/* transparentOnTop enables the hero-bleed effect */}
       <Navbar
         transparentOnTop
@@ -571,7 +620,7 @@ export default function Homepage() {
       />
 
       {/* Hero pulls up behind the navbar via margin-top: calc(-1 * var(--nav-h)) */}
-      <Hero onShop={() => selectCategory('All')} />
+      <Hero onShop={(cat?: string) => selectCategory(cat ?? 'All')} />
       <StatsBar productCount={products.length} />
 
       <div className="lp-video-wrap">
@@ -696,6 +745,20 @@ export default function Homepage() {
       <InstagramStrip handle="@lukuprime" profileUrl="https://instagram.com/lukuprime" limit={12} />
       <ReviewSection reviews={reviews} loading={reviewsLoading} isAdmin={user?.role === 'admin'} />
       <Footer />
+
+
+      {/* Floating WhatsApp Button */}
+      <a
+        href="https://wa.me/254707099935"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="lp-wa-fab"
+        aria-label="Chat with us on WhatsApp"
+      >
+        <img src={WhatsAppLogo} alt="WhatsApp" />
+      </a>
+      <span className="lp-wa-tooltip">Chat with us on WhatsApp</span>
+
     </div>
   );
 }

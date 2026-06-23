@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 import type { Product, Order } from './types';
+import type { Tab } from './constants';
 import { T } from './constants';
 import { authH } from './utils';
 import { useAdminData } from './hooks/useAdminData';
@@ -12,14 +13,14 @@ import { AdminSidebar }     from './components/AdminSidebar';
 import { AdminMobileNav }   from './components/AdminMobileNav';
 import { ConfirmDialog }    from './components/ConfirmDialog';
 import { OverviewTab }      from './components/overview/OverviewTab';
+import { AnalyticsTab }     from './components/analytics/AnalyticsTab';
 import { ProductsTab }      from './components/products/ProductsTab';
 import { AddProductWizard } from './components/products/AddProductWizard';
 import { OrdersTab }        from './components/orders/OrdersTab';
 import { OrderDetailModal } from './components/orders/OrderDetailModal';
 import { OrderStatusModal } from './components/orders/OrderStatusModal';
-import { CustomersTab } from './components/customers/CustomersTab';
-
-type Tab = 'overview' | 'products' | 'orders' | 'customers';
+import { CustomersTab }     from './components/customers/CustomersTab';
+import { ReportsTab }       from './components/reports/ReportsTab';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -29,11 +30,11 @@ export default function AdminDashboard() {
     showToast, fetchAll,
   } = useAdminData();
 
-  const [tab,         setTab]         = useState<Tab>('overview');
-  const [showWizard,  setShowWizard]  = useState(false);
-  const [editProduct, setEditProduct] = useState<Product | null>(null);
-  const [viewOrder,   setViewOrder]   = useState<Order | null>(null);
-  const [editOrder,   setEditOrder]   = useState<Order | null>(null);
+  const [tab,          setTab]          = useState<Tab>('overview');
+  const [showWizard,   setShowWizard]   = useState(false);
+  const [editProduct,  setEditProduct]  = useState<Product | null>(null);
+  const [viewOrder,    setViewOrder]    = useState<Order | null>(null);
+  const [editOrder,    setEditOrder]    = useState<Order | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export default function AdminDashboard() {
   const handleWizardSaved = () => {
     setShowWizard(false);
     setEditProduct(null);
-    showToast(editProduct ? '✓ Product updated!' : '✓ Product published to store!');
+    showToast(editProduct ? '✓ Product updated' : '✓ Product published');
     fetchAll();
   };
 
@@ -62,67 +63,193 @@ export default function AdminDashboard() {
     }
   };
 
+  // Shared nav badge props
+  const navBadgeProps = {
+    productCount:  products.length,
+    activeOrders:  stats?.activeOrders ?? 0,
+    customerCount: stats?.totalUsers   ?? 0,
+  };
+
   return (
-    <div style={{ minHeight: '100vh', background: T.cream, fontFamily: "'Jost','DM Sans',sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: T.grey5, fontFamily: "'Jost','DM Sans',sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Jost:wght@300;400;500;600;700&display=swap');
-        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        .tbtn{font-family:'Jost',sans-serif;font-size:13px;font-weight:600;padding:11px 14px;border-radius:9px;border:none;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:9px;width:100%;text-align:left;letter-spacing:0.3px}
-        .tbtn.on{background:linear-gradient(135deg,${T.gold},${T.gold2});color:${T.navy};box-shadow:0 4px 14px rgba(200,169,81,0.3)}
-        .tbtn.off{background:transparent;color:${T.muted}}
-        .tbtn.off:hover{background:rgba(200,169,81,0.08);color:${T.navy}}
-        .btn{font-family:'Jost',sans-serif;font-size:12px;font-weight:600;border-radius:8px;border:none;cursor:pointer;padding:9px 16px;transition:filter 0.15s,transform 0.1s;display:inline-flex;align-items:center;gap:6px;letter-spacing:0.3px}
-        .btn:hover:not(:disabled){filter:brightness(0.93);transform:translateY(-1px)}
-        .btn:disabled{opacity:0.6;cursor:not-allowed}
-        .row{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid ${T.cream3};border-radius:14px;padding:14px 18px;transition:all 0.2s}
-        .row:hover{box-shadow:0 4px 18px rgba(13,27,62,0.08);border-color:${T.gold}}
-        .kpi{border-radius:16px;padding:20px 22px;transition:transform 0.2s,box-shadow 0.2s}
-        .kpi:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(13,27,62,0.1)}
-        .panel{background:#fff;border:1px solid ${T.cream3};border-radius:16px;padding:20px}
-        .overlay2{position:fixed;inset:0;background:rgba(13,27,62,0.6);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
-        .modal2{background:#fff;border-radius:20px;padding:32px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;box-shadow:0 32px 80px rgba(13,27,62,0.25)}
-        .track-opt{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:9px;cursor:pointer;transition:background 0.15s;font-family:'Jost',sans-serif;font-size:13px;color:${T.navy}}
-        .track-opt:hover{background:${T.cream}}
-        .track-opt.cur{background:rgba(200,169,81,0.1);color:${T.gold};font-weight:700}
-        .sel2{background:${T.cream};border:1.5px solid ${T.cream3};border-radius:9px;padding:11px 14px;font-family:'Jost',sans-serif;font-size:14px;color:${T.navy};width:100%;outline:none;cursor:pointer}
-        .order-card-clickable{cursor:pointer;transition:all 0.2s}
-        .order-card-clickable:hover{border-color:${T.gold}!important;box-shadow:0 4px 20px rgba(13,27,62,0.1)!important;transform:translateY(-1px)}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes wizardIn{from{opacity:0;transform:scale(0.94) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
-        @keyframes slideIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        .fade-up{animation:fadeUp 0.35s ease both}
-        .slide-in{animation:slideIn 0.28s ease both}
-        .spinner{width:36px;height:36px;border:3px solid ${T.cream3};border-top-color:${T.gold};border-radius:50%;animation:spin 0.8s linear infinite}
-        ::-webkit-scrollbar{width:5px}
-        ::-webkit-scrollbar-thumb{background:${T.cream3};border-radius:6px}
-        .mob-nav{display:none}
-        .admin-sidebar{display:flex}
-        @media(max-width:768px){
-          .admin-sidebar{display:none !important}
-          .mob-nav{display:flex !important;position:fixed;bottom:0;left:0;right:0;z-index:200;background:${T.navy};border-top:1px solid rgba(200,169,81,0.2);height:60px;box-shadow:0 -8px 32px rgba(13,27,62,0.3)}
-          .mob-nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;cursor:pointer;background:transparent;padding:6px 4px;font-family:'Jost',sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s}
-          .mob-nav-btn.on{color:${T.gold}}
-          .mob-nav-btn.off{color:rgba(255,255,255,0.4)}
-          .mob-nav-btn .nav-icon{font-size:19px;line-height:1}
-          .admin-main{padding:14px 14px 80px !important}
-          .admin-main h1{font-size:20px !important}
-          .kpi-grid{grid-template-columns:repeat(2,1fr) !important;gap:9px !important;margin-bottom:14px !important}
-          .kpi{padding:13px 12px !important}
-          .overview-charts{grid-template-columns:1fr !important;gap:12px !important}
-          .overview-bottom{grid-template-columns:1fr !important;gap:12px !important}
-          .row{flex-wrap:wrap !important;gap:8px !important;padding:12px !important;align-items:flex-start !important}
-          .row-actions{width:100%;justify-content:flex-end;margin-top:2px}
-          .row-price{min-width:unset !important;text-align:left !important;flex:1}
-          .order-card{padding:14px !important}
-          .order-card-inner{flex-direction:column !important;align-items:stretch !important;gap:12px !important}
-          .order-card-right{flex-direction:row !important;align-items:center !important;justify-content:space-between !important;width:100% !important}
-          .order-meta-grid{grid-template-columns:1fr 1fr !important}
-          .modal2{padding:20px 16px !important;border-radius:16px !important}
-          .dash-date{display:none !important}
-          .dash-header{flex-wrap:wrap;gap:10px}
-          .products-header{flex-wrap:wrap;gap:10px}
-          .products-header h1{flex:1}
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@300;400;500;600;700&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ── Buttons ── */
+        .btn {
+          font-family: 'Jost', sans-serif;
+          font-size: 12px;
+          font-weight: 600;
+          border-radius: 7px;
+          border: none;
+          cursor: pointer;
+          padding: 8px 14px;
+          transition: filter 0.15s, transform 0.1s;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          letter-spacing: 0.3px;
+        }
+        .btn:hover:not(:disabled) { filter: brightness(0.9); transform: translateY(-1px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-primary {
+          background: ${T.black};
+          color: ${T.white};
+        }
+        .btn-secondary {
+          background: ${T.white};
+          color: ${T.black};
+          border: 1px solid ${T.grey3} !important;
+        }
+        .btn-danger {
+          background: #DC2626;
+          color: ${T.white};
+        }
+
+        /* ── Cards / panels ── */
+        .panel {
+          background: ${T.white};
+          border: 1px solid ${T.grey3};
+          border-radius: 12px;
+          padding: 20px;
+        }
+
+        /* ── Product / order rows ── */
+        .row {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          background: ${T.white};
+          border: 1px solid ${T.grey3};
+          border-radius: 12px;
+          padding: 14px 18px;
+          transition: all 0.15s;
+        }
+        .row:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-color: ${T.grey2}; }
+
+        .order-card-clickable { cursor: pointer; transition: all 0.15s; }
+        .order-card-clickable:hover {
+          border-color: ${T.black} !important;
+          box-shadow: 0 2px 16px rgba(0,0,0,0.1) !important;
+          transform: translateY(-1px);
+        }
+
+        /* ── KPI cards ── */
+        .kpi {
+          border-radius: 12px;
+          padding: 18px 20px;
+          transition: transform 0.15s, box-shadow 0.15s;
+          cursor: default;
+        }
+        .kpi:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .kpi.clickable { cursor: pointer; }
+
+        /* ── Modals ── */
+        .overlay2 {
+          position: fixed; inset: 0;
+          background: rgba(0,0,0,0.55);
+          z-index: 300;
+          display: flex; align-items: center; justify-content: center;
+          padding: 20px;
+          backdrop-filter: blur(3px);
+        }
+        .modal2 {
+          background: ${T.white};
+          border-radius: 16px;
+          padding: 28px;
+          width: 100%;
+          max-width: 460px;
+          max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 24px 60px rgba(0,0,0,0.2);
+        }
+
+        /* ── Form elements ── */
+        .sel2 {
+          background: ${T.white};
+          border: 1.5px solid ${T.grey3};
+          border-radius: 8px;
+          padding: 10px 14px;
+          font-family: 'Jost', sans-serif;
+          font-size: 14px;
+          color: ${T.black};
+          width: 100%;
+          outline: none;
+          cursor: pointer;
+        }
+        .sel2:focus { border-color: ${T.black}; }
+
+        .track-opt {
+          display: flex; align-items: center; gap: 10px;
+          padding: 9px 12px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background 0.12s;
+          font-family: 'Jost', sans-serif;
+          font-size: 13px;
+          color: ${T.black};
+        }
+        .track-opt:hover { background: ${T.grey4}; }
+        .track-opt.cur { background: ${T.black}; color: ${T.white}; font-weight: 700; }
+
+        /* ── Animations ── */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes wizardIn { from { opacity: 0; transform: scale(0.96) translateY(16px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes drawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        .fade-up  { animation: fadeUp 0.3s ease both; }
+        .slide-in { animation: slideIn 0.25s ease both; }
+
+        /* ── Spinner ── */
+        .spinner {
+          width: 32px; height: 32px;
+          border: 2.5px solid ${T.grey3};
+          border-top-color: ${T.black};
+          border-radius: 50%;
+          animation: spin 0.75s linear infinite;
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: ${T.grey3}; border-radius: 4px; }
+
+        /* ── Mobile top bar (hidden on desktop) ── */
+        .mob-topbar { display: none; }
+        .admin-sidebar { display: flex; }
+
+        /* ── Status badge colours (global, used in order rows etc.) ── */
+        .status-pending    { background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
+        .status-confirmed  { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+        .status-processing { background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; }
+        .status-shipped    { background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; }
+        .status-delivered  { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+        .status-cancelled  { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+
+        /* ── Print styles (used by ReportsTab) ── */
+        @media print {
+          .no-print { display: none !important; }
+          .admin-sidebar { display: none !important; }
+          .mob-topbar { display: none !important; }
+          body { background: white !important; }
+          .print-full { width: 100% !important; max-width: none !important; }
+        }
+
+        /* ── Mobile breakpoint ── */
+        @media (max-width: 768px) {
+          .admin-sidebar  { display: none !important; }
+          .mob-topbar     { display: flex !important; }
+          .admin-main     { padding: 74px 14px 24px !important; }
+          .kpi-grid       { grid-template-columns: repeat(2,1fr) !important; gap: 8px !important; }
+          .overview-charts  { grid-template-columns: 1fr !important; }
+          .overview-bottom  { grid-template-columns: 1fr !important; }
+          .modal2           { padding: 20px 16px !important; border-radius: 12px !important; }
+          .row              { flex-wrap: wrap !important; gap: 8px !important; }
+          .row-actions      { width: 100%; justify-content: flex-end; margin-top: 2px; }
         }
       `}</style>
 
@@ -141,10 +268,7 @@ export default function AdminDashboard() {
         <OrderDetailModal
           order={viewOrder}
           onClose={() => setViewOrder(null)}
-          onUpdateStatus={() => {
-            setEditOrder(viewOrder);
-            setViewOrder(null);
-          }}
+          onUpdateStatus={() => { setEditOrder(viewOrder); setViewOrder(null); }}
         />
       )}
 
@@ -160,7 +284,7 @@ export default function AdminDashboard() {
       {deleteTarget && (
         <ConfirmDialog
           title="Delete Product"
-          message={`Are you sure you want to delete "${deleteTarget.name}"? This cannot be undone.`}
+          message={`Delete "${deleteTarget.name}"? This cannot be undone.`}
           confirmLabel="Delete"
           confirmDanger
           onConfirm={handleDeleteConfirm}
@@ -168,43 +292,59 @@ export default function AdminDashboard() {
         />
       )}
 
-      {/* ── Mobile nav ── */}
-      <AdminMobileNav tab={tab} setTab={setTab} />
+      {/* ── Mobile top bar + drawer ── */}
+      <AdminMobileNav
+        tab={tab}
+        setTab={setTab}
+        onRefresh={fetchAll}
+        {...navBadgeProps}
+      />
 
       <div style={{ display: 'flex', minHeight: '100vh' }}>
-        {/* ── Sidebar ── */}
+        {/* ── Desktop sidebar ── */}
         <AdminSidebar
           tab={tab}
           setTab={setTab}
-          productCount={products.length}
-          activeOrders={stats?.activeOrders ?? 0}
-          customerCount={stats?.totalUsers ?? 0}
           onRefresh={fetchAll}
+          {...navBadgeProps}
         />
 
         {/* ── Main content ── */}
-        <main className="admin-main" style={{ flex: 1, padding: '32px 36px 60px', overflowY: 'auto' }}>
+        <main
+          className="admin-main"
+          style={{ flex: 1, padding: '32px 36px 60px', overflowY: 'auto', minWidth: 0 }}
+        >
           {loading ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 18 }}>
+            <div style={{
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              height: '60vh', gap: 16,
+            }}>
               <div className="spinner"/>
-              <p style={{ fontFamily: 'Jost,sans-serif', color: T.muted, fontSize: 14 }}>Loading dashboard…</p>
+              <p style={{ fontFamily: 'Jost,sans-serif', color: T.grey1, fontSize: 13 }}>
+                Loading dashboard…
+              </p>
             </div>
           ) : (
             <>
               {tab === 'overview' && stats && (
                 <OverviewTab
                   stats={stats}
-                  onGoToOrders={() => setTab('orders')}
-                  onGoToProducts={() => setTab('products')}
+                  onGoToOrders={()    => setTab('orders')}
+                  onGoToProducts={()  => setTab('products')}
                   onGoToCustomers={() => setTab('customers')}
                 />
+              )}
+
+              {tab === 'analytics' && (
+                <AnalyticsTab showToast={showToast} />
               )}
 
               {tab === 'products' && (
                 <ProductsTab
                   products={products}
                   onAddNew={() => { setEditProduct(null); setShowWizard(true); }}
-                  onEdit={p => setEditProduct(p)}
+                  onEdit={p  => setEditProduct(p)}
                   onDelete={(id, name) => setDeleteTarget({ id, name })}
                   onStockSaved={fetchAll}
                   showToast={showToast}
@@ -215,11 +355,18 @@ export default function AdminDashboard() {
                 <OrdersTab
                   orders={orders}
                   stats={stats}
-                  onView={o => setViewOrder(o)}
+                  onView={o   => setViewOrder(o)}
                   onUpdate={o => setEditOrder(o)}
                 />
               )}
-              {tab === 'customers' && <CustomersTab showToast={showToast} />}
+
+              {tab === 'customers' && (
+                <CustomersTab showToast={showToast} />
+              )}
+
+              {tab === 'reports' && (
+                <ReportsTab showToast={showToast} />
+              )}
             </>
           )}
         </main>

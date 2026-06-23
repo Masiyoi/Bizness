@@ -8,7 +8,8 @@ const {
   createProduct, updateProduct, deleteProduct, updateStock,
   getOrders, updateOrderStatus,
   getStats,
-  getCustomers, verifyCustomer,          // ← add these two
+  getCustomers, verifyCustomer,
+  updateCostPrice,              // ← add this
 } = require('../controllers/adminController');
 
 const upload = multer({
@@ -30,5 +31,6 @@ router.patch ('/admin/products/:id/stock',    auth, adminOnly, updateStock);
 router.delete('/admin/products/:id',          auth, adminOnly, deleteProduct);
 router.get   ('/admin/customers',             auth, adminOnly, getCustomers);        // ← fixed
 router.patch ('/admin/customers/:id/verify',  auth, adminOnly, verifyCustomer);     // ← fixed
+router.patch('/admin/products/:id/cost', auth, adminOnly, updateCostPrice);
 
 module.exports = router;
