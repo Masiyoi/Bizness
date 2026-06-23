@@ -12,27 +12,27 @@ export function Toast({ message, type }: ToastProps) {
     <div
       className="slide-in"
       style={{
-        position:    'fixed',
-        top:         20,
-        left:        '50%',
-        transform:   'translateX(-50%)',
-        background:  type === 'ok' ? T.navy : '#C0392B',
-        color:       '#fff',
-        fontFamily:  'Jost,sans-serif',
-        fontWeight:  600,
-        fontSize:    13,
-        borderRadius: 12,
-        padding:     '13px 28px',
-        zIndex:      999,
-        boxShadow:   '0 8px 28px rgba(13,27,62,0.3)',
-        whiteSpace:  'nowrap',
+        position:     'fixed',
+        top:          20,
+        left:         '50%',
+        transform:    'translateX(-50%)',
+        background:   type === 'ok' ? T.black : '#DC2626',
+        color:        T.white,
+        fontFamily:   'Jost, sans-serif',
+        fontWeight:   600,
+        fontSize:     13,
+        borderRadius: 9,
+        padding:      '12px 24px',
+        zIndex:       999,
+        boxShadow:    '0 8px 24px rgba(0,0,0,0.25)',
+        whiteSpace:   'nowrap',
         letterSpacing: '0.3px',
-        display:     'flex',
-        alignItems:  'center',
-        gap:         8,
+        display:      'flex',
+        alignItems:   'center',
+        gap:          8,
       }}
     >
-      <span>{type === 'ok' ? '✓' : '⚠'}</span>
+      <span style={{ fontSize: 14 }}>{type === 'ok' ? '✓' : '⚠'}</span>
       {message}
     </div>
   );

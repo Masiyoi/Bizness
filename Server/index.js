@@ -14,6 +14,9 @@ const wishlistRoutes    = require('./routes/wishlistRoutes');
 const reviewRoutes      = require('./routes/reviewRoutes');
 const subscribersRoutes = require('./routes/subscribersRoutes');
 const instagramRoutes   = require('./routes/instagramRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
+const auth      = require('./middleware/auth');
+const adminOnly = require('./middleware/adminOnly');
 
 const app = express();
 
@@ -57,6 +60,7 @@ app.use('/api/wishlist',    wishlistRoutes);
 app.use('/api/reviews',     reviewRoutes);
 app.use('/api/subscribers', subscribersRoutes);
 app.use('/api/instagram',   instagramRoutes);
+app.use('/api/admin', auth, adminOnly, analyticsRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

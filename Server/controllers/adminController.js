@@ -24,7 +24,7 @@ const uploadToCloudinary = (buffer) =>
     streamifier.createReadStream(buffer).pipe(stream);
   });
 
-  // ── Save variants for a product (upsert all, delete removed) ─────────────────
+// ── Save variants for a product (upsert all, delete removed) ─────────────────
 const saveVariants = async (productId, variantsJson) => {
   let variants = [];
   try {
@@ -36,15 +36,13 @@ const saveVariants = async (productId, variantsJson) => {
 
   if (!variants.length) return;
 
-  // Delete existing variants for this product, then re-insert
-  // This is simpler than diffing and handles removals cleanly
   await db.query('DELETE FROM product_variants WHERE product_id = $1', [productId]);
 
   for (const v of variants) {
     const color = v.color || null;
     const size  = v.size  || null;
-    if (!color && !size) continue; // skip empty rows
-    if (!parseInt(v.stock)) continue; // skip zero stock rows (they don't need to be saved as variants)
+    if (!color && !size) continue;
+    if (!parseInt(v.stock)) continue;
 
     await db.query(
       `INSERT INTO product_variants (product_id, color, size, stock, sku)
@@ -63,11 +61,11 @@ const getVariants = async (productId) => {
   return result.rows;
 };
 
-// ── Compute total stock from variants (used to keep products.stock in sync) ───
+// ── Compute total stock from variants ─────────────────────────────────────────
 const sumVariantStock = (variants) =>
   variants.reduce((sum, v) => sum + (parseInt(v.stock) || 0), 0);
 
-// ── Safely convert any value to a valid JSON array string for ::jsonb cast ────
+// ── Safely convert any value to a valid JSON array string ────────────────────
 const toJsonString = (val) => {
   if (Array.isArray(val)) return JSON.stringify(val);
   if (typeof val === 'string' && val.trim() !== '') {
@@ -82,14 +80,14 @@ const toJsonString = (val) => {
 };
 
 // ── Normalise a product row before sending to the client ─────────────────────
-// REPLACE the existing normaliseProduct in adminController.js
 const normaliseProduct = (p) => ({
   ...p,
-  images:       Array.isArray(p.images)   ? p.images   : [],
-  features:     Array.isArray(p.features) ? p.features : [],
-  colors:       Array.isArray(p.colors)   ? p.colors   : [],
-  sizes:        Array.isArray(p.sizes)    ? p.sizes    : [],
-  sale_price:   p.sale_price   ? parseFloat(p.sale_price)  : null,
+  images:      Array.isArray(p.images)   ? p.images   : [],
+  features:    Array.isArray(p.features) ? p.features : [],
+  colors:      Array.isArray(p.colors)   ? p.colors   : [],
+  sizes:       Array.isArray(p.sizes)    ? p.sizes    : [],
+  cost_price:  p.cost_price  ? parseFloat(p.cost_price)  : null,
+  sale_price:  p.sale_price  ? parseFloat(p.sale_price)  : null,
   sale_ends_at: p.sale_ends_at ?? null,
 });
 
@@ -116,8 +114,6 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// ── GET /api/products/:id  (public) ──────────────────────────────────────────
-// ── GET /api/products/:id  (public) ──────────────────────────────────────────
 // ── GET /api/products/:id  (public) ──────────────────────────────────────────
 exports.getProductById = async (req, res) => {
   try {
@@ -152,19 +148,20 @@ exports.getProductById = async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 };
-// ── POST /api/admin/products ──────────────────────────────────────────────────
+
 // ── POST /api/admin/products ──────────────────────────────────────────────────
 exports.createProduct = async (req, res) => {
   try {
     const {
       name,
       price,
-      category    = null,
-      description = null,
-      features    = '[]',
-      colors      = '[]',
-      sizes       = '[]',
-      variants    = '[]',
+      cost_price   = null,   // NEW
+      category     = null,
+      description  = null,
+      features     = '[]',
+      colors       = '[]',
+      sizes        = '[]',
+      variants     = '[]',
       sale_price   = null,
       sale_ends_at = null,
     } = req.body;
@@ -188,14 +185,15 @@ exports.createProduct = async (req, res) => {
 
     const result = await db.query(
       `INSERT INTO products
-         (name, price, category, description, features, stock, images, image_url, colors, sizes, sale_price, sale_ends_at)
-       VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7::jsonb, $8, $9::jsonb, $10::jsonb, $11, $12)
+         (name, price, cost_price, category, description, features, stock, images, image_url, colors, sizes, sale_price, sale_ends_at)
+       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8::jsonb, $9, $10::jsonb, $11::jsonb, $12, $13)
        RETURNING *`,
       [
         name,
         price,
-        category    || null,
-        description || null,
+        cost_price   ? parseFloat(cost_price)   : null,
+        category     || null,
+        description  || null,
         featuresJson,
         stockValue,
         imagesJson,
@@ -208,7 +206,6 @@ exports.createProduct = async (req, res) => {
     );
 
     const newProduct = normaliseProduct(result.rows[0]);
-
     await saveVariants(newProduct.id, variants);
     newProduct.variants = await getVariants(newProduct.id);
 
@@ -225,15 +222,16 @@ exports.updateProduct = async (req, res) => {
     const {
       name,
       price,
+      cost_price     = null,   // NEW
       category       = null,
       description    = null,
       features       = '[]',
       existingImages = '[]',
       colors         = '[]',
       sizes          = '[]',
-      variants       = '[]',   // ← add this
-      sale_price     = null,   // ← ADD
-      sale_ends_at   = null,   // ← ADD
+      variants       = '[]',
+      sale_price     = null,
+      sale_ends_at   = null,
     } = req.body;
 
     const productId = req.params.id;
@@ -252,7 +250,6 @@ exports.updateProduct = async (req, res) => {
 
     const allImgs = [...keptImages, ...newUrls];
 
-    // Compute stock from variants
     let parsedVariants = [];
     try { parsedVariants = JSON.parse(variants); } catch { parsedVariants = []; }
     const stockValue = parsedVariants.length ? sumVariantStock(parsedVariants) : parseInt(req.body.stock) || 0;
@@ -262,46 +259,45 @@ exports.updateProduct = async (req, res) => {
     const sizesJson    = toJsonString(sizes);
     const imagesJson   = JSON.stringify(allImgs);
 
-    // Replace the UPDATE query:
-const result = await db.query(
-  `UPDATE products
-   SET name         = $1,
-       price        = $2,
-       category     = $3,
-       description  = $4,
-       features     = $5::jsonb,
-       stock        = $6,
-       images       = $7::jsonb,
-       image_url    = $8,
-       colors       = $9::jsonb,
-       sizes        = $10::jsonb,
-       sale_price   = $11,
-       sale_ends_at = $12,
-       updated_at   = NOW()
-   WHERE id = $13
-   RETURNING *`,
-  [
-    name,
-    price,
-    category    || null,
-    description || null,
-    featuresJson,
-    stockValue,
-    imagesJson,
-    allImgs[0] || null,
-    colorsJson,
-    sizesJson,
-    sale_price   || null,
-    sale_ends_at || null,
-    productId,
-  ]
-);
+    const result = await db.query(
+      `UPDATE products
+       SET name         = $1,
+           price        = $2,
+           cost_price   = $3,
+           category     = $4,
+           description  = $5,
+           features     = $6::jsonb,
+           stock        = $7,
+           images       = $8::jsonb,
+           image_url    = $9,
+           colors       = $10::jsonb,
+           sizes        = $11::jsonb,
+           sale_price   = $12,
+           sale_ends_at = $13,
+           updated_at   = NOW()
+       WHERE id = $14
+       RETURNING *`,
+      [
+        name,
+        price,
+        cost_price   ? parseFloat(cost_price)   : null,
+        category     || null,
+        description  || null,
+        featuresJson,
+        stockValue,
+        imagesJson,
+        allImgs[0]   || null,
+        colorsJson,
+        sizesJson,
+        sale_price   || null,
+        sale_ends_at || null,
+        productId,
+      ]
+    );
 
     if (!result.rows.length) return res.status(404).json({ msg: 'Product not found' });
 
     const updated = normaliseProduct(result.rows[0]);
-
-    // Save variants
     await saveVariants(productId, variants);
     updated.variants = await getVariants(productId);
 
@@ -331,6 +327,26 @@ exports.updateStock = async (req, res) => {
   }
 };
 
+// ── PATCH /api/admin/products/:id/cost ───────────────────────────────────────
+exports.updateCostPrice = async (req, res) => {
+  try {
+    const { cost_price } = req.body;
+    if (cost_price === undefined || isNaN(parseFloat(cost_price)) || parseFloat(cost_price) < 0)
+      return res.status(400).json({ msg: 'Valid cost_price required' });
+
+    const result = await db.query(
+      `UPDATE products SET cost_price = $1, updated_at = NOW()
+       WHERE id = $2 RETURNING id, name, price, cost_price`,
+      [parseFloat(cost_price), req.params.id]
+    );
+    if (!result.rows.length) return res.status(404).json({ msg: 'Product not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('updateCostPrice error:', err.message);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
 // ── DELETE /api/admin/products/:id ───────────────────────────────────────────
 exports.deleteProduct = async (req, res) => {
   try {
@@ -347,8 +363,6 @@ exports.deleteProduct = async (req, res) => {
 };
 
 // ── GET /api/admin/orders ─────────────────────────────────────────────────────
-// COALESCE prefers columns stored directly on the orders row (set by the new
-// mpesaCallback), then falls back to the JOIN values for older orders.
 exports.getOrders = async (req, res) => {
   try {
     const result = await db.query(
@@ -389,12 +403,31 @@ exports.updateOrderStatus = async (req, res) => {
 };
 
 // ── GET /api/admin/stats ──────────────────────────────────────────────────────
+// Now supports ?from=YYYY-MM-DD&to=YYYY-MM-DD for date-ranged KPIs.
+// Falls back to last 7 days when params are absent (backwards-compatible).
 exports.getStats = async (req, res) => {
   try {
+    // ── Date range ────────────────────────────────────────────────────────────
+    const to   = req.query.to   ? new Date(req.query.to)   : new Date();
+    const from = req.query.from ? new Date(req.query.from)  : new Date(Date.now() - 6 * 86400000);
+    to.setHours(23, 59, 59, 999);
+    from.setHours(0, 0, 0, 0);
+
+    // Previous period (same length) for % change comparison
+    const days  = Math.round((to - from) / 86400000) + 1;
+    const pTo   = new Date(from.getTime() - 1);
+    const pFrom = new Date(pTo.getTime() - (days - 1) * 86400000);
+    pFrom.setHours(0, 0, 0, 0);
+    pTo.setHours(23, 59, 59, 999);
+
+    const pct = (cur, prev) =>
+      !prev ? (cur > 0 ? 100 : 0)
+            : parseFloat((((cur - prev) / prev) * 100).toFixed(1));
+
     const [
-      totalOrdersRes,
+      totalsRes,
+      prevTotalsRes,
       totalProductsRes,
-      totalRevenueRes,
       totalUsersRes,
       activeOrdersRes,
       recentOrdersRes,
@@ -403,18 +436,51 @@ exports.getStats = async (req, res) => {
       revenueByDayRes,
       ordersByStatusRes,
     ] = await Promise.all([
-      db.query(`SELECT COUNT(*) FROM orders`),
-      db.query(`SELECT COUNT(*) FROM products`),
+
+      // ── Current period: revenue + cost (for profit) ───────────────────────
       db.query(`
-        SELECT COALESCE(SUM(total), 0) AS total
-        FROM orders WHERE status NOT IN ('cancelled', 'pending')
-      `),
+        SELECT
+          COALESCE(SUM(o.total::numeric), 0) AS revenue,
+          COUNT(o.id)                        AS orders,
+          COALESCE(SUM(
+            (
+              SELECT COALESCE(SUM(
+                (item->>'quantity')::numeric *
+                COALESCE(p.cost_price, 0)
+              ), 0)
+              FROM jsonb_array_elements(
+                CASE WHEN jsonb_typeof(o.items_snapshot::jsonb) = 'array'
+                  THEN o.items_snapshot::jsonb
+                  ELSE '[]'::jsonb
+                END
+              ) AS item
+              LEFT JOIN products p ON p.id = (item->>'product_id')::int
+            )
+          ), 0) AS total_cost
+        FROM orders o
+        WHERE o.created_at BETWEEN $1 AND $2
+          AND o.status NOT IN ('cancelled', 'pending')
+      `, [from.toISOString(), to.toISOString()]),
+
+      // ── Previous period: revenue + orders for % comparison ────────────────
+      db.query(`
+        SELECT
+          COALESCE(SUM(total::numeric), 0) AS revenue,
+          COUNT(id)                        AS orders
+        FROM orders
+        WHERE created_at BETWEEN $1 AND $2
+          AND status NOT IN ('cancelled', 'pending')
+      `, [pFrom.toISOString(), pTo.toISOString()]),
+
+      db.query(`SELECT COUNT(*) FROM products`),
       db.query(`SELECT COUNT(*) FROM users WHERE role != 'admin'`),
+
       db.query(`
         SELECT COUNT(*) FROM orders
         WHERE status NOT IN ('delivered', 'cancelled')
       `),
-      // COALESCE applied here too for the dashboard recent-orders panel
+
+      // Recent orders (always latest 8, not date-filtered)
       db.query(`
         SELECT o.id, o.total, o.status, o.tracking_status, o.created_at,
                COALESCE(o.customer_name,  u.full_name)    AS customer_name,
@@ -426,55 +492,103 @@ exports.getStats = async (req, res) => {
         LEFT JOIN payments p ON o.payment_id = p.id
         ORDER BY o.created_at DESC LIMIT 8
       `),
+
       db.query(`
         SELECT p.id, p.name, p.price, p.image_url, p.stock,
                COUNT(o.id)              AS order_count,
-               COALESCE(SUM(o.total),0) AS total_revenue
+               COALESCE(SUM(o.total::numeric), 0) AS total_revenue
         FROM products p
         LEFT JOIN orders o
           ON o.items_snapshot::text ILIKE '%"product_id":' || p.id || '%'
         GROUP BY p.id
         ORDER BY order_count DESC, p.created_at DESC LIMIT 5
       `),
+
+      // Low stock — prefer variant sum, fallback to products.stock
       db.query(`
-  SELECT
-    p.id, p.name, p.image_url, p.price,
-    COALESCE(
-      (SELECT SUM(pv.stock) FROM product_variants pv WHERE pv.product_id = p.id),
-      p.stock
-    ) AS stock
-  FROM products p
-  WHERE COALESCE(
-    (SELECT SUM(pv.stock) FROM product_variants pv WHERE pv.product_id = p.id),
-    p.stock
-  ) <= 5
-  ORDER BY stock ASC LIMIT 6
-`),
-      db.query(`
-        SELECT DATE(created_at)        AS day,
-               COALESCE(SUM(total), 0) AS revenue,
-               COUNT(*)                AS orders
-        FROM orders
-        WHERE created_at >= NOW() - INTERVAL '7 days'
-          AND status NOT IN ('cancelled', 'pending')
-        GROUP BY DATE(created_at) ORDER BY day ASC
+        SELECT
+          p.id, p.name, p.image_url, p.price,
+          COALESCE(
+            (SELECT SUM(pv.stock) FROM product_variants pv WHERE pv.product_id = p.id),
+            p.stock
+          ) AS stock
+        FROM products p
+        WHERE COALESCE(
+          (SELECT SUM(pv.stock) FROM product_variants pv WHERE pv.product_id = p.id),
+          p.stock
+        ) <= 5
+        ORDER BY stock ASC LIMIT 6
       `),
+
+      // Revenue by day in range (with cost for profit overlay)
+      db.query(`
+        SELECT
+          DATE(o.created_at)                   AS day,
+          COALESCE(SUM(o.total::numeric), 0)   AS revenue,
+          COUNT(o.id)                          AS orders,
+          COALESCE(SUM(
+            (
+              SELECT COALESCE(SUM(
+                (item->>'quantity')::numeric *
+                COALESCE(p.cost_price, 0)
+              ), 0)
+              FROM jsonb_array_elements(
+                CASE WHEN jsonb_typeof(o.items_snapshot::jsonb) = 'array'
+                  THEN o.items_snapshot::jsonb
+                  ELSE '[]'::jsonb
+                END
+              ) AS item
+              LEFT JOIN products p ON p.id = (item->>'product_id')::int
+            )
+          ), 0) AS cost
+        FROM orders o
+        WHERE o.created_at BETWEEN $1 AND $2
+          AND o.status NOT IN ('cancelled', 'pending')
+        GROUP BY DATE(o.created_at)
+        ORDER BY day ASC
+      `, [from.toISOString(), to.toISOString()]),
+
       db.query(`
         SELECT status, COUNT(*) AS count
         FROM orders GROUP BY status ORDER BY count DESC
       `),
     ]);
 
+    const t       = totalsRes.rows[0];
+    const pt      = prevTotalsRes.rows[0];
+    const revenue = parseFloat(t.revenue);
+    const cost    = parseFloat(t.total_cost);
+    const profit  = revenue - cost;
+    const orders  = parseInt(t.orders);
+    const pRev    = parseFloat(pt.revenue);
+    const pOrds   = parseInt(pt.orders);
+    const aov     = orders > 0 ? revenue / orders : 0;
+
+    // Attach profit to each day row
+    const revenueByDay = revenueByDayRes.rows.map(r => ({
+      day:     r.day,
+      revenue: r.revenue,
+      orders:  r.orders,
+      cost:    r.cost,
+      profit:  (parseFloat(r.revenue) - parseFloat(r.cost)).toFixed(2),
+    }));
+
     res.json({
-      totalOrders:    parseInt(totalOrdersRes.rows[0].count),
+      totalOrders:    orders,
       totalProducts:  parseInt(totalProductsRes.rows[0].count),
-      totalRevenue:   parseFloat(totalRevenueRes.rows[0].total),
+      totalRevenue:   revenue,
       totalUsers:     parseInt(totalUsersRes.rows[0].count),
       activeOrders:   parseInt(activeOrdersRes.rows[0].count),
+      avgOrderValue:  parseFloat(aov.toFixed(2)),
+      totalCost:      parseFloat(cost.toFixed(2)),
+      totalProfit:    parseFloat(profit.toFixed(2)),
+      profitMargin:   revenue > 0 ? parseFloat(((profit / revenue) * 100).toFixed(1)) : 0,
+      revenueVsPrev:  pct(revenue, pRev),
+      ordersVsPrev:   pct(orders,  pOrds),
       recentOrders:   recentOrdersRes.rows,
       topProducts:    topProductsRes.rows,
       lowStock:       lowStockRes.rows,
-      revenueByDay:   revenueByDayRes.rows,
+      revenueByDay,
       ordersByStatus: ordersByStatusRes.rows,
     });
   } catch (err) {
@@ -482,20 +596,13 @@ exports.getStats = async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 };
-// server/controllers/adminController.js  — ADD these two exports to your existing file
 
 // ── GET /api/admin/customers ──────────────────────────────────────────────────
 exports.getCustomers = async (req, res) => {
   try {
     const usersResult = await db.query(`
-      SELECT
-        id,
-        full_name  AS name,
-        email,
-        role,
-        is_verified,
-        profile_picture,
-        created_at
+      SELECT id, full_name AS name, email, role,
+             is_verified, profile_picture, created_at
       FROM users
       WHERE role != 'admin'
       ORDER BY created_at DESC
@@ -513,7 +620,6 @@ exports.getCustomers = async (req, res) => {
       ORDER BY created_at DESC
     `, [userIds]);
 
-    // Group orders by user_id
     const ordersByUser = {};
     for (const o of ordersResult.rows) {
       if (!ordersByUser[o.user_id]) ordersByUser[o.user_id] = [];
@@ -536,14 +642,13 @@ exports.getCustomers = async (req, res) => {
 };
 
 // ── PATCH /api/admin/customers/:id/verify ────────────────────────────────────
-// Manually marks a user as verified (bypasses the email link flow)
 exports.verifyCustomer = async (req, res) => {
   const { id } = req.params;
   try {
     const result = await db.query(
       `UPDATE users
-       SET is_verified             = TRUE,
-           verification_token      = NULL,
+       SET is_verified              = TRUE,
+           verification_token       = NULL,
            verification_token_expiry = NULL
        WHERE id = $1 AND role != 'admin'
        RETURNING id, full_name, email, is_verified`,

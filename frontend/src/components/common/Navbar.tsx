@@ -38,6 +38,14 @@ export default function Navbar({
   const [wishlistCount,  setWishlistCount]  = useState(wishlistCountProp ?? 0);
   const [navCategories,  setNavCategories]  = useState<string[]>(categories);
   const [scrolled,       setScrolled]       = useState(false);
+  const [lang, setLang] = useState(() => {
+    const match = document.cookie.match(/googtrans=\/en\/([^;]+)/);
+    if (!match) return 'EN';
+    const LANGS_MAP: Record<string,string> = { sw:'SW', fr:'FR', ar:'AR', 'zh-CN':'ZH' };
+    return LANGS_MAP[match[1]] || 'EN';
+  });
+  const [showLang,       setShowLang]       = useState(false);
+  const langRef          = useRef<HTMLDivElement>(null);
 
   // ── Scroll detection ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -68,6 +76,30 @@ export default function Navbar({
     return () => document.removeEventListener('mousedown', h);
   }, []);
 
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) setShowLang(false);
+    };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+
+  // Re-read user from localStorage when AuthPopup (or any tab) updates it
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'user') setUser(e.newValue ? JSON.parse(e.newValue) : null);
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  // Also poll on window focus (same-tab logins don't fire storage events)
+  useEffect(() => {
+    const onFocus = () => setUser(readUser());
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, []);
+
   useEffect(() => { if (cartCountProp     !== undefined) setCartCount(cartCountProp);         }, [cartCountProp]);
   useEffect(() => { if (wishlistCountProp !== undefined) setWishlistCount(wishlistCountProp); }, [wishlistCountProp]);
 
@@ -95,6 +127,45 @@ export default function Navbar({
     window.addEventListener('focus', fetchCounts);
     return () => window.removeEventListener('focus', fetchCounts);
   }, [fetchCounts]);
+
+  // Load Google Translate once
+  useEffect(() => {
+    if (document.querySelector('script[data-gt]')) return;
+    (window as any).googleTranslateElementInit = () => {
+      new (window as any).google.translate.TranslateElement(
+        { pageLanguage: 'en', layout: (window as any).google.translate.TranslateElement.InlineLayout.SIMPLE },
+        'google_translate_element'
+      );
+    };
+    const s = document.createElement('script');
+    s.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+    s.async = true;
+    s.setAttribute('data-gt', 'true');
+    document.body.appendChild(s);
+  }, []);
+
+  const LANGS = [
+    { code: 'EN', label: 'English',   gtCode: '',      flag: '🇬🇧' },
+    { code: 'SW', label: 'Kiswahili', gtCode: 'sw',    flag: '🇰🇪' },
+    { code: 'FR', label: 'Français',  gtCode: 'fr',    flag: '🇫🇷' },
+    { code: 'AR', label: 'العربية',   gtCode: 'ar',    flag: '🇸🇦' },
+    { code: 'ZH', label: '中文',       gtCode: 'zh-CN', flag: '🇨🇳' },
+  ];
+
+  const applyLang = (gtCode: string, code: string) => {
+    setLang(code); setShowLang(false);
+    if (!gtCode) {
+      // Reset to English — remove the GT cookie and reload
+      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + window.location.hostname;
+      window.location.reload();
+      return;
+    }
+    const val = '/en/' + gtCode;
+    document.cookie = 'googtrans=' + val + '; path=/';
+    document.cookie = 'googtrans=' + val + '; path=/; domain=' + window.location.hostname;
+    window.location.reload();
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -188,12 +259,11 @@ export default function Navbar({
 
       {/* ── Main navbar ── */}
       <nav style={{
-        position: 'sticky', top: 0, zIndex: 100,
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
         background: isTransparent ? 'transparent' : '#fff',
-        borderBottom: isTransparent ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.09)',
+        borderBottom: isTransparent ? 'none' : '1px solid rgba(0,0,0,0.09)',
         transition: 'background 0.4s ease, border-color 0.4s ease',
-        // Pull hero up behind nav when transparent
-        ...(transparentOnTop && isTransparent ? { marginBottom: '-96px' } : {}),
+        backdropFilter: isTransparent ? 'none' : 'blur(12px)',
       }}>
 
         <div style={{ padding: '0 5%', height: 64, display: 'flex', alignItems: 'center', position: 'relative' }}>
@@ -234,14 +304,41 @@ export default function Navbar({
               <span className="nav-link" style={{ color: ink }} onClick={() => navigate('/sale')}>Sale</span>
             </div>
 
-            {/* Mobile: hamburger only (categories) */}
-            <div className="flex md:hidden">
+            {/* Mobile: hamburger THEN lang */}
+            <div className="flex md:hidden" style={{ alignItems: 'center', gap: 6 }}>
+            <div>
               <button className="nav-icon-btn" style={{ color: ink }} onClick={() => setMobileMenuOpen(x => !x)}>
                 {mobileMenuOpen
                   ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
                 }
               </button>
+            </div>
+
+              {/* Mobile lang picker — after hamburger */}
+              <div ref={langRef} style={{ position: 'relative' }}>
+                <button
+                  className="nav-icon-btn"
+                  style={{ color: ink, fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '2px', display: 'flex', alignItems: 'center', gap: 3, padding: '4px 6px' }}
+                  onClick={() => setShowLang(x => !x)}
+                >
+                  <span style={{ fontSize: 16, lineHeight: 1 }}>{LANGS.find(l => l.code === lang)?.flag ?? '🌐'}</span>
+                  <svg width="6" height="4" viewBox="0 0 6 4" fill="none">
+                    <path d="M1 1l2 2 2-2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                {showLang && (
+                  <div style={{ position: 'absolute', top: 'calc(100% + 10px)', left: 0, background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 10, padding: 6, minWidth: 148, boxShadow: '0 8px 28px rgba(0,0,0,0.11)', zIndex: 300, animation: 'fadeInDown 0.15s ease' }}>
+                    {LANGS.map(l => (
+                      <button key={l.code} className="mitem" style={{ fontWeight: lang === l.code ? 600 : undefined, fontSize: 12 }} onClick={() => applyLang(l.gtCode, l.code)}>
+                        <span style={{ fontSize: 18, lineHeight: 1, minWidth: 24 }}>{l.flag}</span>
+                        {l.label}
+                        {lang === l.code && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -255,6 +352,33 @@ export default function Navbar({
 
           {/* ── RIGHT ── */}
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
+
+            {/* ── Language picker ── */}
+            <div ref={langRef} className="hidden md:block" style={{ position: 'relative' }}>
+              <button
+                className="nav-icon-btn"
+                style={{ color: ink, fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '2px', display: 'flex', alignItems: 'center', gap: 4, padding: '4px 6px' }}
+                onClick={() => setShowLang(x => !x)}
+              >
+                <span style={{ fontSize: 16, lineHeight: 1 }}>{LANGS.find(l => l.code === lang)?.flag ?? '🌐'}</span>
+                <svg width="6" height="4" viewBox="0 0 6 4" fill="none" style={{ transition: 'transform 0.2s', transform: showLang ? 'rotate(180deg)' : 'none' }}>
+                  <path d="M1 1l2 2 2-2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              {showLang && (
+                <div style={{ position: 'absolute', top: 'calc(100% + 10px)', right: 0, background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 10, padding: 6, minWidth: 148, boxShadow: '0 8px 28px rgba(0,0,0,0.11)', zIndex: 200, animation: 'fadeInDown 0.15s ease' }}>
+                  {LANGS.map(l => (
+                    <button key={l.code} className="mitem" style={{ fontWeight: lang === l.code ? 600 : undefined, fontSize: 12 }} onClick={() => applyLang(l.gtCode, l.code)}>
+                      <span style={{ opacity: 0.45, fontSize: 10, fontWeight: 700, letterSpacing: '1px', minWidth: 24 }}>{l.code}</span>
+                      {l.label}
+                      {lang === l.code && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* Hidden GT element (required by the script) */}
+            <div id="google_translate_element" style={{ display: 'none' }} />
 
             {/* Desktop search */}
             <button className="nav-icon-btn hidden md:flex" style={{ color: ink }} onClick={() => setShowSearch(x => !x)} title="Search">
@@ -371,7 +495,7 @@ export default function Navbar({
 
       {/* ── Search bar (desktop) ── */}
       {showSearch && (
-        <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.09)', padding: '12px 5%', position: 'sticky', top: 64, zIndex: 99 }}>
+        <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.09)', padding: '12px 5%', position: 'fixed', top: 64, left: 0, right: 0, zIndex: 99 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, maxWidth: 520, margin: '0 auto', borderBottom: '1px solid rgba(0,0,0,0.18)', paddingBottom: 8 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(0,0,0,0.35)', flexShrink: 0 }}>
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -391,7 +515,7 @@ export default function Navbar({
 
       {/* ── Mobile category menu (hamburger) — categories only ── */}
       {mobileMenuOpen && (
-        <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.09)', padding: '16px 5%', position: 'sticky', top: 64, zIndex: 99 }}>
+        <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.09)', padding: '16px 5%', position: 'fixed', top: 64, left: 0, right: 0, zIndex: 99 }}>
           <div style={{ marginBottom: 8 }}>
             <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '2.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)' }}>Shop by Category</span>
           </div>

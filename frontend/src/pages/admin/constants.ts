@@ -1,16 +1,71 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Luku Prime Admin — Design Tokens (Black & White theme)
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const T = {
-  navy:   '#0D1B3E',
-  navy2:  '#152348',
-  navy3:  '#1E2F5A',
-  gold:   '#C8A951',
-  gold2:  '#DEC06A',
-  cream:  '#F9F5EC',
-  cream2: '#F0EAD8',
-  cream3: '#E4D9C0',
+  // Core blacks
+  black:  '#0A0A0A',   // primary text, sidebar bg, button fills
+  black2: '#1A1A1A',   // hover states, secondary dark surfaces
+  black3: '#2C2C2C',   // borders on dark surfaces, dividers on dark
+
+  // Greys
+  grey1:  '#6B6B6B',   // muted text, placeholders, secondary labels
+  grey2:  '#9A9A9A',   // lighter muted, disabled states
+  grey3:  '#E5E5E5',   // borders, dividers on light surfaces
+  grey4:  '#F0F0F0',   // card / panel backgrounds
+  grey5:  '#F7F7F7',   // page background, input backgrounds
+  grey6:  '#FAFAFA',   // lightest tint, alternating rows
+
+  // White
   white:  '#FFFFFF',
-  muted:  '#7A8099',
+
+  // Semantic status colours (unchanged — these are standard traffic-light colours
+  // and swapping them would confuse the meaning)
+  ok:     '#166534',   // delivered / confirmed text
+  okBg:   '#F0FDF4',   // delivered / confirmed bg
+  okBdr:  '#BBF7D0',   // delivered / confirmed border
+
+  warn:   '#92400E',   // pending / processing text
+  warnBg: '#FFFBEB',   // pending / processing bg
+  warnBdr:'#FDE68A',   // pending / processing border
+
+  info:   '#1E40AF',   // shipped text
+  infoBg: '#EFF6FF',   // shipped bg
+  infoBdr:'#BFDBFE',   // shipped border
+
+  err:    '#991B1B',   // cancelled / error text
+  errBg:  '#FEF2F2',   // cancelled / error bg
+  errBdr: '#FECACA',   // cancelled / error border
+
+  // Legacy aliases so existing JSX that references T.navy / T.gold
+  // doesn't throw TypeScript errors during the migration.
+  // Remove these once every component is migrated.
+  navy:   '#0A0A0A',
+  navy2:  '#1A1A1A',
+  navy3:  '#2C2C2C',
+  gold:   '#0A0A0A',   // was accent; now just black (used in price/highlight text)
+  gold2:  '#2C2C2C',
+  cream:  '#F7F7F7',
+  cream2: '#F0F0F0',
+  cream3: '#E5E5E5',
+  muted:  '#6B6B6B',
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Status colour config  (used by SC[order.status])
+// ─────────────────────────────────────────────────────────────────────────────
+export const SC: Record<string, { bg: string; col: string; border: string }> = {
+  pending:    { bg: T.warnBg,  col: T.warn,  border: T.warnBdr  },
+  confirmed:  { bg: T.okBg,   col: T.ok,    border: T.okBdr    },
+  processing: { bg: '#EFF6FF', col: '#1D4ED8', border: '#BFDBFE' },
+  shipped:    { bg: T.infoBg,  col: T.info,  border: T.infoBdr  },
+  delivered:  { bg: T.okBg,   col: T.ok,    border: T.okBdr    },
+  cancelled:  { bg: T.errBg,  col: T.err,   border: T.errBdr   },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Order / tracking constants
+// ─────────────────────────────────────────────────────────────────────────────
 export const TRACKING_STEPS = [
   'Order Placed',
   'Payment Confirmed',
@@ -30,15 +85,6 @@ export const ORDER_STATUSES = [
   'cancelled',
 ];
 
-export const CATEGORIES = [
-  'Dresses',
-  'Designer Wear',
-  'Sneakers',
-  'Bags',
-  'Shoes',
-  'Heels',
-];
-
 export const TRACKING_TO_STATUS: Record<string, string> = {
   'Order Placed':      'confirmed',
   'Payment Confirmed': 'confirmed',
@@ -49,16 +95,21 @@ export const TRACKING_TO_STATUS: Record<string, string> = {
   'Delivered':         'delivered',
 };
 
-/** Status colour config */
-export const SC: Record<string, { bg: string; col: string; border: string }> = {
-  pending:    { bg: '#FDF8EC', col: '#B7791F', border: '#F6E4A0' },
-  confirmed:  { bg: '#EEF5EE', col: '#4A8A4A', border: '#C8DFC8' },
-  processing: { bg: '#EEF0FA', col: '#4A5FBF', border: '#C5CBEE' },
-  shipped:    { bg: '#EDF5FB', col: '#2B7AB5', border: '#BAD9EF' },
-  delivered:  { bg: '#EEF5EE', col: '#2E7D32', border: '#A5D6A7' },
-  cancelled:  { bg: '#FDF0EE', col: '#C0392B', border: '#F5C6C0' },
-};
+// ─────────────────────────────────────────────────────────────────────────────
+// Product categories
+// ─────────────────────────────────────────────────────────────────────────────
+export const CATEGORIES = [
+  'Dresses',
+  'Designer Wear',
+  'Sneakers',
+  'Bags',
+  'Shoes',
+  'Heels',
+];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Delivery zone labels
+// ─────────────────────────────────────────────────────────────────────────────
 export const ZONE_LABELS: Record<string, { label: string; icon: string }> = {
   pickup:   { label: 'Pick Up from Shop', icon: '🏪' },
   cbd:      { label: 'Nairobi CBD',       icon: '🏙️' },
@@ -66,27 +117,71 @@ export const ZONE_LABELS: Record<string, { label: string; icon: string }> = {
   county:   { label: 'Other Counties',    icon: '📍' },
 };
 
-/** Shared input / label styles */
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared form element styles  (used inside wizard / forms)
+// ─────────────────────────────────────────────────────────────────────────────
 export const lbl: React.CSSProperties = {
   display:       'block',
-  fontFamily:    'Jost,sans-serif',
+  fontFamily:    'Jost, sans-serif',
   fontSize:      10,
   fontWeight:    700,
-  color:         '#7A8099',
+  color:         T.grey1,
   letterSpacing: '1.5px',
   textTransform: 'uppercase',
   marginBottom:  8,
 };
 
 export const inp: React.CSSProperties = {
-  background:  '#F9F5EC',
-  border:      '1.5px solid #E4D9C0',
-  borderRadius: 10,
-  padding:     '12px 14px',
-  fontFamily:  'Jost,sans-serif',
-  fontSize:    14,
-  color:       '#0D1B3E',
-  width:       '100%',
-  outline:     'none',
-  transition:  'border-color 0.2s',
+  background:   T.white,
+  border:       `1.5px solid ${T.grey3}`,
+  borderRadius: 8,
+  padding:      '11px 14px',
+  fontFamily:   'Jost, sans-serif',
+  fontSize:     14,
+  color:        T.black,
+  width:        '100%',
+  outline:      'none',
+  transition:   'border-color 0.2s, box-shadow 0.2s',
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Date range presets  (used by DateRangePicker and analytics endpoints)
+// ─────────────────────────────────────────────────────────────────────────────
+export type DateRangePreset = '7d' | '30d' | '90d' | 'custom';
+
+export interface DateRange {
+  preset: DateRangePreset;
+  from:   string;   // ISO date string YYYY-MM-DD
+  to:     string;
+}
+
+export const defaultDateRange = (): DateRange => {
+  const to   = new Date();
+  const from = new Date();
+  from.setDate(from.getDate() - 6);   // last 7 days inclusive
+  return {
+    preset: '7d',
+    from:   from.toISOString().slice(0, 10),
+    to:     to.toISOString().slice(0, 10),
+  };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Navigation tabs (source of truth for sidebar + mobile drawer)
+// ─────────────────────────────────────────────────────────────────────────────
+export type Tab = 'overview' | 'analytics' | 'products' | 'orders' | 'customers' | 'reports';
+
+export interface NavItem {
+  id:    Tab;
+  icon:  string;
+  label: string;
+}
+
+export const NAV_ITEMS: NavItem[] = [
+  { id: 'overview',   icon: '▣',  label: 'Overview'   },
+  { id: 'analytics',  icon: '↗',  label: 'Analytics'  },
+  { id: 'products',   icon: '⊞',  label: 'Products'   },
+  { id: 'orders',     icon: '≡',  label: 'Orders'     },
+  { id: 'customers',  icon: '◎',  label: 'Customers'  },
+  { id: 'reports',    icon: '⎙',  label: 'Reports'    },
+];

@@ -1,36 +1,159 @@
+import React, { useState } from 'react';
+import {
+  ResponsiveContainer,
+  AreaChart, Area,
+  XAxis, YAxis, CartesianGrid,
+  Tooltip, Legend,
+} from 'recharts';
 import type { Stats } from '../../types';
-import { T, SC } from '../../constants';
+import { T, SC, defaultDateRange } from '../../constants';
+import type { DateRange } from '../../constants';
+import { StatCard }       from '../shared/StatCard';
+import { DateRangePicker } from '../shared/DateRangePicker';
 
-// ── Revenue sparkline chart ──────────────────────────────────────────────────
-function RevenueChart({ data }: { data: { day: string; revenue: string }[] }) {
-  if (!data.length) return (
-    <div style={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Jost,sans-serif', fontSize: 13, color: T.muted }}>
-      No revenue data yet
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmtKsh(n: number) {
+  if (n >= 1_000_000) return `KSh ${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000)     return `KSh ${(n / 1_000).toFixed(1)}k`;
+  return `KSh ${n.toLocaleString()}`;
+}
+
+function shortDay(iso: string) {
+  return new Date(iso).toLocaleDateString('en-KE', { weekday: 'short', day: 'numeric' });
+}
+
+// ── Custom tooltip ────────────────────────────────────────────────────────────
+function ChartTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{
+      background: T.black, border: `1px solid ${T.black3}`,
+      borderRadius: 9, padding: '10px 14px',
+      fontFamily: 'Jost, sans-serif', fontSize: 12,
+    }}>
+      <div style={{ color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontSize: 11 }}>{label}</div>
+      {payload.map((p: any) => (
+        <div key={p.dataKey} style={{
+          color: T.white, display: 'flex', justifyContent: 'space-between',
+          gap: 16, marginBottom: 3,
+        }}>
+          <span style={{ color: p.color, fontWeight: 600 }}>{p.name}</span>
+          <span style={{ fontWeight: 700 }}>KSh {Number(p.value).toLocaleString()}</span>
+        </div>
+      ))}
     </div>
   );
-  const max = Math.max(...data.map(d => parseFloat(d.revenue)), 1);
+}
+
+// ── Revenue + Profit area chart ───────────────────────────────────────────────
+function RevenueChart({ data }: { data: Stats['revenueByDay'] }) {
+  if (!data.length) {
+    return (
+      <div style={{
+        height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: 'Jost, sans-serif', fontSize: 13, color: T.grey1,
+        border: `1px dashed ${T.grey3}`, borderRadius: 8,
+      }}>No revenue data for this period</div>
+    );
+  }
+
+  const chartData = data.map(d => ({
+    day:     shortDay(d.day),
+    Revenue: parseFloat(d.revenue as any),
+    Profit:  parseFloat((d as any).profit ?? '0'),
+    Cost:    parseFloat((d as any).cost   ?? '0'),
+  }));
+
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: 130, padding: '0 4px' }}>
-      {data.map((d, i) => {
-        const h   = Math.max((parseFloat(d.revenue) / max) * 100, 3);
-        const day = new Date(d.day).toLocaleDateString('en-KE', { weekday: 'short' });
-        const rev = parseFloat(d.revenue);
+    <ResponsiveContainer width="100%" height={200}>
+      <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%"  stopColor={T.black} stopOpacity={0.15}/>
+            <stop offset="95%" stopColor={T.black} stopOpacity={0}/>
+          </linearGradient>
+          <linearGradient id="profGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%"  stopColor="#166534" stopOpacity={0.15}/>
+            <stop offset="95%" stopColor="#166534" stopOpacity={0}/>
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" stroke={T.grey3} vertical={false}/>
+        <XAxis
+          dataKey="day"
+          tick={{ fontFamily: 'Jost, sans-serif', fontSize: 11, fill: T.grey1 }}
+          axisLine={false} tickLine={false}
+        />
+        <YAxis
+          tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}
+          tick={{ fontFamily: 'Jost, sans-serif', fontSize: 11, fill: T.grey1 }}
+          axisLine={false} tickLine={false} width={40}
+        />
+        <Tooltip content={<ChartTooltip />}/>
+        <Legend
+          wrapperStyle={{ fontFamily: 'Jost, sans-serif', fontSize: 12, paddingTop: 8 }}
+          iconType="circle" iconSize={8}
+        />
+        <Area
+          type="monotone" dataKey="Revenue" name="Revenue"
+          stroke={T.black} strokeWidth={2}
+          fill="url(#revGrad)"
+        />
+        <Area
+          type="monotone" dataKey="Profit" name="Profit"
+          stroke="#166534" strokeWidth={2}
+          fill="url(#profGrad)"
+          strokeDasharray="4 2"
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ── Orders by status ──────────────────────────────────────────────────────────
+function OrdersByStatus({ data, onGoToOrders }: {
+  data: Stats['ordersByStatus'];
+  onGoToOrders: () => void;
+}) {
+  if (!data.length) {
+    return (
+      <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, color: T.grey1, textAlign: 'center', padding: '20px 0' }}>
+        No orders yet
+      </p>
+    );
+  }
+
+  const total = data.reduce((s, r) => s + parseInt(r.count as any), 0);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {data.map(r => {
+        const sc    = SC[r.status] || SC.pending;
+        const count = parseInt(r.count as any);
+        const pct   = total > 0 ? ((count / total) * 100).toFixed(0) : '0';
         return (
-          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, fontWeight: 700, color: T.gold, minHeight: 14 }}>
-              {rev > 0 ? `${(rev / 1000).toFixed(1)}k` : ''}
+          <div
+            key={r.status}
+            onClick={onGoToOrders}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '9px 12px', borderRadius: 9,
+              background: sc.bg, border: `1px solid ${sc.border}`,
+              cursor: 'pointer', transition: 'opacity 0.15s',
+            }}
+          >
+            <span style={{
+              fontFamily: 'Jost, sans-serif', fontSize: 12, fontWeight: 600,
+              color: sc.col, textTransform: 'capitalize', flex: 1,
+            }}>{r.status}</span>
+            {/* Mini bar */}
+            <div style={{ width: 60, height: 4, borderRadius: 2, background: 'rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+              <div style={{ width: `${pct}%`, height: '100%', background: sc.col, borderRadius: 2 }}/>
             </div>
-            <div
-              title={`KSh ${rev.toLocaleString()}`}
-              style={{
-                width: '100%', borderRadius: '4px 4px 0 0',
-                background: `linear-gradient(180deg,${T.gold2} 0%,${T.gold} 100%)`,
-                height: `${h}%`, minHeight: 4,
-                transition: 'height 0.6s cubic-bezier(.34,1.56,.64,1)',
-                cursor: 'default',
-              }}
-            />
-            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, color: T.muted }}>{day}</div>
+            <span style={{
+              fontFamily: "'Cormorant Garamond', serif", fontWeight: 700,
+              fontSize: 15, color: sc.col, minWidth: 24, textAlign: 'right',
+            }}>{count}</span>
           </div>
         );
       })}
@@ -38,211 +161,340 @@ function RevenueChart({ data }: { data: { day: string; revenue: string }[] }) {
   );
 }
 
-// ── KPI card ─────────────────────────────────────────────────────────────────
-interface KpiCardProps {
-  label: string;
-  value: string | number;
-  icon: string;
-  col: string;
-  bg: string;
-  border: string;
-  sub: string;
-  onClick?: () => void;   // ← optional click handler
-}
-
-function KpiCard({ label, value, icon, col, bg, border, sub, onClick }: KpiCardProps) {
+// ── Recent orders ─────────────────────────────────────────────────────────────
+function RecentOrders({ orders, onGoToOrders }: {
+  orders: Stats['recentOrders'];
+  onGoToOrders: () => void;
+}) {
+  if (!orders.length) {
+    return (
+      <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, color: T.grey1, textAlign: 'center', padding: '20px 0' }}>
+        No orders yet
+      </p>
+    );
+  }
   return (
-    <div
-      className="kpi"
-      onClick={onClick}
-      style={{
-        background: bg,
-        border: `1px solid ${border}`,
-        cursor: onClick ? 'pointer' : 'default',
-        position: 'relative',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-        <span style={{ fontSize: 26 }}>{icon}</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          {/* Small arrow hint for clickable cards */}
-          {onClick && (
-            <span style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, color: col, opacity: 0.6 }}>→</span>
-          )}
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: col, marginTop: 4 }}/>
-        </div>
-      </div>
-      <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 20, color: col, marginBottom: 4 }}>{value}</div>
-      <div style={{ fontFamily: 'Jost,sans-serif', fontWeight: 700, fontSize: 12, color: T.navy }}>{label}</div>
-      <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: T.muted, marginTop: 2 }}>{sub}</div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      {orders.map(o => {
+        const sc = SC[o.status] || SC.pending;
+        return (
+          <div
+            key={o.id}
+            onClick={onGoToOrders}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '10px 12px', borderRadius: 9,
+              background: T.grey5, border: `1px solid ${T.grey3}`,
+              cursor: 'pointer',
+            }}
+          >
+            {/* Avatar */}
+            <div style={{
+              width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+              background: T.black,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: "'Cormorant Garamond', serif",
+              fontWeight: 700, fontSize: 14, color: T.white,
+            }}>
+              {(o.customer_name || '?').charAt(0).toUpperCase()}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                fontFamily: 'Jost, sans-serif', fontWeight: 600, fontSize: 13,
+                color: T.black, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
+                {o.customer_name || 'Customer'}
+                <span style={{ color: T.grey1, fontWeight: 400 }}> #{o.id}</span>
+              </div>
+              <div style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: T.grey1, marginTop: 1 }}>
+                {new Date(o.created_at).toLocaleDateString('en-KE')}
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <span style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontWeight: 700, fontSize: 14, color: T.black,
+              }}>KSh {Number(o.total).toLocaleString()}</span>
+              <span style={{
+                fontFamily: 'Jost, sans-serif', fontSize: 9, fontWeight: 700,
+                padding: '2px 8px', borderRadius: 20,
+                background: sc.bg, color: sc.col, border: `1px solid ${sc.border}`,
+                textTransform: 'capitalize',
+              }}>{o.status}</span>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-// ── Overview tab ─────────────────────────────────────────────────────────────
-interface OverviewTabProps {
-  stats: Stats;
-  onGoToOrders: () => void;
+// ── Low stock ─────────────────────────────────────────────────────────────────
+function LowStockAlerts({ items, onGoToProducts }: {
+  items: Stats['lowStock'];
   onGoToProducts: () => void;
-  onGoToCustomers: () => void;   // ← new prop
+}) {
+  if (!items.length) {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '14px 16px', borderRadius: 9,
+        background: '#F0FDF4', border: '1px solid #BBF7D0',
+      }}>
+        <span style={{ fontSize: 16 }}>✓</span>
+        <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, color: '#166534', fontWeight: 600 }}>
+          All products are well stocked
+        </span>
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      {items.map(p => {
+        const out = p.stock === 0;
+        return (
+          <div
+            key={p.id}
+            onClick={onGoToProducts}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '10px 12px', borderRadius: 9, cursor: 'pointer',
+              background: out ? '#FEF2F2' : '#FFFBEB',
+              border: `1px solid ${out ? '#FECACA' : '#FDE68A'}`,
+            }}
+          >
+            <img
+              src={p.image_url || `https://placehold.co/40x40/F0F0F0/0A0A0A?text=📦`}
+              alt={p.name}
+              style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
+              onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/40x40/F0F0F0/0A0A0A?text=📦`; }}
+            />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                fontFamily: 'Jost, sans-serif', fontWeight: 600, fontSize: 13,
+                color: T.black, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>{p.name}</div>
+              <div style={{
+                fontFamily: 'Jost, sans-serif', fontSize: 11, fontWeight: 700, marginTop: 2,
+                color: out ? '#991B1B' : '#92400E',
+              }}>
+                {out ? 'Out of stock' : `Only ${p.stock} left`}
+              </div>
+            </div>
+            <div style={{
+              fontFamily: "'Cormorant Garamond', serif",
+              fontWeight: 700, fontSize: 14, color: T.black, flexShrink: 0,
+            }}>KSh {Number(p.price).toLocaleString()}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Section header ────────────────────────────────────────────────────────────
+function SectionHeader({ title, action, onAction }: {
+  title: string;
+  action?: string;
+  onAction?: () => void;
+}) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+      <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 700, fontSize: 13, color: T.black }}>
+        {title}
+      </span>
+      {action && onAction && (
+        <button
+          onClick={onAction}
+          style={{
+            fontFamily: 'Jost, sans-serif', fontSize: 12, fontWeight: 600,
+            color: T.grey1, background: 'none', border: 'none', cursor: 'pointer',
+            padding: '4px 8px', borderRadius: 6,
+          }}
+        >{action} →</button>
+      )}
+    </div>
+  );
+}
+
+// ── Main OverviewTab ──────────────────────────────────────────────────────────
+
+interface OverviewTabProps {
+  stats:           Stats;
+  onGoToOrders:    () => void;
+  onGoToProducts:  () => void;
+  onGoToCustomers: () => void;
 }
 
 export function OverviewTab({ stats, onGoToOrders, onGoToProducts, onGoToCustomers }: OverviewTabProps) {
-  const KPI_ITEMS: KpiCardProps[] = [
-    {
-      label: 'Total Revenue', value: `KSh ${stats.totalRevenue.toLocaleString()}`,
-      icon: '💰', col: T.gold, bg: 'rgba(200,169,81,0.08)', border: 'rgba(200,169,81,0.25)', sub: 'Confirmed orders',
-      // Revenue has no dedicated tab so no onClick
-    },
-    {
-      label: 'Active Orders', value: stats.activeOrders,
-      icon: '⏳', col: '#B7791F', bg: '#FDF8EC', border: '#F6E4A0', sub: 'Awaiting delivery',
-      onClick: onGoToOrders,
-    },
-    {
-      label: 'Total Orders', value: stats.totalOrders,
-      icon: '🧾', col: '#4A8A4A', bg: '#EEF5EE', border: '#C8DFC8', sub: 'All time',
-      onClick: onGoToOrders,
-    },
-    {
-      label: 'Products', value: stats.totalProducts,
-      icon: '📦', col: T.navy3, bg: 'rgba(30,47,90,0.07)', border: 'rgba(30,47,90,0.15)', sub: 'In catalogue',
-      onClick: onGoToProducts,
-    },
-    {
-      label: 'Customers', value: stats.totalUsers,
-      icon: '👥', col: '#2B7AB5', bg: '#EDF5FB', border: '#BAD9EF', sub: 'Registered',
-      onClick: onGoToCustomers,
-    },
+  const [dateRange, setDateRange] = useState<DateRange>(defaultDateRange());
+
+  // KPI cards config
+  const KPI_ROWS = [
+    [
+      {
+        label:   'Total Revenue',
+        value:   fmtKsh(stats.totalRevenue),
+        sub:     'Confirmed orders',
+        trend:   stats.revenueVsPrev ?? null,
+        accent:  true,
+      },
+      {
+        label:   'Total Profit',
+        value:   fmtKsh(stats.totalProfit ?? 0),
+        sub:     `${stats.profitMargin ?? 0}% margin`,
+        trend:   null as null,
+        accent:  false,
+      },
+      {
+        label:   'Avg Order Value',
+        value:   fmtKsh(stats.avgOrderValue ?? 0),
+        sub:     'Per confirmed order',
+        trend:   null as null,
+        accent:  false,
+      },
+    ],
+    [
+      {
+        label:   'Active Orders',
+        value:   stats.activeOrders,
+        sub:     'Awaiting delivery',
+        trend:   null as null,
+        accent:  false,
+        onClick: onGoToOrders,
+      },
+      {
+        label:   'Total Orders',
+        value:   stats.totalOrders,
+        sub:     'All time',
+        trend:   stats.ordersVsPrev ?? null,
+        accent:  false,
+        onClick: onGoToOrders,
+      },
+      {
+        label:   'Products',
+        value:   stats.totalProducts,
+        sub:     'In catalogue',
+        trend:   null as null,
+        accent:  false,
+        onClick: onGoToProducts,
+      },
+      {
+        label:   'Customers',
+        value:   stats.totalUsers,
+        sub:     'Registered',
+        trend:   null as null,
+        accent:  false,
+        onClick: onGoToCustomers,
+      },
+    ],
   ];
 
   return (
     <div className="fade-up">
-      {/* Header */}
-      <div className="dash-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+      {/* ── Page header ── */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between',
+        alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 12,
+      }}>
         <div>
-          <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: '2.5px', textTransform: 'uppercase', marginBottom: 6 }}>Dashboard</div>
-          <h1 style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 28, color: T.navy }}>Overview</h1>
+          <div style={{
+            fontFamily: 'Jost, sans-serif', fontSize: 10, fontWeight: 700,
+            color: T.grey1, letterSpacing: '2.5px', textTransform: 'uppercase', marginBottom: 6,
+          }}>Dashboard</div>
+          <h1 style={{
+            fontFamily: "'Cormorant Garamond', serif",
+            fontWeight: 700, fontSize: 32, color: T.black, lineHeight: 1,
+          }}>Overview</h1>
         </div>
-        <div className="dash-date" style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.muted, background: '#fff', border: `1px solid ${T.cream3}`, borderRadius: 9, padding: '8px 14px' }}>
-          📅 {new Date().toLocaleDateString('en-KE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <DateRangePicker value={dateRange} onChange={setDateRange} />
+          <div style={{
+            fontFamily: 'Jost, sans-serif', fontSize: 12, color: T.grey1,
+            background: T.white, border: `1px solid ${T.grey3}`,
+            borderRadius: 8, padding: '9px 14px',
+          }}>
+            {new Date().toLocaleDateString('en-KE', { weekday: 'short', day: 'numeric', month: 'long' })}
+          </div>
         </div>
       </div>
 
-      {/* KPI Grid */}
-      <div className="kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(178px,1fr))', gap: 14, marginBottom: 24 }}>
-        {KPI_ITEMS.map(k => <KpiCard key={k.label} {...k} />)}
+      {/* ── KPI row 1 — Revenue / Profit / AOV ── */}
+      <div className="kpi-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: 12, marginBottom: 12,
+      }}>
+        {KPI_ROWS[0].map(k => (
+          <StatCard key={k.label} {...k} />
+        ))}
       </div>
 
-      {/* Charts row */}
-      <div className="overview-charts" style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 18, marginBottom: 18 }}>
+      {/* ── KPI row 2 — Orders / Products / Customers ── */}
+      <div className="kpi-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: 12, marginBottom: 24,
+      }}>
+        {KPI_ROWS[1].map((k: any) => (
+          <StatCard key={k.label} {...k} />
+        ))}
+      </div>
+
+      {/* ── Charts row ── */}
+      <div className="overview-charts" style={{
+        display: 'grid', gridTemplateColumns: '1.6fr 1fr',
+        gap: 16, marginBottom: 16,
+      }}>
+        {/* Revenue / Profit chart */}
         <div className="panel">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ fontFamily: 'Jost,sans-serif', fontWeight: 700, fontSize: 13, color: T.navy }}>📈 Revenue — Last 7 Days</div>
-            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.muted }}>
-              KSh {stats.revenueByDay.reduce((s, d) => s + parseFloat(d.revenue), 0).toLocaleString()}
+          <SectionHeader
+            title="Revenue & Profit"
+            action="View Analytics"
+          />
+          <div style={{
+            display: 'flex', gap: 20, marginBottom: 16, flexWrap: 'wrap',
+          }}>
+            <div>
+              <div style={{ fontFamily: 'Jost, sans-serif', fontSize: 9, fontWeight: 700, color: T.grey1, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: 3 }}>Period Revenue</div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 700, fontSize: 20, color: T.black }}>
+                {fmtKsh(stats.revenueByDay.reduce((s, d) => s + parseFloat(d.revenue as any), 0))}
+              </div>
             </div>
+            {stats.totalProfit !== undefined && (
+              <div>
+                <div style={{ fontFamily: 'Jost, sans-serif', fontSize: 9, fontWeight: 700, color: T.grey1, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: 3 }}>Period Profit</div>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 700, fontSize: 20, color: '#166534' }}>
+                  {fmtKsh(stats.totalProfit)}
+                </div>
+              </div>
+            )}
           </div>
           <RevenueChart data={stats.revenueByDay} />
         </div>
+
+        {/* Orders by status */}
         <div className="panel">
-          <div style={{ fontFamily: 'Jost,sans-serif', fontWeight: 700, fontSize: 13, color: T.navy, marginBottom: 14 }}>📊 Orders by Status</div>
-          {stats.ordersByStatus.length === 0
-            ? <p style={{ fontFamily: 'Jost,sans-serif', fontSize: 13, color: T.muted, textAlign: 'center', padding: '16px 0' }}>No orders yet</p>
-            : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                {stats.ordersByStatus.map(r => {
-                  const sc = SC[r.status] || SC.pending;
-                  return (
-                    <div
-                      key={r.status}
-                      onClick={onGoToOrders}
-                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: sc.bg, border: `1px solid ${sc.border}`, borderRadius: 9, cursor: 'pointer' }}
-                    >
-                      <span style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, fontWeight: 600, color: sc.col, textTransform: 'capitalize' }}>{r.status}</span>
-                      <span style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 15, color: sc.col }}>{r.count}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )
-          }
+          <SectionHeader title="Orders by Status" action="View all" onAction={onGoToOrders} />
+          <OrdersByStatus data={stats.ordersByStatus} onGoToOrders={onGoToOrders} />
         </div>
       </div>
 
-      {/* Bottom row */}
-      <div className="overview-bottom" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+      {/* ── Bottom row ── */}
+      <div className="overview-bottom" style={{
+        display: 'grid', gridTemplateColumns: '1fr 1fr',
+        gap: 16,
+      }}>
         {/* Recent orders */}
         <div className="panel">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <div style={{ fontFamily: 'Jost,sans-serif', fontWeight: 700, fontSize: 13, color: T.navy }}>🧾 Recent Orders</div>
-            <button className="btn" style={{ background: T.cream, color: T.gold, border: `1px solid ${T.cream3}`, fontSize: 11, padding: '5px 12px' }} onClick={onGoToOrders}>View All →</button>
-          </div>
-          {stats.recentOrders.length === 0
-            ? <p style={{ fontFamily: 'Jost,sans-serif', fontSize: 13, color: T.muted, textAlign: 'center', padding: '16px 0' }}>No orders yet</p>
-            : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                {stats.recentOrders.map(o => {
-                  const sc = SC[o.status] || SC.pending;
-                  return (
-                    <div
-                      key={o.id}
-                      onClick={onGoToOrders}
-                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 12px', background: T.cream, borderRadius: 10, border: `1px solid ${T.cream3}`, cursor: 'pointer' }}
-                    >
-                      <div>
-                        <div style={{ fontFamily: 'Jost,sans-serif', fontWeight: 600, fontSize: 12, color: T.navy }}>
-                          {o.customer_name || 'Customer'} <span style={{ color: T.muted, fontWeight: 400 }}>#{o.id}</span>
-                        </div>
-                        <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: T.muted, marginTop: 1 }}>
-                          {new Date(o.created_at).toLocaleDateString('en-KE')}
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                        <span style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 13, color: T.gold }}>KSh {Number(o.total).toLocaleString()}</span>
-                        <span style={{ fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: sc.bg, color: sc.col, border: `1px solid ${sc.border}`, textTransform: 'capitalize' }}>{o.status}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )
-          }
+          <SectionHeader title="Recent Orders" action="View all" onAction={onGoToOrders} />
+          <RecentOrders orders={stats.recentOrders} onGoToOrders={onGoToOrders} />
         </div>
 
         {/* Low stock */}
         <div className="panel">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <div style={{ fontFamily: 'Jost,sans-serif', fontWeight: 700, fontSize: 13, color: T.navy }}>⚠️ Low Stock Alerts</div>
-            <button className="btn" style={{ background: T.cream, color: T.gold, border: `1px solid ${T.cream3}`, fontSize: 11, padding: '5px 12px' }} onClick={onGoToProducts}>Manage →</button>
-          </div>
-          {stats.lowStock.length === 0
-            ? <p style={{ fontFamily: 'Jost,sans-serif', fontSize: 13, color: '#4A8A4A', textAlign: 'center', padding: '16px 0' }}>✓ All products well stocked</p>
-            : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                {stats.lowStock.map(p => (
-                  <div
-                    key={p.id}
-                    onClick={onGoToProducts}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', background: p.stock === 0 ? '#FDF0EE' : '#FDF8EC', borderRadius: 10, border: `1px solid ${p.stock === 0 ? '#F5C6C0' : '#F6E4A0'}`, cursor: 'pointer' }}
-                  >
-                    <img
-                      src={p.image_url || 'https://placehold.co/40x40/F0EAD8/0D1B3E?text=📦'}
-                      style={{ width: 38, height: 38, borderRadius: 9, objectFit: 'cover', flexShrink: 0 }}
-                      onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/40x40/F0EAD8/0D1B3E?text=📦'; }}
-                    />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: 'Jost,sans-serif', fontWeight: 600, fontSize: 12, color: T.navy, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                      <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, fontWeight: 700, color: p.stock === 0 ? '#C0392B' : '#B7791F', marginTop: 1 }}>
-                        {p.stock === 0 ? '❌ Out of stock' : `⚠️ Only ${p.stock} left`}
-                      </div>
-                    </div>
-                    <div style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 13, color: T.gold, flexShrink: 0 }}>KSh {Number(p.price).toLocaleString()}</div>
-                  </div>
-                ))}
-              </div>
-            )
-          }
+          <SectionHeader title="Low Stock Alerts" action="Manage" onAction={onGoToProducts} />
+          <LowStockAlerts items={stats.lowStock} onGoToProducts={onGoToProducts} />
         </div>
       </div>
     </div>

@@ -90,3 +90,5 @@
            hover:shadow-card;
   }
 }
+/* Hide reCAPTCHA badge — disclosed in Privacy Policy & Terms */
+.grecaptcha-badge { visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }

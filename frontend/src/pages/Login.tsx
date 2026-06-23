@@ -160,6 +160,33 @@ export default function Login() {
             <span style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 500, fontSize: 15, color: "#0a0a0a" }}>Luku Prime</span>
           </div>
 
+      {/* Image Hero */}
+      <div style={{
+        width: "100%", borderRadius: 12, overflow: "hidden",
+        marginBottom: 28, background: "#0a0a0a",
+        height: 320
+      }}>
+        <img
+          src="https://res.cloudinary.com/dfiy43f01/image/upload/v1782201742/Lara_Bubmann_outfit__knns7x.jpg"
+          alt="Let's Go Shopping – Luku Prime"
+          style={{
+            width: "100%", height: "100%", objectFit: "cover",
+            objectPosition: "top", display: "block"
+          }}
+        />
+      </div>
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <p style={{
+          fontFamily: "'DM Sans',sans-serif", fontSize: 22, fontWeight: 700,
+          color: "#0a0a0a", letterSpacing: -0.3, lineHeight: 1.2
+        }}>Let's Go Shopping</p>
+        <p style={{
+          fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 500,
+          letterSpacing: "3px", textTransform: "uppercase",
+          color: "rgba(0,0,0,0.3)", marginTop: 6
+        }}>New Collection · Luku Prime</p>
+      </div>
+
           <div style={{ marginBottom: 28 }}>
             <div style={s.tag}>Member Login</div>
             <h1 style={s.heading}>Sign In</h1>

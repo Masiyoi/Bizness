@@ -1,14 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import type { Order } from '../../types';
-import type { Stats } from '../../types';
+import type { Order, Stats } from '../../types';
 import { T } from '../../constants';
-import { OrderCard } from './OrderCard';
+import { OrderCard }    from './OrderCard';
 import { OrderFilters } from './OrderFilters';
 
 interface OrdersTabProps {
-  orders: Order[];
-  stats: Stats | null;
-  onView: (o: Order) => void;
+  orders:   Order[];
+  stats:    Stats | null;
+  onView:   (o: Order) => void;
   onUpdate: (o: Order) => void;
 }
 
@@ -16,75 +15,103 @@ export function OrdersTab({ orders, stats, onView, onUpdate }: OrdersTabProps) {
   const [search,       setSearch]       = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  const filtered = useMemo(() => {
-    return orders.filter(o => {
-      const matchesStatus = statusFilter === '' || o.status === statusFilter;
-      const q = search.toLowerCase();
-      const matchesSearch =
-        !q ||
-        (o.customer_name  || '').toLowerCase().includes(q) ||
-        (o.customer_email || '').toLowerCase().includes(q) ||
-        (o.mpesa_phone    || '').toLowerCase().includes(q) ||
-        (o.mpesa_receipt  || '').toLowerCase().includes(q) ||
-        String(o.id).includes(q);
-      return matchesStatus && matchesSearch;
-    });
-  }, [orders, search, statusFilter]);
+  const filtered = useMemo(() => orders.filter(o => {
+    const matchStatus = statusFilter === '' || o.status === statusFilter;
+    const q           = search.toLowerCase();
+    const matchSearch =
+      !q ||
+      (o.customer_name  || '').toLowerCase().includes(q) ||
+      (o.customer_email || '').toLowerCase().includes(q) ||
+      (o.mpesa_phone    || '').toLowerCase().includes(q) ||
+      (o.mpesa_receipt  || '').toLowerCase().includes(q) ||
+      String(o.id).includes(q);
+    return matchStatus && matchSearch;
+  }), [orders, search, statusFilter]);
+
+  // Simple CSV export of visible orders
+  const exportCSV = () => {
+    const header = ['Order ID','Customer','Email','Phone','Total','Status','Tracking','M-Pesa Receipt','Date'].join(',');
+    const rows   = filtered.map(o => [
+      o.id,
+      `"${(o.customer_name  || '').replace(/"/g, '""')}"`,
+      `"${(o.customer_email || '').replace(/"/g, '""')}"`,
+      o.mpesa_phone    || '',
+      o.total,
+      o.status,
+      `"${o.tracking_status}"`,
+      o.mpesa_receipt  || '',
+      new Date(o.created_at).toLocaleDateString('en-KE'),
+    ].join(','));
+    const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `luku-orders-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="fade-up">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: '2.5px', textTransform: 'uppercase', marginBottom: 6 }}>Sales</div>
-          <h1 style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: 28, color: T.navy }}>Orders ({orders.length})</h1>
+          <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, fontWeight: 700, color: T.grey1, letterSpacing: '2.5px', textTransform: 'uppercase', marginBottom: 6 }}>Sales</div>
+          <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 32, color: T.black, lineHeight: 1 }}>
+            Orders <span style={{ fontSize: 20, color: T.grey1 }}>({orders.length})</span>
+          </h1>
         </div>
-        {stats && stats.activeOrders > 0 && (
-          <div style={{ background: 'rgba(200,169,81,0.1)', border: '1px solid rgba(200,169,81,0.3)', borderRadius: 10, padding: '10px 18px', fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.gold, fontWeight: 700 }}>
-            ⏳ {stats.activeOrders} active order{stats.activeOrders !== 1 ? 's' : ''} need attention
-          </div>
-        )}
+
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          {stats && stats.activeOrders > 0 && (
+            <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 9, padding: '9px 16px', fontFamily: 'Jost,sans-serif', fontSize: 12, color: '#92400E', fontWeight: 700 }}>
+              ⏳ {stats.activeOrders} active order{stats.activeOrders !== 1 ? 's' : ''} pending
+            </div>
+          )}
+          {/* CSV export */}
+          {filtered.length > 0 && (
+            <button
+              onClick={exportCSV}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 7,
+                padding: '9px 16px', borderRadius: 8,
+                border: `1px solid ${T.grey3}`, background: T.white,
+                fontFamily: 'Jost,sans-serif', fontSize: 12, fontWeight: 600, color: T.black, cursor: 'pointer',
+              }}
+            >⬇ Export CSV</button>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
       <OrderFilters
-        search={search}
-        setSearch={setSearch}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        totalCount={orders.length}
-        filteredCount={filtered.length}
+        search={search}           setSearch={setSearch}
+        statusFilter={statusFilter} setStatusFilter={setStatusFilter}
+        totalCount={orders.length}  filteredCount={filtered.length}
       />
 
-      {/* Orders list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* List */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {orders.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: T.muted, fontFamily: 'Jost,sans-serif' }}>
-            <div style={{ fontSize: 50, marginBottom: 14 }}>🧾</div>
-            <div style={{ fontWeight: 600, fontSize: 15, color: T.navy, marginBottom: 6 }}>No orders yet</div>
+          <div style={{ textAlign: 'center', padding: '70px 0', color: T.grey1, fontFamily: 'Jost,sans-serif' }}>
+            <div style={{ fontSize: 44, marginBottom: 14 }}>🧾</div>
+            <div style={{ fontWeight: 600, fontSize: 15, color: T.black, marginBottom: 6 }}>No orders yet</div>
             <div style={{ fontSize: 13 }}>Orders will appear here once customers start purchasing.</div>
           </div>
         )}
 
         {orders.length > 0 && filtered.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: T.muted, fontFamily: 'Jost,sans-serif' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-            <div style={{ fontWeight: 600, fontSize: 15, color: T.navy, marginBottom: 8 }}>No orders match your filters</div>
+          <div style={{ textAlign: 'center', padding: '60px 0', color: T.grey1, fontFamily: 'Jost,sans-serif' }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
+            <div style={{ fontWeight: 600, fontSize: 15, color: T.black, marginBottom: 10 }}>No orders match your filters</div>
             <button
-              className="btn"
-              style={{ background: T.cream, color: T.muted, border: `1px solid ${T.cream3}`, margin: '0 auto', padding: '8px 20px' }}
+              className="btn btn-secondary"
+              style={{ background: T.grey5, color: T.grey1, border: `1px solid ${T.grey3}`, margin: '0 auto' }}
               onClick={() => { setSearch(''); setStatusFilter(''); }}
             >Clear filters</button>
           </div>
         )}
 
         {filtered.map(o => (
-          <OrderCard
-            key={o.id}
-            order={o}
-            onView={onView}
-            onUpdate={onUpdate}
-          />
+          <OrderCard key={o.id} order={o} onView={onView} onUpdate={onUpdate} />
         ))}
       </div>
     </div>
