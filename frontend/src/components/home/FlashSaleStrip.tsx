@@ -202,7 +202,10 @@ export default function FlashSaleStrip({
         </div>
       )}
 
-      {/* Cards — reuses ProductCard, with sale price swapped in + % off badge */}
+      {/* Cards — reuses ProductCard, with sale price swapped in + % off badge.
+          FIX: product.price = sale_price (the active discounted price shown large)
+               comparePrice  = original price (shown slashed above it)
+          This satisfies ProductCard's hasDiscount check: comparePrice > product.price */}
       {!loading && products.length > 0 && (
         <div
           ref={stripRef}
@@ -222,12 +225,11 @@ export default function FlashSaleStrip({
         >
           <style>{'.flash-strip::-webkit-scrollbar { display: none }'}</style>
           {products.map(p => {
-            // ProductCard renders the card exactly like the rest of the catalog;
-            // we just feed it the sale price as the active price and the original
-            // price as comparePrice so it shows the slashed original + new price.
+            // product.price  → sale_price  (the discounted amount, shown prominently in red)
+            // comparePrice   → p.price     (the original amount, shown slashed in grey)
             const productForCard: Product & { images?: string[] } = {
               ...(p as unknown as Product),
-              price: String(p.price),
+              price: String(p.sale_price),   // ← active price = sale price
               images: p.images,
               image_url: p.image_url ?? '',
             };
@@ -236,7 +238,7 @@ export default function FlashSaleStrip({
                 <SaleBadge p={p} />
                 <ProductCard
                   product={productForCard}
-                  comparePrice={p.sale_price}
+                  comparePrice={Number(p.price)}   // ← compare price = original full price
                   inCart={cartIds.includes(p.id)}
                   inWishlist={wishlistIds.includes(p.id)}
                   isAdmin={isAdmin}
