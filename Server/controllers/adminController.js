@@ -42,8 +42,7 @@ const saveVariants = async (productId, variantsJson) => {
     const color = v.color || null;
     const size  = v.size  || null;
     if (!color && !size) continue;
-    if (!parseInt(v.stock)) continue;
-
+    // zero-stock variants are valid — do not skip them
     await db.query(
       `INSERT INTO product_variants (product_id, color, size, stock, sku)
        VALUES ($1, $2, $3, $4, $5)`,

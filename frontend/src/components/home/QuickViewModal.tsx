@@ -1,11 +1,11 @@
 // src/components/home/QuickViewModal.tsx
-import { useEffect } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { T, isNewProduct } from '../../constants/theme';
 import type { Product } from '../../constants/theme';
 
 interface QuickViewModalProps {
-  product: Product & { sku?: string };
+  product: Product & { sku?: string; images?: string[] };
   inCart: boolean;
   inWishlist: boolean;
   isAdmin: boolean;
@@ -15,10 +15,46 @@ interface QuickViewModalProps {
 }
 
 export default function QuickViewModal({
-  product, inCart, inWishlist, isAdmin, onCartToggle, onWishlistToggle, onClose,
+  product, inCart, inWishlist, isAdmin, onCartToggle, onWishlistToggle, onClose, salePrice,
 }: QuickViewModalProps) {
   const stock = product.stock ?? 0;
   const isNew = isNewProduct(product.created_at);
+
+  const images: string[] = (product.images && product.images.length > 0)
+    ? product.images
+    : product.image_url
+      ? [product.image_url]
+      : ['https://placehold.co/420x520/F0EAD8/0D1B3E?text=Luku+Prime'];
+  const count = images.length;
+
+  const [activeIdx, setActiveIdx]   = useState(0);
+  const dragging  = useRef(false);
+  const startX    = useRef(0);
+  const [dragOffset, setDragOffset] = useState(0);
+
+  const goTo = useCallback((idx: number) => {
+    setActiveIdx(Math.max(0, Math.min(count - 1, idx)));
+  }, [count]);
+
+  const prevImg = (e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); goTo(activeIdx - 1); };
+  const nextImg = (e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); goTo(activeIdx + 1); };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (count <= 1) return;
+    dragging.current = true;
+    startX.current   = e.touches[0].clientX;
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!dragging.current) return;
+    setDragOffset(e.touches[0].clientX - startX.current);
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!dragging.current) return;
+    dragging.current = false;
+    const delta = e.changedTouches[0].clientX - startX.current;
+    setDragOffset(0);
+    if (Math.abs(delta) > 35) delta < 0 ? goTo(activeIdx + 1) : goTo(activeIdx - 1);
+  };
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -37,18 +73,30 @@ export default function QuickViewModal({
         @keyframes qv-fade-in {
           from { opacity: 0; } to { opacity: 1; }
         }
-        @keyframes qv-slide-up {
-          from { transform: translateY(100%); } to { transform: translateY(0); }
-        }
         @keyframes qv-scale-in {
-          from { opacity: 0; transform: scale(0.96) translateY(10px); }
-          to   { opacity: 1; transform: scale(1)    translateY(0);     }
+          from { opacity: 0; transform: scale(0.94) translateY(8px); }
+          to   { opacity: 1; transform: scale(1)    translateY(0);   }
         }
-        .qv-desktop { display: none !important; }
-        .qv-mobile  { display: block !important; }
-        @media (min-width: 768px) {
-          .qv-desktop { display: flex !important; }
-          .qv-mobile  { display: none  !important; }
+        .qv-panel {
+          flex-direction: row;
+        }
+        .qv-image-pane {
+          flex: 0 0 46%;
+          min-height: 460px;
+        }
+        @media (max-width: 720px) {
+          .qv-panel {
+            flex-direction: column !important;
+            max-height: 92vh !important;
+          }
+          .qv-image-pane {
+            flex: 0 0 auto !important;
+            min-height: 0 !important;
+            height: 220px !important;
+          }
+          .qv-details-pane {
+            padding: 24px 20px 28px !important;
+          }
         }
         .qv-wishlist-btn:hover {
           background: ${T.navy} !important;
@@ -68,53 +116,68 @@ export default function QuickViewModal({
         }}
       />
 
-      {/* ══════════════════════════════════════════
-          DESKTOP — centered, side-by-side
-          ══════════════════════════════════════════ */}
+      {/* Centered popup — single layout for all screen sizes */}
       <div
-        className="qv-desktop"
         style={{
           position: 'fixed', inset: 0, zIndex: 1001,
-          alignItems: 'center', justifyContent: 'center',
-          padding: 24, pointerEvents: 'none',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 20, pointerEvents: 'none',
         }}
       >
         <div
+          className="qv-panel"
           style={{
             pointerEvents: 'all',
             background: '#fff',
-            borderRadius: 4,
+            borderRadius: 8,
             overflow: 'hidden',
             width: '100%',
             maxWidth: 840,
             maxHeight: '86vh',
             display: 'flex',
-            flexDirection: 'row',
             boxShadow: '0 32px 80px rgba(13,27,62,0.24)',
-            animation: 'qv-scale-in 0.28s cubic-bezier(0.25,0.46,0.45,0.94) forwards',
+            animation: 'qv-scale-in 0.26s cubic-bezier(0.25,0.46,0.45,0.94) forwards',
           }}
         >
-          {/* Left — Image (fills height) */}
-          <div style={{
-            flex: '0 0 46%',
-            position: 'relative',
-            background: '#F7F5F0',
-            overflow: 'hidden',
-            minHeight: 460,
-          }}>
-            <img
-              src={product.image_url}
-              alt={product.name}
-              style={{
-                position: 'absolute', inset: 0,
-                width: '100%', height: '100%',
-                objectFit: 'cover', display: 'block',
-              }}
-              onError={e => {
-                (e.target as HTMLImageElement).src =
-                  `https://placehold.co/420x520/F0EAD8/0D1B3E?text=Luku+Prime`;
-              }}
-            />
+          {/* Image carousel */}
+          <div
+            className="qv-image-pane"
+            style={{
+              position: 'relative',
+              background: '#F7F5F0',
+              overflow: 'hidden',
+            }}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
+            <div style={{
+              display: 'flex',
+              width: `${count * 100}%`,
+              height: '100%',
+              transform: `translateX(calc(${-activeIdx * (100 / count)}% + ${dragOffset}px))`,
+              transition: dragging.current ? 'none' : 'transform 0.32s cubic-bezier(0.25,0.46,0.45,0.94)',
+            }}>
+              {images.map((src, i) => (
+                <div key={i} style={{ flex: `0 0 ${100 / count}%`, height: '100%', position: 'relative' }}>
+                  <img
+                    src={src}
+                    alt={i === 0 ? product.name : `${product.name} view ${i + 1}`}
+                    style={{
+                      position: 'absolute', inset: 0,
+                      width: '100%', height: '100%',
+                      objectFit: 'cover', display: 'block',
+                    }}
+                    draggable={false}
+                    onError={e => {
+                      (e.target as HTMLImageElement).src =
+                        `https://placehold.co/420x520/F0EAD8/0D1B3E?text=Luku+Prime`;
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+
             {isNew && stock > 0 && <div style={badgeStyle(T.gold, T.navy)}>NEW</div>}
             {product.category && !isNew && stock > 0 && (
               <div style={badgeStyle(T.navy, T.gold)}>{product.category}</div>
@@ -124,14 +187,54 @@ export default function QuickViewModal({
                 position: 'absolute', inset: 0,
                 background: 'rgba(13,27,62,0.5)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                zIndex: 2,
               }}>
                 <span style={soldOutStyle}>Sold Out</span>
               </div>
             )}
+
+            {count > 1 && (
+              <>
+                <button
+                  onClick={prevImg}
+                  disabled={activeIdx === 0}
+                  aria-label="Previous image"
+                  style={arrowStyle('left', activeIdx === 0)}
+                >
+                  <span style={arrowIconStyle}>‹</span>
+                </button>
+                <button
+                  onClick={nextImg}
+                  disabled={activeIdx === count - 1}
+                  aria-label="Next image"
+                  style={arrowStyle('right', activeIdx === count - 1)}
+                >
+                  <span style={arrowIconStyle}>›</span>
+                </button>
+
+                <div style={{
+                  position: 'absolute', bottom: 10, left: 0, right: 0,
+                  display: 'flex', justifyContent: 'center', gap: 4, zIndex: 3,
+                }}>
+                  {images.map((_, i) => (
+                    <div
+                      key={i}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); goTo(i); }}
+                      style={{
+                        width: i === activeIdx ? 16 : 5, height: 5, borderRadius: 2.5,
+                        background: i === activeIdx ? '#fff' : 'rgba(255,255,255,0.55)',
+                        cursor: 'pointer', transition: 'width 0.25s ease, background 0.25s ease',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                      }}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Right — Details */}
-          <div style={{
+          {/* Details */}
+          <div className="qv-details-pane" style={{
             flex: 1, overflowY: 'auto',
             padding: '40px 36px 36px',
             display: 'flex', flexDirection: 'column',
@@ -172,12 +275,26 @@ export default function QuickViewModal({
 
             {/* Price + stock */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-              <span style={{
-                fontFamily: 'sans-serif', fontSize: 19,
-                fontWeight: 700, color: T.navy,
-              }}>
-                KSh {Number(product.price).toLocaleString()}
-              </span>
+              {salePrice != null ? (
+                <div style={{ display:'flex', alignItems:'baseline', gap:8, flexWrap:'wrap' }}>
+                  <span style={{ fontFamily:'sans-serif', fontSize:19, fontWeight:700, color:'#C2410C' }}>
+                    KSh {salePrice.toLocaleString()}
+                  </span>
+                  <span style={{ fontFamily:'sans-serif', fontSize:14, fontWeight:400, color:'#aaa', textDecoration:'line-through' }}>
+                    KSh {Number(product.price).toLocaleString()}
+                  </span>
+                  <span style={{ background:'#EF4444', color:'#fff', fontFamily:'sans-serif', fontWeight:700, fontSize:10, padding:'2px 8px', borderRadius:4 }}>
+                    -{Math.round(((Number(product.price) - salePrice) / Number(product.price)) * 100)}%
+                  </span>
+                </div>
+              ) : (
+                <span style={{
+                  fontFamily: 'sans-serif', fontSize: 19,
+                  fontWeight: 700, color: T.navy,
+                }}>
+                  KSh {Number(product.price).toLocaleString()}
+                </span>
+              )}
               <StockPill stock={stock} />
             </div>
 
@@ -211,110 +328,6 @@ export default function QuickViewModal({
               onClose={onClose}
             />
           </div>
-        </div>
-      </div>
-
-      {/* ══════════════════════════════════════════
-          MOBILE — bottom sheet
-          ══════════════════════════════════════════ */}
-      <div
-        className="qv-mobile"
-        style={{
-          position: 'fixed',
-          bottom: 0, left: 0, right: 0,
-          zIndex: 1001,
-          background: '#fff',
-          borderRadius: '16px 16px 0 0',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          animation: 'qv-slide-up 0.32s cubic-bezier(0.25,0.46,0.45,0.94) forwards',
-          boxShadow: '0 -8px 48px rgba(13,27,62,0.18)',
-        }}
-      >
-        {/* Drag handle */}
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 0' }}>
-          <div style={{ width: 40, height: 4, borderRadius: 2, background: '#DDD' }} />
-        </div>
-
-        {/* Close */}
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute', top: 14, right: 16,
-            background: 'none', border: 'none', cursor: 'pointer',
-            color: '#999', fontSize: 18, padding: 4,
-          }}
-          aria-label="Close"
-        >
-          ✕
-        </button>
-
-        {/* Image */}
-        <div style={{ position: 'relative', background: '#F7F5F0', overflow: 'hidden', marginTop: 8 }}>
-          <img
-            src={product.image_url}
-            alt={product.name}
-            style={{ width: '100%', maxHeight: 300, objectFit: 'cover', display: 'block' }}
-            onError={e => {
-              (e.target as HTMLImageElement).src =
-                `https://placehold.co/600x300/F0EAD8/0D1B3E?text=Luku+Prime`;
-            }}
-          />
-          {isNew && stock > 0 && <div style={badgeStyle(T.gold, T.navy)}>NEW</div>}
-          {product.category && !isNew && stock > 0 && (
-            <div style={badgeStyle(T.navy, T.gold)}>{product.category}</div>
-          )}
-          {stock === 0 && (
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'rgba(13,27,62,0.55)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <span style={soldOutStyle}>Sold Out</span>
-            </div>
-          )}
-        </div>
-
-        {/* Details */}
-        <div style={{ padding: '20px 20px 36px' }}>
-          <h2 style={{
-            fontFamily: 'Georgia, serif', fontSize: 20, fontWeight: 600,
-            color: T.navy, margin: '0 0 8px', lineHeight: 1.3,
-          }}>
-            {product.name}
-          </h2>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-            <span style={{ fontFamily: 'sans-serif', fontSize: 17, fontWeight: 700, color: T.navy }}>
-              KSh {Number(product.price).toLocaleString()}
-            </span>
-            <StockPill stock={stock} />
-          </div>
-
-          {product.description && (
-            <p style={{
-              fontFamily: 'sans-serif', fontSize: 13,
-              color: '#666', lineHeight: 1.65, margin: '0 0 16px',
-            }}>
-              {product.description}
-            </p>
-          )}
-
-          <div style={{ height: 1, background: '#EEE', margin: '0 0 16px' }} />
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 22 }}>
-            {product.category && <MetaRow label="Category"     value={product.category} />}
-            {product.sku      && <MetaRow label="SKU"          value={product.sku} />}
-            <MetaRow label="Availability" value={stock > 0 ? `${stock} units` : 'Unavailable'} />
-          </div>
-
-          <CTAs
-            isAdmin={isAdmin} stock={stock} inCart={inCart} inWishlist={inWishlist}
-            productId={product.id}
-            onCartToggle={onCartToggle}
-            onWishlistToggle={onWishlistToggle}
-            onClose={onClose}
-          />
         </div>
       </div>
     </>
@@ -417,6 +430,30 @@ function MetaRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function arrowStyle(side: 'left' | 'right', disabled: boolean): React.CSSProperties {
+  return {
+    position: 'absolute',
+    top: '50%',
+    [side]: 10,
+    transform: 'translateY(-50%)',
+    width: 28, height: 28,
+    borderRadius: '50%',
+    background: disabled ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.92)',
+    border: 'none',
+    cursor: disabled ? 'default' : 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    zIndex: 4,
+    opacity: disabled ? 0.4 : 1,
+    transition: 'opacity 0.2s',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+  };
+}
+
+const arrowIconStyle: React.CSSProperties = {
+  fontSize: 16, color: '#000', fontWeight: 700,
+  lineHeight: 1, userSelect: 'none',
+};
 
 function badgeStyle(bg: string, color: string): React.CSSProperties {
   return {
