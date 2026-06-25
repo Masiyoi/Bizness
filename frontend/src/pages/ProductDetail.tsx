@@ -550,6 +550,7 @@ export default function ProductDetail() {
   const [cartCount,     setCartCount]     = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [inWishlist,    setInWishlist]    = useState(false);
+  const [salePrice,     setSalePrice]     = useState<number | null>(null);
 
   // ── Derived variant state ──────────────────────────────────────────────────
   const hasVariants  = variants.length > 0;
@@ -674,6 +675,18 @@ export default function ProductDetail() {
         setLoading(false);
       })
       .catch(() => { setLoading(false); navigate('/'); });
+  }, [id]);
+
+  // Fetch flash sale price for this product (if any)
+  useEffect(() => {
+    setSalePrice(null);
+    axios.get('/api/products/flash-sales?limit=100')
+      .then(res => {
+        const match = (res.data as { id: number; sale_price: number }[])
+          .find(p => p.id === Number(id));
+        if (match) setSalePrice(match.sale_price);
+      })
+      .catch(() => {});
   }, [id]);
 
   // ── Restore selections if item already in cart ─────────────────────────────
@@ -922,12 +935,37 @@ export default function ProductDetail() {
 
             {/* Price + stock badge */}
             <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20, flexWrap:'wrap' }}>
-              <span style={{
-                fontFamily:"'Inter',sans-serif", fontWeight:700,
-                fontSize:'clamp(18px,2.5vw,24px)', color:'#000000',
-              }}>
-                KSh {Number(product.price).toLocaleString()}
-              </span>
+              {salePrice !== null ? (
+                <div style={{ display:'flex', alignItems:'baseline', gap:10, flexWrap:'wrap' }}>
+                  <span style={{
+                    fontFamily:"'Inter',sans-serif", fontWeight:700,
+                    fontSize:'clamp(18px,2.5vw,24px)', color:'#C2410C',
+                  }}>
+                    KSh {salePrice.toLocaleString()}
+                  </span>
+                  <span style={{
+                    fontFamily:"'Inter',sans-serif", fontWeight:400,
+                    fontSize:'clamp(13px,1.5vw,16px)', color:'#aaa',
+                    textDecoration:'line-through',
+                  }}>
+                    KSh {Number(product.price).toLocaleString()}
+                  </span>
+                  <span style={{
+                    background:'#EF4444', color:'#fff',
+                    fontFamily:"'Jost',sans-serif", fontWeight:800, fontSize:11,
+                    padding:'3px 9px', borderRadius:6, letterSpacing:'0.5px',
+                  }}>
+                    -{Math.round(((Number(product.price) - salePrice) / Number(product.price)) * 100)}%
+                  </span>
+                </div>
+              ) : (
+                <span style={{
+                  fontFamily:"'Inter',sans-serif", fontWeight:700,
+                  fontSize:'clamp(18px,2.5vw,24px)', color:'#000000',
+                }}>
+                  KSh {Number(product.price).toLocaleString()}
+                </span>
+              )}
               <VariantStockBadge
                 variant={selectedVariant}
                 hasVariants={hasVariants}

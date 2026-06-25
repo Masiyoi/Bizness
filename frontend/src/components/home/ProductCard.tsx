@@ -11,6 +11,7 @@ interface ProductCardProps {
   isAdmin:          boolean;
   onCartToggle:     (id: number) => void;
   onWishlistToggle: (id: number) => void;
+  comparePrice?:    number | string | null; // original price before discount (e.g. flash sales)
 }
 
 const isTouchDevice = () =>
@@ -248,11 +249,38 @@ const S = {
     minWidth:      0,
   } as React.CSSProperties,
 
+  priceWrap: {
+    display:       'flex',
+    alignItems:    'baseline',
+    gap:           6,
+    flexShrink:    0,
+    whiteSpace:    'nowrap' as const,
+  } as React.CSSProperties,
+
+  compareAt: {
+    fontFamily:    "'DM Sans', sans-serif",
+    fontSize:      11,
+    fontWeight:    400,
+    color:         '#aaa',
+    textDecoration:'line-through' as const,
+    letterSpacing: '0.1px',
+  } as React.CSSProperties,
+
   price: {
     fontFamily:    "'DM Sans', sans-serif",
     fontSize:      12,
     fontWeight:    400,
     color:         '#0A0A0A',
+    letterSpacing: '0.1px',
+    whiteSpace:    'nowrap' as const,
+    flexShrink:    0,
+  } as React.CSSProperties,
+
+  priceSale: {
+    fontFamily:    "'DM Sans', sans-serif",
+    fontSize:      12,
+    fontWeight:    600,
+    color:         '#C2410C',
     letterSpacing: '0.1px',
     whiteSpace:    'nowrap' as const,
     flexShrink:    0,
@@ -283,7 +311,7 @@ function CartIcon() {
 }
 
 export default function ProductCard({
-  product, inCart, inWishlist, isAdmin, onCartToggle, onWishlistToggle,
+  product, inCart, inWishlist, isAdmin, onCartToggle, onWishlistToggle, comparePrice,
 }: ProductCardProps) {
   const stock  = product.stock ?? 0;
   const images = (product as any).images?.length >= 1
@@ -364,6 +392,9 @@ export default function ProductCard({
     Date.now() - new Date((product as any).created_at).getTime() < 7 * 24 * 60 * 60 * 1000;
   const showLowStock = stock > 0 && stock <= 5;
 
+  // Quick View / Plus button should be visible on hover (desktop) or always-on-touch (mobile)
+  const showOverlayUI = hovered || isTouch;
+
   const handleActionBtn = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -376,6 +407,8 @@ export default function ProductCard({
     e.stopPropagation();
     setQuickViewOpen(true);
   };
+
+  const hasDiscount = comparePrice != null && Number(comparePrice) > Number(product.price);
 
   return (
     <>
@@ -431,10 +464,11 @@ export default function ProductCard({
               </div>
             )}
 
-            {!isAdmin && !isTouch && stock > 0 && (
+            {!isAdmin && stock > 0 && (
               <button
-                style={S.quickView(hovered)}
-                onClick={e => { e.preventDefault(); setQuickViewOpen(true); }}
+                style={S.quickView(showOverlayUI)}
+                onClick={e => { e.preventDefault(); e.stopPropagation(); setQuickViewOpen(true); }}
+                onTouchEnd={e => { e.preventDefault(); e.stopPropagation(); setQuickViewOpen(true); }}
               >
                 Quick View
               </button>
@@ -466,7 +500,14 @@ export default function ProductCard({
           <div style={S.info}>
             <div style={S.nameRow}>
               <span style={S.name}>{product.name}</span>
-              <span style={S.price}>KSh {Number(product.price).toLocaleString()}</span>
+              <span style={S.priceWrap}>
+                {hasDiscount && (
+                  <span style={S.compareAt}>KSh {Number(comparePrice).toLocaleString()}</span>
+                )}
+                <span style={hasDiscount ? S.priceSale : S.price}>
+                  KSh {Number(product.price).toLocaleString()}
+                </span>
+              </span>
             </div>
             {(product.category || showLowStock) && (
               <div style={S.meta}>
@@ -488,6 +529,7 @@ export default function ProductCard({
           onCartToggle={onCartToggle}
           onWishlistToggle={onWishlistToggle}
           onClose={() => setQuickViewOpen(false)}
+          salePrice={comparePrice != null ? Number(comparePrice) : null}
         />
       )}
     </>
