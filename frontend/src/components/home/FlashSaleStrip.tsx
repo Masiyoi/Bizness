@@ -321,58 +321,51 @@ export default function FlashSaleStrip({
         </div>
       )}
 
-      {/* Cards — reuses ProductCard, with sale price swapped in + % off badge */}
+      {/* Cards — reuses ProductCard, with sale price swapped in + % off badge.
+          product.price  → sale_price  (the discounted amount, shown prominently in red)
+          comparePrice   → p.price     (the original amount, shown slashed in grey) */}
       {!loading && products.length > 0 && (() => {
         const visibleProducts = selectedCategory === 'All'
           ? products
           : products.filter(p => p.category === selectedCategory);
         return (
-        <div
-          ref={stripRef}
-          onMouseDown={onMouseDown}
-          onMouseMove={onMouseMove}
-          onMouseUp={stopDrag}
-          onMouseLeave={stopDrag}
-          onMouseEnter={pauseAndScheduleResume}
-          onTouchStart={pauseAndScheduleResume}
-          style={{
-            display: 'flex', gap: 16,
-            padding: '0 clamp(20px,5%,80px) 28px',
-            overflowX: 'auto', scrollbarWidth: 'none',
-            cursor: 'grab', userSelect: 'none',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          <style>{'.flash-strip::-webkit-scrollbar { display: none }'}</style>
-          {visibleProducts.map(p => {
-            // ProductCard renders the card exactly like the rest of the catalog;
-            // we just feed it the sale price as the active price and the original
-            // price as comparePrice so it shows the slashed original + new price.
-            const productForCard: Product & { images?: string[] } = {
-              ...(p as unknown as Product),
-              price: String(p.price),
-              images: p.images,
-              image_url: p.image_url ?? '',
-            };
-            return (
-              <div key={p.id} style={{ position: 'relative', width: 200, flexShrink: 0 }}>
-                <SaleBadge p={p} />
-                <ProductCard
-                  product={productForCard}
-                  comparePrice={p.sale_price}
-                  inCart={cartIds.includes(p.id)}
-                  inWishlist={wishlistIds.includes(p.id)}
-                  isAdmin={isAdmin}
-                  onCartToggle={onCartToggle}
-                  onWishlistToggle={onWishlistToggle}
-                />
-              </div>
-            );
-          })}
-        </div>
+          <div
+            ref={stripRef}
+            onMouseDown={onMouseDown}
+            onMouseMove={onMouseMove}
+            onMouseUp={stopDrag}
+            onMouseLeave={stopDrag}
+            style={{
+              display: 'flex', gap: 16, overflowX: 'auto', scrollBehavior: 'auto',
+              padding: '0 clamp(20px,5%,80px) 24px', cursor: 'grab',
+              scrollbarWidth: 'none',
+            }}
+          >
+            {visibleProducts.map(p => {
+              const productForCard: Product & { images?: string[] } = {
+                ...(p as unknown as Product),
+                price: String(p.sale_price),   // ← active price = sale price
+                images: p.images,
+                image_url: p.image_url ?? '',
+              };
+              return (
+                <div key={p.id} style={{ position: 'relative', width: 200, flexShrink: 0 }}>
+                  <SaleBadge p={p} />
+                  <ProductCard
+                    product={productForCard}
+                    comparePrice={Number(p.price)}   // ← compare price = original full price
+                    inCart={cartIds.includes(p.id)}
+                    inWishlist={wishlistIds.includes(p.id)}
+                    isAdmin={isAdmin}
+                    onCartToggle={onCartToggle}
+                    onWishlistToggle={onWishlistToggle}
+                  />
+                </div>
+              );
+            })}
+          </div>
         );
       })()}
-
 
     </section>
   );
