@@ -95,9 +95,12 @@ export default function FlashSaleStrip({
   cartIds, wishlistIds, isAdmin, onCartToggle, onWishlistToggle,
 }: FlashSaleStripProps) {
   const stripRef = useRef<HTMLDivElement>(null);
-  const [products, setProducts] = useState<FlashProduct[]>([]);
-  const [loading,  setLoading]  = useState(true);
-  const [paused,   setPaused]   = useState(false);
+  const [products,         setProducts]         = useState<FlashProduct[]>([]);
+  const [loading,          setLoading]          = useState(true);
+  const [paused,           setPaused]           = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [drawerOpen,       setDrawerOpen]       = useState(false);
+  const filterBtnRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     axios.get('/api/products/flash-sales?limit=20')
@@ -176,12 +179,128 @@ export default function FlashSaleStrip({
             <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 'clamp(20px,3vw,30px)', color: '#0A0A0A', lineHeight: 1 }}>Flash Sales</h2>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           {!loading && <HeaderCountdown products={products} />}
           {!loading && products.length > 0 && (
-            <span style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: '#C2410C', fontWeight: 600 }}>
-              {products.length} deal{products.length !== 1 ? 's' : ''}
-            </span>
+            <div ref={filterBtnRef} style={{ position: 'relative', display: 'inline-block' }}>
+            <button
+              onClick={() => setDrawerOpen(v => !v)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                fontFamily: 'Jost,sans-serif', fontSize: 11, fontWeight: 600,
+                letterSpacing: '2px', textTransform: 'uppercase',
+                background: '#fff', color: '#0A0A0A',
+                border: '1px solid rgba(0,0,0,0.15)', padding: '9px 18px',
+                cursor: 'pointer',
+              }}
+            >
+              <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
+                <line x1="0" y1="2" x2="16" y2="2" stroke="#0A0A0A" strokeWidth="1.5" strokeLinecap="round"/>
+                <circle cx="5" cy="2" r="2" fill="#fff" stroke="#0A0A0A" strokeWidth="1.5"/>
+                <line x1="0" y1="7" x2="16" y2="7" stroke="#0A0A0A" strokeWidth="1.5" strokeLinecap="round"/>
+                <circle cx="11" cy="7" r="2" fill="#fff" stroke="#0A0A0A" strokeWidth="1.5"/>
+                <line x1="0" y1="12" x2="16" y2="12" stroke="#0A0A0A" strokeWidth="1.5" strokeLinecap="round"/>
+                <circle cx="4" cy="12" r="2" fill="#fff" stroke="#0A0A0A" strokeWidth="1.5"/>
+              </svg>
+              Filter
+              {selectedCategory !== 'All' && (
+                <span style={{ background: '#C2410C', color: '#fff', borderRadius: '50%', width: 16, height: 16, fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>1</span>
+              )}
+            </button>
+
+            {/* Popup anchored directly inside the relative wrapper */}
+            {drawerOpen && (
+              <>
+                <div
+                  onClick={() => setDrawerOpen(false)}
+                  style={{ position: 'fixed', inset: 0, zIndex: 998 }}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 8px)',
+                    right: 0,
+                    width: 200,
+                    background: '#fff',
+                    border: '1px solid rgba(0,0,0,0.10)',
+                    borderRadius: 10,
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                    zIndex: 999,
+                    overflow: 'hidden',
+                    animation: 'popupFadeUp 0.18s cubic-bezier(0.22,0.68,0,1.2) both',
+                  }}
+                >
+                  <style>{`@keyframes popupFadeUp { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }`}</style>
+
+                  {/* Header */}
+                  <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                    <p style={{ fontFamily: 'Jost,sans-serif', fontSize: 8, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: '#C2410C', margin: '0 0 2px' }}>Flash Sales</p>
+                    <p style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#0A0A0A', margin: 0 }}>Categories</p>
+                  </div>
+
+                  {/* All row */}
+                  <button
+                    onClick={() => { setSelectedCategory('All'); setDrawerOpen(false); }}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '10px 16px',
+                      background: selectedCategory === 'All' ? 'rgba(0,0,0,0.04)' : 'none',
+                      border: 'none',
+                      borderLeft: selectedCategory === 'All' ? '2px solid #0A0A0A' : '2px solid transparent',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, fontWeight: selectedCategory === 'All' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: selectedCategory === 'All' ? '#0A0A0A' : '#888' }}>All</span>
+                    <span style={{ fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 600, color: '#C2410C' }}>{products.length}</span>
+                  </button>
+
+                  <div style={{ margin: '0 16px', borderTop: '1px solid rgba(0,0,0,0.05)' }} />
+
+                  {/* Category rows */}
+                  {Array.from(new Set(products.map(p => p.category).filter(Boolean))).sort().map(cat => {
+                    const count  = products.filter(p => p.category === cat).length;
+                    const active = selectedCategory === cat;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => { setSelectedCategory(cat!); setDrawerOpen(false); }}
+                        style={{
+                          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '10px 16px',
+                          background: active ? 'rgba(0,0,0,0.04)' : 'none',
+                          border: 'none',
+                          borderLeft: active ? '2px solid #0A0A0A' : '2px solid transparent',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <span style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, fontWeight: active ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: active ? '#0A0A0A' : '#888' }}>{cat}</span>
+                        <span style={{ fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 600, color: '#C2410C' }}>{count}</span>
+                      </button>
+                    );
+                  })}
+
+                  {/* Clear filter */}
+                  {selectedCategory !== 'All' && (
+                    <>
+                      <div style={{ margin: '0 16px', borderTop: '1px solid rgba(0,0,0,0.05)' }} />
+                      <button
+                        onClick={() => { setSelectedCategory('All'); setDrawerOpen(false); }}
+                        style={{
+                          width: '100%', padding: '10px 16px', background: 'none', border: 'none',
+                          cursor: 'pointer', textAlign: 'left',
+                          fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 600,
+                          letterSpacing: '1.5px', textTransform: 'uppercase', color: '#aaa',
+                        }}
+                      >
+                        Clear ×
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+
+            </div>
           )}
         </div>
       </div>
@@ -203,53 +322,51 @@ export default function FlashSaleStrip({
       )}
 
       {/* Cards — reuses ProductCard, with sale price swapped in + % off badge.
-          FIX: product.price = sale_price (the active discounted price shown large)
-               comparePrice  = original price (shown slashed above it)
-          This satisfies ProductCard's hasDiscount check: comparePrice > product.price */}
-      {!loading && products.length > 0 && (
-        <div
-          ref={stripRef}
-          onMouseDown={onMouseDown}
-          onMouseMove={onMouseMove}
-          onMouseUp={stopDrag}
-          onMouseLeave={stopDrag}
-          onMouseEnter={pauseAndScheduleResume}
-          onTouchStart={pauseAndScheduleResume}
-          style={{
-            display: 'flex', gap: 16,
-            padding: '0 clamp(20px,5%,80px) 28px',
-            overflowX: 'auto', scrollbarWidth: 'none',
-            cursor: 'grab', userSelect: 'none',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          <style>{'.flash-strip::-webkit-scrollbar { display: none }'}</style>
-          {products.map(p => {
-            // product.price  → sale_price  (the discounted amount, shown prominently in red)
-            // comparePrice   → p.price     (the original amount, shown slashed in grey)
-            const productForCard: Product & { images?: string[] } = {
-              ...(p as unknown as Product),
-              price: String(p.sale_price),   // ← active price = sale price
-              images: p.images,
-              image_url: p.image_url ?? '',
-            };
-            return (
-              <div key={p.id} style={{ position: 'relative', width: 200, flexShrink: 0 }}>
-                <SaleBadge p={p} />
-                <ProductCard
-                  product={productForCard}
-                  comparePrice={Number(p.price)}   // ← compare price = original full price
-                  inCart={cartIds.includes(p.id)}
-                  inWishlist={wishlistIds.includes(p.id)}
-                  isAdmin={isAdmin}
-                  onCartToggle={onCartToggle}
-                  onWishlistToggle={onWishlistToggle}
-                />
-              </div>
-            );
-          })}
-        </div>
-      )}
+          product.price  → sale_price  (the discounted amount, shown prominently in red)
+          comparePrice   → p.price     (the original amount, shown slashed in grey) */}
+      {!loading && products.length > 0 && (() => {
+        const visibleProducts = selectedCategory === 'All'
+          ? products
+          : products.filter(p => p.category === selectedCategory);
+        return (
+          <div
+            ref={stripRef}
+            onMouseDown={onMouseDown}
+            onMouseMove={onMouseMove}
+            onMouseUp={stopDrag}
+            onMouseLeave={stopDrag}
+            style={{
+              display: 'flex', gap: 16, overflowX: 'auto', scrollBehavior: 'auto',
+              padding: '0 clamp(20px,5%,80px) 24px', cursor: 'grab',
+              scrollbarWidth: 'none',
+            }}
+          >
+            {visibleProducts.map(p => {
+              const productForCard: Product & { images?: string[] } = {
+                ...(p as unknown as Product),
+                price: String(p.sale_price),   // ← active price = sale price
+                images: p.images,
+                image_url: p.image_url ?? '',
+              };
+              return (
+                <div key={p.id} style={{ position: 'relative', width: 200, flexShrink: 0 }}>
+                  <SaleBadge p={p} />
+                  <ProductCard
+                    product={productForCard}
+                    comparePrice={Number(p.price)}   // ← compare price = original full price
+                    inCart={cartIds.includes(p.id)}
+                    inWishlist={wishlistIds.includes(p.id)}
+                    isAdmin={isAdmin}
+                    onCartToggle={onCartToggle}
+                    onWishlistToggle={onWishlistToggle}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
+
     </section>
   );
 }

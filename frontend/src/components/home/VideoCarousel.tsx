@@ -44,9 +44,9 @@ export const VIDEO_TILES: VideoTile[] = [
 
 // ─── Injected styles ──────────────────────────────────────────────────────────
 const TILE_STYLES = `
-  .video-tile { aspect-ratio: 16 / 7; }
+  .video-tile { aspect-ratio: 16 / 11; }
   @media (max-width: 640px) {
-    .video-tile { aspect-ratio: 9 / 16; }
+    .video-tile { aspect-ratio: 4 / 5; }
   }
   .vc-cta { transition: opacity 0.2s; }
   .vc-cta:hover { opacity: 0.72 !important; }
