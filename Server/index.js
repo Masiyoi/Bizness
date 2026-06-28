@@ -31,15 +31,23 @@ const allowedOrigins = [
   'https://bizness.onrender.com',
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow curl/Postman
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    if (origin.endsWith('.app.github.dev')) return callback(null, true); // ← fixes codespace
-    callback(new Error('CORS blocked: ' + origin));
-  },
-  credentials: true,
-}));
+// Webhook paths are called server-to-server by Safaricom/Pesapal —
+// there's no browser involved, so CORS (a browser-only mechanism) doesn't apply.
+// These must skip origin-checking entirely or the providers' callbacks get blocked.
+const webhookPaths = ['/api/payments/callback', '/api/payments/pesapal/ipn'];
+
+app.use((req, res, next) => {
+  if (webhookPaths.includes(req.path)) return next(); // skip CORS for webhooks
+  return cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // allow curl/Postman
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      if (origin.endsWith('.app.github.dev')) return callback(null, true); // ← fixes codespace
+      callback(new Error('CORS blocked: ' + origin));
+    },
+    credentials: true,
+  })(req, res, next);
+});
 
 app.use(express.json());
 app.use(cookieParser());
