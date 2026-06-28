@@ -127,7 +127,7 @@ const S = {
     pointerEvents: 'none' as const,
   } as React.CSSProperties,
 
-  actionBtn: (visible: boolean, inCart: boolean, isTouch: boolean): React.CSSProperties => ({
+  actionBtn: (visible: boolean, inCart: boolean): React.CSSProperties => ({
     position:       'absolute',
     bottom:         10,
     right:          10,
@@ -141,11 +141,11 @@ const S = {
     alignItems:     'center',
     justifyContent: 'center',
     zIndex:         10,
-    opacity:        visible || isTouch ? 1 : 0,
-    transform:      visible || isTouch ? 'scale(1)' : 'scale(0.75)',
+    opacity:        visible ? 1 : 0,
+    transform:      visible ? 'scale(1)' : 'scale(0.75)',
     transition:     'opacity 0.2s ease, transform 0.2s ease, background 0.15s',
     boxShadow:      '0 2px 10px rgba(0,0,0,0.18)',
-    pointerEvents:  'auto' as const,
+    pointerEvents:  visible ? 'auto' as const : 'none' as const,
   }),
 
   quickView: (visible: boolean): React.CSSProperties => ({
@@ -326,9 +326,31 @@ export default function ProductCard({
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [activeIdx,     setActiveIdx]     = useState(0);
   const [dragOffset,    setDragOffset]    = useState(0);
-  const [isTouch,       setIsTouch]       = useState(isTouchDevice);
+  // FIX: isTouch drives layout decisions (hide arrows on touch), but NOT overlay visibility.
+  // tapped tracks a short-lived "active" state after a tap, mirroring hover on desktop.
+  const [isTouch,       setIsTouch]       = useState(false);
+  const [tapped,        setTapped]        = useState(false);
+  const tapTimer = useRef<number | null>(null);
 
-  useEffect(() => { setIsTouch(isTouchDevice()); }, []);
+  useEffect(() => {
+    // Detect touch after mount to avoid SSR mismatches
+    setIsTouch(isTouchDevice());
+  }, []);
+
+  // On touch: show overlay briefly after a tap, then hide (mimics hover intent)
+  const handleCardTouchStart = useCallback(() => {
+    if (!isTouch) return;
+    setTapped(true);
+    if (tapTimer.current) window.clearTimeout(tapTimer.current);
+    tapTimer.current = window.setTimeout(() => setTapped(false), 2500);
+  }, [isTouch]);
+
+  useEffect(() => () => {
+    if (tapTimer.current) window.clearTimeout(tapTimer.current);
+  }, []);
+
+  // showOverlayUI: on desktop = hovered; on touch = tapped (not always-on)
+  const showOverlayUI = isTouch ? tapped : hovered;
 
   const dragging = useRef(false);
   const startX   = useRef(0);
@@ -392,22 +414,8 @@ export default function ProductCard({
     Date.now() - new Date((product as any).created_at).getTime() < 7 * 24 * 60 * 60 * 1000;
   const showLowStock = stock > 0 && stock <= 5;
 
-  // Quick View / Plus button should be visible on hover (desktop) or always-on-touch (mobile)
-  const showOverlayUI = hovered || isTouch;
-
-  const handleActionBtn = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setQuickViewOpen(true);
-  };
-
-  // Force show button on touch tap
-  const handleTouchBtn = (e: React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setQuickViewOpen(true);
-  };
-
+  // FIX: comparePrice is the ORIGINAL (higher) price; product.price is the sale (lower) price.
+  // hasDiscount is true when comparePrice > product.price.
   const hasDiscount = comparePrice != null && Number(comparePrice) > Number(product.price);
 
   return (
@@ -416,6 +424,7 @@ export default function ProductCard({
         style={S.card}
         onMouseEnter={() => !isTouch && setHovered(true)}
         onMouseLeave={onMouseLeaveCard}
+        onTouchStart={handleCardTouchStart}
       >
         <div style={S.imgOuter}>
           <Link
@@ -484,9 +493,9 @@ export default function ProductCard({
 
           {!isAdmin && stock > 0 && (
             <button
-              style={S.actionBtn(hovered, inCart, isTouch)}
-              onClick={handleActionBtn}
-              onTouchEnd={handleTouchBtn}
+              style={S.actionBtn(showOverlayUI, inCart)}
+              onClick={e => { e.preventDefault(); e.stopPropagation(); setQuickViewOpen(true); }}
+              onTouchEnd={e => { e.preventDefault(); e.stopPropagation(); setQuickViewOpen(true); }}
               aria-label={inCart ? 'View in bag' : 'Quick add'}
             >
               {inCart ? <CartIcon /> : (
@@ -501,6 +510,7 @@ export default function ProductCard({
             <div style={S.nameRow}>
               <span style={S.name}>{product.name}</span>
               <span style={S.priceWrap}>
+                {/* comparePrice = original full price (slashed); product.price = sale price (active) */}
                 {hasDiscount && (
                   <span style={S.compareAt}>KSh {Number(comparePrice).toLocaleString()}</span>
                 )}
