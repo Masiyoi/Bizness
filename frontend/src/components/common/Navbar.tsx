@@ -243,23 +243,15 @@ export default function Navbar({
       `}</style>
 
       {/* ── Announcement marquee ── */}
-      <div style={{ background: '#000', height: 32, overflow: 'hidden', display: 'flex', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <div style={{ overflow: 'hidden', width: '100%' }}>
-          <div className="flex gap-14 animate-marquee whitespace-nowrap">
-            {[...Array(2)].map((_, r) =>
-              ANNOUNCEMENTS.map((t, i) => (
-                <span key={`${r}-${i}`} style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 400, letterSpacing: '3px', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}>
-                  {t}
-                </span>
-              ))
-            )}
-          </div>
-        </div>
+      <div style={{ background: '#000', height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 101 }}>
+        <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: '3px', color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase' }}>
+          Get 10% off on your first order
+        </span>
       </div>
 
       {/* ── Main navbar ── */}
       <nav style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        position: 'fixed', top: 32, left: 0, right: 0, zIndex: 100,
         background: isTransparent ? 'transparent' : '#fff',
         borderBottom: isTransparent ? 'none' : '1px solid rgba(0,0,0,0.09)',
         transition: 'background 0.4s ease, border-color 0.4s ease',

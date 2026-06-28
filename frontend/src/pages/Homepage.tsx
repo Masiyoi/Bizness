@@ -12,7 +12,7 @@ import ReviewSection   from '../components/home/ReviewSection';
 import VideoCarousel, { VIDEO_TILES } from '../components/home/VideoCarousel';
 import FlashSaleStrip from '../components/home/FlashSaleStrip';
 
-import { readUser } from '../constants/theme';
+import { readUser, ANNOUNCEMENTS } from '../constants/theme';
 import WhatsAppLogo from '../assets/Whatsapplogo.jpg';
 import type { Product, HomepageReview, User } from '../constants/theme';
 
@@ -115,19 +115,6 @@ const css = `
   @media(max-width:640px) { .lp-wa-fab { width: 50px; height: 50px; bottom: 20px; right: 20px; } .lp-wa-fab img { width: 50px; height: 50px; } .lp-wa-tooltip { display: none; } }
 `;
 
-const ITEMS = [
-  'FAST SHIPPING ACROSS KENYA →',
-  'NAIROBI CBD DELIVERY — KSH 100',
-  'FREE SHOP PICKUP',
-  'NEW DROPS EVERY FRIDAY',
-  'AUTHENTIC FASHION ONLY',
-  "KENYA'S PREMIER FASHION STORE",
-  'SECURE M-PESA CHECKOUT',
-  '30-DAY EASY RETURNS',
-  'EXCLUSIVE SNEAKER DROPS',
-  'WORLDWIDE SHIPPING AVAILABLE',
-];
-
 function Hero({ onShop }: { onShop: (cat?: string) => void }) {
   const navigate = useNavigate();
   return (
@@ -159,36 +146,103 @@ function Hero({ onShop }: { onShop: (cat?: string) => void }) {
   );
 }
 
+import worldwideShipping from '../assets/worldwideshipping.png';
+import returnArrow from '../assets/returnarrow.png';
+import shopperIcon from '../assets/shoppericon.png';
+import securePayment from '../assets/securepayment.png';
+
 function StatsBar({ productCount }: { productCount: number }) {
   const items = [
-    { line1: 'WORLDWIDE', line2: 'SHIPPING', icon: (<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>) },
-    { line1: '30-DAY EASY', line2: 'RETURNS', icon: (<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.56"/></svg>) },
-    { line1: 'OVER 4,200', line2: 'CUSTOMERS', icon: (<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>) },
+    { line1: 'WORLDWIDE', line2: 'SHIPPING', img: worldwideShipping },
+    { line1: '2–3 DAY', line2: 'RETURN POLICY', img: returnArrow },
+    { line1: 'OVER 25K', line2: 'CUSTOMERS', img: shopperIcon },
+    { line1: 'SECURE', line2: 'PAYMENT', img: securePayment },
   ];
   return (
-    <div className="lp-stats">
-      {items.map(({ icon, line1, line2 }) => (
-        <div key={line1} className="lp-stat">
-          <div className="lp-stat-icon">{icon}</div>
-          <div className="lp-stat-label"><span>{line1}</span><br/><span>{line2}</span></div>
-        </div>
-      ))}
-    </div>
+    <>
+      <style>{`
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          border-bottom: 1px solid rgba(0,0,0,0.08);
+          background: #FFFFFF;
+        }
+        @media (max-width: 640px) {
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0;
+          }
+        }
+        .stat-item {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          padding: clamp(16px,3vw,40px) clamp(10px,2vw,32px);
+        }
+        @media (max-width: 640px) {
+          .stat-item {
+            flex-direction: column;
+            text-align: center;
+            gap: 8px;
+            padding: 20px 12px;
+          }
+        }
+        .stat-img {
+          width: 56px;
+          height: 56px;
+          object-fit: contain;
+          flex-shrink: 0;
+        }
+        @media (max-width: 640px) {
+          .stat-img {
+            width: 36px;
+            height: 36px;
+          }
+        }
+        .stat-label {
+          font-family: var(--f-sans);
+          font-size: clamp(10px,1.1vw,13px);
+          font-weight: 700;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          color: var(--ink);
+          line-height: 1.4;
+        }
+        @media (max-width: 640px) {
+          .stat-label {
+            font-size: 9px;
+            letter-spacing: 1px;
+          }
+        }
+      `}</style>
+      <div className="stats-grid">
+        {items.map(({ img, line1, line2 }) => (
+          <div key={line1} className="stat-item">
+            <img src={img} alt={line1} className="stat-img" />
+            <div className="stat-label">
+              <span>{line1}</span><br/><span>{line2}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 
 function Editorial({ onShop }: { onShop: (cat: string) => void }) {
+  const navigate = useNavigate();
   return (
     <section id="editorial" className="lp-editorial">
       <div className="lp-editorial-img">
-        <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=900&q=80" alt="Footwear Collection" />
-        <div className="lp-editorial-badge">Footwear Drop</div>
+        <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=900&q=80" alt="Our Story" />
+        <div className="lp-editorial-badge">Est. Nairobi, Kenya</div>
       </div>
       <div className="lp-editorial-copy">
-        <p style={{ fontFamily:"var(--f-sans)", fontSize:10, fontWeight:500, letterSpacing:'3px', textTransform:'uppercase', color:'var(--mid)', marginBottom:16 }}>Season Highlight</p>
-        <h3>Step into<br/>Something<br/>Extraordinary</h3>
-        <p>Exclusive sneakers and shoes sourced from the world's finest labels — authenticated, curated, and delivered to your door across Kenya.</p>
-        <button className="lp-btn-primary" onClick={() => onShop('Shoes')}>Shop Footwear</button>
+        <p style={{ fontFamily:"var(--f-sans)", fontSize:10, fontWeight:500, letterSpacing:'3px', textTransform:'uppercase', color:'var(--mid)', marginBottom:16 }}>Our Story</p>
+        <h3>Born in Nairobi,<br/>Dressed for<br/>the World</h3>
+        <p>Luku Prime started with a simple belief — that every person in Kenya deserves access to authentic, premium fashion without compromise. From curated thrift finds to coveted designer pieces, we source with intention, deliver with care, and dress a generation that refuses to settle.</p>
+        <button className="lp-btn-primary" onClick={() => navigate('/about')}>Read About Us</button>
       </div>
     </section>
   );
