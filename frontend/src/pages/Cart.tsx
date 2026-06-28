@@ -48,10 +48,10 @@ interface ShippingInfo {
 }
 
 const DELIVERY_OPTIONS: { value: DeliveryZone; label: string; sub: string; fee: number; icon: string }[] = [
-  { value: 'pickup',   label: 'Pick Up from Shop',  sub: 'Collect at our shop — no charge',    fee: 0,   icon: '🏪' },
-  { value: 'cbd',      label: 'Nairobi CBD',         sub: 'Delivery within the CBD area',       fee: 100, icon: '🏙️' },
-  { value: 'environs', label: 'Nairobi Environs',    sub: 'Outside CBD, within Nairobi county', fee: 200, icon: '🌆' },
-  { value: 'county',   label: 'Other Counties',      sub: 'Mombasa, Kisumu, Nakuru & more',     fee: 300, icon: '📍' },
+  { value: 'pickup',   label: 'Pick Up from Shop',  sub: 'Collect at our shop — no charge',    fee: 0,   icon: '' },
+  { value: 'cbd',      label: 'Nairobi CBD',         sub: 'Delivery within the CBD area',       fee: 100, icon: '' },
+  { value: 'environs', label: 'Nairobi Environs',    sub: 'Outside CBD, within Nairobi county', fee: 350, icon: '' },
+  { value: 'county',   label: 'Other Counties',      sub: 'Mombasa, Kisumu, Nakuru & more',     fee: 400, icon: '' },
 ];
 
 const KENYA_COUNTIES = [
@@ -101,6 +101,7 @@ export default function Cart() {
   const [selectedColors, setSelectedColors] = useState<Record<number, string>>({});
   const [selectedSizes,  setSelectedSizes]  = useState<Record<number, string>>({});
   const [flashSaleMap,   setFlashSaleMap]   = useState<Record<number, number>>({});
+  const [openDropdown,   setOpenDropdown]   = useState<string | null>(null);
 
   useEffect(() => {
     fetchCart();
@@ -432,6 +433,43 @@ export default function Cart() {
         }
         .fade-in { animation: fadeIn 0.3s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popupFadeUp { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
+        .lk-dd-trigger {
+          display: flex; align-items: center; justify-content: space-between;
+          width: 100%; padding: 10px 14px;
+          font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 600;
+          letter-spacing: 2px; text-transform: uppercase; color: #0A0A0A;
+          background: #fff; border: 1px solid rgba(0,0,0,0.15);
+          cursor: pointer; transition: border-color 0.18s; user-select: none;
+        }
+        .lk-dd-trigger:hover { border-color: #0A0A0A; }
+        .lk-dd-trigger.open { border-color: #0A0A0A; }
+        .lk-dd-popup {
+          position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+          background: #fff; border: 1px solid rgba(0,0,0,0.10);
+          box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+          z-index: 999; overflow: hidden;
+          animation: popupFadeUp 0.18s cubic-bezier(0.22,0.68,0,1.2) both;
+          max-height: 260px; overflow-y: auto;
+        }
+        .lk-dd-popup-header {
+          padding: 10px 14px 8px; border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+        .lk-dd-row {
+          width: 100%; display: flex; align-items: center; justify-content: space-between;
+          padding: 9px 14px; background: none; border: none;
+          border-left: 2px solid transparent;
+          font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 400;
+          letter-spacing: 1.5px; text-transform: uppercase; color: #888;
+          cursor: pointer; transition: background 0.12s;
+          text-align: left;
+        }
+        .lk-dd-row:hover { background: rgba(0,0,0,0.03); }
+        .lk-dd-row.active {
+          background: rgba(0,0,0,0.04); border-left-color: #0A0A0A;
+          color: #0A0A0A; font-weight: 700;
+        }
+        .lk-dd-wrap { position: relative; }
       `}</style>
 
       {/* ── NAVBAR ── */}
@@ -518,27 +556,35 @@ export default function Cart() {
 
                         {/* ── COLOUR SELECTOR ── */}
                         {hasColors && (
-                          <div className="color-row">
-                            <select
-                              className="color-select"
-                              value={chosen}
-                              onChange={e => handleColorChange(item.id, e.target.value)}
-                              disabled={isBusy}
-                              style={{ border: `1.5px solid ${chosen ? '#000' : '#E0E0E0'}` }}
-                            >
-                              <option value="">Select colour…</option>
-                              {item.colors.map(c => (
-                                <option key={c} value={c}>{c}</option>
-                              ))}
-                            </select>
-                            {chosen ? (
-                              <div className="color-swatch-pill">
-                                <div style={{ width: 10, height: 10, borderRadius: '50%', background: chosen, border: '1.5px solid rgba(0,0,0,0.15)', flexShrink: 0 }} />
-                                {chosen}
-                              </div>
-                            ) : (
-                              <span className="color-nudge">⚠ Pick a colour</span>
+                          <div className="lk-dd-wrap" style={{ margin: '4px 0 8px' }}>
+                            {openDropdown === `color-${item.id}` && (
+                              <div style={{ position:'fixed', inset:0, zIndex:998 }} onClick={() => setOpenDropdown(null)} />
                             )}
+                            <div
+                              className={`lk-dd-trigger${openDropdown === `color-${item.id}` ? ' open' : ''}`}
+                              onClick={() => !isBusy && setOpenDropdown(openDropdown === `color-${item.id}` ? null : `color-${item.id}`)}
+                            >
+                              <span style={{ color: chosen ? '#0A0A0A' : '#888' }}>{chosen || 'Select Colour'}</span>
+                              <svg width="8" height="5" viewBox="0 0 8 5" fill="none" style={{ transition:'transform 0.2s', transform: openDropdown === `color-${item.id}` ? 'rotate(180deg)' : 'none', flexShrink:0 }}>
+                                <path d="M1 1l3 3 3-3" stroke="#0A0A0A" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </div>
+                            {openDropdown === `color-${item.id}` && (
+                              <div className="lk-dd-popup">
+                                <div className="lk-dd-popup-header">
+                                  <p style={{ fontFamily:'DM Sans,sans-serif', fontSize:8, fontWeight:700, letterSpacing:'3px', textTransform:'uppercase', color:'#C2410C', margin:'0 0 2px' }}>Item</p>
+                                  <p style={{ fontFamily:'DM Sans,sans-serif', fontSize:10, fontWeight:700, letterSpacing:'2px', textTransform:'uppercase', color:'#0A0A0A', margin:0 }}>Colour</p>
+                                </div>
+                                {item.colors.map(c => (
+                                  <button key={c} className={`lk-dd-row${chosen === c ? ' active' : ''}`}
+                                    onClick={() => { handleColorChange(item.id, c); setOpenDropdown(null); }}>
+                                    <span>{c}</span>
+                                    {chosen === c && <span style={{ fontSize:9, color:'#C2410C', fontWeight:700 }}>✓</span>}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                            {!chosen && <span className="color-nudge" style={{ display:'block', marginTop:3 }}>⚠ Pick a colour</span>}
                           </div>
                         )}
 
@@ -658,30 +704,79 @@ export default function Cart() {
 
                 <div style={{ marginBottom: 20 }}>
                   <label className="field-label" style={{ display: 'block', marginBottom: 10 }}>Delivery Method *</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
-                    {DELIVERY_OPTIONS.map(opt => (
-                      <div key={opt.value}
-                        onClick={() => { setDeliveryZone(opt.value); sessionStorage.setItem('luku_zone', opt.value); }}
-                        style={{ border: `1.5px solid ${deliveryZone === opt.value ? '#000' : '#E0E0E0'}`, background: deliveryZone === opt.value ? '#F5F5F5' : '#fff', borderRadius: 12, padding: '12px 14px', cursor: 'pointer', transition: 'all 0.18s' }}>
-                        <div style={{ fontSize: 20, marginBottom: 6 }}>{opt.icon}</div>
-                        <div className="jost" style={{ fontSize: 12, fontWeight: 700, color: T.navy, marginBottom: 2 }}>{opt.label}</div>
-                        <div className="jost" style={{ fontSize: 10, color: T.muted, lineHeight: 1.4 }}>{opt.sub}</div>
-                        <div className="jost" style={{ fontSize: 13, fontWeight: 800, color: opt.fee === 0 ? '#2D6A2D' : '#000', marginTop: 6 }}>
-                          {opt.fee === 0 ? 'FREE' : `KSh ${opt.fee}`}
+                  <div className="lk-dd-wrap">
+                    {openDropdown === 'delivery' && (
+                      <div style={{ position:'fixed', inset:0, zIndex:998 }} onClick={() => setOpenDropdown(null)} />
+                    )}
+                    <div
+                      className={`lk-dd-trigger${openDropdown === 'delivery' ? ' open' : ''}`}
+                      onClick={() => setOpenDropdown(openDropdown === 'delivery' ? null : 'delivery')}
+                    >
+                      <span>{DELIVERY_OPTIONS.find(o => o.value === deliveryZone)?.label}</span>
+                      <svg width="8" height="5" viewBox="0 0 8 5" fill="none" style={{ transition:'transform 0.2s', transform: openDropdown === 'delivery' ? 'rotate(180deg)' : 'none', flexShrink:0 }}>
+                        <path d="M1 1l3 3 3-3" stroke="#0A0A0A" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    {openDropdown === 'delivery' && (
+                      <div className="lk-dd-popup">
+                        <div className="lk-dd-popup-header">
+                          <p style={{ fontFamily:'DM Sans,sans-serif', fontSize:8, fontWeight:700, letterSpacing:'3px', textTransform:'uppercase', color:'#C2410C', margin:'0 0 2px' }}>Choose</p>
+                          <p style={{ fontFamily:'DM Sans,sans-serif', fontSize:10, fontWeight:700, letterSpacing:'2px', textTransform:'uppercase', color:'#0A0A0A', margin:0 }}>Delivery Method</p>
                         </div>
+                        {DELIVERY_OPTIONS.map(opt => (
+                          <button key={opt.value} className={`lk-dd-row${deliveryZone === opt.value ? ' active' : ''}`}
+                            onClick={() => { setDeliveryZone(opt.value); sessionStorage.setItem('luku_zone', opt.value); setOpenDropdown(null); }}>
+                            <span>{opt.label}</span>
+                            <span style={{ fontSize:9, fontWeight:700, color: opt.fee === 0 ? '#16a34a' : '#C2410C' }}>
+                              {opt.fee === 0 ? 'FREE' : `KSh ${opt.fee}`}
+                            </span>
+                          </button>
+                        ))}
                       </div>
-                    ))}
+                    )}
+                  </div>
+                  <div style={{ marginTop: 8, padding: '4px 0' }}>
+                    <span className="jost" style={{ fontSize: 11, color: T.muted }}>
+                      {DELIVERY_OPTIONS.find(o => o.value === deliveryZone)?.sub}
+                    </span>
                   </div>
                 </div>
 
                 {deliveryZone === 'pickup' ? (
                   <div className="form-field fade-in">
                     <label className="field-label">Pickup Location *</label>
-                    <select value={shipping.pickupLocation} onChange={e => setField('pickupLocation', e.target.value)} onBlur={() => touch('pickupLocation')}
-                      style={{ ...inputStyle('pickupLocation'), backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230D1B3E' stroke-width='1.5' fill='none'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center', paddingRight: 36 }}>
-                      <option value="">Select pickup branch…</option>
-                      {PICKUP_LOCATIONS.map(loc => <option key={loc} value={loc}>{loc}</option>)}
-                    </select>
+                    <div className="lk-dd-wrap">
+                      {openDropdown === 'pickup' && (
+                        <div style={{ position:'fixed', inset:0, zIndex:998 }} onClick={() => { setOpenDropdown(null); touch('pickupLocation'); }} />
+                      )}
+                      <div
+                        className={`lk-dd-trigger${openDropdown === 'pickup' ? ' open' : ''}`}
+                        style={{ borderColor: formErrors.pickupLocation && formTouched.pickupLocation ? '#CC0000' : openDropdown === 'pickup' || shipping.pickupLocation ? '#0A0A0A' : 'rgba(0,0,0,0.15)' }}
+                        onClick={() => setOpenDropdown(openDropdown === 'pickup' ? null : 'pickup')}
+                      >
+                        <span style={{ color: shipping.pickupLocation ? '#0A0A0A' : '#888', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1, marginRight:8 }}>
+                          {shipping.pickupLocation || 'Select Pickup Branch'}
+                        </span>
+                        <svg width="8" height="5" viewBox="0 0 8 5" fill="none" style={{ transition:'transform 0.2s', transform: openDropdown === 'pickup' ? 'rotate(180deg)' : 'none', flexShrink:0 }}>
+                          <path d="M1 1l3 3 3-3" stroke="#0A0A0A" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      {openDropdown === 'pickup' && (
+                        <div className="lk-dd-popup">
+                          <div className="lk-dd-popup-header">
+                            <p style={{ fontFamily:'DM Sans,sans-serif', fontSize:8, fontWeight:700, letterSpacing:'3px', textTransform:'uppercase', color:'#C2410C', margin:'0 0 2px' }}>Luku Prime</p>
+                            <p style={{ fontFamily:'DM Sans,sans-serif', fontSize:10, fontWeight:700, letterSpacing:'2px', textTransform:'uppercase', color:'#0A0A0A', margin:0 }}>Pickup Branch</p>
+                          </div>
+                          {PICKUP_LOCATIONS.map(loc => (
+                            <button key={loc} className={`lk-dd-row${shipping.pickupLocation === loc ? ' active' : ''}`}
+                              onClick={() => { setField('pickupLocation', loc); setOpenDropdown(null); }}>
+                              <span>🏪 {loc.replace('Luku Prime — ', '')}</span>
+                              {shipping.pickupLocation === loc && <span style={{ fontSize:9, color:'#C2410C', fontWeight:700 }}>✓</span>}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     {formTouched.pickupLocation && formErrors.pickupLocation && <span className="field-error">{formErrors.pickupLocation}</span>}
                     <div style={{ background: 'rgba(74,122,74,0.08)', border: '1px solid rgba(74,122,74,0.25)', borderRadius: 10, padding: '10px 14px', marginTop: 10 }}>
                       <p className="jost" style={{ fontSize: 12, color: '#4A7A4A', fontWeight: 500 }}>🏪 You'll collect your order at this branch — no delivery fee!</p>
@@ -691,11 +786,36 @@ export default function Cart() {
                   <>
                     <div className="form-field fade-in">
                       <label className="field-label">County *</label>
-                      <select value={shipping.county} onChange={e => setField('county', e.target.value)} onBlur={() => touch('county')}
-                        style={{ ...inputStyle('county'), backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230D1B3E' stroke-width='1.5' fill='none'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center', paddingRight: 36 }}>
-                        <option value="">Select county…</option>
-                        {KENYA_COUNTIES.map(c => <option key={c} value={c}>{c}</option>)}
-                      </select>
+                      <div className="lk-dd-wrap">
+                        {openDropdown === 'county' && (
+                          <div style={{ position:'fixed', inset:0, zIndex:998 }} onClick={() => { setOpenDropdown(null); touch('county'); }} />
+                        )}
+                        <div
+                          className={`lk-dd-trigger${openDropdown === 'county' ? ' open' : ''}`}
+                          style={{ borderColor: formErrors.county && formTouched.county ? '#CC0000' : openDropdown === 'county' || shipping.county ? '#0A0A0A' : 'rgba(0,0,0,0.15)' }}
+                          onClick={() => setOpenDropdown(openDropdown === 'county' ? null : 'county')}
+                        >
+                          <span style={{ color: shipping.county ? '#0A0A0A' : '#888' }}>{shipping.county || 'Select County'}</span>
+                          <svg width="8" height="5" viewBox="0 0 8 5" fill="none" style={{ transition:'transform 0.2s', transform: openDropdown === 'county' ? 'rotate(180deg)' : 'none', flexShrink:0 }}>
+                            <path d="M1 1l3 3 3-3" stroke="#0A0A0A" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                        {openDropdown === 'county' && (
+                          <div className="lk-dd-popup">
+                            <div className="lk-dd-popup-header">
+                              <p style={{ fontFamily:'DM Sans,sans-serif', fontSize:8, fontWeight:700, letterSpacing:'3px', textTransform:'uppercase', color:'#C2410C', margin:'0 0 2px' }}>Kenya</p>
+                              <p style={{ fontFamily:'DM Sans,sans-serif', fontSize:10, fontWeight:700, letterSpacing:'2px', textTransform:'uppercase', color:'#0A0A0A', margin:0 }}>County</p>
+                            </div>
+                            {KENYA_COUNTIES.map(c => (
+                              <button key={c} className={`lk-dd-row${shipping.county === c ? ' active' : ''}`}
+                                onClick={() => { setField('county', c); setOpenDropdown(null); }}>
+                                <span>{c}</span>
+                                {shipping.county === c && <span style={{ fontSize:9, color:'#C2410C', fontWeight:700 }}>✓</span>}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       {formTouched.county && formErrors.county && <span className="field-error">{formErrors.county}</span>}
                     </div>
                     <div className="form-field fade-in">
@@ -753,8 +873,18 @@ export default function Cart() {
                       const isLast   = idx === arr.length - 1;
                       return (
                         <div key={i.id} style={{ marginBottom: isLast ? 0 : 12, paddingBottom: isLast ? 0 : 12, borderBottom: isLast ? 'none' : `1px solid ${T.creamDeep}` }}>
-                          <div className="jost" style={{ fontSize: 11, fontWeight: 700, color: T.navy, marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {i.name}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                            <div style={{ width: 40, height: 40, borderRadius: 6, overflow: 'hidden', flexShrink: 0, background: T.creamMid }}>
+                              <img
+                                src={i.image_url}
+                                alt={i.name}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/40x40/F5F5F5/000?text=LP'; }}
+                              />
+                            </div>
+                            <div className="jost" style={{ fontSize: 11, fontWeight: 700, color: T.navy, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                              {i.name}
+                            </div>
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                             {hasColor && (
@@ -803,6 +933,9 @@ export default function Cart() {
                   <span className="jost" style={{ fontWeight: 800, fontSize: 22, color: T.navy, letterSpacing: '-0.5px' }}>KSh {total.toLocaleString()}</span>
                 </div>
 
+                <button className="cta-primary" style={{ marginBottom: 10, background: '#16a34a' }} onClick={handleCheckout}>Proceed to Checkout →</button>
+                <button className="cta-secondary" style={{ marginBottom: 18 }} onClick={() => navigate('/')}>Continue Shopping</button>
+
                 <div style={{ border: '1px solid #E0E0E0', borderRadius: 8, padding: '12px 16px', marginBottom: 18 }}>
                   <div className="jost" style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#888', marginBottom: 10, textAlign: 'center' }}>We Accept</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -815,34 +948,14 @@ export default function Cart() {
                   </div>
                 </div>
 
-                <div className="desktop-ctas">
-                  <button className="cta-primary" onClick={handleCheckout}>Proceed to Checkout →</button>
-                  <button className="cta-secondary" onClick={() => navigate('/')}>Continue Shopping</button>
-                </div>
 
-                <div style={{ display: 'flex', gap: 10, marginTop: 18, justifyContent: 'center', flexWrap: 'wrap' }}>
-                  {['🔒 Secure', '↩️ 30-Day Returns', '🚚 Fast Delivery'].map(b => (
-                    <span key={b} className="jost" style={{ fontSize: 10, color: T.muted }}>{b}</span>
-                  ))}
-                </div>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* ── MOBILE STICKY CHECKOUT BAR ── */}
-      {items.length > 0 && (
-        <div className="mobile-checkout-bar">
-          <div style={{ flex: 1 }}>
-            <div className="jost" style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', letterSpacing: '1px', textTransform: 'uppercase' }}>Total</div>
-            <div className="jost" style={{ fontWeight: 800, fontSize: 18, color: '#fff' }}>KSh {total.toLocaleString()}</div>
-          </div>
-          <button className="cta-primary" style={{ width: 'auto', padding: '14px 24px', flex: 1 }} onClick={handleCheckout}>
-            Checkout →
-          </button>
-        </div>
-      )}
+
 
       {/* ── FOOTER ── */}
       <Footer />

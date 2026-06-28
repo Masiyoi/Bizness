@@ -34,8 +34,8 @@ const T = {
 const DELIVERY_OPTIONS: { value: DeliveryZone; label: string; fee: number }[] = [
   { value:'pickup',   label:'Pick Up from Shop',  fee:0   },
   { value:'cbd',      label:'Nairobi CBD',         fee:100 },
-  { value:'environs', label:'Nairobi Environs',    fee:200 },
-  { value:'county',   label:'Other Counties',      fee:300 },
+  { value:'environs', label:'Nairobi Environs',    fee:350 },
+  { value:'county',   label:'Other Counties',      fee:400 },
 ];
 
 export default function Checkout() {
@@ -270,6 +270,7 @@ export default function Checkout() {
         .ornament-diamond{width:5px;height:5px;background:#000;transform:rotate(45deg);flex-shrink:0}
 
         .lp-card{background:#fff;border:1px solid #E0E0E0;border-radius:0;padding:40px 38px;width:100%;max-width:500px;box-shadow:0 4px 24px rgba(0,0,0,0.06)}
+        .lp-card-wide{max-width:640px}
 
         .item-card{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #E0E0E0;border-radius:0;padding:14px 16px;transition:border-color 0.2s}
         .item-card:hover{border-color:#000}
@@ -290,18 +291,19 @@ export default function Checkout() {
         .cta-navy:hover{background:#F5F5F5;transform:translateY(-1px)}
 
         /* Payment method selector cards */
-        .pay-method-card{border-radius:0;padding:20px 22px;cursor:pointer;transition:all 0.25s;display:flex;align-items:center;gap:16px;width:100%;background:#fff;margin-bottom:12px}
-        .pay-method-card:hover{transform:translateY(-2px)}
-        .pay-method-card.selected{border:2px solid #000;background:#F5F5F5}
-        .pay-method-card.unselected{border:1.5px solid #E0E0E0}
+        .pay-method-list{border:1px solid #E5E5E5;border-radius:8px;overflow:hidden;margin-bottom:8px}
+        .pay-method-card{border-radius:0;padding:14px 16px;cursor:pointer;transition:background 0.15s ease;display:flex;align-items:center;gap:12px;width:100%;background:#fff;margin-bottom:0;border:none;border-bottom:1px solid #E5E5E5}
+        .pay-method-card:last-child{border-bottom:none}
+        .pay-method-card:hover{background:#FAFAFA}
+        .pay-method-card.selected{background:#F5F5F5}
 
         .phone-input{background:#fff;border:1.5px solid #E0E0E0;border-radius:0;padding:14px 18px;color:#000;font-size:16px;font-family:'DM Sans',sans-serif;width:100%;outline:none;transition:border-color 0.2s;letter-spacing:1.5px}
-        .phone-input:focus{border-color:#000;background:#fff}
+        .phone-input:focus{border-color:#16a34a;background:#fff}
         .phone-input.error{border-color:#C0392B}
 
         .totals-box{background:#F5F5F5;border:1px solid #E0E0E0;border-radius:0;padding:18px 20px}
         .trust-badge{flex:1;text-align:center;background:#fff;border:1px solid #E0E0E0;border-radius:0;padding:8px 0;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#888;letter-spacing:0.3px}
-        .mpesa-badge{display:flex;align-items:center;gap:12px;background:#000;border:1px solid #333;border-radius:0;padding:14px 18px;margin-bottom:24px}
+        .mpesa-badge{display:flex;align-items:center;gap:12px;background:#16a34a;border:1px solid #15803d;border-radius:8px;padding:14px 18px;margin-bottom:24px}
         .amount-pill{display:flex;flex-direction:column;align-items:center;background:#000;border:1px solid #333;border-radius:0;padding:20px;margin:20px 0;gap:6px}
         .progress-box{background:#F5F5F5;border:1px solid #E0E0E0;border-radius:0;padding:18px 20px;margin-bottom:20px;text-align:left}
         .step-list{display:flex;flex-direction:column;gap:14px;background:#F5F5F5;border:1px solid #E0E0E0;border-radius:0;padding:18px 20px;margin-bottom:20px;text-align:left}
@@ -325,7 +327,7 @@ export default function Checkout() {
         <div style={{ overflow: 'hidden', width: '100%' }}>
           <div className="topbar-marquee">
             {[...Array(2)].map((_, r) =>
-              ['✦ NAIROBI CBD DELIVERY — KSH 100', '✦ NAIROBI ENVIRONS — KSH 200', '✦ OTHER COUNTIES — KSH 300', '✦ FREE PICKUP FROM OUR SHOP', '✦ SECURE M-PESA CHECKOUT', '✦ VISA / MASTERCARD ACCEPTED', '✦ 30-DAY RETURNS'].map((t, i) => (
+              ['✦ NAIROBI CBD DELIVERY — KSH 100', '✦ NAIROBI ENVIRONS — KSH 350', '✦ OTHER COUNTIES — KSH 400', '✦ FREE PICKUP FROM OUR SHOP', '✦ SECURE M-PESA CHECKOUT', '✦ VISA / MASTERCARD ACCEPTED', '✦ 30-DAY RETURNS'].map((t, i) => (
                 <span key={`${r}-${i}`} className="jost" style={{ fontSize: 10, fontWeight: 600, letterSpacing: '2px', color: 'rgba(255,255,255,0.7)' }}>{t}</span>
               ))
             )}
@@ -425,13 +427,19 @@ export default function Checkout() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
-              {['🔒 Secure', '📱 M-Pesa', '💳 Cards'].map(t => (
-                <div key={t} className="trust-badge">{t}</div>
-              ))}
+            <div style={{ border: '1px solid #E0E0E0', borderRadius: 8, padding: '12px 16px', marginTop: 18 }}>
+              <div className="jost" style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#888', marginBottom: 10, textAlign: 'center' }}>We Accept</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <img src="/src/assets/M-PESA_LOGO-01.svg" alt="M-Pesa" style={{ height: 22, objectFit: 'contain' }} />
+                <img src="/src/assets/Airtel_logo.svg" alt="Airtel Money" style={{ height: 22, objectFit: 'contain' }} />
+                <img src="/src/assets/Visa.png" alt="Visa" style={{ height: 20, objectFit: 'contain' }} />
+                <img src="/src/assets/MasterCard-Logo.svg" alt="Mastercard" style={{ height: 28, objectFit: 'contain' }} />
+                <img src="/src/assets/Apple_Pay_logo.svg" alt="Apple Pay" style={{ height: 20, objectFit: 'contain' }} />
+                <img src="/src/assets/Google_Pay_Logo.svg" alt="Google Pay" style={{ height: 24, objectFit: 'contain' }} />
+              </div>
             </div>
 
-            <button className="cta-gold" onClick={() => setStep('choose')} style={{ marginTop: 22 }}>
+            <button className="cta-gold" onClick={() => setStep('choose')} style={{ marginTop: 18, background: '#16a34a' }}>
               Choose Payment Method →
             </button>
           </div>
@@ -451,26 +459,23 @@ export default function Checkout() {
               Choose your preferred payment method
             </p>
 
+            {/* Payment methods list */}
+            <div className="pay-method-list">
             {/* M-Pesa option */}
             <div
               className={`pay-method-card ${paymentMethod === 'mpesa' ? 'selected' : 'unselected'}`}
               onClick={() => setPaymentMethod('mpesa')}
             >
               <div style={{
-                width: 48, height: 48, borderRadius: 0, background: '#000',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 22, flexShrink: 0,
-                border: paymentMethod === 'mpesa' ? '2px solid #000' : '2px solid #E0E0E0',
-              }}>📱</div>
-              <div style={{ flex: 1 }}>
-                <div className="jost" style={{ fontWeight: 700, fontSize: 14, color: T.navy }}>M-Pesa</div>
-                <div className="jost" style={{ fontSize: 12, color: T.muted, marginTop: 3 }}>Lipa Na M-Pesa · STK Push to your phone</div>
-              </div>
-              <div style={{
-                width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
-                border: paymentMethod === 'mpesa' ? '6px solid #000' : '2px solid #E0E0E0',
-                transition: 'all 0.2s',
+                width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+                border: paymentMethod === 'mpesa' ? '5px solid #16a34a' : '1.5px solid #C9C9C9',
+                transition: 'all 0.15s',
               }} />
+              <img src="/src/assets/M-PESA_LOGO-01.svg" alt="M-Pesa" style={{ height: 22, objectFit: 'contain', flexShrink: 0 }} />
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span className="jost" style={{ fontWeight: 600, fontSize: 14, color: T.navy }}>M-Pesa</span>
+                <span className="jost" style={{ fontSize: 11, color: T.muted }}>STK Push to your phone</span>
+              </div>
             </div>
 
             {/* Pesapal option */}
@@ -479,39 +484,26 @@ export default function Checkout() {
               onClick={() => setPaymentMethod('pesapal')}
             >
               <div style={{
-                width: 48, height: 48, borderRadius: 12,
-                background: 'linear-gradient(135deg,#1565C0,#0D47A1)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 22, flexShrink: 0,
-                border: paymentMethod === 'pesapal' ? '2px solid #000' : '2px solid transparent',
-              }}>💳</div>
-              <div style={{ flex: 1 }}>
-                <div className="jost" style={{ fontWeight: 700, fontSize: 14, color: T.navy }}>Credit / Debit Card</div>
-                <div className="jost" style={{ fontSize: 12, color: T.muted, marginTop: 3 }}>Visa, Mastercard & more · Powered by Pesapal</div>
-                {/* Card logos */}
-                <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                  {['VISA', 'MC'].map(brand => (
-                    <span key={brand} className="jost" style={{
-                      fontSize: 9, fontWeight: 800, letterSpacing: '1px',
-                      padding: '3px 8px', borderRadius: 4,
-                      background: brand === 'VISA' ? '#1A1F71' : '#EB001B',
-                      color: '#fff',
-                    }}>{brand}</span>
-                  ))}
-                  <span className="jost" style={{ fontSize: 9, color: T.muted, alignSelf: 'center' }}>+ more</span>
-                </div>
-              </div>
-              <div style={{
-                width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
-                border: paymentMethod === 'pesapal' ? '6px solid #000' : '2px solid #E0E0E0',
-                transition: 'all 0.2s',
+                width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+                border: paymentMethod === 'pesapal' ? '5px solid #16a34a' : '1.5px solid #C9C9C9',
+                transition: 'all 0.15s',
               }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                <img src="/src/assets/Visa.png" alt="Visa" style={{ height: 14, objectFit: 'contain' }} />
+                <img src="/src/assets/MasterCard-Logo.svg" alt="Mastercard" style={{ height: 18, objectFit: 'contain' }} />
+                {/* Swap in a real Pesapal logo asset here once you have one */}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span className="jost" style={{ fontWeight: 600, fontSize: 14, color: T.navy }}>Pesapal</span>
+                <span className="jost" style={{ fontSize: 11, color: T.muted }}>Pay with card online</span>
+              </div>
+            </div>
             </div>
 
             {/* Amount summary */}
             <div className="amount-pill" style={{ marginTop: 8 }}>
               <span className="jost" style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', letterSpacing: '2px', textTransform: 'uppercase' }}>Amount to pay</span>
-              <span style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 32, color: '#fff' }}>
+              <span style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 32, color: '#16a34a' }}>
                 KSh {total.toLocaleString()}
               </span>
               <span className="jost" style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>
@@ -527,16 +519,16 @@ export default function Checkout() {
 
             {/* Continue CTA — changes based on selected method */}
             {paymentMethod === 'mpesa' && (
-              <button className="cta-gold" onClick={() => setStep('phone')}>
+              <button className="cta-gold" onClick={() => setStep('phone')} style={{ background: '#16a34a' }}>
                 📱 Continue with M-Pesa →
               </button>
             )}
 
             {paymentMethod === 'pesapal' && (
-              <button className="cta-gold" onClick={handlePesapalPay} disabled={pesapalLoading}>
+              <button className="cta-gold" onClick={handlePesapalPay} disabled={pesapalLoading} style={{ background: '#16a34a' }}>
                 {pesapalLoading
                   ? <><span style={{ display: 'inline-block', animation: 'pulse 0.8s ease infinite' }}>⏳</span> Redirecting to Pesapal…</>
-                  : <>💳 Pay KSh {total.toLocaleString()} with Card →</>
+                  : <>Continue with Pesapal →</>
                 }
               </button>
             )}
@@ -547,9 +539,10 @@ export default function Checkout() {
               </button>
             )}
 
-            <p className="jost" style={{ textAlign: 'center', fontSize: 11, color: T.muted, marginTop: 14 }}>
-              🔒 All payments are encrypted and secure
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16 }}>
+              <img src="/src/assets/securepayment.png" alt="Secure payment" style={{ height: 16, objectFit: 'contain' }} />
+              <span className="jost" style={{ fontSize: 11, color: T.muted }}>All payments are encrypted and secure</span>
+            </div>
           </div>
         )}
 
@@ -559,13 +552,15 @@ export default function Checkout() {
             <button className="back-btn" onClick={() => setStep('choose')}>← Back</button>
 
             <div className="mpesa-badge">
-              <div style={{ width: 42, height: 42, borderRadius: 10, background: 'rgba(200,169,81,0.12)', border: `1px solid rgba(200,169,81,0.25)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>📱</div>
+              <div style={{ width: 46, height: 46, borderRadius: 8, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8, flexShrink: 0 }}>
+                <img src="/src/assets/M-PESA_LOGO-01.svg" alt="M-Pesa" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              </div>
               <div>
                 <div className="jost" style={{ fontWeight: 800, fontSize: 13, color: '#fff', letterSpacing: '1px' }}>M-PESA</div>
-                <div className="jost" style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>Lipa Na M-Pesa · STK Push</div>
+                <div className="jost" style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>Lipa Na M-Pesa · STK Push</div>
               </div>
               <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                <div className="jost" style={{ fontSize: 9, color: 'rgba(255,255,255,0.45)', letterSpacing: '1px', textTransform: 'uppercase' }}>Powered by</div>
+                <div className="jost" style={{ fontSize: 9, color: 'rgba(255,255,255,0.65)', letterSpacing: '1px', textTransform: 'uppercase' }}>Powered by</div>
                 <div className="jost" style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>Safaricom</div>
               </div>
             </div>
@@ -601,23 +596,24 @@ export default function Checkout() {
               </div>
             )}
 
-            <div className="amount-pill">
-              <span className="jost" style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', letterSpacing: '2px', textTransform: 'uppercase' }}>Amount to pay</span>
+            <div className="amount-pill" style={{ background: '#16a34a', border: '1px solid #15803d' }}>
+              <span className="jost" style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', letterSpacing: '2px', textTransform: 'uppercase' }}>Amount to pay</span>
               <span style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 32, color: '#fff' }}>KSh {total.toLocaleString()}</span>
-              <span className="jost" style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>
+              <span className="jost" style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
                 incl. {deliveryFee === 0 ? 'free' : `KSh ${deliveryFee}`} delivery · {deliveryLabel}
               </span>
             </div>
 
-            <button className="cta-gold" onClick={handleMpesaPay} disabled={pushing}>
+            <button className="cta-gold" onClick={handleMpesaPay} disabled={pushing} style={{ background: '#16a34a' }}>
               {pushing
                 ? <><span style={{ display: 'inline-block', animation: 'pulse 0.8s ease infinite' }}>⏳</span> Sending prompt…</>
                 : <>📲 Send KSh {total.toLocaleString()} Prompt</>
               }
             </button>
-            <p className="jost" style={{ textAlign: 'center', fontSize: 11, color: T.muted, marginTop: 14 }}>
-              🔒 Secured by Safaricom · We never store your PIN
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 14 }}>
+              <img src="/src/assets/securepayment.png" alt="Secure payment" style={{ height: 16, objectFit: 'contain' }} />
+              <span className="jost" style={{ fontSize: 11, color: T.muted }}>Secured by Safaricom · We never store your PIN</span>
+            </div>
           </div>
         )}
 

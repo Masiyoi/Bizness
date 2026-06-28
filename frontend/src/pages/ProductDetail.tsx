@@ -1,10 +1,11 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 import Navbar         from '../components/common/Navbar';
 import Footer         from '../components/common/Footer';
 import InstagramStrip from '../components/common/InstagramStrip';
+import ProductCard    from '../components/home/ProductCard';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Variant {
@@ -173,17 +174,42 @@ function Slideshow({ images, productName, stock }: {
           )}
         </div>
 
-        {/* Mobile dot indicators */}
+        {/* ── Fit advice strip (sits between main image and mobile thumbs) ── */}
+        <div style={{
+          display:'flex', alignItems:'center', justifyContent:'center', gap:10,
+          background:'#F5F5F5', border:'1px solid #E8E8E8',
+          padding:'10px 14px', marginTop:8,
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+          </svg>
+          <span style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:'#444', letterSpacing:'0.5px', fontWeight:500 }}>
+            For a perfect fit, go half or one size up
+          </span>
+        </div>
+
+        {/* Mobile thumbnail strip (replaces dot indicators) */}
         {images.length > 1 && (
-          <div className="lp-mobile-dots" style={{
-            display:'none', justifyContent:'center', gap:5, marginTop:10,
+          <div className="lp-mobile-thumbs" style={{
+            display:'none', gap:6, marginTop:8,
+            overflowX:'auto', scrollbarWidth:'none',
           }}>
-            {images.map((_, i) => (
-              <div key={i} onClick={() => setActive(i)} style={{
-                width: i === active ? 18 : 5, height:5,
-                background: i === active ? '#000' : '#CCC',
-                cursor:'pointer', transition:'all 0.25s',
-              }}/>
+            {images.map((img, i) => (
+              <div
+                key={i}
+                onClick={() => setActive(i)}
+                style={{
+                  flexShrink:0, width:64, height:64, cursor:'pointer',
+                  border:`2px solid ${i === active ? '#000' : 'transparent'}`,
+                  overflow:'hidden', background:'#f2f2f2',
+                }}
+              >
+                <img
+                  src={img} alt=""
+                  style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}
+                  onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/64x64/f2f2f2/000?text=LP'; }}
+                />
+              </div>
             ))}
           </div>
         )}
@@ -208,8 +234,8 @@ function SocialProofBadge() {
   return (
     <div style={{
       display:'flex', alignItems:'center', gap:10,
-      background:'#fff', border:'1.5px solid #000',
-      borderRadius:0, padding:'10px 14px', marginBottom:20,
+      background:'transparent', border:'none',
+      borderRadius:0, padding:'10px 0', marginBottom:20,
       opacity: visible ? 1 : 0,
       transform: visible ? 'translateY(0)' : 'translateY(-4px)',
       transition:'opacity 0.35s ease, transform 0.35s ease',
@@ -238,9 +264,9 @@ function VariantStockBadge({ variant, hasVariants, selectionComplete, productSto
   if (hasVariants && !selectionComplete) {
     return (
       <span style={{
-        background:'#fff', border:'1.5px solid #000',
-        color:'#000', borderRadius:0, padding:'5px 12px',
-        fontFamily:"'Inter',sans-serif", fontSize:10, fontWeight:700,
+        background:'transparent', border:'none',
+        color:'#888', borderRadius:0, padding:'0',
+        fontFamily:"'Inter',sans-serif", fontSize:10, fontWeight:600,
         letterSpacing:'1px', textTransform:'uppercase' as const,
       }}>
         {selectedColor && hasSizeDim ? 'Select a size' : 'Select options'}
@@ -288,9 +314,9 @@ function VariantStockBadge({ variant, hasVariants, selectionComplete, productSto
 
   return (
     <span style={{
-      background:'#fff', border:'1.5px solid #000', color:'#000',
-      borderRadius:0, padding:'5px 12px',
-      fontFamily:"'Inter',sans-serif", fontSize:10, fontWeight:700,
+      background:'transparent', border:'none', color:'#4A7A4A',
+      borderRadius:0, padding:'0',
+      fontFamily:"'Inter',sans-serif", fontSize:10, fontWeight:600,
       letterSpacing:'1px', textTransform:'uppercase' as const,
     }}>
       In Stock — {stock} available
@@ -341,44 +367,17 @@ function RelatedProducts({ category, currentId }: { category: string; currentId:
         </h2>
       </div>
 
-      <div className="related-grid" style={{ display:'grid', gridTemplateColumns:'repeat(2,minmax(0,1fr))', gap:12 }}>
+      <div className="related-grid" style={{ display:'grid', gridTemplateColumns:'repeat(2,minmax(0,1fr))', gap:16 }}>
         {products.map(p => (
-          <div
+          <ProductCard
             key={p.id}
-            onClick={() => { navigate(`/product/${p.id}`); window.scrollTo({ top:0, behavior:'smooth' }); }}
-            style={{ cursor:'pointer' }}
-            className="related-card"
-          >
-            {/* FIX: image fills naturally, no fixed padding-bottom trick */}
-            <div style={{
-              width:'100%', overflow:'hidden', borderRadius:0,
-              background:'#f5f5f5', border:'1px solid #E8E8E8', marginBottom:10,
-              lineHeight:0,
-            }}>
-              <img
-                src={p.image_url} alt={p.name}
-                style={{
-                  width:'100%', height:'auto', display:'block',
-                  objectFit:'cover', transition:'transform 0.4s ease',
-                }}
-                className="related-img"
-                onError={e => {
-                  (e.target as HTMLImageElement).src =
-                    'https://placehold.co/300x300/F0EAD8/0D1B3E?text=LP';
-                }}
-              />
-            </div>
-            <div style={{
-              fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:600,
-              letterSpacing:'1.5px', textTransform:'uppercase', color:T.navy,
-              marginBottom:4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
-            }}>
-              {p.name}
-            </div>
-            <div style={{ fontFamily:"'Jost',sans-serif", fontSize:12, color:T.muted }}>
-              KSh {Number(p.price).toLocaleString()}
-            </div>
-          </div>
+            product={p}
+            inCart={false}
+            inWishlist={false}
+            isAdmin={false}
+            onCartToggle={() => { navigate(`/product/${p.id}`); window.scrollTo({ top:0, behavior:'smooth' }); }}
+            onWishlistToggle={() => {}}
+          />
         ))}
       </div>
     </div>
@@ -526,6 +525,48 @@ function ReviewsSection({ productId }: { productId: number }) {
             </>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Accordion Row ────────────────────────────────────────────────────────────
+function AccordionRow({ label, body }: { label: string; body: string }) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div style={{ borderTop:'1px solid #E8E8E8' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width:'100%', background:'transparent', border:'none',
+          padding:'16px 0', display:'flex', alignItems:'center',
+          justifyContent:'space-between', cursor:'pointer',
+        }}
+      >
+        <span style={{
+          fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:700,
+          letterSpacing:'2.5px', textTransform:'uppercase', color:'#111',
+        }}>
+          {label}
+        </span>
+        <span style={{
+          fontSize:16, color:'#888', lineHeight:1,
+          transition:'transform 0.25s',
+          transform: open ? 'rotate(45deg)' : 'rotate(0deg)',
+          display:'inline-block',
+        }}>+</span>
+      </button>
+      <div style={{
+        overflow:'hidden',
+        maxHeight: open ? 400 : 0,
+        transition:'max-height 0.35s ease',
+      }}>
+        <p style={{
+          fontFamily:"'Jost',sans-serif", fontSize:13, color:'#555',
+          lineHeight:1.8, paddingBottom:18,
+        }}>
+          {body}
+        </p>
       </div>
     </div>
   );
@@ -856,9 +897,10 @@ export default function ProductDetail() {
         onLogout={() => { setCartCount(0); setWishlistCount(0); }}
       />
 
-      <div className="lp-fade lp-page-wrap" style={{
+      <div className="lp-page-wrap" style={{
         maxWidth:1100, margin:'0 auto',
         padding:'clamp(20px,4vw,48px) clamp(16px,5%,5%) 80px',
+        paddingTop:'calc(96px + clamp(20px,4vw,48px))',
       }}>
         {/* Breadcrumb */}
         <div style={{
@@ -882,7 +924,7 @@ export default function ProductDetail() {
           </span>
         </div>
 
-        <div className="lp-grid">
+        <div className="lp-fade lp-grid">
 
           {/* ── Slideshow ── */}
           <div className="lp-img-bleed">
@@ -895,18 +937,6 @@ export default function ProductDetail() {
 
           {/* ── Info panel ── */}
           <div>
-            {product.category && (
-              <div style={{
-                display:'inline-block',
-                background:'rgba(200,169,81,0.1)', border:'1px solid rgba(200,169,81,0.3)',
-                color:T.gold, borderRadius:3, padding:'3px 12px',
-                fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:800,
-                letterSpacing:'2.5px', textTransform:'uppercase', marginBottom:12,
-              }}>
-                {product.category}
-              </div>
-            )}
-
             <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
               <h1 style={{
                 fontFamily:"'Playfair Display',serif", fontWeight:800,
@@ -1023,13 +1053,13 @@ export default function ProductDetail() {
                   )}
                 </div>
 
-                {/* Colour swatches */}
+                {/* Colour swatches — circular product image thumbnails */}
                 <div style={{ display:'flex', flexWrap:'wrap', gap:12, marginBottom:14 }}>
                   {product.colors.map((color, i) => {
                     const active     = selectedColor === color;
-                    const light      = isLightColor(color);
                     const soldOut    = isColorSoldOut(color);
                     const colorStock = getColorStock(color);
+                    const thumb      = product.images[i] || product.images[0] || product.image_url;
                     return (
                       <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, width:54 }}>
                         <button
@@ -1040,52 +1070,49 @@ export default function ProductDetail() {
                               : color}
                           onClick={() => !soldOut && handleColorChange(color)}
                           style={{
-                            width:38, height:38, borderRadius:'50%', background:color,
-                            border: active
-                              ? `3px solid ${T.gold}`
-                              : `2px solid ${light ? T.creamDeep : 'rgba(0,0,0,0.12)'}`,
+                            width:48, height:48, borderRadius:'50%', padding:0, border:'none',
                             boxShadow: active
-                              ? `0 0 0 2px #fff, 0 0 0 5px ${T.gold}`
-                              : '0 2px 6px rgba(0,0,0,0.15)',
+                              ? '0 0 0 2px #fff, 0 0 0 4px #000'
+                              : '0 0 0 2px transparent',
                             cursor: soldOut ? 'not-allowed' : 'pointer',
-                            opacity: soldOut ? 0.35 : 1,
-                            transition:'all 0.18s', flexShrink:0, position:'relative', padding:0,
+                            opacity: soldOut ? 0.4 : 1,
+                            overflow:'hidden', background:'#f2f2f2',
+                            transition:'box-shadow 0.18s, opacity 0.18s',
+                            position:'relative', flexShrink:0,
                           }}
-                          aria-label={`${color}${soldOut ? ' (sold out)' : colorStock !== null ? ` (${colorStock} available)` : ''}`}
+                          aria-label={`${color}${soldOut ? ' (sold out)' : ''}`}
                           aria-pressed={active}
                         >
-                          {active && !soldOut && (
-                            <span style={{
-                              position:'absolute', inset:0,
-                              display:'flex', alignItems:'center', justifyContent:'center',
-                              fontSize:14, fontWeight:800, color: light ? T.navy : '#fff',
-                            }}>✓</span>
-                          )}
+                          <img
+                            src={thumb}
+                            alt={color}
+                            style={{ width:'100%', height:'100%', objectFit:'cover', display:'block', borderRadius:'50%' }}
+                            onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/48x48/f2f2f2/000?text=LP'; }}
+                          />
                           {soldOut && (
-                            <span style={{
-                              position:'absolute', inset:0,
+                            <div style={{
+                              position:'absolute', inset:0, borderRadius:'50%',
+                              background:'rgba(255,255,255,0.65)',
                               display:'flex', alignItems:'center', justifyContent:'center',
-                              fontSize:12, color: light ? T.navy : '#fff',
-                            }}>✕</span>
+                              fontSize:12, color:'#555', fontWeight:700,
+                            }}>✕</div>
                           )}
                         </button>
+                        <span style={{
+                          fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight: active ? 700 : 500,
+                          color: soldOut ? T.muted : active ? '#000' : '#666',
+                          textAlign:'center', maxWidth:54,
+                          overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
+                        }}>
+                          {color}
+                        </span>
                         {colorStock !== null && active && (
                           <span style={{
                             fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700,
                             textAlign:'center', lineHeight:1.2,
-                            color: soldOut
-                              ? T.muted
-                              : colorStock === 0
-                                ? '#C0392B'
-                                : colorStock <= 5
-                                  ? '#555555'
-                                  : '#4A7A4A',
+                            color: colorStock === 0 ? '#C0392B' : colorStock <= 5 ? '#555' : '#4A7A4A',
                           }}>
-                            {soldOut || colorStock === 0
-                              ? 'Sold out'
-                              : colorStock <= 5
-                                ? `${colorStock} left`
-                                : `${colorStock}`}
+                            {colorStock === 0 ? 'Sold out' : colorStock <= 5 ? `${colorStock} left` : `${colorStock}`}
                           </span>
                         )}
                       </div>
@@ -1315,11 +1342,35 @@ export default function ProductDetail() {
                 </button>
               )}
             </div>
+
+            {/* ── ACCORDION DROPDOWNS ── */}
+            {[
+              {
+                key: 'details',
+                label: 'Details',
+                content: product.description || 'Premium quality product. Carefully sourced and curated by Luku Prime.',
+              },
+              {
+                key: 'fit',
+                label: 'Fit Information',
+                content: 'This product runs true to size. For a relaxed fit, size up. For a more tailored look, size down. Measurements are taken lying flat — chest, waist, and hip measurements available on request.',
+              },
+              {
+                key: 'shipping',
+                label: 'Shipping',
+                content: 'Orders are processed within 24 hours. Standard delivery within Nairobi takes 1–2 business days. Nationwide delivery takes 2–4 business days. Free shipping on orders over KSh 5,000.',
+              },
+            ].map(({ key, label, content: body }) => (
+              <AccordionRow key={key} label={label} body={body} />
+            ))}
+
           </div>
         </div>
 
-        <ReviewsSection productId={product.id}/>
-        <RelatedProducts category={product.category} currentId={product.id}/>
+        <div style={{ padding:'0 clamp(16px,5%,5%)' }}>
+          <ReviewsSection productId={product.id}/>
+          <RelatedProducts category={product.category} currentId={product.id}/>
+        </div>
       </div>
 
       <InstagramStrip handle="@lukuprime" profileUrl="https://instagram.com/lukuprime" limit={12}/>
@@ -1387,7 +1438,7 @@ const css = `
     .lp-page-wrap { padding-left:0 !important; padding-right:0 !important }
     .lp-img-bleed { width:100vw }
     .lp-thumb-strip { display:none !important }
-    .lp-mobile-dots { display:flex !important }
+    .lp-mobile-thumbs { display:flex !important }
     .lp-grid > div:last-child { padding:20px 16px 0 }
   }
   @media(min-width:769px) {
