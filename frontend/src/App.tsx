@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 
 // ── Pages ──────────────────────────────────────────────────────────────────────
+import MembersClub    from './pages/MembersClub';
 import Homepage       from './pages/Homepage';
 import Register       from './pages/Register';
 import Login          from './pages/Login';
@@ -168,6 +169,7 @@ export default function App() {
       <Routes>
 
         {/* ── Public ─────────────────────────────────────────────────────────── */}
+        <Route path="/members-club" element={<MembersClub />} />
         <Route path="/"            element={<Homepage />} />
         <Route path="/product/:id" element={<ProductDetail />} />
 

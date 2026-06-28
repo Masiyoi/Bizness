@@ -65,6 +65,7 @@ export default function Checkout() {
   // Shared state
   const [failMsg, setFailMsg]                   = useState('');
   const [serverError, setServerError]           = useState('');
+  const [flashSaleMap, setFlashSaleMap]         = useState<Record<number, number>>({});
 
   const passedZone = (location.state as { deliveryZone?: DeliveryZone } | null)?.deliveryZone;
   const deliveryZone: DeliveryZone = passedZone ?? 'cbd';
@@ -78,7 +79,21 @@ export default function Checkout() {
     axios.get('/api/cart')
       .then(res => { setItems(res.data); setLoading(false); })
       .catch(() => { setLoading(false); navigate('/cart'); });
+
+    axios.get('/api/products/flash-sales?limit=100')
+      .then(r => {
+        const map: Record<number, number> = {};
+        (r.data as { id: number; sale_price: number }[]).forEach(p => {
+          map[p.id] = p.sale_price;
+        });
+        setFlashSaleMap(map);
+      })
+      .catch(() => {});
   }, []);
+
+  // Returns the active price for an item — sale price if flash-sale, else regular price
+  const getEffectivePrice = (item: CartItem): number =>
+    flashSaleMap[item.product_id] ?? Number(item.price);
 
   // On return from Pesapal redirect, check URL params
   useEffect(() => {
@@ -100,7 +115,7 @@ export default function Checkout() {
     if (tickRef.current)    clearInterval(tickRef.current);
   }, []);
 
-  const subtotal = items.reduce((s, i) => s + Number(i.price) * i.quantity, 0);
+  const subtotal = items.reduce((s, i) => s + getEffectivePrice(i) * i.quantity, 0);
   const total    = subtotal + deliveryFee;
 
   const validatePhone = (val: string) => {
@@ -365,8 +380,23 @@ export default function Checkout() {
                     <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 14, color: T.navy, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
                     <div className="jost" style={{ fontSize: 11, color: T.muted, marginTop: 3 }}>Qty: {item.quantity}</div>
                   </div>
-                  <div className="jost" style={{ fontWeight: 700, fontSize: 15, color: T.gold, flexShrink: 0 }}>
-                    KSh {(Number(item.price) * item.quantity).toLocaleString()}
+                  <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                    {(() => {
+                      const effectivePrice = getEffectivePrice(item);
+                      const onSale = flashSaleMap[item.product_id] !== undefined;
+                      return (
+                        <>
+                          <div className="jost" style={{ fontWeight: 700, fontSize: 15, color: onSale ? '#C2410C' : T.gold }}>
+                            KSh {(effectivePrice * item.quantity).toLocaleString()}
+                          </div>
+                          {onSale && (
+                            <div className="jost" style={{ fontSize: 11, color: T.muted, textDecoration: 'line-through', marginTop: 2 }}>
+                              KSh {(Number(item.price) * item.quantity).toLocaleString()}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               ))}

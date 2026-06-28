@@ -120,19 +120,19 @@ function Hero({ onShop }: { onShop: (cat?: string) => void }) {
   return (
     <section className="lp-hero-split">
       <div className="lp-hero-panel lp-fade-up lp-d1">
-        <img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=1200&q=85" alt="New Collection" className="lp-hero-panel-img" />
+        <img src="/i1.webp" alt="New Collection" className="lp-hero-panel-img" />
         <div className="lp-hero-panel-overlay" />
         <div className="lp-hero-panel-content">
           <p className="lp-hero-panel-eyebrow">New Collection 2025</p>
           <h2 className="lp-hero-panel-title">New<br/>Arrivals</h2>
           <div className="lp-hero-panel-ctas">
             <button className="lp-hero-cta-primary" onClick={() => onShop()}>Shop Collection</button>
-            <button className="lp-hero-cta-ghost" onClick={() => document.getElementById('editorial')?.scrollIntoView({behavior:'smooth'})}>Explore Lookbook</button>
+
           </div>
         </div>
       </div>
       <div className="lp-hero-panel lp-fade-up lp-d2">
-        <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200&q=85" alt="Most Wanted" className="lp-hero-panel-img" />
+        <img src="/i2.webp" alt="Most Wanted" className="lp-hero-panel-img" />
         <div className="lp-hero-panel-overlay" />
         <div className="lp-hero-panel-content">
           <p className="lp-hero-panel-eyebrow">Top Picks</p>
@@ -265,6 +265,8 @@ export default function Homepage() {
   const [reviews, setReviews]         = useState<HomepageReview[]>([]);
   const [reviewsLoading, setRLoading] = useState(true);
   const [sortBy, setSortBy]           = useState('featured');
+  const [sortDrawerOpen, setSortDrawerOpen] = useState(false);
+  const sortBtnRef                          = useRef<HTMLDivElement>(null);
   const [flashSaleMap, setFlashSaleMap] = useState<Record<number, number>>({});
   // maps product_id → sale_price (used to hide flash items from main grid)
 
@@ -436,12 +438,110 @@ export default function Homepage() {
                 {pageStart + 1}–{Math.min(pageStart + PRODUCTS_PER_PAGE, filtered.length)} of {filtered.length}
               </span>
             )}
-            <select className="lp-sort" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-              <option value="featured">Featured</option>
-              <option value="price_asc">Price: Low → High</option>
-              <option value="price_desc">Price: High → Low</option>
-              <option value="newest">Newest First</option>
-            </select>
+            <div ref={sortBtnRef} style={{ position: 'relative', display: 'inline-block' }}>
+              <button
+                onClick={() => setSortDrawerOpen(v => !v)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  fontFamily: 'var(--f-sans)', fontSize: 11, fontWeight: 600,
+                  letterSpacing: '2px', textTransform: 'uppercase',
+                  background: '#fff', color: 'var(--ink)',
+                  border: '1px solid rgba(0,0,0,0.15)', padding: '9px 18px',
+                  cursor: 'pointer',
+                }}
+              >
+                <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
+                  <line x1="0" y1="2" x2="16" y2="2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="5" cy="2" r="2" fill="#fff" stroke="currentColor" strokeWidth="1.5"/>
+                  <line x1="0" y1="7" x2="16" y2="7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="11" cy="7" r="2" fill="#fff" stroke="currentColor" strokeWidth="1.5"/>
+                  <line x1="0" y1="12" x2="16" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  <circle cx="4" cy="12" r="2" fill="#fff" stroke="currentColor" strokeWidth="1.5"/>
+                </svg>
+                Filter
+              </button>
+
+              {sortDrawerOpen && (
+                <>
+                  <div onClick={() => setSortDrawerOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 998 }} />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 8px)',
+                      right: 0,
+                      width: 200,
+                      background: '#fff',
+                      border: '1px solid rgba(0,0,0,0.10)',
+                      borderRadius: 10,
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                      zIndex: 999,
+                      overflow: 'hidden',
+                      animation: 'popupFadeUp 0.18s cubic-bezier(0.22,0.68,0,1.2) both',
+                    }}
+                  >
+                    <style>{`@keyframes popupFadeUp { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }`}</style>
+
+                    <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                      <p style={{ fontFamily: 'var(--f-sans)', fontSize: 8, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--mid)', margin: '0 0 2px' }}>The Collection</p>
+                      <p style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--ink)', margin: 0 }}>Sort By</p>
+                    </div>
+
+                <button
+                  onClick={() => { setSortBy('featured'); setSortDrawerOpen(false); }}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 16px',
+                    background: sortBy === 'featured' ? 'rgba(0,0,0,0.04)' : 'none',
+                    border: 'none',
+                    borderLeft: sortBy === 'featured' ? '2px solid var(--ink)' : '2px solid transparent',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'featured' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: sortBy === 'featured' ? 'var(--ink)' : 'var(--mid)' }}>Featured</span>
+                </button>
+                <button
+                  onClick={() => { setSortBy('price_asc'); setSortDrawerOpen(false); }}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 16px',
+                    background: sortBy === 'price_asc' ? 'rgba(0,0,0,0.04)' : 'none',
+                    border: 'none',
+                    borderLeft: sortBy === 'price_asc' ? '2px solid var(--ink)' : '2px solid transparent',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'price_asc' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: sortBy === 'price_asc' ? 'var(--ink)' : 'var(--mid)' }}>Price: Low → High</span>
+                </button>
+                <button
+                  onClick={() => { setSortBy('price_desc'); setSortDrawerOpen(false); }}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 16px',
+                    background: sortBy === 'price_desc' ? 'rgba(0,0,0,0.04)' : 'none',
+                    border: 'none',
+                    borderLeft: sortBy === 'price_desc' ? '2px solid var(--ink)' : '2px solid transparent',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'price_desc' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: sortBy === 'price_desc' ? 'var(--ink)' : 'var(--mid)' }}>Price: High → Low</span>
+                </button>
+                <button
+                  onClick={() => { setSortBy('newest'); setSortDrawerOpen(false); }}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 16px',
+                    background: sortBy === 'newest' ? 'rgba(0,0,0,0.04)' : 'none',
+                    border: 'none',
+                    borderLeft: sortBy === 'newest' ? '2px solid var(--ink)' : '2px solid transparent',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'newest' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: sortBy === 'newest' ? 'var(--ink)' : 'var(--mid)' }}>Newest First</span>
+                </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 

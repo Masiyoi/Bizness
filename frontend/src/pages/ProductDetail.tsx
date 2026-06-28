@@ -1311,7 +1311,7 @@ export default function ProductDetail() {
                       ? 'Select a colour to add to cart'
                       : hasVariants && !selectedSize && product.sizes.length > 0
                         ? 'Select a size to add to cart'
-                        : `Add to Cart — KSh ${(Number(product.price) * qty).toLocaleString()}`}
+                        : `Add to Cart — KSh ${((salePrice ?? Number(product.price)) * qty).toLocaleString()}`}
                 </button>
               )}
             </div>

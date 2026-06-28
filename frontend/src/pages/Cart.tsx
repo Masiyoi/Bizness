@@ -100,6 +100,7 @@ export default function Cart() {
   const [formTouched,    setFormTouched]    = useState<Partial<Record<keyof ShippingInfo, boolean>>>({});
   const [selectedColors, setSelectedColors] = useState<Record<number, string>>({});
   const [selectedSizes,  setSelectedSizes]  = useState<Record<number, string>>({});
+  const [flashSaleMap,   setFlashSaleMap]   = useState<Record<number, number>>({});
 
   useEffect(() => {
     fetchCart();
@@ -109,7 +110,21 @@ export default function Cart() {
       const savedZone = sessionStorage.getItem('luku_zone') as DeliveryZone | null;
       if (savedZone) setDeliveryZone(savedZone);
     } catch {}
+
+    axios.get('/api/products/flash-sales?limit=100')
+      .then(r => {
+        const map: Record<number, number> = {};
+        (r.data as { id: number; sale_price: number }[]).forEach(p => {
+          map[p.id] = p.sale_price;
+        });
+        setFlashSaleMap(map);
+      })
+      .catch(() => {});
   }, []);
+
+  // Returns the active price for an item — sale price if flash-sale, else regular price
+  const getEffectivePrice = (item: CartItem): number =>
+    flashSaleMap[item.product_id] ?? Number(item.price);
 
   // ✅ Listen for cartUpdated events fired by ProductDetail when color/size changes there
   useEffect(() => {
@@ -264,7 +279,7 @@ export default function Cart() {
     } catch { setError('Failed to update size.'); }
   };
 
-  const subtotal    = items.reduce((sum, i) => sum + Number(i.price) * i.quantity, 0);
+  const subtotal    = items.reduce((sum, i) => sum + getEffectivePrice(i) * i.quantity, 0);
   const deliveryFee = DELIVERY_OPTIONS.find(o => o.value === deliveryZone)!.fee;
   const total       = subtotal + deliveryFee;
 
@@ -563,12 +578,24 @@ export default function Cart() {
                         )}
 
                         {/* price */}
-                        <div className="jost" style={{ fontWeight: 700, fontSize: 15, color: T.gold }}>
-                          KSh {(Number(item.price) * item.quantity).toLocaleString()}
-                        </div>
-                        <div className="jost" style={{ fontSize: 11, color: T.muted, marginTop: 1 }}>
-                          KSh {Number(item.price).toLocaleString()} each
-                        </div>
+                        {(() => {
+                          const effectivePrice = getEffectivePrice(item);
+                          const onSale = flashSaleMap[item.product_id] !== undefined;
+                          return (
+                            <>
+                              <div className="jost" style={{ fontWeight: 700, fontSize: 15, color: onSale ? '#C2410C' : T.gold }}>
+                                KSh {(effectivePrice * item.quantity).toLocaleString()}
+                              </div>
+                              <div className="jost" style={{ fontSize: 11, color: T.muted, marginTop: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                {onSale && (
+                                  <span style={{ textDecoration: 'line-through' }}>KSh {Number(item.price).toLocaleString()}</span>
+                                )}
+                                <span>KSh {effectivePrice.toLocaleString()} each</span>
+                                {onSale && <span style={{ color: '#EF4444', fontWeight: 700 }}>🔥 Sale</span>}
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
 
                       {/* qty + remove */}

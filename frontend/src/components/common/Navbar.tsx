@@ -292,7 +292,7 @@ export default function Navbar({
               ) : (
                 <span className="nav-link" style={{ color: ink }} onClick={() => navigate('/')}>Shop</span>
               )}
-              <span className="nav-link" style={{ color: ink }} onClick={() => navigate('/new-drops')}>New in</span>
+              <span className="nav-link" style={{ color: ink }} onClick={() => navigate('/members-club')}>Members Club</span>
               <span className="nav-link" style={{ color: ink }} onClick={() => navigate('/sale')}>Sale</span>
             </div>
 
@@ -507,10 +507,40 @@ export default function Navbar({
 
       {/* ── Mobile category menu (hamburger) — categories only ── */}
       {mobileMenuOpen && (
-        <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.09)', padding: '16px 5%', position: 'fixed', top: 64, left: 0, right: 0, zIndex: 99 }}>
-          <div style={{ marginBottom: 8 }}>
+        <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.09)', padding: '16px 5%', position: 'fixed', top: 96, left: 0, right: 0, zIndex: 99 }}>
+
+          {/* ── Top row: Home + Members Club side by side ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+            <button
+              onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
+              style={{
+                fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 600,
+                letterSpacing: '2px', textTransform: 'uppercase',
+                padding: '13px 10px', background: '#0A0A0A', color: '#fff',
+                border: 'none', cursor: 'pointer', textAlign: 'center',
+              }}
+            >
+              Home
+            </button>
+            <button
+              onClick={() => { navigate('/members-club'); setMobileMenuOpen(false); }}
+              style={{
+                fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 600,
+                letterSpacing: '2px', textTransform: 'uppercase',
+                padding: '13px 10px', background: 'transparent', color: '#111',
+                border: '1px solid rgba(0,0,0,0.2)', cursor: 'pointer', textAlign: 'center',
+              }}
+            >
+              Members Club
+            </button>
+          </div>
+
+          {/* ── Categories label ── */}
+          <div style={{ marginBottom: 6 }}>
             <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '2.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)' }}>Shop by Category</span>
           </div>
+
+          {/* ── All Products ── */}
           <button
             className="mitem"
             style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', borderRadius: 0, padding: '11px 14px', fontWeight: activeCategory === 'All' ? 600 : undefined }}
@@ -518,6 +548,8 @@ export default function Navbar({
           >
             All Products {activeCategory === 'All' && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
           </button>
+
+          {/* ── Category list ── */}
           {navCategories.map(cat => (
             <button
               key={cat}
@@ -529,7 +561,74 @@ export default function Navbar({
             </button>
           ))}
 
-          {/* Sign in / join for guests in mobile menu too */}
+          {/* ── Visual category scroller ── */}
+          {(() => {
+            const CAT_IMAGES: Record<string, { img: string; label: string }> = {
+              'Dresses':       { img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=300&q=80', label: 'Dresses' },
+              'Sneakers':      { img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&q=80', label: 'Sneakers' },
+              'Bags':          { img: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=300&q=80', label: 'Bags' },
+              'Heels':         { img: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=300&q=80', label: 'Heels' },
+              'Shoes':         { img: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=300&q=80', label: 'Shoes' },
+              'New Arrivals':  { img: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=300&q=80', label: 'New In' },
+              'Best Sellers':  { img: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=300&q=80', label: 'Best Sellers' },
+              'Designer Wear': { img: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80', label: 'Designer' },
+            };
+            const tiles = [
+              { slug: 'All', img: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=300&q=80', label: 'All' },
+              ...navCategories.map(cat => ({
+                slug: cat,
+                img: CAT_IMAGES[cat]?.img ?? 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=300&q=80',
+                label: CAT_IMAGES[cat]?.label ?? cat,
+              })),
+            ];
+            return (
+              <div style={{ marginTop: 14, marginBottom: 2 }}>
+                <div style={{ marginBottom: 8 }}>
+                  <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '2.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)' }}>Browse</span>
+                </div>
+                <div style={{
+                  display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8,
+                  scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' as any,
+                }}>
+                  {tiles.map(tile => (
+                    <div
+                      key={tile.slug}
+                      onClick={() => goCategory(tile.slug)}
+                      style={{
+                        flexShrink: 0, width: 80, cursor: 'pointer',
+                        outline: activeCategory === tile.slug ? '2px solid #111' : 'none',
+                        outlineOffset: 2,
+                      }}
+                    >
+                      <div style={{ width: 80, height: 96, overflow: 'hidden', position: 'relative', background: '#f0f0f0' }}>
+                        <img
+                          src={tile.img}
+                          alt={tile.label}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'brightness(0.78)' }}
+                          onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/80x96/f0f0f0/999?text=LP'; }}
+                        />
+                        <div style={{
+                          position: 'absolute', inset: 0,
+                          background: 'linear-gradient(to top, rgba(0,0,0,0.62) 0%, transparent 55%)',
+                        }} />
+                        <span style={{
+                          position: 'absolute', bottom: 6, left: 0, right: 0,
+                          textAlign: 'center',
+                          fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700,
+                          letterSpacing: '1.5px', textTransform: 'uppercase', color: '#fff',
+                          lineHeight: 1.2, padding: '0 4px',
+                        }}>
+                          {tile.label}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Sign in / join for guests */}
           {!user && (
             <div style={{ display: 'flex', gap: 10, marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(0,0,0,0.07)' }}>
               <button onClick={() => go('/login')}
