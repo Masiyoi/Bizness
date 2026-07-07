@@ -642,28 +642,49 @@ export default function Checkout() {
               Your order has been placed.<br />Thank you for shopping with Luku Prime!
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20, textAlign: 'left' }}>
-              {items.map(item => (
-                <div key={item.id} className="item-card">
-                  <div style={{ width: 48, height: 48, overflow: 'hidden', flexShrink: 0, background: '#F5F5F5' }}>
-                    <img
-                      src={item.image_url}
-                      alt={item.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/48x48/${T.creamMid.replace('#','')}/${T.navy.replace('#','')}?text=📦`; }}
-                    />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 13, color: T.navy, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
-                    <div className="jost" style={{ fontSize: 11, color: T.muted, marginTop: 3 }}>Qty: {item.quantity}</div>
-                  </div>
-                  <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                    <div className="jost" style={{ fontWeight: 700, fontSize: 14, color: T.gold }}>
-                      KSh {(getEffectivePrice(item) * item.quantity).toLocaleString()}
+            <div style={{ marginBottom: 20, textAlign: 'left' }}>
+              <div className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.muted, marginBottom: 8 }}>Order Summary</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {items.map(item => {
+                  const color = passedColors?.[item.id];
+                  const size  = passedSizes?.[item.id];
+                  return (
+                    <div key={item.id} className="item-card">
+                      <div style={{ width: 48, height: 48, overflow: 'hidden', flexShrink: 0, background: '#F5F5F5' }}>
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/48x48/${T.creamMid.replace('#','')}/${T.navy.replace('#','')}?text=📦`; }}
+                        />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 13, color: T.navy, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                        <div className="jost" style={{ fontSize: 11, color: T.muted, marginTop: 3, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                          <span>Qty: {item.quantity}</span>
+                          {color && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 700, color: T.navy }}>
+                              <span style={{ color: T.creamDeep, fontWeight: 400 }}>·</span>
+                              <span style={{ width: 9, height: 9, borderRadius: '50%', background: color, border: '1px solid rgba(0,0,0,0.15)', display: 'inline-block' }} />
+                              {color}
+                            </span>
+                          )}
+                          {size && (
+                            <span style={{ fontWeight: 700, color: T.navy }}>
+                              <span style={{ color: T.creamDeep, fontWeight: 400 }}>·</span> Size: {size}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                        <div className="jost" style={{ fontWeight: 700, fontSize: 14, color: T.gold }}>
+                          KSh {(getEffectivePrice(item) * item.quantity).toLocaleString()}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  );
+                })}
+              </div>
             </div>
 
             {(passedShipping?.firstName || passedShipping?.county || passedShipping?.pickupLocation) && (
@@ -684,27 +705,6 @@ export default function Checkout() {
                     "{passedShipping.additionalInfo}"
                   </div>
                 )}
-              </div>
-            )}
-
-            {items.some(i => passedColors?.[i.id] || passedSizes?.[i.id]) && (
-              <div style={{ background: '#F5F5F5', border: '1px solid #E0E0E0', borderRadius: 8, padding: '14px 16px', marginBottom: 20, textAlign: 'left' }}>
-                <div className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.muted, marginBottom: 10 }}>Item Selections</div>
-                {items.map((i, idx, arr) => {
-                  const color = passedColors?.[i.id];
-                  const size  = passedSizes?.[i.id];
-                  if (!color && !size) return null;
-                  return (
-                    <div key={i.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: idx === arr.length - 1 ? 0 : 8 }}>
-                      <span className="jost" style={{ fontSize: 12, color: T.navy, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>{i.name}</span>
-                      <span className="jost" style={{ fontSize: 12, color: T.muted }}>
-                        {color && <>Colour: <strong style={{ color: T.navy }}>{color}</strong></>}
-                        {color && size && '  ·  '}
-                        {size && <>Size: <strong style={{ color: T.navy }}>{size}</strong></>}
-                      </span>
-                    </div>
-                  );
-                })}
               </div>
             )}
 
