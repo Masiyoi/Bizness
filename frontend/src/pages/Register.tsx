@@ -48,6 +48,7 @@ export default function Register() {
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [resendLoading, setResendLoading] = useState(false);
   const [resendMsg, setResendMsg] = useState("");
+  const [showEmailForm, setShowEmailForm] = useState(false);
   const passwordStrength = getPasswordStrength(formData.password);
 
   const handleGoogleResponse = useCallback(async (response: { credential: string }) => {
@@ -182,8 +183,7 @@ export default function Register() {
         </div>
 
         <h2 style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:300, fontSize:28, color:"#0a0a0a", textAlign:"center", lineHeight:1.2, marginBottom:14, zIndex:1, position:"relative" }}>
-          Join<br />
-          <span style={{ color:"rgba(0,0,0,0.4)", fontWeight:300 }}>Luku Prime Shop</span>
+          Join Us Today
         </h2>
         <p style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:300, fontSize:13, color:"rgba(0,0,0,0.4)", textAlign:"center", lineHeight:1.8, maxWidth:260, zIndex:1, position:"relative" }}>
           Kenya's premium destination for the finest fashion.
@@ -208,7 +208,6 @@ export default function Register() {
             <div style={{ width:40, height:40, borderRadius:3, background:"#000", display:"flex", alignItems:"center", justifyContent:"center" }}>
               <span style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:700, fontSize:13, color:"#fff" }}>LP</span>
             </div>
-            <span style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:500, fontSize:15, color:"#0a0a0a" }}>Luku Prime Shop</span>
           </div>
 
           {/* Image Hero */}
@@ -218,7 +217,7 @@ export default function Register() {
           }}>
             <img
               src="https://res.cloudinary.com/dfiy43f01/image/upload/v1782201742/Lara_Bubmann_outfit__knns7x.jpg"
-              alt="Let's Go Shopping - Luku Prime"
+              alt="Let's Go Shopping"
               style={{
                 width: "100%", height: "100%", objectFit: "cover",
                 objectPosition: "top", display: "block"
@@ -230,11 +229,6 @@ export default function Register() {
               fontFamily: "'DM Sans',sans-serif", fontSize: 22, fontWeight: 700,
               color: "#0a0a0a", letterSpacing: -0.3, lineHeight: 1.2
             }}>Let's Go Shopping</p>
-            <p style={{
-              fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 500,
-              letterSpacing: "3px", textTransform: "uppercase",
-              color: "rgba(0,0,0,0.3)", marginTop: 6
-            }}>New Collection · Luku Prime</p>
           </div>
 
           <div style={{ marginBottom:22 }}>
@@ -249,8 +243,36 @@ export default function Register() {
             {googleLoading ? <div style={s.gLoad}>Signing in with Google…</div> : <div id="google-btn" style={{ width:"100%", minHeight:44 }} />}
           </div>
 
-          <div style={s.divider}><span style={s.divLine}/><span style={s.divText}>or sign up with email</span><span style={s.divLine}/></div>
+          <div style={s.orRow}>
+            <span style={s.divLine}/>
+            <span style={s.divText}>OR</span>
+            <span style={s.divLine}/>
+          </div>
 
+          <div
+            style={{ ...s.emailToggle, cursor: "pointer" }}
+            onClick={() => setShowEmailForm(x => !x)}
+            role="button"
+            aria-expanded={showEmailForm}
+          >
+            <span style={s.divText}>with email</span>
+            <span
+              style={{
+                fontSize: 16,
+                fontWeight: 400,
+                lineHeight: 1,
+                color: "rgba(0,0,0,0.5)",
+                marginLeft: 6,
+                transform: showEmailForm ? "rotate(45deg)" : "rotate(0deg)",
+                transition: "transform 0.25s ease",
+                display: "inline-block",
+              }}
+            >
+              +
+            </span>
+          </div>
+
+          <div className={`lp-collapse ${showEmailForm ? "lp-collapse-open" : ""}`}>
           <form onSubmit={handleSubmit} noValidate style={{ display:"flex", flexDirection:"column", gap:14 }}>
             <div>
               <label style={s.label}>Full Name</label>
@@ -335,6 +357,7 @@ export default function Register() {
               {loading ? "Creating account…" : "Create Account →"}
             </button>
           </form>
+          </div>
 
           <div style={{ height:1, background:"rgba(0,0,0,0.07)", margin:"24px 0" }}/>
           <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"rgba(0,0,0,0.4)", textAlign:"center", marginBottom:14 }}>
@@ -370,6 +393,10 @@ const css = `
   @keyframes lpFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
   .lp-card{animation:lpFadeUp 0.4s ease both}
 
+  .lp-collapse{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 0.3s ease,opacity 0.25s ease,margin-top 0.3s ease;margin-top:0}
+  .lp-collapse > form{overflow:hidden;min-height:0}
+  .lp-collapse-open{grid-template-rows:1fr;opacity:1;margin-top:4px}
+
   .lp-left{width:420px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 44px;position:relative;overflow:hidden;border-right:1px solid rgba(0,0,0,0.07);background:#f9f9f9}
 
   .lp-mobile-logo{display:none;align-items:center;gap:12px;margin-bottom:28px}
@@ -397,6 +424,8 @@ const s: Record<string, React.CSSProperties> = {
   successBox:{ background:"rgba(22,163,74,0.06)", border:"1px solid rgba(22,163,74,0.2)", borderRadius:6, padding:"12px 16px", color:"#166534", fontFamily:"'DM Sans',sans-serif", fontSize:13, marginBottom:18 },
   gLoad:    { background:"rgba(0,0,0,0.03)", border:"1px solid rgba(0,0,0,0.08)", borderRadius:6, padding:"12px", color:"rgba(0,0,0,0.3)", fontFamily:"'DM Sans',sans-serif", fontSize:13, textAlign:"center" as const },
   divider:  { display:"flex", alignItems:"center", gap:12, marginBottom:18 },
+  orRow:      { display: "flex", alignItems: "center", gap: 12, marginBottom: 14 },
+  emailToggle:{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 20, padding: "4px 0" },
   divLine:  { flex:1, height:1, background:"rgba(0,0,0,0.08)", display:"block" },
-  divText:  { fontFamily:"'DM Sans',sans-serif", fontSize:10, color:"rgba(0,0,0,0.3)", letterSpacing:"1.5px", textTransform:"uppercase" as const, whiteSpace:"nowrap" as const },
+  divText:  { fontFamily: "'Roboto', arial, sans-serif", fontSize: 14, fontWeight: 500, color: "#3c4043", letterSpacing: "0.15px", whiteSpace: "nowrap" as const },
 };

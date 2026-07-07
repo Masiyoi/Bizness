@@ -64,11 +64,7 @@ const KENYA_COUNTIES = [
   'Turkana','Uasin Gishu','Vihiga','Wajir','West Pokot',
 ];
 
-const PICKUP_LOCATIONS = [
-  'Luku Prime — Nairobi CBD (Moi Avenue)',
-  'Luku Prime — Westlands',
-  'Luku Prime — Upperhill',
-];
+const PICKUP_LOCATION_FIXED = 'Luku Prime — Nairobi CBD (Moi Avenue)';
 
 const EMPTY_SHIPPING: ShippingInfo = {
   firstName: '', lastName: '', phone: '', email: '',
@@ -133,6 +129,15 @@ export default function Cart() {
     window.addEventListener('cartUpdated', handler);
     return () => window.removeEventListener('cartUpdated', handler);
   }, []);
+
+  // ✅ Pickup is a single fixed branch — auto-fill it, no user selection needed
+  useEffect(() => {
+    if (deliveryZone === 'pickup' && shipping.pickupLocation !== PICKUP_LOCATION_FIXED) {
+      const updated = { ...shipping, pickupLocation: PICKUP_LOCATION_FIXED };
+      setShipping(updated);
+      sessionStorage.setItem('luku_shipping', JSON.stringify(updated));
+    }
+  }, [deliveryZone]);
 
   const fetchCart = async () => {
     try {
@@ -375,7 +380,7 @@ export default function Cart() {
         a { text-decoration: none; color: inherit; }
         .back-btn { background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: ${T.gold}; padding: 8px 0; display: flex; align-items: center; gap: 8px; transition: opacity 0.2s; min-height: 44px; }
         .back-btn:hover { opacity: 0.75; }
-        .item-card { background: #fff; border-radius: 16px; border: 1px solid ${T.creamDeep}; transition: all 0.25s; display: flex; align-items: flex-start; gap: 16px; padding: 16px; }
+        .item-card { background: #fff; border-radius: 16px; border: none; transition: all 0.25s; display: flex; align-items: flex-start; gap: 16px; padding: 16px; }
         .item-card:hover { border-color: ${T.gold}; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
         .qty-btn { border: 1px solid ${T.creamDeep}; background: ${T.cream}; border-radius: 8px; width: 36px; height: 36px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; font-family: 'DM Sans', sans-serif; font-weight: 600; transition: all 0.15s; color: #000; flex-shrink: 0; }
         .qty-btn:hover:not(:disabled) { background: #000; color: #fff; border-color: #000; }
@@ -394,8 +399,8 @@ export default function Cart() {
         .ornament { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
         .ornament-line { flex: 0 0 28px; height: 1px; background: ${T.gold}; }
         .ornament-diamond { width: 4px; height: 4px; background: ${T.gold}; transform: rotate(45deg); flex-shrink: 0; }
-        .summary-card { background: #fff; border: 1px solid ${T.creamDeep}; border-radius: 20px; padding: clamp(18px,4vw,28px); }
-        .shipping-card { background: #fff; border: 1px solid ${T.creamDeep}; border-radius: 20px; padding: clamp(18px,4vw,28px); margin-top: 24px; }
+        .summary-card { background: #fff; border: none; border-radius: 20px; padding: clamp(18px,4vw,28px); }
+        .shipping-card { background: #fff; border: none; border-radius: 20px; padding: clamp(18px,4vw,28px); margin-top: 24px; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
         .form-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
         .field-label { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #000; }
@@ -476,7 +481,7 @@ export default function Cart() {
      <Navbar />
 
       {/* ── PAGE BODY ── */}
-      <div className="cart-body-pad" style={{ padding: 'clamp(20px,4vw,40px) clamp(16px,4%,5%) 80px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+      <div className="cart-body-pad" style={{ padding: 'clamp(20px,4vw,40px) clamp(16px,4%,5%) 24px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
 
         {error && (
           <div className="jost" style={{ background: '#FDF0EE', border: '1px solid #F5C6C0', borderRadius: 10, padding: '12px 18px', color: '#C0392B', fontSize: 13, marginBottom: 24 }}>
@@ -744,40 +749,14 @@ export default function Cart() {
 
                 {deliveryZone === 'pickup' ? (
                   <div className="form-field fade-in">
-                    <label className="field-label">Pickup Location *</label>
-                    <div className="lk-dd-wrap">
-                      {openDropdown === 'pickup' && (
-                        <div style={{ position:'fixed', inset:0, zIndex:998 }} onClick={() => { setOpenDropdown(null); touch('pickupLocation'); }} />
-                      )}
-                      <div
-                        className={`lk-dd-trigger${openDropdown === 'pickup' ? ' open' : ''}`}
-                        style={{ borderColor: formErrors.pickupLocation && formTouched.pickupLocation ? '#CC0000' : openDropdown === 'pickup' || shipping.pickupLocation ? '#0A0A0A' : 'rgba(0,0,0,0.15)' }}
-                        onClick={() => setOpenDropdown(openDropdown === 'pickup' ? null : 'pickup')}
-                      >
-                        <span style={{ color: shipping.pickupLocation ? '#0A0A0A' : '#888', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1, marginRight:8 }}>
-                          {shipping.pickupLocation || 'Select Pickup Branch'}
-                        </span>
-                        <svg width="8" height="5" viewBox="0 0 8 5" fill="none" style={{ transition:'transform 0.2s', transform: openDropdown === 'pickup' ? 'rotate(180deg)' : 'none', flexShrink:0 }}>
-                          <path d="M1 1l3 3 3-3" stroke="#0A0A0A" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
+                    <label className="field-label">Pickup Location</label>
+                    <div style={{ background: T.cream, border: '1px solid rgba(0,0,0,0.1)', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 18 }}>🏪</span>
+                      <div>
+                        <div className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy }}>Luku Prime — Nairobi CBD</div>
+                        <div className="jost" style={{ fontSize: 11, color: T.muted }}>Moi Avenue</div>
                       </div>
-                      {openDropdown === 'pickup' && (
-                        <div className="lk-dd-popup">
-                          <div className="lk-dd-popup-header">
-                            <p style={{ fontFamily:'DM Sans,sans-serif', fontSize:8, fontWeight:700, letterSpacing:'3px', textTransform:'uppercase', color:'#C2410C', margin:'0 0 2px' }}>Luku Prime</p>
-                            <p style={{ fontFamily:'DM Sans,sans-serif', fontSize:10, fontWeight:700, letterSpacing:'2px', textTransform:'uppercase', color:'#0A0A0A', margin:0 }}>Pickup Branch</p>
-                          </div>
-                          {PICKUP_LOCATIONS.map(loc => (
-                            <button key={loc} className={`lk-dd-row${shipping.pickupLocation === loc ? ' active' : ''}`}
-                              onClick={() => { setField('pickupLocation', loc); setOpenDropdown(null); }}>
-                              <span>🏪 {loc.replace('Luku Prime — ', '')}</span>
-                              {shipping.pickupLocation === loc && <span style={{ fontSize:9, color:'#C2410C', fontWeight:700 }}>✓</span>}
-                            </button>
-                          ))}
-                        </div>
-                      )}
                     </div>
-                    {formTouched.pickupLocation && formErrors.pickupLocation && <span className="field-error">{formErrors.pickupLocation}</span>}
                     <div style={{ background: 'rgba(74,122,74,0.08)', border: '1px solid rgba(74,122,74,0.25)', borderRadius: 10, padding: '10px 14px', marginTop: 10 }}>
                       <p className="jost" style={{ fontSize: 12, color: '#4A7A4A', fontWeight: 500 }}>🏪 You'll collect your order at this branch — no delivery fee!</p>
                     </div>
@@ -846,7 +825,7 @@ export default function Cart() {
                 <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 'clamp(18px,3vw,22px)', color: T.navy, marginBottom: 20 }}>Order Summary</h2>
 
                 {(shipping.firstName || shipping.county || shipping.pickupLocation) && (
-                  <div style={{ background: T.cream, border: `1px solid ${T.creamDeep}`, borderRadius: 12, padding: '12px 14px', marginBottom: 18 }}>
+                  <div style={{ background: T.cream, border: 'none', borderRadius: 12, padding: '12px 14px', marginBottom: 18 }}>
                     <div className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.muted, marginBottom: 6 }}>Delivering to</div>
                     {shipping.firstName && <div className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy, marginBottom: 2 }}>{shipping.firstName} {shipping.lastName}</div>}
                     {shipping.phone && <div className="jost" style={{ fontSize: 12, color: T.muted }}>{shipping.phone}</div>}
@@ -863,7 +842,7 @@ export default function Cart() {
 
                 {/* ── unified per-item colour + size recap ── */}
                 {items.some(i => i.colors.length > 0 || i.sizes.length > 0) && (
-                  <div style={{ background: T.cream, border: `1px solid ${T.creamDeep}`, borderRadius: 12, padding: '12px 14px', marginBottom: 18 }}>
+                  <div style={{ background: T.cream, border: 'none', borderRadius: 12, padding: '12px 14px', marginBottom: 18 }}>
                     <div className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.muted, marginBottom: 10 }}>Item Selections</div>
                     {items.filter(i => i.colors.length > 0 || i.sizes.length > 0).map((i, idx, arr) => {
                       const hasColor = i.colors.length > 0;
@@ -887,6 +866,10 @@ export default function Cart() {
                             </div>
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span className="jost" style={{ fontSize: 10, color: T.muted, letterSpacing: '0.5px' }}>Qty</span>
+                              <span className="jost" style={{ fontSize: 11, fontWeight: 700, color: T.navy }}>{i.quantity}</span>
+                            </div>
                             {hasColor && (
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span className="jost" style={{ fontSize: 10, color: T.muted, letterSpacing: '0.5px' }}>Colour</span>
@@ -933,10 +916,7 @@ export default function Cart() {
                   <span className="jost" style={{ fontWeight: 800, fontSize: 22, color: T.navy, letterSpacing: '-0.5px' }}>KSh {total.toLocaleString()}</span>
                 </div>
 
-                <button className="cta-primary" style={{ marginBottom: 10, background: '#16a34a' }} onClick={handleCheckout}>Proceed to Checkout →</button>
-                <button className="cta-secondary" style={{ marginBottom: 18 }} onClick={() => navigate('/')}>Continue Shopping</button>
-
-                <div style={{ border: '1px solid #E0E0E0', borderRadius: 8, padding: '12px 16px', marginBottom: 18 }}>
+                <div style={{ marginBottom: 20 }}>
                   <div className="jost" style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#888', marginBottom: 10, textAlign: 'center' }}>We Accept</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
                     <img src="/src/assets/M-PESA_LOGO-01.svg" alt="M-Pesa" style={{ height: 22, objectFit: 'contain' }} />
@@ -948,6 +928,8 @@ export default function Cart() {
                   </div>
                 </div>
 
+                <button className="cta-primary" style={{ marginBottom: 10, background: '#16a34a' }} onClick={handleCheckout}>Proceed to Checkout →</button>
+                <button className="cta-secondary" style={{ marginBottom: 18 }} onClick={() => navigate('/')}>Continue Shopping</button>
 
               </div>
             </div>

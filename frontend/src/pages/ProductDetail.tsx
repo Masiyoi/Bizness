@@ -5,6 +5,8 @@ import axios from 'axios';
 import Navbar         from '../components/common/Navbar';
 import Footer         from '../components/common/Footer';
 import InstagramStrip from '../components/common/InstagramStrip';
+import bookmarkIcon from '../assets/bookmark.png';
+import bookmarkedIcon from '../assets/bookmarked.png';
 import ProductCard    from '../components/home/ProductCard';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -148,18 +150,37 @@ function Slideshow({ images, productName, stock }: {
         <div
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
-          style={{ overflow:'hidden', background:'#f2f2f2', lineHeight:0, aspectRatio:'1/1' }}
+          style={{ overflow:'hidden', background:'#f2f2f2', lineHeight:0, aspectRatio:'1/1', position:'relative' }}
         >
-          <img
-            key={active}
-            src={images[active]}
-            alt={productName}
-            style={{
-              width:'100%', height:'100%', display:'block',
-              objectFit:'cover', transition:'opacity 0.18s ease',
-            }}
-            onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/600x600/f2f2f2/000?text=LP'; }}
-          />
+          {/* Image carousel using sliding track (like ProductCard) */}
+          <div style={{
+            display:'flex',
+            width:`${images.length * 100}%`,
+            height:'100%',
+            transform:`translateX(${-active * (100 / images.length)}%)`,
+            transition:'transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94)',
+          }}>
+            {images.map((img, i) => (
+              <div key={i} style={{
+                flex:`0 0 ${100 / images.length}%`,
+                height:'100%',
+                position:'relative',
+                background:'#f2f2f2',
+              }}>
+                <img
+                  src={img}
+                  alt={productName}
+                  style={{
+                    width:'100%',
+                    height:'100%',
+                    display:'block',
+                    objectFit:'cover',
+                  }}
+                  onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/600x600/f2f2f2/000?text=LP'; }}
+                />
+              </div>
+            ))}
+          </div>
           {stock !== -1 && stock === 0 && (
             <div style={{
               position:'absolute', inset:0, background:'rgba(255,255,255,0.65)',
@@ -172,26 +193,39 @@ function Slideshow({ images, productName, stock }: {
               }}>Sold Out</span>
             </div>
           )}
+          
+          {/* ── Dot indicators ── */}
+          {images.length > 1 && (
+            <div style={{
+              position:'absolute', bottom:12, left:'50%', transform:'translateX(-50%)',
+              display:'flex', gap:6, zIndex:2,
+            }}>
+              {images.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActive(i)}
+                  style={{
+                    width: i === active ? 20 : 8,
+                    height:8, borderRadius:4,
+                    background: i === active ? '#fff' : 'rgba(255,255,255,0.6)',
+                    border:'none', cursor:'pointer',
+                    transition:'all 0.25s ease', padding:0,
+                    boxShadow:'0 2px 4px rgba(0,0,0,0.2)',
+                  }}
+                  aria-label={`View image ${i + 1}`}
+                  aria-current={i === active ? 'true' : 'false'}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* ── Fit advice strip (sits between main image and mobile thumbs) ── */}
-        <div style={{
-          display:'flex', alignItems:'center', justifyContent:'center', gap:10,
-          background:'#F5F5F5', border:'1px solid #E8E8E8',
-          padding:'10px 14px', marginTop:8,
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
-          </svg>
-          <span style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:'#444', letterSpacing:'0.5px', fontWeight:500 }}>
-            For a perfect fit, go half or one size up
-          </span>
-        </div>
+
 
         {/* Mobile thumbnail strip (replaces dot indicators) */}
         {images.length > 1 && (
           <div className="lp-mobile-thumbs" style={{
-            display:'none', gap:6, marginTop:8,
+            display:'none !important', gap:6, marginTop:8,
             overflowX:'auto', scrollbarWidth:'none',
           }}>
             {images.map((img, i) => (
@@ -419,7 +453,6 @@ function ReviewsSection({ productId }: { productId: number }) {
         style={{
           width:'100%', background:'transparent', border:'none',
           borderTop:`1px solid ${T.creamDeep}`,
-          borderBottom: open ? 'none' : `1px solid ${T.creamDeep}`,
           padding:'18px 0', display:'flex', alignItems:'center',
           justifyContent:'space-between', cursor:'pointer',
         }}
@@ -455,8 +488,7 @@ function ReviewsSection({ productId }: { productId: number }) {
 
       <div style={{ overflow:'hidden', maxHeight: open ? 3000 : 0, transition:'max-height 0.4s ease' }}>
         <div style={{
-          background:'#fff', border:'1px solid #E8E8E8',
-          borderTop:'none', borderRadius:0, padding:'22px 22px 20px',
+          background:'#fff', borderRadius:0, padding:'22px 22px 20px',
         }}>
           {loading && (
             <div style={{ textAlign:'center', padding:'28px 0', color:T.muted, fontSize:13 }}>
@@ -500,7 +532,7 @@ function ReviewsSection({ productId }: { productId: number }) {
                 <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
                   {reviews.map(r => (
                     <div key={r.id} style={{
-                      background:'#fff', border:'1px solid #E8E8E8',
+                      background:'#fff',
                       borderRadius:0, padding:'16px 18px',
                     }}>
                       <div style={{
@@ -534,13 +566,14 @@ function ReviewsSection({ productId }: { productId: number }) {
 function AccordionRow({ label, body }: { label: string; body: string }) {
   const [open, setOpen] = React.useState(false);
   return (
-    <div style={{ borderTop:'1px solid #E8E8E8' }}>
+    <div>
       <button
         onClick={() => setOpen(o => !o)}
         style={{
           width:'100%', background:'transparent', border:'none',
           padding:'16px 0', display:'flex', alignItems:'center',
           justifyContent:'space-between', cursor:'pointer',
+          borderTop:'1px solid #E8E8E8',
         }}
       >
         <span style={{
@@ -753,13 +786,19 @@ export default function ProductDetail() {
   // ── Wishlist ───────────────────────────────────────────────────────────────
   const toggleWishlist = async () => {
     if (inWishlist) {
+      // Optimistic update — change immediately
       setInWishlist(false);
-      try { await axios.delete(`/api/wishlist/${product!.id}`); showToast('Removed from wishlist.'); }
-      catch { setInWishlist(true); }
+      showToast('Removed from wishlist.');
+      // Then sync with server
+      try { await axios.delete(`/api/wishlist/${product!.id}`); }
+      catch { setInWishlist(true); showToast('Failed to remove. Try again.'); }
     } else {
+      // Optimistic update — change immediately
       setInWishlist(true);
-      try { await axios.post('/api/wishlist', { product_id: product!.id }); showToast('❤️ Added to wishlist!'); }
-      catch { setInWishlist(false); }
+      showToast('❤️ Added to wishlist!');
+      // Then sync with server
+      try { await axios.post('/api/wishlist', { product_id: product!.id }); }
+      catch { setInWishlist(false); showToast('Failed to add. Try again.'); }
     }
     fetchWishlistCount();
   };
@@ -949,15 +988,20 @@ export default function ProductDetail() {
                 onClick={toggleWishlist}
                 style={{
                   background:'none',
-                  border:`1.5px solid ${inWishlist ? '#E74C3C' : T.creamDeep}`,
-                  borderRadius:'50%', width:42, height:42,
+                  border:'none',
+                  width:42, height:42,
                   display:'flex', alignItems:'center', justifyContent:'center',
-                  cursor:'pointer', fontSize:18, flexShrink:0,
+                  cursor:'pointer', flexShrink:0,
                   transition:'all 0.2s', marginTop:4,
-                  color: inWishlist ? '#E74C3C' : T.muted,
+                  opacity: 1,
                 }}
+                title={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
               >
-                {inWishlist ? '❤️' : '🤍'}
+                <img 
+                  src={inWishlist ? bookmarkedIcon : bookmarkIcon}
+                  alt={inWishlist ? 'Bookmarked' : 'Bookmark'}
+                  style={{ width:24, height:24, objectFit:'contain', transition:'all 0.3s ease' }}
+                />
               </button>
             </div>
 
@@ -1106,74 +1150,13 @@ export default function ProductDetail() {
                         }}>
                           {color}
                         </span>
-                        {colorStock !== null && active && (
-                          <span style={{
-                            fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700,
-                            textAlign:'center', lineHeight:1.2,
-                            color: colorStock === 0 ? '#C0392B' : colorStock <= 5 ? '#555' : '#4A7A4A',
-                          }}>
-                            {colorStock === 0 ? 'Sold out' : colorStock <= 5 ? `${colorStock} left` : `${colorStock}`}
-                          </span>
-                        )}
+
                       </div>
                     );
                   })}
                 </div>
 
-                {/* Colour dropdown */}
-                <div className={colorError ? 'lp-shake' : ''}>
-                  <div style={{ position:'relative' }}>
-                    {selectedColor && (
-                      <div style={{
-                        position:'absolute', left:13, top:'50%', transform:'translateY(-50%)',
-                        width:14, height:14, borderRadius:'50%', background:selectedColor,
-                        border:`1.5px solid ${T.creamDeep}`, pointerEvents:'none', zIndex:1,
-                        boxShadow:'0 1px 4px rgba(0,0,0,0.2)',
-                      }}/>
-                    )}
-                    <select
-                      value={selectedColor}
-                      onChange={e => handleColorChange(e.target.value)}
-                      style={{
-                        width:'100%', background:'#fff',
-                        border:`1.5px solid ${colorError ? '#C0392B' : selectedColor ? T.gold : T.creamDeep}`,
-                        borderRadius:10,
-                        padding:`11px 36px 11px ${selectedColor ? '36px' : '14px'}`,
-                        fontFamily:"'Jost',sans-serif", fontSize:14,
-                        color: selectedColor ? T.navy : T.muted,
-                        outline:'none', cursor:'pointer',
-                        appearance:'none', WebkitAppearance:'none',
-                      }}
-                    >
-                      <option value="">— Choose a colour —</option>
-                      {product.colors.map((color, i) => {
-                        const soldOut = isColorSoldOut(color);
-                        return (
-                          <option key={i} value={color} disabled={soldOut}>
-                            {color}{soldOut ? ' (sold out)' : ''}
-                          </option>
-                        );
-                      })}
-                    </select>
-                    <div style={{
-                      position:'absolute', right:13, top:'50%', transform:'translateY(-50%)',
-                      pointerEvents:'none', fontSize:10, color:T.muted,
-                    }}>▼</div>
-                  </div>
-                  {colorError ? (
-                    <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:'#C0392B', marginTop:6, fontWeight:700 }}>
-                      ⚠ Please select a colour to continue
-                    </div>
-                  ) : selectedColor ? (
-                    <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:'#4A7A4A', marginTop:6, fontWeight:600 }}>
-                      ✓ {selectedColor} selected{inCart ? ' · saved to cart' : ''}
-                    </div>
-                  ) : (
-                    <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:T.muted, marginTop:6 }}>
-                      {product.colors.length} colour{product.colors.length !== 1 ? 's' : ''} available
-                    </div>
-                  )}
-                </div>
+
               </div>
             )}
 
@@ -1235,25 +1218,7 @@ export default function ProductDetail() {
                               }}/>
                             )}
                           </button>
-                          {sizeStock !== null && active && (
-                            <span style={{
-                              fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700,
-                              textAlign:'center', lineHeight:1.2,
-                              color: soldOut
-                                ? T.muted
-                                : sizeStock === 0
-                                  ? '#C0392B'
-                                  : sizeStock <= 5
-                                    ? '#555555'
-                                    : '#4A7A4A',
-                            }}>
-                              {soldOut || sizeStock === 0
-                                ? 'Sold out'
-                                : sizeStock <= 5
-                                  ? `${sizeStock} left`
-                                  : `${sizeStock}`}
-                            </span>
-                          )}
+
                         </div>
                       );
                     })}
@@ -1262,17 +1227,6 @@ export default function ProductDetail() {
                 {sizeError ? (
                   <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:'#C0392B', fontWeight:700 }}>
                     ⚠ Please select a size to continue
-                  </div>
-                ) : variantHint ? (
-                  <div style={{
-                    fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:600,
-                    color: variantHint.includes('sold out') || variantHint.includes('Sold')
-                      ? '#C0392B'
-                      : variantHint.includes('Only')
-                        ? '#555555'
-                        : '#4A7A4A',
-                  }}>
-                    {variantHint.includes('sold out') ? '✕' : variantHint.includes('Only') ? '⚠' : '✓'} {variantHint}
                   </div>
                 ) : selectedSize ? (
                   <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:'#4A7A4A', fontWeight:600 }}>
@@ -1299,9 +1253,7 @@ export default function ProductDetail() {
                     {qty}
                   </span>
                   <button className="lp-qty" onClick={() => setQty(q => Math.min(qtyMax, q+1))}>+</button>
-                  <span style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:T.muted }}>
-                    {qtyMax} available
-                  </span>
+
                 </div>
               </div>
             )}
@@ -1346,29 +1298,30 @@ export default function ProductDetail() {
             {/* ── ACCORDION DROPDOWNS ── */}
             {[
               {
-                key: 'details',
-                label: 'Details',
+                key: 'description',
+                label: 'Description',
                 content: product.description || 'Premium quality product. Carefully sourced and curated by Luku Prime.',
               },
               {
-                key: 'fit',
-                label: 'Fit Information',
-                content: 'This product runs true to size. For a relaxed fit, size up. For a more tailored look, size down. Measurements are taken lying flat — chest, waist, and hip measurements available on request.',
+                key: 'care',
+                label: 'Product Care Guide',
+                content: 'Dry clean or gentle hand wash recommended. Avoid harsh chemicals. Store in cool, dry place away from direct sunlight.',
               },
               {
-                key: 'shipping',
-                label: 'Shipping',
-                content: 'Orders are processed within 24 hours. Standard delivery within Nairobi takes 1–2 business days. Nationwide delivery takes 2–4 business days. Free shipping on orders over KSh 5,000.',
+                key: 'complete-look',
+                label: 'Complete the Look',
+                content: 'Style this piece with complementary items from our collection. Mix and match to create your signature aesthetic.',
               },
             ].map(({ key, label, content: body }) => (
               <AccordionRow key={key} label={label} body={body} />
             ))}
 
+            <ReviewsSection productId={product.id}/>
+
           </div>
         </div>
 
         <div style={{ padding:'0 clamp(16px,5%,5%)' }}>
-          <ReviewsSection productId={product.id}/>
           <RelatedProducts category={product.category} currentId={product.id}/>
         </div>
       </div>
@@ -1389,6 +1342,7 @@ const css = `
   @keyframes spin    { to { transform:rotate(360deg) } }
   @keyframes shake   { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
   @keyframes pulse   { 0%,100%{box-shadow:0 0 0 3px rgba(74,154,74,0.2)} 50%{box-shadow:0 0 0 6px rgba(74,154,74,0.05)} }
+
 
   .lp-fade  { animation:fadeUp 0.45s ease forwards }
   .lp-shake { animation:shake 0.45s ease both }
@@ -1430,7 +1384,7 @@ const css = `
   .lp-grid { display:grid; grid-template-columns:1fr 1fr; gap:clamp(24px,4vw,48px); align-items:start }
 
   /* ── Desktop: thumbnail strip layout ── */
-  .lp-thumb-strip { display:flex }
+  .lp-thumb-strip { display:none !important }
 
   /* ── Mobile overrides ── */
   @media(max-width:768px) {
@@ -1438,7 +1392,7 @@ const css = `
     .lp-page-wrap { padding-left:0 !important; padding-right:0 !important }
     .lp-img-bleed { width:100vw }
     .lp-thumb-strip { display:none !important }
-    .lp-mobile-thumbs { display:flex !important }
+    .lp-mobile-thumbs { display:none !important }
     .lp-grid > div:last-child { padding:20px 16px 0 }
   }
   @media(min-width:769px) {

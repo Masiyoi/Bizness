@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import Footer from '../components/common/Footer';
 
 interface CartItem {
   id: number;
@@ -11,7 +12,7 @@ interface CartItem {
   quantity: number;
 }
 
-type CheckoutStep = 'summary' | 'choose' | 'phone' | 'waiting' | 'success' | 'failed' | 'pesapal-redirect';
+type CheckoutStep = 'summary' | 'waiting' | 'success' | 'failed' | 'pesapal-redirect';
 type DeliveryZone = 'pickup' | 'cbd' | 'environs' | 'county';
 type PaymentMethod = 'mpesa' | 'pesapal';
 
@@ -51,8 +52,6 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod]       = useState<PaymentMethod | null>(null);
 
   // M-Pesa state
-  const [phone, setPhone]                       = useState('');
-  const [phoneError, setPhoneError]             = useState('');
   const [pushing, setPushing]                   = useState(false);
   const [, setCheckoutRequestId]                = useState('');
   const [receipt, setReceipt]                   = useState('');
@@ -69,6 +68,10 @@ export default function Checkout() {
 
   const passedZone = (location.state as { deliveryZone?: DeliveryZone } | null)?.deliveryZone;
   const deliveryZone: DeliveryZone = passedZone ?? 'cbd';
+  const passedShipping = (location.state as any)?.shipping as
+    { firstName?: string; lastName?: string; phone?: string; county?: string; town?: string; pickupLocation?: string; additionalInfo?: string } | undefined;
+  const passedColors = (location.state as any)?.selectedColors as Record<number, string> | undefined;
+  const passedSizes  = (location.state as any)?.selectedSizes as Record<number, string> | undefined;
   const deliveryFee   = DELIVERY_OPTIONS.find(o => o.value === deliveryZone)!.fee;
   const deliveryLabel = DELIVERY_OPTIONS.find(o => o.value === deliveryZone)!.label;
 
@@ -126,22 +129,25 @@ export default function Checkout() {
 
   // ── M-Pesa payment ─────────────────────────────────────────────────────────
   const handleMpesaPay = async () => {
-    const err = validatePhone(phone);
-    if (err) { setPhoneError(err); return; }
-    setPhoneError('');
+    const shippingPhone = passedShipping?.phone || '';
+    if (!shippingPhone) {
+      setServerError('No phone number found. Please complete shipping details first.');
+      return;
+    }
+    const err = validatePhone(shippingPhone);
+    if (err) { setServerError(err); return; }
     setPushing(true);
     setServerError('');
     try {
-      const passedShipping = (location.state as any)?.shipping ?? {};
       const passedColors   = (location.state as any)?.selectedColors ?? {};
       const passedSizes    = (location.state as any)?.selectedSizes ?? {};
 
       const res = await axios.post('/api/payments/stk-push', {
-        phone,
+        phone: shippingPhone,
         amount:         total,
         delivery_zone:  deliveryZone,
         delivery_fee:   deliveryFee,
-        shipping:       passedShipping,
+        shipping:       passedShipping ?? {},
         selectedColors: passedColors,
         selectedSizes:  passedSizes,
       });
@@ -271,9 +277,12 @@ export default function Checkout() {
 
         .lp-card{background:#fff;border:1px solid #E0E0E0;border-radius:0;padding:40px 38px;width:100%;max-width:500px;box-shadow:0 4px 24px rgba(0,0,0,0.06)}
         .lp-card-wide{max-width:640px}
+        .lp-checkout-full{width:100%;max-width:1160px;display:grid;grid-template-columns:1.3fr 1fr;gap:4px;align-items:start}
+        .lp-checkout-col{background:#fff;padding:36px 34px}
+        @media(max-width:900px){.lp-checkout-full{grid-template-columns:1fr;max-width:640px}}
 
-        .item-card{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #E0E0E0;border-radius:0;padding:14px 16px;transition:border-color 0.2s}
-        .item-card:hover{border-color:#000}
+        .item-card{display:flex;align-items:center;gap:14px;background:#fff;border-radius:8px;padding:14px 16px;transition:background 0.2s}
+        .item-card:hover{background:#FAFAFA}
 
         .back-btn{background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#000;padding:8px 0;display:flex;align-items:center;gap:8px;transition:opacity 0.2s;margin-bottom:24px}
         .back-btn:hover{opacity:0.7}
@@ -291,17 +300,17 @@ export default function Checkout() {
         .cta-navy:hover{background:#F5F5F5;transform:translateY(-1px)}
 
         /* Payment method selector cards */
-        .pay-method-list{border:1px solid #E5E5E5;border-radius:8px;overflow:hidden;margin-bottom:8px}
-        .pay-method-card{border-radius:0;padding:14px 16px;cursor:pointer;transition:background 0.15s ease;display:flex;align-items:center;gap:12px;width:100%;background:#fff;margin-bottom:0;border:none;border-bottom:1px solid #E5E5E5}
-        .pay-method-card:last-child{border-bottom:none}
+        .pay-method-list{border-radius:8px;overflow:hidden;margin-bottom:8px}
+        .pay-method-card{border-radius:8px;padding:14px 16px;cursor:pointer;transition:background 0.15s ease;display:flex;align-items:center;gap:12px;width:100%;background:#fff;margin-bottom:6px;border:none}
+        
         .pay-method-card:hover{background:#FAFAFA}
         .pay-method-card.selected{background:#F5F5F5}
 
-        .phone-input{background:#fff;border:1.5px solid #E0E0E0;border-radius:0;padding:14px 18px;color:#000;font-size:16px;font-family:'DM Sans',sans-serif;width:100%;outline:none;transition:border-color 0.2s;letter-spacing:1.5px}
-        .phone-input:focus{border-color:#16a34a;background:#fff}
-        .phone-input.error{border-color:#C0392B}
+        .phone-input{background:#F5F5F5;border:none;border-radius:8px;padding:14px 18px;color:#000;font-size:16px;font-family:'DM Sans',sans-serif;width:100%;outline:none;transition:box-shadow 0.2s;letter-spacing:1.5px}
+        .phone-input:focus{box-shadow:0 0 0 2px #16a34a;background:#fff}
+        .phone-input.error{box-shadow:0 0 0 2px #C0392B}
 
-        .totals-box{background:#F5F5F5;border:1px solid #E0E0E0;border-radius:0;padding:18px 20px}
+        .totals-box{background:#F5F5F5;border-radius:8px;padding:18px 20px}
         .trust-badge{flex:1;text-align:center;background:#fff;border:1px solid #E0E0E0;border-radius:0;padding:8px 0;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:#888;letter-spacing:0.3px}
         .mpesa-badge{display:flex;align-items:center;gap:12px;background:#16a34a;border:1px solid #15803d;border-radius:8px;padding:14px 18px;margin-bottom:24px}
         .amount-pill{display:flex;flex-direction:column;align-items:center;background:#000;border:1px solid #333;border-radius:0;padding:20px;margin:20px 0;gap:6px}
@@ -322,47 +331,37 @@ export default function Checkout() {
         .pulse-anim{animation:pulse 1.6s ease-in-out infinite}
       `}</style>
 
-      {/* ── TOPBAR ── */}
-      <div style={{ background: '#000', height: 34, overflow: 'hidden', display: 'flex', alignItems: 'center', borderBottom: '1px solid #222' }}>
-        <div style={{ overflow: 'hidden', width: '100%' }}>
-          <div className="topbar-marquee">
-            {[...Array(2)].map((_, r) =>
-              ['✦ NAIROBI CBD DELIVERY — KSH 100', '✦ NAIROBI ENVIRONS — KSH 350', '✦ OTHER COUNTIES — KSH 400', '✦ FREE PICKUP FROM OUR SHOP', '✦ SECURE M-PESA CHECKOUT', '✦ VISA / MASTERCARD ACCEPTED', '✦ 30-DAY RETURNS'].map((t, i) => (
-                <span key={`${r}-${i}`} className="jost" style={{ fontSize: 10, fontWeight: 600, letterSpacing: '2px', color: 'rgba(255,255,255,0.7)' }}>{t}</span>
-              ))
-            )}
-          </div>
+      {/* ── STICKY HEADER: Topbar + Navbar ── */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 101, background: '#000' }}>
+        {/* Topbar */}
+        <div style={{ height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span className="jost" style={{ fontSize: 10, fontWeight: 600, letterSpacing: '2px', color: 'rgba(255,255,255,0.7)' }}>
+            ✦ GET 10% OFF ON YOUR FIRST ORDER
+          </span>
         </div>
+        {/* Navbar */}
+        <nav style={{ background: '#000', padding: '0 5%', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 2px 16px rgba(0,0,0,0.15)' }}>
+          <button className="jost" onClick={() => navigate('/cart')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 11, fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}>
+            ← Cart
+          </button>
+          <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', textAlign: 'center' }}>
+            <div className="jost" style={{ fontSize: 9, fontWeight: 700, letterSpacing: '3px', color: '#888', textTransform: 'uppercase', marginBottom: 3 }}>Secure</div>
+            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 20, color: '#fff' }}>Checkout</div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {(['summary', 'waiting', 'success'] as CheckoutStep[]).map((s) => (
+              <div key={s} style={{ width: s === step ? 20 : 6, height: 3, borderRadius: 2, background: s === step ? '#fff' : 'rgba(255,255,255,0.25)', transition: 'all 0.3s' }} />
+            ))}
+          </div>
+        </nav>
       </div>
 
-      {/* ── NAVBAR ── */}
-      <nav style={{
-        background: '#000', padding: '0 5%', height: 64,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        position: 'sticky', top: 0, zIndex: 100,
-        boxShadow: '0 2px 16px rgba(0,0,0,0.15)',
-        borderBottom: '1px solid #222',
-      }}>
-        <button className="jost" onClick={() => navigate('/cart')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 11, fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}>
-          ← Cart
-        </button>
-        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', textAlign: 'center' }}>
-          <div className="jost" style={{ fontSize: 9, fontWeight: 700, letterSpacing: '3px', color: '#888', textTransform: 'uppercase', marginBottom: 3 }}>Secure</div>
-          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 20, color: '#fff' }}>Checkout</div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          {(['summary', 'choose', 'phone', 'waiting', 'success'] as CheckoutStep[]).map((s) => (
-            <div key={s} style={{ width: s === step ? 20 : 6, height: 3, borderRadius: 2, background: s === step ? '#fff' : 'rgba(255,255,255,0.25)', transition: 'all 0.3s' }} />
-          ))}
-        </div>
-      </nav>
-
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '48px 16px 80px', minHeight: 'calc(100vh - 114px)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '16px 16px 80px', minHeight: 'calc(100vh - 114px)' }}>
 
         {/* ── STEP: SUMMARY ── */}
         {step === 'summary' && (
-          <div className="lp-card fade-in">
-            <button className="back-btn" onClick={() => navigate('/cart')}>← Back to Cart</button>
+          <div className="lp-checkout-full fade-in">
+          <div className="lp-checkout-col">
             <div className="ornament">
               <div className="ornament-line" /><div className="ornament-diamond" />
               <span className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '3px', color: T.gold, textTransform: 'uppercase' }}>Review</span>
@@ -380,7 +379,16 @@ export default function Checkout() {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 14, color: T.navy, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
-                    <div className="jost" style={{ fontSize: 11, color: T.muted, marginTop: 3 }}>Qty: {item.quantity}</div>
+                    <div className="jost" style={{ fontSize: 11, color: T.muted, marginTop: 3, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span>Qty: {item.quantity}</span>
+                      {passedColors?.[item.id] && (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 700, color: T.navy }}>
+                          <span style={{ color: T.creamDeep, fontWeight: 400 }}>·</span>
+                          <span style={{ width: 9, height: 9, borderRadius: '50%', background: passedColors[item.id], border: '1px solid rgba(0,0,0,0.15)', display: 'inline-block' }} />
+                          {passedColors[item.id]}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div style={{ flexShrink: 0, textAlign: 'right' }}>
                     {(() => {
@@ -404,7 +412,28 @@ export default function Checkout() {
               ))}
             </div>
 
-            <div className="totals-box">
+            {(passedShipping?.firstName || passedShipping?.county || passedShipping?.pickupLocation) && (
+              <div style={{ marginTop: 24 }}>
+                <div className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.muted, marginBottom: 8 }}>Delivering To</div>
+                {passedShipping?.firstName && <div className="jost" style={{ fontSize: 14, fontWeight: 700, color: T.navy, marginBottom: 3 }}>{passedShipping.firstName} {passedShipping.lastName}</div>}
+                {passedShipping?.phone && <div className="jost" style={{ fontSize: 13, color: T.muted }}>{passedShipping.phone}</div>}
+                {deliveryZone === 'pickup' && passedShipping?.pickupLocation && (
+                  <div className="jost" style={{ fontSize: 13, color: T.gold, marginTop: 6, fontWeight: 600 }}>🏪 {passedShipping.pickupLocation}</div>
+                )}
+                {deliveryZone !== 'pickup' && (passedShipping?.county || passedShipping?.town) && (
+                  <div className="jost" style={{ fontSize: 13, color: T.gold, marginTop: 6, fontWeight: 600 }}>
+                    📍 {[passedShipping?.town, passedShipping?.county].filter(Boolean).join(', ')}
+                  </div>
+                )}
+                {passedShipping?.additionalInfo && (
+                  <div className="jost" style={{ fontSize: 12, color: T.muted, marginTop: 8, lineHeight: 1.6, fontStyle: 'italic' }}>
+                    "{passedShipping.additionalInfo}"
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div style={{ marginTop: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <span className="jost" style={{ fontSize: 13, color: T.muted }}>Subtotal</span>
                 <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: T.navy }}>KSh {subtotal.toLocaleString()}</span>
@@ -426,37 +455,16 @@ export default function Checkout() {
                 <span className="jost" style={{ fontWeight: 800, fontSize: 22, color: T.navy }}>KSh {total.toLocaleString()}</span>
               </div>
             </div>
-
-            <div style={{ border: '1px solid #E0E0E0', borderRadius: 8, padding: '12px 16px', marginTop: 18 }}>
-              <div className="jost" style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#888', marginBottom: 10, textAlign: 'center' }}>We Accept</div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
-                <img src="/src/assets/M-PESA_LOGO-01.svg" alt="M-Pesa" style={{ height: 22, objectFit: 'contain' }} />
-                <img src="/src/assets/Airtel_logo.svg" alt="Airtel Money" style={{ height: 22, objectFit: 'contain' }} />
-                <img src="/src/assets/Visa.png" alt="Visa" style={{ height: 20, objectFit: 'contain' }} />
-                <img src="/src/assets/MasterCard-Logo.svg" alt="Mastercard" style={{ height: 28, objectFit: 'contain' }} />
-                <img src="/src/assets/Apple_Pay_logo.svg" alt="Apple Pay" style={{ height: 20, objectFit: 'contain' }} />
-                <img src="/src/assets/Google_Pay_Logo.svg" alt="Google Pay" style={{ height: 24, objectFit: 'contain' }} />
-              </div>
-            </div>
-
-            <button className="cta-gold" onClick={() => setStep('choose')} style={{ marginTop: 18, background: '#16a34a' }}>
-              Choose Payment Method →
-            </button>
           </div>
-        )}
 
-        {/* ── STEP: CHOOSE PAYMENT METHOD ── */}
-        {step === 'choose' && (
-          <div className="lp-card fade-in">
-            <button className="back-btn" onClick={() => setStep('summary')}>← Back</button>
+          <div className="lp-checkout-col" style={{ paddingTop: 12 }}>
             <div className="ornament">
               <div className="ornament-line" /><div className="ornament-diamond" />
-              <span className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '3px', color: T.gold, textTransform: 'uppercase' }}>Payment</span>
+              <span className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '3px', color: T.gold, textTransform: 'uppercase' }}>Payment Method</span>
               <div className="ornament-diamond" /><div className="ornament-line" />
             </div>
-            <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 24, color: T.navy, marginBottom: 6 }}>How would you like to pay?</h2>
-            <p className="jost" style={{ color: T.muted, fontSize: 13, marginBottom: 28, fontWeight: 300 }}>
-              Choose your preferred payment method
+            <p className="jost" style={{ color: T.muted, fontSize: 13, marginBottom: 18, fontWeight: 300 }}>
+              Choose how you'd like to pay
             </p>
 
             {/* Payment methods list */}
@@ -489,26 +497,18 @@ export default function Checkout() {
                 transition: 'all 0.15s',
               }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                <img src="/src/assets/Visa.png" alt="Visa" style={{ height: 14, objectFit: 'contain' }} />
-                <img src="/src/assets/MasterCard-Logo.svg" alt="Mastercard" style={{ height: 18, objectFit: 'contain' }} />
-                {/* Swap in a real Pesapal logo asset here once you have one */}
+                <img src="/src/assets/pesapal1.png" alt="Pesapal" style={{ height: 22, objectFit: 'contain' }} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span className="jost" style={{ fontWeight: 600, fontSize: 14, color: T.navy }}>Pesapal</span>
-                <span className="jost" style={{ fontSize: 11, color: T.muted }}>Pay with card online</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                  <img src="/src/assets/M-PESA_LOGO-01.svg" alt="M-Pesa" style={{ height: 14, objectFit: 'contain' }} />
+                  <img src="/src/assets/Airtel_logo.svg" alt="Airtel Money" style={{ height: 14, objectFit: 'contain' }} />
+                  <img src="/src/assets/MasterCard-Logo.svg" alt="Mastercard" style={{ height: 16, objectFit: 'contain' }} />
+                  <img src="/src/assets/Visa.png" alt="Visa" style={{ height: 12, objectFit: 'contain' }} />
+                </div>
               </div>
             </div>
-            </div>
-
-            {/* Amount summary */}
-            <div className="amount-pill" style={{ marginTop: 8 }}>
-              <span className="jost" style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', letterSpacing: '2px', textTransform: 'uppercase' }}>Amount to pay</span>
-              <span style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 32, color: '#16a34a' }}>
-                KSh {total.toLocaleString()}
-              </span>
-              <span className="jost" style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>
-                incl. {deliveryFee === 0 ? 'free' : `KSh ${deliveryFee}`} delivery · {deliveryLabel}
-              </span>
             </div>
 
             {serverError && (
@@ -517,15 +517,17 @@ export default function Checkout() {
               </div>
             )}
 
-            {/* Continue CTA — changes based on selected method */}
             {paymentMethod === 'mpesa' && (
-              <button className="cta-gold" onClick={() => setStep('phone')} style={{ background: '#16a34a' }}>
-                📱 Continue with M-Pesa →
+              <button className="cta-gold" onClick={handleMpesaPay} disabled={pushing} style={{ marginTop: 4, background: '#16a34a' }}>
+                {pushing
+                  ? <><span style={{ display: 'inline-block', animation: 'pulse 0.8s ease infinite' }}>⏳</span> Sending prompt…</>
+                  : <>Pay with M-Pesa →</>
+                }
               </button>
             )}
 
             {paymentMethod === 'pesapal' && (
-              <button className="cta-gold" onClick={handlePesapalPay} disabled={pesapalLoading} style={{ background: '#16a34a' }}>
+              <button className="cta-gold" onClick={handlePesapalPay} disabled={pesapalLoading} style={{ marginTop: 4, background: '#16a34a' }}>
                 {pesapalLoading
                   ? <><span style={{ display: 'inline-block', animation: 'pulse 0.8s ease infinite' }}>⏳</span> Redirecting to Pesapal…</>
                   : <>Continue with Pesapal →</>
@@ -534,7 +536,7 @@ export default function Checkout() {
             )}
 
             {!paymentMethod && (
-              <button className="cta-gold" disabled style={{ opacity: 0.4 }}>
+              <button className="cta-gold" disabled style={{ opacity: 0.4, marginTop: 4 }}>
                 Select a payment method above
               </button>
             )}
@@ -544,76 +546,6 @@ export default function Checkout() {
               <span className="jost" style={{ fontSize: 11, color: T.muted }}>All payments are encrypted and secure</span>
             </div>
           </div>
-        )}
-
-        {/* ── STEP: PHONE (M-Pesa) ── */}
-        {step === 'phone' && (
-          <div className="lp-card fade-in">
-            <button className="back-btn" onClick={() => setStep('choose')}>← Back</button>
-
-            <div className="mpesa-badge">
-              <div style={{ width: 46, height: 46, borderRadius: 8, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8, flexShrink: 0 }}>
-                <img src="/src/assets/M-PESA_LOGO-01.svg" alt="M-Pesa" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-              </div>
-              <div>
-                <div className="jost" style={{ fontWeight: 800, fontSize: 13, color: '#fff', letterSpacing: '1px' }}>M-PESA</div>
-                <div className="jost" style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>Lipa Na M-Pesa · STK Push</div>
-              </div>
-              <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                <div className="jost" style={{ fontSize: 9, color: 'rgba(255,255,255,0.65)', letterSpacing: '1px', textTransform: 'uppercase' }}>Powered by</div>
-                <div className="jost" style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>Safaricom</div>
-              </div>
-            </div>
-
-            <div className="ornament">
-              <div className="ornament-line" /><div className="ornament-diamond" />
-              <span className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '3px', color: T.gold, textTransform: 'uppercase' }}>M-Pesa</span>
-              <div className="ornament-diamond" /><div className="ornament-line" />
-            </div>
-            <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 24, color: T.navy, marginBottom: 6 }}>Enter M-Pesa Number</h2>
-            <p className="jost" style={{ color: T.muted, fontSize: 13, marginBottom: 28, fontWeight: 300, lineHeight: 1.7 }}>
-              A payment prompt will be sent to your phone.<br />Enter your PIN to complete the purchase.
-            </p>
-
-            <div style={{ marginBottom: 6 }}>
-              <label className="jost" style={{ fontSize: 10, fontWeight: 700, color: T.navy, letterSpacing: '2px', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>
-                Safaricom Number
-              </label>
-              <input
-                className={`phone-input ${phoneError ? 'error' : ''}`}
-                type="tel"
-                placeholder="07xx xxx xxx"
-                value={phone}
-                onChange={e => { setPhone(e.target.value); setPhoneError(''); }}
-                onKeyDown={e => e.key === 'Enter' && handleMpesaPay()}
-              />
-              {phoneError && <p className="jost" style={{ color: '#C0392B', fontSize: 12, marginTop: 6 }}>{phoneError}</p>}
-            </div>
-
-            {serverError && (
-              <div className="jost" style={{ background: '#FDF0EE', border: '1px solid #F5C6C0', borderRadius: 10, padding: '12px 16px', color: '#C0392B', fontSize: 12, marginBottom: 16, marginTop: 12 }}>
-                {serverError}
-              </div>
-            )}
-
-            <div className="amount-pill" style={{ background: '#16a34a', border: '1px solid #15803d' }}>
-              <span className="jost" style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', letterSpacing: '2px', textTransform: 'uppercase' }}>Amount to pay</span>
-              <span style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 32, color: '#fff' }}>KSh {total.toLocaleString()}</span>
-              <span className="jost" style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
-                incl. {deliveryFee === 0 ? 'free' : `KSh ${deliveryFee}`} delivery · {deliveryLabel}
-              </span>
-            </div>
-
-            <button className="cta-gold" onClick={handleMpesaPay} disabled={pushing} style={{ background: '#16a34a' }}>
-              {pushing
-                ? <><span style={{ display: 'inline-block', animation: 'pulse 0.8s ease infinite' }}>⏳</span> Sending prompt…</>
-                : <>📲 Send KSh {total.toLocaleString()} Prompt</>
-              }
-            </button>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 14 }}>
-              <img src="/src/assets/securepayment.png" alt="Secure payment" style={{ height: 16, objectFit: 'contain' }} />
-              <span className="jost" style={{ fontSize: 11, color: T.muted }}>Secured by Safaricom · We never store your PIN</span>
-            </div>
           </div>
         )}
 
@@ -635,7 +567,7 @@ export default function Checkout() {
             <p className="jost" style={{ color: T.muted, fontSize: 13, maxWidth: 300, margin: '0 auto 28px', lineHeight: 1.75, fontWeight: 300 }}>
               {paymentMethod === 'pesapal'
                 ? <>We're confirming your card payment of <strong style={{ color: T.gold, fontWeight: 700 }}>KSh {total.toLocaleString()}</strong>. This usually takes a few seconds.</>
-                : <>A prompt was sent to <strong style={{ color: T.navy, fontWeight: 600 }}>{phone}</strong>. Enter your M-Pesa PIN to pay <strong style={{ color: T.gold, fontWeight: 700 }}>KSh {total.toLocaleString()}</strong>.</>
+                : <>A prompt was sent to <strong style={{ color: T.navy, fontWeight: 600 }}>{passedShipping?.phone}</strong>. Enter your M-Pesa PIN to pay <strong style={{ color: T.gold, fontWeight: 700 }}>KSh {total.toLocaleString()}</strong>.</>
               }
             </p>
 
@@ -688,8 +620,8 @@ export default function Checkout() {
             </div>
 
             {paymentMethod === 'mpesa' && (
-              <button className="cta-outline" onClick={() => { clearAll(); setStep('phone'); }}>
-                Cancel — Try Different Number
+              <button className="cta-outline" onClick={() => { clearAll(); setStep('summary'); }}>
+                Cancel — Back to Summary
               </button>
             )}
           </div>
@@ -706,9 +638,75 @@ export default function Checkout() {
               <div className="ornament-diamond" /><div className="ornament-line" />
             </div>
             <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 26, color: T.navy, marginBottom: 8 }}>Payment Successful!</h2>
-            <p className="jost" style={{ color: T.muted, fontSize: 13, marginBottom: 28, fontWeight: 300, lineHeight: 1.7 }}>
+            <p className="jost" style={{ color: T.muted, fontSize: 13, marginBottom: 24, fontWeight: 300, lineHeight: 1.7 }}>
               Your order has been placed.<br />Thank you for shopping with Luku Prime!
             </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20, textAlign: 'left' }}>
+              {items.map(item => (
+                <div key={item.id} className="item-card">
+                  <div style={{ width: 48, height: 48, overflow: 'hidden', flexShrink: 0, background: '#F5F5F5' }}>
+                    <img
+                      src={item.image_url}
+                      alt={item.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/48x48/${T.creamMid.replace('#','')}/${T.navy.replace('#','')}?text=📦`; }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 13, color: T.navy, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                    <div className="jost" style={{ fontSize: 11, color: T.muted, marginTop: 3 }}>Qty: {item.quantity}</div>
+                  </div>
+                  <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                    <div className="jost" style={{ fontWeight: 700, fontSize: 14, color: T.gold }}>
+                      KSh {(getEffectivePrice(item) * item.quantity).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {(passedShipping?.firstName || passedShipping?.county || passedShipping?.pickupLocation) && (
+              <div style={{ background: '#F5F5F5', border: '1px solid #E0E0E0', borderRadius: 8, padding: '14px 16px', marginBottom: 20, textAlign: 'left' }}>
+                <div className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.muted, marginBottom: 8 }}>Delivered To</div>
+                {passedShipping?.firstName && <div className="jost" style={{ fontSize: 14, fontWeight: 700, color: T.navy, marginBottom: 3 }}>{passedShipping.firstName} {passedShipping.lastName}</div>}
+                {passedShipping?.phone && <div className="jost" style={{ fontSize: 13, color: T.muted }}>{passedShipping.phone}</div>}
+                {deliveryZone === 'pickup' && passedShipping?.pickupLocation && (
+                  <div className="jost" style={{ fontSize: 13, color: T.gold, marginTop: 6, fontWeight: 600 }}>🏪 {passedShipping.pickupLocation}</div>
+                )}
+                {deliveryZone !== 'pickup' && (passedShipping?.county || passedShipping?.town) && (
+                  <div className="jost" style={{ fontSize: 13, color: T.gold, marginTop: 6, fontWeight: 600 }}>
+                    📍 {[passedShipping?.town, passedShipping?.county].filter(Boolean).join(', ')}
+                  </div>
+                )}
+                {passedShipping?.additionalInfo && (
+                  <div className="jost" style={{ fontSize: 12, color: T.muted, marginTop: 8, lineHeight: 1.6, fontStyle: 'italic' }}>
+                    "{passedShipping.additionalInfo}"
+                  </div>
+                )}
+              </div>
+            )}
+
+            {items.some(i => passedColors?.[i.id] || passedSizes?.[i.id]) && (
+              <div style={{ background: '#F5F5F5', border: '1px solid #E0E0E0', borderRadius: 8, padding: '14px 16px', marginBottom: 20, textAlign: 'left' }}>
+                <div className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.muted, marginBottom: 10 }}>Item Selections</div>
+                {items.map((i, idx, arr) => {
+                  const color = passedColors?.[i.id];
+                  const size  = passedSizes?.[i.id];
+                  if (!color && !size) return null;
+                  return (
+                    <div key={i.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: idx === arr.length - 1 ? 0 : 8 }}>
+                      <span className="jost" style={{ fontSize: 12, color: T.navy, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>{i.name}</span>
+                      <span className="jost" style={{ fontSize: 12, color: T.muted }}>
+                        {color && <>Colour: <strong style={{ color: T.navy }}>{color}</strong></>}
+                        {color && size && '  ·  '}
+                        {size && <>Size: <strong style={{ color: T.navy }}>{size}</strong></>}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {receipt && (
               <div className="receipt-box">
@@ -738,7 +736,7 @@ export default function Checkout() {
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span className="jost" style={{ fontSize: 13, color: T.muted }}>Payment method</span>
                 <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: T.navy }}>
-                  {paymentMethod === 'pesapal' ? '💳 Card (Pesapal)' : `📱 M-Pesa · ${phone}`}
+                  {paymentMethod === 'pesapal' ? '💳 Card (Pesapal)' : `📱 M-Pesa · ${passedShipping?.phone}`}
                 </span>
               </div>
             </div>
@@ -763,7 +761,7 @@ export default function Checkout() {
               {failMsg || 'The payment was cancelled or not completed. Your cart is saved.'}
             </p>
 
-            <button className="cta-gold" onClick={() => { setStep('choose'); setServerError(''); setFailMsg(''); }}>
+            <button className="cta-gold" onClick={() => { setStep('summary'); setServerError(''); setFailMsg(''); }}>
               🔄 Try Again
             </button>
             <button className="cta-outline" onClick={() => navigate('/cart')}>← Back to Cart</button>
@@ -773,24 +771,7 @@ export default function Checkout() {
       </div>
 
       {/* ── FOOTER ── */}
-      <footer style={{ background: '#000', borderTop: '1px solid #222' }}>
-        <div style={{ height: 2, background: 'linear-gradient(90deg,transparent 0%,#fff 30%,#ccc 50%,#fff 70%,transparent 100%)' }} />
-        <div style={{ padding: '20px 5%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 16, color: '#fff' }}>
-            Luku <span style={{ color: '#ccc' }}>Prime</span>
-          </div>
-          <div className="jost" style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>© 2025 Luku Prime · All rights reserved</div>
-          <div style={{ display: 'flex', gap: 24 }}>
-            {['Privacy', 'Terms', 'Help'].map(l => (
-              <span key={l} className="jost" style={{ cursor: 'pointer', color: 'rgba(255,255,255,0.35)', fontSize: 11, letterSpacing: '1px', textTransform: 'uppercase', transition: 'color 0.2s' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}>
-                {l}
-              </span>
-            ))}
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 // src/components/common/Navbar.tsx
 import { useRef, useState, useCallback, useEffect } from 'react';
-import { useNavigate }  from 'react-router-dom';
+import { useNavigate, useLocation }  from 'react-router-dom';
 import axios            from 'axios';
 import { ANNOUNCEMENTS, getInitials, readUser } from '../../constants/theme';
 import type { User } from '../../constants/theme';
@@ -22,9 +22,10 @@ export default function Navbar({
   categories = [],
   activeCategory = 'All',
   onCategorySelect,
-  transparentOnTop = false,
+  transparentOnTop = true,
 }: NavbarProps) {
   const navigate    = useNavigate();
+  const location    = useLocation();
   const menuRef     = useRef<HTMLDivElement>(null);
   const shopMenuRef = useRef<HTMLDivElement>(null);
 
@@ -37,7 +38,7 @@ export default function Navbar({
   const [cartCount,      setCartCount]      = useState(cartCountProp ?? 0);
   const [wishlistCount,  setWishlistCount]  = useState(wishlistCountProp ?? 0);
   const [navCategories,  setNavCategories]  = useState<string[]>(categories);
-  const [scrolled,       setScrolled]       = useState(false);
+
   const [lang, setLang] = useState(() => {
     const match = document.cookie.match(/googtrans=\/en\/([^;]+)/);
     if (!match) return 'EN';
@@ -45,6 +46,7 @@ export default function Navbar({
     return LANGS_MAP[match[1]] || 'EN';
   });
   const [showLang,       setShowLang]       = useState(false);
+  const [scrolled,       setScrolled]       = useState(false);
   const langRef          = useRef<HTMLDivElement>(null);
 
   // ── Scroll detection ──────────────────────────────────────────────────────
@@ -56,8 +58,9 @@ export default function Navbar({
     return () => window.removeEventListener('scroll', onScroll);
   }, [transparentOnTop]);
 
-  // Transparent when: prop enabled, not scrolled, no overlays open
-  const isTransparent = transparentOnTop && !scrolled && !mobileMenuOpen && !showSearch && !showMenu;
+  // Transparent ONLY on homepage: prop enabled, on home route, not scrolled, no overlays open
+  const isOnHomepage = location.pathname === '/';
+  const isTransparent = transparentOnTop && isOnHomepage && !scrolled && !mobileMenuOpen && !showSearch && !showMenu;
 
   // ── Outside-click closers ─────────────────────────────────────────────────
   useEffect(() => {

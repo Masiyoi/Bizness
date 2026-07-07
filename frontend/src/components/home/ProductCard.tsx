@@ -3,6 +3,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import type { Product } from '../../constants/theme';
 import QuickViewModal from './QuickViewModal';
+import { toCardImage } from '../../utils/cloudinary';
 
 interface ProductCardProps {
   product:          Product & { images?: string[] };
@@ -61,16 +62,21 @@ const S = {
     height:     '100%',
     position:   'relative' as const,
     background: '#ffffff',
+    overflow:   'hidden' as const,
   }),
 
   img: (): React.CSSProperties => ({
     position:       'absolute',
-    inset:          '6%',
-    width:          '88%',
-    height:         '88%',
-    objectFit:      'contain' as const,
+    inset:          0,
+    width:          '100%',
+    height:         '100%',
+    objectFit:      'cover' as const,
     objectPosition: 'center center',
     pointerEvents:  'none' as const,
+    display:        'block' as const,
+    margin:         0,
+    padding:        0,
+    border:         'none',
   }),
 
   soldOverlay: {
@@ -224,8 +230,10 @@ const S = {
   } as React.CSSProperties,
 
   info: {
-    paddingTop: 9,
-    minHeight:  52,
+    paddingTop:  9,
+    paddingLeft: 6,
+    paddingRight:6,
+    minHeight:   52,
   } as React.CSSProperties,
 
   nameRow: {
@@ -443,7 +451,7 @@ export default function ProductCard({
               {images.map((src: string, i: number) => (
                 <div key={i} style={S.slide(count)}>
                   <img
-                    src={src}
+                    src={toCardImage(src)}
                     alt={i === 0 ? product.name : `${product.name} view ${i + 1}`}
                     style={S.img()}
                     draggable={false}
@@ -519,13 +527,7 @@ export default function ProductCard({
                 </span>
               </span>
             </div>
-            {(product.category || showLowStock) && (
-              <div style={S.meta}>
-                {product.category}
-                {product.category && showLowStock && ' · '}
-                {showLowStock && `${stock} left`}
-              </div>
-            )}
+
           </div>
         </Link>
       </div>

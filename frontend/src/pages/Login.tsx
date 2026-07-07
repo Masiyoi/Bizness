@@ -40,6 +40,7 @@ export default function Login() {
   const [resendMsg,     setResendMsg]     = useState("");
   const [locked,        setLocked]        = useState(false);
   const [lockedUntil,   setLockedUntil]   = useState<Date | null>(null);
+  const [showEmailForm, setShowEmailForm] = useState(false);
 
   useEffect(() => {
     if (location.search.includes("verified=true"))
@@ -131,8 +132,7 @@ export default function Login() {
         </div>
 
         <h2 style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 300, fontSize: 28, color: "#0a0a0a", textAlign: "center", lineHeight: 1.2, marginBottom: 14, zIndex: 1, position: "relative" }}>
-          Welcome Back<br />
-          <span style={{ color: "rgba(0,0,0,0.4)", fontWeight: 300 }}>to Luku Prime</span>
+          Welcome Back
         </h2>
         <p style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 300, fontSize: 13, color: "rgba(0,0,0,0.4)", textAlign: "center", lineHeight: 1.8, maxWidth: 260, zIndex: 1, position: "relative" }}>
           Kenya's premium destination for the finest products.
@@ -157,34 +157,18 @@ export default function Login() {
             <div style={{ width: 40, height: 40, borderRadius: 3, background: "#000", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 700, fontSize: 13, color: "#fff" }}>LP</span>
             </div>
-            <span style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 500, fontSize: 15, color: "#0a0a0a" }}>Luku Prime</span>
           </div>
 
-      {/* Image Hero */}
-      <div style={{
-        width: "100%", borderRadius: 12, overflow: "hidden",
-        marginBottom: 28, background: "#0a0a0a",
-        height: 320
-      }}>
+      {/* Image Hero — edge-to-edge, bleeds past card padding. Swap src for your own asset. */}
+      <div className="lp-hero">
         <img
-          src="https://res.cloudinary.com/dfiy43f01/image/upload/v1782201742/Lara_Bubmann_outfit__knns7x.jpg"
-          alt="Let's Go Shopping – Luku Prime"
-          style={{
-            width: "100%", height: "100%", objectFit: "cover",
-            objectPosition: "top", display: "block"
-          }}
+          src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80"
+          alt="Let's Go Shopping"
         />
-      </div>
-      <div style={{ textAlign: "center", marginBottom: 24 }}>
-        <p style={{
-          fontFamily: "'DM Sans',sans-serif", fontSize: 22, fontWeight: 700,
-          color: "#0a0a0a", letterSpacing: -0.3, lineHeight: 1.2
-        }}>Let's Go Shopping</p>
-        <p style={{
-          fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 500,
-          letterSpacing: "3px", textTransform: "uppercase",
-          color: "rgba(0,0,0,0.3)", marginTop: 6
-        }}>New Collection · Luku Prime</p>
+        <div className="lp-hero-overlay" />
+        <div className="lp-hero-caption">
+          <p className="lp-hero-title">Let's Go Shopping</p>
+        </div>
       </div>
 
           <div style={{ marginBottom: 28 }}>
@@ -224,12 +208,36 @@ export default function Login() {
             }
           </div>
 
-          <div style={s.divider}>
+          <div style={s.orRow}>
             <span style={s.divLine} />
-            <span style={s.divText}>or with email</span>
+            <span style={s.divText}>OR</span>
             <span style={s.divLine} />
           </div>
 
+          <div
+            style={{ ...s.emailToggle, cursor: "pointer" }}
+            onClick={() => setShowEmailForm(x => !x)}
+            role="button"
+            aria-expanded={showEmailForm}
+          >
+            <span style={s.divText}>with email</span>
+            <span
+              style={{
+                fontSize: 16,
+                fontWeight: 400,
+                lineHeight: 1,
+                color: "rgba(0,0,0,0.5)",
+                marginLeft: 6,
+                transform: showEmailForm ? "rotate(45deg)" : "rotate(0deg)",
+                transition: "transform 0.25s ease",
+                display: "inline-block",
+              }}
+            >
+              +
+            </span>
+          </div>
+
+          <div className={`lp-collapse ${showEmailForm ? "lp-collapse-open" : ""}`}>
           <form onSubmit={handleSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div>
               <label style={s.label}>Email Address</label>
@@ -270,6 +278,7 @@ export default function Login() {
               {loading ? "Signing in…" : locked ? "Account Locked" : "Sign In →"}
             </button>
           </form>
+          </div>
 
           <div style={{ height: 1, background: "rgba(0,0,0,0.07)", margin: "24px 0" }} />
           <p style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "rgba(0,0,0,0.4)", textAlign: "center" }}>
@@ -303,6 +312,17 @@ const css = `
   @keyframes lpFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
   .lp-card{animation:lpFadeUp 0.4s ease both}
 
+  .lp-hero{position:relative;width:calc(100% + 2 * clamp(18px,5vw,42px));margin:calc(-1 * clamp(24px,5vw,48px)) calc(-1 * clamp(18px,5vw,42px)) 26px;height:380px;overflow:hidden;border-radius:12px 12px 0 0;background:#0a0a0a}
+  .lp-hero img{width:100%;height:100%;object-fit:cover;object-position:center 30%;display:block;animation:lpHeroZoom 14s ease-in-out infinite alternate}
+  .lp-hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,0.6) 100%)}
+  .lp-hero-caption{position:absolute;left:0;right:0;bottom:20px;text-align:center}
+  .lp-hero-title{font-family:'DM Sans',sans-serif;font-size:24px;font-weight:700;color:#fff;letter-spacing:-0.3px}
+  @keyframes lpHeroZoom{from{transform:scale(1)}to{transform:scale(1.08)}}
+
+  .lp-collapse{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 0.3s ease,opacity 0.25s ease,margin-top 0.3s ease;margin-top:0}
+  .lp-collapse > form{overflow:hidden;min-height:0}
+  .lp-collapse-open{grid-template-rows:1fr;opacity:1;margin-top:4px}
+
   .lp-left{width:420px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 44px;position:relative;overflow:hidden;border-right:1px solid rgba(0,0,0,0.07);background:#f9f9f9}
 
   .lp-mobile-logo{display:none;align-items:center;gap:12px;margin-bottom:28px}
@@ -328,6 +348,8 @@ const s: Record<string, React.CSSProperties> = {
   resendBtn:  { background: "transparent", border: "1px solid rgba(220,38,38,0.3)", borderRadius: 4, padding: "6px 14px", color: "#991b1b", fontSize: 12, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" },
   gLoad:      { background: "rgba(0,0,0,0.03)", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 6, padding: "12px", color: "rgba(0,0,0,0.3)", fontFamily: "'DM Sans',sans-serif", fontSize: 13, textAlign: "center" as const },
   divider:    { display: "flex", alignItems: "center", gap: 12, marginBottom: 22 },
+  orRow:      { display: "flex", alignItems: "center", gap: 12, marginBottom: 14 },
+  emailToggle:{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 20, padding: "4px 0" },
   divLine:    { flex: 1, height: 1, background: "rgba(0,0,0,0.08)", display: "block" },
-  divText:    { fontFamily: "'DM Sans',sans-serif", fontSize: 10, color: "rgba(0,0,0,0.3)", letterSpacing: "1.5px", textTransform: "uppercase" as const, whiteSpace: "nowrap" as const },
+  divText:    { fontFamily: "'Roboto', arial, sans-serif", fontSize: 14, fontWeight: 500, color: "#3c4043", letterSpacing: "0.15px", whiteSpace: "nowrap" as const },
 };

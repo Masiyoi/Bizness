@@ -80,7 +80,7 @@ const css = `
   .lp-search::placeholder { color: var(--mid) }
   .lp-search-icon { color: var(--mid); font-size: 15px; flex-shrink:0 }
   .lp-result-count { font-family: var(--f-sans); font-size: 11px; color: var(--mid); white-space: nowrap; flex-shrink: 0; }
-  .lp-grid-wrap { padding: 20px clamp(20px,5%,80px) clamp(40px,6vw,80px); overflow: hidden; }
+  .lp-grid-wrap { padding: 20px 0 clamp(40px,6vw,80px); overflow: hidden; }
   .lp-grid { width: 100%; box-sizing: border-box; display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px 20px; }
   @media(max-width:1024px) { .lp-grid { grid-template-columns: repeat(3,1fr); gap: 24px 16px } }
   @media(max-width:640px) { .lp-grid { grid-template-columns: repeat(2,1fr); gap: 20px 12px } }
