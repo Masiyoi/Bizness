@@ -65,7 +65,9 @@ export default function Checkout() {
   const [failMsg, setFailMsg]                   = useState('');
   const [serverError, setServerError]           = useState('');
   const [flashSaleMap, setFlashSaleMap]         = useState<Record<number, number>>({});
-
+  const [orderNumber, setOrderNumber]           = useState('');
+  const [orderDate, setOrderDate]               = useState('');
+  
   const passedZone = (location.state as { deliveryZone?: DeliveryZone } | null)?.deliveryZone;
   const deliveryZone: DeliveryZone = passedZone ?? 'cbd';
   const passedShipping = (location.state as any)?.shipping as

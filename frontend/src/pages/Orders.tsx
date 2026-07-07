@@ -19,7 +19,7 @@ interface OrderItem {
 
 interface Order {
   id: number;
-  user_order_number: number;
+  order_number: string;
   created_at: string;
   status: 'pending' | 'processing' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
   tracking_status: string;
@@ -362,9 +362,9 @@ export default function Orders() {
               <div className="order-header" onClick={() => toggleExpand(order.id)}>  {/* ← uses order.id */}
                 <div style={{ flex:1, minWidth:0 }}>
                   <div className="order-title-row">
-                    {/* Display uses user_order_number */}
+                    {/* Display uses the globally-unique order_number from the DB */}
                     <span style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:'clamp(14px,3.5vw,16px)', color:T.navy }}>
-                      Order #{order.user_order_number}
+                      Order #{order.order_number}
                     </span>
                     <span style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:'1px', padding:'3px 10px', borderRadius:20, background:status.bg, color:status.color, border:`1px solid ${status.border}`, textTransform:'uppercase', whiteSpace:'nowrap' }}>
                       {status.icon} {status.label}

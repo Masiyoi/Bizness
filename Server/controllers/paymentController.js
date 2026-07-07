@@ -269,8 +269,17 @@ exports.getPaymentStatus = async (req, res) => {
   const { checkoutRequestId } = req.params;
   try {
     const result = await db.query(
-      `SELECT status, mpesa_receipt, result_desc, amount
-       FROM payments WHERE checkout_request_id = $1`,
+      `SELECT
+         p.status,
+         p.mpesa_receipt,
+         p.result_desc,
+         p.amount,
+         o.order_number,
+         o.created_at AS order_created_at,
+         o.total      AS order_total
+       FROM payments p
+       LEFT JOIN orders o ON o.payment_id = p.id
+       WHERE p.checkout_request_id = $1`,
       [checkoutRequestId]
     );
     if (result.rows.length === 0) {

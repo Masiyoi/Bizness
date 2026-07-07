@@ -291,8 +291,17 @@ exports.getPesapalStatus = async (req, res) => {
   try {
     // First check our DB
     const dbResult = await db.query(
-      `SELECT status, mpesa_receipt AS confirmation_code, result_desc, amount
-       FROM payments WHERE checkout_request_id = $1`,
+      `SELECT
+         p.status,
+         p.mpesa_receipt AS confirmation_code,
+         p.result_desc,
+         p.amount,
+         o.order_number,
+         o.created_at AS order_created_at,
+         o.total      AS order_total
+       FROM payments p
+       LEFT JOIN orders o ON o.payment_id = p.id
+       WHERE p.checkout_request_id = $1`,
       [orderTrackingId]
     );
 
