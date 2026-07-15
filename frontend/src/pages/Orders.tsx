@@ -21,7 +21,7 @@ interface Order {
   id: number;
   order_number: string;
   created_at: string;
-  status: 'pending' | 'processing' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'confirmed' | 'in_progress' | 'delivered' | 'cancelled';
   tracking_status: string;
   total_amount: string;
   delivery_fee?: string;
@@ -39,12 +39,10 @@ const T = {
 };
 
 const STATUS_CONFIG: Record<Order['status'], { label: string; color: string; bg: string; border: string; icon: string; step: number }> = {
-  pending:    { label:'Pending',    color:'#333333', bg:'rgba(0,0,0,0.05)',      border:'rgba(0,0,0,0.15)',  icon:'⏳', step:0 },
-  processing: { label:'Processing', color:T.navy,    bg:'rgba(13,27,62,0.07)',   border:'rgba(13,27,62,0.15)',   icon:'🔄', step:1 },
-  confirmed:  { label:'Confirmed',  color:'#000000', bg:'rgba(0,0,0,0.06)',       border:'rgba(0,0,0,0.2)', icon:'✅', step:2 },
-  shipped:    { label:'Shipped',    color:'#111111', bg:'rgba(0,0,0,0.07)',       border:'rgba(0,0,0,0.2)', icon:'🚚', step:3 },
-  delivered:  { label:'Delivered',  color:'#000000', bg:'rgba(0,0,0,0.06)',       border:'rgba(0,0,0,0.18)', icon:'🎉', step:4 },
-  cancelled:  { label:'Cancelled',  color:'#555555', bg:'#F5F5F5',              border:'#CCCCCC',              icon:'✕',  step:-1 },
+  confirmed:   { label:'Payment Confirmed',    color:'#000000', bg:'rgba(0,0,0,0.06)', border:'rgba(0,0,0,0.2)',  icon:'✅', step:0 },
+  in_progress: { label:'Delivery In Progress', color:'#111111', bg:'rgba(0,0,0,0.07)', border:'rgba(0,0,0,0.2)',  icon:'🚚', step:1 },
+  delivered:   { label:'Delivered',            color:'#000000', bg:'rgba(0,0,0,0.06)', border:'rgba(0,0,0,0.18)', icon:'🎉', step:2 },
+  cancelled:   { label:'Cancelled',            color:'#555555', bg:'#F5F5F5',          border:'#CCCCCC',          icon:'✕',  step:-1 },
 };
 
 const DELIVERY_ZONE_LABELS: Record<string, string> = {
@@ -224,13 +222,9 @@ export default function Orders() {
     setExpandedOrder(prev => prev === orderId ? null : orderId);
 
   const TRACKING_STEPS = [
-    { icon:'✅', label:'Order Placed'       },
-    { icon:'💳', label:'Payment Confirmed'  },
-    { icon:'🔄', label:'Processing'         },
-    { icon:'📦', label:'Packed'             },
-    { icon:'🚚', label:'Shipped'            },
-    { icon:'🛵', label:'Out for Delivery'   },
-    { icon:'🎉', label:'Delivered'          },
+    { icon:'💳', label:'Payment Confirmed'    },
+    { icon:'🚚', label:'Delivery In Progress' },
+    { icon:'🎉', label:'Delivered'            },
   ];
 
   if (loading) return (
@@ -335,7 +329,7 @@ export default function Orders() {
 
         {/* Orders list */}
         {orders.map((order, idx) => {
-          const status      = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending;
+          const status      = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.confirmed;
           const isOpen      = expandedOrder === order.id;          // ← uses order.id
           const isCancelled = order.status === 'cancelled';
           const eligible    = canReview(order.status);
@@ -345,11 +339,9 @@ export default function Orders() {
 
           const trackingIdx     = TRACKING_STEPS.findIndex(s => s.label === order.tracking_status);
           const currentTrackIdx = trackingIdx !== -1 ? trackingIdx :
-            order.status === 'pending'    ? 0 :
-            order.status === 'confirmed'  ? 1 :
-            order.status === 'processing' ? 2 :
-            order.status === 'shipped'    ? 4 :
-            order.status === 'delivered'  ? 6 : 0;
+            order.status === 'confirmed'   ? 0 :
+            order.status === 'in_progress' ? 1 :
+            order.status === 'delivered'   ? 2 : 0;
 
           return (
             <div

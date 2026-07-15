@@ -12,6 +12,7 @@ interface QuickViewModalProps {
   onCartToggle: (id: number) => void;
   onWishlistToggle: (id: number) => void;
   onClose: () => void;
+  salePrice?: number;
 }
 
 export default function QuickViewModal({

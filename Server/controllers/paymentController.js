@@ -255,6 +255,72 @@ exports.mpesaCallback = async (req, res) => {
       );
 
       console.log(`❌ Payment failed: ${ResultDesc}`);
+
+      // Create a 'cancelled' order so the customer sees the failed attempt.
+      // Cart is intentionally left intact so they can retry checkout.
+      try {
+        const paymentRes = await db.query(
+          `SELECT id, user_id, amount, phone, delivery_zone, delivery_fee, shipping_meta
+           FROM payments WHERE checkout_request_id = $1`,
+          [CheckoutRequestID]
+        );
+
+        if (paymentRes.rows.length > 0) {
+          const payment      = paymentRes.rows[0];
+          const shippingMeta = payment.shipping_meta || {};
+          const { shipping = {}, selectedColors = {}, selectedSizes = {} } = shippingMeta;
+          const deliveryZone = shippingMeta.delivery_zone || payment.delivery_zone || 'cbd';
+          const deliveryFee  = shippingMeta.delivery_fee  || payment.delivery_fee  || 0;
+
+          const cartRes = await db.query(
+            `SELECT
+               ci.id, ci.product_id, ci.quantity, ci.selected_color, ci.selected_size,
+               p.name, p.price, p.image_url, p.category
+             FROM carts c
+             JOIN cart_items ci ON ci.cart_id = c.id
+             JOIN products   p  ON p.id = ci.product_id
+             WHERE c.user_id = $1`,
+            [payment.user_id]
+          );
+
+          const itemsArray = cartRes.rows.map(item => ({
+            id:             item.id,
+            product_id:     item.product_id,
+            name:           item.name,
+            price:          item.price,
+            image_url:      item.image_url,
+            category:       item.category,
+            quantity:       item.quantity,
+            selected_color: item.selected_color || selectedColors[String(item.id)] || null,
+            selected_size:  item.selected_size  || selectedSizes[String(item.id)]  || null,
+          }));
+
+          const itemsSnapshot = { items: itemsArray, shipping, deliveryZone };
+
+          await db.query(
+            `INSERT INTO orders
+               (user_id, payment_id, status, tracking_status, total, delivery_fee,
+                delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt)
+             VALUES ($1, $2, 'cancelled', 'Payment Failed', $3, $4, $5, $6, $7, $8, $9, $10)`,
+            [
+              payment.user_id,
+              payment.id,
+              payment.amount,
+              deliveryFee,
+              deliveryZone,
+              JSON.stringify(itemsSnapshot),
+              `${shipping.firstName || ''} ${shipping.lastName || ''}`.trim() || 'Customer',
+              shipping.email || '',
+              shipping.phone || payment.phone,
+              null,
+            ]
+          );
+
+          console.log(`📋 Cancelled-order record created for user ${payment.user_id}`);
+        }
+      } catch (orderErr) {
+        console.error('Failed to create cancelled-order record:', orderErr.message);
+      }
     }
 
     return res.json({ ResultCode: 0, ResultDesc: 'Accepted' });

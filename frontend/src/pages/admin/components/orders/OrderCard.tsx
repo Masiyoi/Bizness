@@ -5,6 +5,7 @@ import React from 'react';
 import type { Order } from '../../types';
 import { T, SC } from '../../constants';
 import { parseItemsSnapshot } from '../../utils';
+import emailIcon from '../../../../assets/email.png';
 
 interface OrderCardProps {
   order:    Order;
@@ -13,7 +14,18 @@ interface OrderCardProps {
 }
 
 export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
-  const sc    = SC[o.status] || SC.pending;
+  const TRACKING_CARD_THEME: Record<string, {
+    bg: string; border: string; text: string; muted: string;
+    badgeBg: string; badgeCol: string; badgeBorder: string;
+  }> = {
+    'Payment Confirmed':    { bg: T.white,  border: T.grey3,  text: T.black, muted: T.grey1, badgeBg: T.grey5,  badgeCol: T.grey1, badgeBorder: T.grey3  },
+    'Delivery in progress': { bg: T.grey4,  border: T.grey3,  text: T.black, muted: T.grey1, badgeBg: T.white,  badgeCol: T.black, badgeBorder: T.grey3  },
+    'Delivered':            { bg: T.black2, border: T.black3, text: T.white, muted: T.grey2, badgeBg: T.black3, badgeCol: T.white, badgeBorder: T.black3 },
+  };
+  const theme = TRACKING_CARD_THEME[o.tracking_status] || {
+    bg: T.white, border: T.grey3, text: T.black, muted: T.grey1,
+    badgeBg: T.grey5, badgeCol: T.grey1, badgeBorder: T.grey3,
+  };
   const items = parseItemsSnapshot(o.items_snapshot);
   const preview = items.slice(0, 3);
 
@@ -21,7 +33,7 @@ export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
     <div
       className="order-card order-card-clickable"
       onClick={() => onView(o)}
-      style={{ background: T.white, border: `1px solid ${T.grey3}`, borderRadius: 14, padding: '16px 20px' }}
+      style={{ background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: 14, padding: '16px 20px', transition: 'background 0.2s, border-color 0.2s' }}
     >
       <div className="order-card-inner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14 }}>
 
@@ -29,29 +41,32 @@ export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
         <div style={{ flex: 1, minWidth: 0 }}>
           {/* Top row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 10, flexWrap: 'wrap' }}>
-            <span style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 16, color: T.black }}>
-              Order #{o.id}
+            <span style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 16, color: theme.text }}>
+              Order #{o.order_number || o.id}
             </span>
             <span style={{
-              fontFamily: 'Jost,sans-serif', fontSize: 10, fontWeight: 700,
-              padding: '2px 10px', borderRadius: 20,
-              background: sc.bg, color: sc.col, border: `1px solid ${sc.border}`,
-              textTransform: 'capitalize',
-            }}>{o.status}</span>
-            <span style={{
-              fontFamily: 'Jost,sans-serif', fontSize: 10, color: T.grey1,
-              background: T.grey5, border: `1px solid ${T.grey3}`,
+              fontFamily: 'Jost,sans-serif', fontSize: 10, fontWeight: 600, color: theme.badgeCol,
+              background: theme.badgeBg, border: `1px solid ${theme.badgeBorder}`,
               borderRadius: 20, padding: '2px 9px',
             }}>🚚 {o.tracking_status}</span>
           </div>
 
           {/* Meta */}
           <div className="order-meta-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px,1fr))', gap: 4, marginBottom: preview.length > 0 ? 12 : 0 }}>
-            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.black }}>
+            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: theme.text }}>
               👤 <strong>{o.customer_name || 'Unknown'}</strong>
             </div>
-            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: T.grey1 }}>✉ {o.customer_email || '—'}</div>
-            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: T.grey1 }}>📱 {o.mpesa_phone || '—'}</div>
+            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: theme.muted, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <img src={emailIcon} alt="" style={{ width: 12, height: 12, flexShrink: 0 }} />
+              {o.customer_email
+                ? <a href={`mailto:${o.customer_email}`} onClick={e => e.stopPropagation()} style={{ color: theme.text, textDecoration: 'underline' }}>{o.customer_email}</a>
+                : '—'}
+            </div>
+            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: theme.muted }}>
+              📱 {o.mpesa_phone
+                ? <a href={`tel:${o.mpesa_phone}`} onClick={e => e.stopPropagation()} style={{ color: theme.text, textDecoration: 'underline' }}>{o.mpesa_phone}</a>
+                : '—'}
+            </div>
             {o.mpesa_receipt && (
               <div
                 onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(o.mpesa_receipt); }}
@@ -62,7 +77,7 @@ export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
                 <span style={{ fontSize: 9, color: T.grey2, background: T.grey5, border: `1px solid ${T.grey3}`, borderRadius: 4, padding: '1px 5px' }}>copy</span>
               </div>
             )}
-            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, color: T.grey2 }}>
+            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, color: theme.muted }}>
               🕐 {new Date(o.created_at).toLocaleString('en-KE')}
             </div>
           </div>
@@ -112,7 +127,7 @@ export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
 
         {/* ── Right ── */}
         <div className="order-card-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10, flexShrink: 0 }}>
-          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 20, color: T.black }}>
+          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 20, color: theme.text }}>
             KSh {Number(o.total).toLocaleString()}
           </div>
           <div style={{ display: 'flex', gap: 7 }}>

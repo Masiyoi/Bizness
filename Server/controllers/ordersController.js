@@ -18,6 +18,8 @@ exports.getOrders = async (req, res) => {
          p.mpesa_receipt,
          p.phone,
          p.amount AS paid_amount,
+         o.order_number,
+         o.order_number,
          ROW_NUMBER() OVER (
            PARTITION BY o.user_id
            ORDER BY o.created_at ASC
@@ -33,6 +35,8 @@ exports.getOrders = async (req, res) => {
       const snapshot = row.items_snapshot || {};
       return {
         id:               row.id,
+        order_number:     row.order_number,
+      order_number:      row.order_number,
         user_order_number: parseInt(row.user_order_number), // e.g. 1, 2, 3...
         created_at:       row.created_at,
         updated_at:       row.updated_at,

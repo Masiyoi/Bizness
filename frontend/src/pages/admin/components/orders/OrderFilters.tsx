@@ -1,5 +1,5 @@
 import React from 'react';
-import { T, SC, ORDER_STATUSES } from '../../constants';
+import { T, SC, ORDER_STATUSES, TRACKING_TO_STATUS } from '../../constants';
 
 interface OrderFiltersProps {
   search:          string;
@@ -41,7 +41,7 @@ export function OrderFilters({ search, setSearch, statusFilter, setStatusFilter,
         >All {statusFilter === '' && totalCount > 0 && `(${totalCount})`}</button>
 
         {ORDER_STATUSES.map(s => {
-          const sc     = SC[s];
+          const sc     = SC[TRACKING_TO_STATUS[s]] || SC.confirmed;
           const active = statusFilter === s;
           return (
             <button

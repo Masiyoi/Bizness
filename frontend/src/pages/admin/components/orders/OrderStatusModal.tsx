@@ -2,7 +2,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState } from 'react';
 import axios from 'axios';
-import { TRACKING_STEPS, TRACKING_TO_STATUS, ORDER_STATUSES } from '../../constants';
+import type { Order } from '../../types';
+import { TRACKING_STEPS, TRACKING_TO_STATUS, ORDER_STATUSES, SC, STATUS_LABELS, T } from '../../constants';
 import { authH } from '../../utils';
  
 interface OrderStatusModalProps {
@@ -36,7 +37,7 @@ export function OrderStatusModal({ order, onClose, onSaved, showToast }: OrderSt
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>
           <div>
-            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 700, color: T.grey1, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 5 }}>Order #{order.id}</div>
+            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 700, color: T.grey1, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 5 }}>Order #{order.order_number || order.id}</div>
             <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 22, color: T.black }}>Update Status</h2>
           </div>
           <button onClick={onClose} style={{ background: T.grey5, border: `1px solid ${T.grey3}`, borderRadius: 8, width: 34, height: 34, cursor: 'pointer', fontSize: 14, color: T.grey1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
@@ -70,10 +71,10 @@ export function OrderStatusModal({ order, onClose, onSaved, showToast }: OrderSt
           <select
             className="sel2"
             value={form.status}
-            onChange={e => setForm({ status: e.target.value, tracking_status: e.target.value === 'cancelled' ? 'Order Placed' : form.tracking_status })}
+            onChange={e => setForm({ status: e.target.value, tracking_status: e.target.value === 'cancelled' ? 'Payment Failed' : form.tracking_status })}
           >
             {ORDER_STATUSES.map(st => (
-              <option key={st} value={st}>{st.charAt(0).toUpperCase() + st.slice(1)}</option>
+              <option key={st} value={st}>{STATUS_LABELS[st] || st}</option>
             ))}
           </select>
         </div>
@@ -85,7 +86,7 @@ export function OrderStatusModal({ order, onClose, onSaved, showToast }: OrderSt
             {TRACKING_STEPS.map((step, i) => {
               const isActive = form.tracking_status === step;
               const mapped   = TRACKING_TO_STATUS[step];
-              const sc       = SC[mapped] || SC.pending;
+              const sc       = SC[mapped] || SC.confirmed;
               return (
                 <div
                   key={step}

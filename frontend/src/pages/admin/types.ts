@@ -24,6 +24,7 @@ export interface Product {
 
 export interface Order {
   id:              number;
+  order_number?:   string;
   customer_name:   string;
   customer_email:  string;
   total:           string;

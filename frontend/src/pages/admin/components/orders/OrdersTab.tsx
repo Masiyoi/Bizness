@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { Order, Stats } from '../../types';
-import { T } from '../../constants';
+import { T, TRACKING_TO_STATUS } from '../../constants';
 import { OrderCard }    from './OrderCard';
 import { OrderFilters } from './OrderFilters';
 
@@ -16,7 +16,7 @@ export function OrdersTab({ orders, stats, onView, onUpdate }: OrdersTabProps) {
   const [statusFilter, setStatusFilter] = useState('');
 
   const filtered = useMemo(() => orders.filter(o => {
-    const matchStatus = statusFilter === '' || o.status === statusFilter;
+    const matchStatus = statusFilter === '' || o.status === TRACKING_TO_STATUS[statusFilter];
     const q           = search.toLowerCase();
     const matchSearch =
       !q ||
@@ -32,7 +32,7 @@ export function OrdersTab({ orders, stats, onView, onUpdate }: OrdersTabProps) {
   const exportCSV = () => {
     const header = ['Order ID','Customer','Email','Phone','Total','Status','Tracking','M-Pesa Receipt','Date'].join(',');
     const rows   = filtered.map(o => [
-      o.id,
+      o.order_number || o.id,
       `"${(o.customer_name  || '').replace(/"/g, '""')}"`,
       `"${(o.customer_email || '').replace(/"/g, '""')}"`,
       o.mpesa_phone    || '',

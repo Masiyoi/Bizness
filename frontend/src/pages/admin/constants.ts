@@ -67,23 +67,22 @@ export const SC: Record<string, { bg: string; col: string; border: string }> = {
 // Order / tracking constants
 // ─────────────────────────────────────────────────────────────────────────────
 export const TRACKING_STEPS = [
-  'Order Placed',
   'Payment Confirmed',
-  'Processing',
-  'Packed',
-  'Shipped',
-  'Out for Delivery',
+  'Delivery in progress',
   'Delivered',
 ];
 
 export const ORDER_STATUSES = [
-  'pending',
-  'confirmed',
-  'processing',
-  'shipped',
-  'delivered',
-  'cancelled',
+  'Payment Confirmed',
+  'Delivery in progress',
+  'Delivered',
 ];
+
+export const STATUS_LABELS: Record<string, string> = {
+  'payment confirmed': 'Payment Confirmed',
+  'delivery in progress': 'Delivery in Progress',
+  delivered: 'Delivered',
+};
 
 export const TRACKING_TO_STATUS: Record<string, string> = {
   'Order Placed':      'confirmed',

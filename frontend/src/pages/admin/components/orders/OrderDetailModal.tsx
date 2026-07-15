@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Order } from '../../types';
-import { T, SC, ZONE_LABELS } from '../../constants';
+import { T, ZONE_LABELS } from '../../constants';
 import { parseItemsSnapshot, parseShippingInfo, parseDeliveryZone } from '../../utils';
  
 interface OrderDetailModalProps {
@@ -13,7 +13,6 @@ export function OrderDetailModal({ order, onClose, onUpdateStatus }: OrderDetail
   const items        = parseItemsSnapshot(order.items_snapshot);
   const shippingInfo = parseShippingInfo(order);
   const deliveryZone = parseDeliveryZone(order);
-  const sc           = SC[order.status] || SC.pending;
   const zoneLabel    = deliveryZone ? ZONE_LABELS[deliveryZone] : null;
  
   return (
@@ -27,7 +26,7 @@ export function OrderDetailModal({ order, onClose, onUpdateStatus }: OrderDetail
         <div style={{ background: T.black, borderRadius: '18px 18px 0 0', padding: '20px 26px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '2.5px', textTransform: 'uppercase', marginBottom: 5 }}>Order Details</div>
-            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 22, color: T.white }}>Order #{order.id}</div>
+            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 22, color: T.white }}>Order #{order.order_number || order.id}</div>
             <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>
               {new Date(order.created_at).toLocaleString('en-KE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </div>
@@ -36,9 +35,8 @@ export function OrderDetailModal({ order, onClose, onUpdateStatus }: OrderDetail
             <span style={{
               fontFamily: 'Jost,sans-serif', fontSize: 11, fontWeight: 700,
               padding: '4px 12px', borderRadius: 20,
-              background: sc.bg, color: sc.col, border: `1px solid ${sc.border}`,
-              textTransform: 'capitalize',
-            }}>{order.status}</span>
+              background: 'rgba(255,255,255,0.12)', color: T.white, border: '1px solid rgba(255,255,255,0.25)',
+            }}>🚚 {order.tracking_status}</span>
             <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, width: 34, height: 34, cursor: 'pointer', fontSize: 14, color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
           </div>
         </div>
