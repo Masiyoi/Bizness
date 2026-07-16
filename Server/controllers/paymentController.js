@@ -1,5 +1,6 @@
 const axios = require('axios');
 const db    = require('../config/db');
+const { calculateFirstOrderDiscount } = require('./discountController');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -45,17 +46,16 @@ const getAccessToken = async () => {
 exports.stkPush = async (req, res) => {
   const {
     phone,
-    amount,
     delivery_zone,
-    delivery_fee,
+    delivery_fee = 0,
     shipping       = {},
     selectedColors = {},
     selectedSizes  = {},
   } = req.body;
   const userId = req.user.id;
 
-  if (!phone || !amount) {
-    return res.status(400).json({ msg: 'Phone and amount are required' });
+  if (!phone) {
+    return res.status(400).json({ msg: 'Phone is required' });
   }
 
   let formattedPhone;
@@ -65,7 +65,35 @@ exports.stkPush = async (req, res) => {
     return res.status(400).json({ msg: err.message });
   }
 
-  const roundedAmount = Math.ceil(Number(amount));
+  // ── Compute the authoritative order total server-side ──────────────────────
+  // Never trust a client-supplied amount — recompute the subtotal from the DB
+  // cart and apply the first-order discount (if eligible) here.
+  let roundedAmount, discountInfo;
+  try {
+    const cartRes = await db.query(
+      `SELECT ci.quantity, p.price
+       FROM cart_items ci
+       JOIN carts c ON c.id = ci.cart_id
+       JOIN products p ON p.id = ci.product_id
+       WHERE c.user_id = $1`,
+      [userId]
+    );
+
+    if (cartRes.rows.length === 0) {
+      return res.status(400).json({ msg: 'Cart is empty' });
+    }
+
+    const subtotal = cartRes.rows.reduce(
+      (sum, row) => sum + Number(row.price) * row.quantity, 0
+    );
+
+    discountInfo = await calculateFirstOrderDiscount(userId, subtotal);
+    const total  = discountInfo.discountedSubtotal + Number(delivery_fee || 0);
+    roundedAmount = Math.ceil(total);
+  } catch (err) {
+    console.error('Order total calculation error:', err.message);
+    return res.status(500).json({ msg: 'Failed to calculate order total' });
+  }
 
   try {
     const token     = await getAccessToken();
@@ -115,7 +143,11 @@ exports.stkPush = async (req, res) => {
         formattedPhone,
         delivery_zone || 'cbd',
         delivery_fee  || 0,
-        JSON.stringify({ shipping, selectedColors, selectedSizes, delivery_zone, delivery_fee }),
+        JSON.stringify({
+          shipping, selectedColors, selectedSizes, delivery_zone, delivery_fee,
+          discount_amount: discountInfo.discountAmount,
+          discount_type: discountInfo.eligible ? 'first_order' : null,
+        }),
       ]
     );
 
@@ -174,6 +206,8 @@ exports.mpesaCallback = async (req, res) => {
       const { shipping = {}, selectedColors = {}, selectedSizes = {} } = shippingMeta;
       const deliveryZone = shippingMeta.delivery_zone || payment.delivery_zone || 'cbd';
       const deliveryFee  = shippingMeta.delivery_fee  || payment.delivery_fee  || 0;
+      const discountAmount = Number(shippingMeta.discount_amount) || 0;
+      const discountType   = shippingMeta.discount_type || null;
 
       // 3. Fetch the user's cart items with product details
       const cartRes = await db.query(
@@ -218,8 +252,9 @@ exports.mpesaCallback = async (req, res) => {
       await db.query(
         `INSERT INTO orders
            (user_id, payment_id, status, tracking_status, total, delivery_fee,
-            delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+            delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt,
+            discount_type, discount_amount)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
         [
           payment.user_id,
           payment.id,
@@ -233,6 +268,8 @@ exports.mpesaCallback = async (req, res) => {
           shipping.email  || '',
           shipping.phone  || payment.phone,
           receipt,
+          discountType,
+          discountAmount,
         ]
       );
 
@@ -271,6 +308,8 @@ exports.mpesaCallback = async (req, res) => {
           const { shipping = {}, selectedColors = {}, selectedSizes = {} } = shippingMeta;
           const deliveryZone = shippingMeta.delivery_zone || payment.delivery_zone || 'cbd';
           const deliveryFee  = shippingMeta.delivery_fee  || payment.delivery_fee  || 0;
+          const discountAmount = Number(shippingMeta.discount_amount) || 0;
+          const discountType   = shippingMeta.discount_type || null;
 
           const cartRes = await db.query(
             `SELECT
@@ -300,8 +339,9 @@ exports.mpesaCallback = async (req, res) => {
           await db.query(
             `INSERT INTO orders
                (user_id, payment_id, status, tracking_status, total, delivery_fee,
-                delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt)
-             VALUES ($1, $2, 'cancelled', 'Payment Failed', $3, $4, $5, $6, $7, $8, $9, $10)`,
+                delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt,
+                discount_type, discount_amount)
+             VALUES ($1, $2, 'cancelled', 'Payment Failed', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
             [
               payment.user_id,
               payment.id,
@@ -313,6 +353,8 @@ exports.mpesaCallback = async (req, res) => {
               shipping.email || '',
               shipping.phone || payment.phone,
               null,
+              discountType,
+              discountAmount,
             ]
           );
 

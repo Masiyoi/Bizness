@@ -99,6 +99,11 @@ export default function Cart() {
   const [flashSaleMap,   setFlashSaleMap]   = useState<Record<number, number>>({});
   const [openDropdown,   setOpenDropdown]   = useState<string | null>(null);
 
+  // First-order discount (server is the source of truth — this is display only)
+  const [discount, setDiscount] = useState<{ eligible: boolean; discountAmount: number; discountLabel: string | null }>({
+    eligible: false, discountAmount: 0, discountLabel: null,
+  });
+
   useEffect(() => {
     fetchCart();
     try {
@@ -117,6 +122,14 @@ export default function Cart() {
         setFlashSaleMap(map);
       })
       .catch(() => {});
+
+    axios.get('/api/discount/preview')
+      .then(r => setDiscount({
+        eligible: r.data.eligible,
+        discountAmount: Number(r.data.discountAmount) || 0,
+        discountLabel: r.data.discountLabel,
+      }))
+      .catch(() => {}); // fine to fail silently — preview is display-only
   }, []);
 
   // Returns the active price for an item — sale price if flash-sale, else regular price
@@ -285,9 +298,10 @@ export default function Cart() {
     } catch { setError('Failed to update size.'); }
   };
 
-  const subtotal    = items.reduce((sum, i) => sum + getEffectivePrice(i) * i.quantity, 0);
-  const deliveryFee = DELIVERY_OPTIONS.find(o => o.value === deliveryZone)!.fee;
-  const total       = subtotal + deliveryFee;
+  const subtotal          = items.reduce((sum, i) => sum + getEffectivePrice(i) * i.quantity, 0);
+  const deliveryFee        = DELIVERY_OPTIONS.find(o => o.value === deliveryZone)!.fee;
+  const discountedSubtotal = Math.max(subtotal - discount.discountAmount, 0);
+  const total              = discountedSubtotal + deliveryFee;
 
   const setField = (field: keyof ShippingInfo, value: string) => {
     const updated = { ...shipping, [field]: value };
@@ -904,6 +918,14 @@ export default function Cart() {
                   <span className="jost" style={{ fontSize: 13, color: T.muted }}>Subtotal</span>
                   <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: T.navy }}>KSh {subtotal.toLocaleString()}</span>
                 </div>
+                {discount.eligible && discount.discountAmount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <span className="jost" style={{ fontSize: 13, color: '#2D6A2D' }}>{discount.discountLabel}</span>
+                    <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: '#2D6A2D' }}>
+                      − KSh {discount.discountAmount.toLocaleString()}
+                    </span>
+                  </div>
+                )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                   <span className="jost" style={{ fontSize: 13, color: T.muted }}>Delivery</span>
                   <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: deliveryFee === 0 ? '#2D6A2D' : '#000' }}>

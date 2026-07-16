@@ -67,6 +67,11 @@ export default function Checkout() {
   const [flashSaleMap, setFlashSaleMap]         = useState<Record<number, number>>({});
   const [orderNumber, setOrderNumber]           = useState('');
   const [orderDate, setOrderDate]               = useState('');
+
+  // First-order discount (server is the source of truth — this is display only)
+  const [discount, setDiscount] = useState<{ eligible: boolean; discountAmount: number; discountLabel: string | null }>({
+    eligible: false, discountAmount: 0, discountLabel: null,
+  });
   
   const passedZone = (location.state as { deliveryZone?: DeliveryZone } | null)?.deliveryZone;
   const deliveryZone: DeliveryZone = passedZone ?? 'cbd';
@@ -94,6 +99,14 @@ export default function Checkout() {
         setFlashSaleMap(map);
       })
       .catch(() => {});
+
+    axios.get('/api/discount/preview')
+      .then(r => setDiscount({
+        eligible: r.data.eligible,
+        discountAmount: Number(r.data.discountAmount) || 0,
+        discountLabel: r.data.discountLabel,
+      }))
+      .catch(() => {}); // fine to fail silently — preview is display-only
   }, []);
 
   // Returns the active price for an item — sale price if flash-sale, else regular price
@@ -120,8 +133,9 @@ export default function Checkout() {
     if (tickRef.current)    clearInterval(tickRef.current);
   }, []);
 
-  const subtotal = items.reduce((s, i) => s + getEffectivePrice(i) * i.quantity, 0);
-  const total    = subtotal + deliveryFee;
+  const subtotal          = items.reduce((s, i) => s + getEffectivePrice(i) * i.quantity, 0);
+  const discountedSubtotal = Math.max(subtotal - discount.discountAmount, 0);
+  const total              = discountedSubtotal + deliveryFee;
 
   const validatePhone = (val: string) => {
     const cleaned = val.replace(/\s+/g, '').replace(/^0/, '254').replace(/^\+/, '');
@@ -144,9 +158,10 @@ export default function Checkout() {
       const passedColors   = (location.state as any)?.selectedColors ?? {};
       const passedSizes    = (location.state as any)?.selectedSizes ?? {};
 
+      // amount is intentionally omitted — the server recomputes the total
+      // from the cart + first-order discount eligibility, never trusting the client.
       const res = await axios.post('/api/payments/stk-push', {
         phone: shippingPhone,
-        amount:         total,
         delivery_zone:  deliveryZone,
         delivery_fee:   deliveryFee,
         shipping:       passedShipping ?? {},
@@ -206,6 +221,10 @@ export default function Checkout() {
       const passedColors   = (location.state as any)?.selectedColors ?? {};
       const passedSizes    = (location.state as any)?.selectedSizes ?? {};
 
+      // NOTE: your pesapalController presumably still reads `amount` from req.body —
+      // that's a separate file I haven't seen. If it trusts this client-sent amount,
+      // it has the same spoofing hole stk-push had; apply the same
+      // calculateFirstOrderDiscount()-based recomputation there before going live.
       const res = await axios.post('/api/payments/pesapal/initiate', {
         amount:         total,
         delivery_zone:  deliveryZone,
@@ -440,6 +459,14 @@ export default function Checkout() {
                 <span className="jost" style={{ fontSize: 13, color: T.muted }}>Subtotal</span>
                 <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: T.navy }}>KSh {subtotal.toLocaleString()}</span>
               </div>
+              {discount.eligible && discount.discountAmount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span className="jost" style={{ fontSize: 13, color: '#5A8A5A' }}>{discount.discountLabel}</span>
+                  <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: '#5A8A5A' }}>
+                    − KSh {discount.discountAmount.toLocaleString()}
+                  </span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <span className="jost" style={{ fontSize: 13, color: T.muted }}>Delivery · <span style={{ color: '#000' }}>{deliveryLabel}</span></span>
                 <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: deliveryFee === 0 ? '#5A8A5A' : T.navy }}>
@@ -724,6 +751,14 @@ export default function Checkout() {
                 <span className="jost" style={{ fontSize: 13, color: T.muted }}>Subtotal</span>
                 <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: T.navy }}>KSh {subtotal.toLocaleString()}</span>
               </div>
+              {discount.eligible && discount.discountAmount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span className="jost" style={{ fontSize: 13, color: '#5A8A5A' }}>{discount.discountLabel}</span>
+                  <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: '#5A8A5A' }}>
+                    − KSh {discount.discountAmount.toLocaleString()}
+                  </span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <span className="jost" style={{ fontSize: 13, color: T.muted }}>Delivery · <span style={{ color: '#000' }}>{deliveryLabel}</span></span>
                 <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: deliveryFee === 0 ? '#5A8A5A' : T.navy }}>

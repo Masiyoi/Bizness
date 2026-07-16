@@ -47,6 +47,9 @@ export default function Navbar({
   });
   const [showLang,       setShowLang]       = useState(false);
   const [scrolled,       setScrolled]       = useState(false);
+  // Defaults true (guests are always potential first-time buyers) — flips to
+  // false only once we confirm a logged-in user has already used the discount.
+  const [firstOrderEligible, setFirstOrderEligible] = useState(true);
   const langRef          = useRef<HTMLDivElement>(null);
 
   // ── Scroll detection ──────────────────────────────────────────────────────
@@ -105,6 +108,15 @@ export default function Navbar({
 
   useEffect(() => { if (cartCountProp     !== undefined) setCartCount(cartCountProp);         }, [cartCountProp]);
   useEffect(() => { if (wishlistCountProp !== undefined) setWishlistCount(wishlistCountProp); }, [wishlistCountProp]);
+
+  // First-order discount banner — only checkable once a user is logged in;
+  // guests keep seeing the banner as an incentive to sign up and order.
+  useEffect(() => {
+    if (!user || user.role === 'admin') { setFirstOrderEligible(!!user ? false : true); return; }
+    axios.get('/api/discount/preview')
+      .then(r => setFirstOrderEligible(!!r.data.eligible))
+      .catch(() => {}); // fine to fail silently — banner just stays as-is
+  }, [user?.id]);
 
   useEffect(() => {
     if (categories.length > 0) { setNavCategories(categories); return; }
@@ -245,16 +257,19 @@ export default function Navbar({
         }
       `}</style>
 
-      {/* ── Announcement marquee ── */}
-      <div style={{ background: '#000', height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 101 }}>
-        <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: '3px', color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase' }}>
-          Get 10% off on your first order
-        </span>
-      </div>
+      {/* ── Announcement marquee — hidden once a logged-in user has used their first-order discount ── */}
+      {firstOrderEligible && (
+        <div style={{ background: '#000', height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 101 }}>
+          <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: '3px', color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase' }}>
+            Get 10% off on your first order
+          </span>
+        </div>
+      )}
 
       {/* ── Main navbar ── */}
       <nav style={{
-        position: 'fixed', top: 32, left: 0, right: 0, zIndex: 100,
+        position: 'fixed', top: firstOrderEligible ? 32 : 0, left: 0, right: 0, zIndex: 100,
+        transition: 'top 0.3s ease',
         background: isTransparent ? 'transparent' : '#fff',
         borderBottom: isTransparent ? 'none' : '1px solid rgba(0,0,0,0.09)',
         transition: 'background 0.4s ease, border-color 0.4s ease',
@@ -490,7 +505,7 @@ export default function Navbar({
 
       {/* ── Search bar (desktop) ── */}
       {showSearch && (
-        <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.09)', padding: '12px 5%', position: 'fixed', top: 64, left: 0, right: 0, zIndex: 99 }}>
+        <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.09)', padding: '12px 5%', position: 'fixed', top: firstOrderEligible ? 96 : 64, left: 0, right: 0, zIndex: 99, transition: 'top 0.3s ease' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, maxWidth: 520, margin: '0 auto', borderBottom: '1px solid rgba(0,0,0,0.18)', paddingBottom: 8 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(0,0,0,0.35)', flexShrink: 0 }}>
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -510,7 +525,7 @@ export default function Navbar({
 
       {/* ── Mobile category menu (hamburger) — categories only ── */}
       {mobileMenuOpen && (
-        <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.09)', padding: '16px 5%', position: 'fixed', top: 96, left: 0, right: 0, zIndex: 99 }}>
+        <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.09)', padding: '16px 5%', position: 'fixed', top: firstOrderEligible ? 96 : 64, left: 0, right: 0, zIndex: 99, transition: 'top 0.3s ease' }}>
 
           {/* ── Top row: Home + Members Club side by side ── */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
