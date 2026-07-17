@@ -16,7 +16,7 @@ export function cloudinaryTransform(url: string, transformation: string): string
 
 // Standard transform for product card images — matches the 4:5 (width:height)
 // card aspect ratio used across ProductCard, QuickViewModal, etc.
-export const CARD_IMAGE_TRANSFORM = 'c_lfill,g_auto,ar_4:5,q_auto,f_auto';
+export const CARD_IMAGE_TRANSFORM = 'c_fill,g_auto,ar_4:5,w_600,q_auto,f_auto';
 
 export function toCardImage(url: string): string {
   return cloudinaryTransform(url, CARD_IMAGE_TRANSFORM);
