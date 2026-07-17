@@ -1,5 +1,6 @@
 const axios = require('axios');
 const db    = require('../config/db');
+const { calculateFirstOrderDiscount } = require('./discountController');
 
 // ── Pesapal base URLs ─────────────────────────────────────────────────────────
 const PESAPAL_BASE = process.env.PESAPAL_ENV === 'production'
@@ -60,18 +61,51 @@ const registerIPN = async (token) => {
  */
 exports.initiatePayment = async (req, res) => {
   const {
-    amount,
     delivery_zone,
-    delivery_fee,
+    delivery_fee = 0,
     shipping       = {},
     selectedColors = {},
     selectedSizes  = {},
   } = req.body;
   const userId = req.user.id;
 
-  if (!amount) return res.status(400).json({ msg: 'Amount is required' });
+  // ── Compute the authoritative order total server-side ──────────────────────
+  // Never trust a client-supplied amount — recompute the subtotal from the DB
+  // cart (using flash-sale price where active) and apply the first-order
+  // discount (if eligible) here, mirroring stkPush.
+  let roundedAmount, discountInfo;
+  try {
+    const cartRes = await db.query(
+      `SELECT ci.quantity,
+              CASE
+                 WHEN p.sale_price IS NOT NULL
+                  AND p.sale_price < p.price
+                  AND (p.sale_ends_at IS NULL OR p.sale_ends_at > NOW())
+                 THEN p.sale_price
+                 ELSE p.price
+               END AS effective_price
+       FROM cart_items ci
+       JOIN carts c ON c.id = ci.cart_id
+       JOIN products p ON p.id = ci.product_id
+       WHERE c.user_id = $1`,
+      [userId]
+    );
 
-  const roundedAmount = Math.ceil(Number(amount));
+    if (cartRes.rows.length === 0) {
+      return res.status(400).json({ msg: 'Cart is empty' });
+    }
+
+    const subtotal = cartRes.rows.reduce(
+      (sum, row) => sum + Number(row.effective_price) * row.quantity, 0
+    );
+
+    discountInfo = await calculateFirstOrderDiscount(userId, subtotal);
+    const total  = discountInfo.discountedSubtotal + Number(delivery_fee || 0);
+    roundedAmount = Math.ceil(total);
+  } catch (err) {
+    console.error('Order total calculation error:', err.message);
+    return res.status(500).json({ msg: 'Failed to calculate order total' });
+  }
 
   // Generate a unique merchant reference for this order
   const merchantReference = `PP-${userId}-${Date.now()}`;
@@ -138,7 +172,11 @@ exports.initiatePayment = async (req, res) => {
         shipping.phone || '',
         delivery_zone  || 'cbd',
         delivery_fee   || 0,
-        JSON.stringify({ shipping, selectedColors, selectedSizes, delivery_zone, delivery_fee }),
+        JSON.stringify({
+          shipping, selectedColors, selectedSizes, delivery_zone, delivery_fee,
+          discount_amount: discountInfo.discountAmount,
+          discount_type: discountInfo.eligible ? 'first_order' : null,
+        }),
       ]
     );
 
@@ -208,6 +246,8 @@ exports.pesapalIPN = async (req, res) => {
       const { shipping = {}, selectedColors = {}, selectedSizes = {} } = shippingMeta;
       const deliveryZone = shippingMeta.delivery_zone || payment.delivery_zone || 'cbd';
       const deliveryFee  = shippingMeta.delivery_fee  || payment.delivery_fee  || 0;
+      const discountAmount = Number(shippingMeta.discount_amount) || 0;
+      const discountType   = shippingMeta.discount_type || null;
 
       // 3. Fetch cart items
       const cartRes = await db.query(
@@ -239,8 +279,9 @@ exports.pesapalIPN = async (req, res) => {
       await db.query(
         `INSERT INTO orders
            (user_id, payment_id, status, tracking_status, total, delivery_fee,
-            delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+            delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt,
+            discount_type, discount_amount)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
         [
           payment.user_id,
           payment.id,
@@ -254,6 +295,8 @@ exports.pesapalIPN = async (req, res) => {
           shipping.email || '',
           shipping.phone || payment.phone,
           confirmation_code,
+          discountType,
+          discountAmount,
         ]
       );
 
@@ -289,6 +332,8 @@ exports.pesapalIPN = async (req, res) => {
           const { shipping = {}, selectedColors = {}, selectedSizes = {} } = shippingMeta;
           const deliveryZone = shippingMeta.delivery_zone || payment.delivery_zone || 'cbd';
           const deliveryFee  = shippingMeta.delivery_fee  || payment.delivery_fee  || 0;
+          const discountAmount = Number(shippingMeta.discount_amount) || 0;
+          const discountType   = shippingMeta.discount_type || null;
 
           const cartRes = await db.query(
             `SELECT
@@ -318,8 +363,9 @@ exports.pesapalIPN = async (req, res) => {
           await db.query(
             `INSERT INTO orders
                (user_id, payment_id, status, tracking_status, total, delivery_fee,
-                delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt)
-             VALUES ($1, $2, 'cancelled', 'Payment Failed', $3, $4, $5, $6, $7, $8, $9, $10)`,
+                delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt,
+                discount_type, discount_amount)
+             VALUES ($1, $2, 'cancelled', 'Payment Failed', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
             [
               payment.user_id,
               payment.id,
@@ -331,6 +377,8 @@ exports.pesapalIPN = async (req, res) => {
               shipping.email || '',
               shipping.phone || payment.phone,
               null,
+              discountType,
+              discountAmount,
             ]
           );
 

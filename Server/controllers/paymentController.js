@@ -71,7 +71,14 @@ exports.stkPush = async (req, res) => {
   let roundedAmount, discountInfo;
   try {
     const cartRes = await db.query(
-      `SELECT ci.quantity, p.price
+      `SELECT ci.quantity,
+              CASE
+                 WHEN p.sale_price IS NOT NULL
+                  AND p.sale_price < p.price
+                  AND (p.sale_ends_at IS NULL OR p.sale_ends_at > NOW())
+                 THEN p.sale_price
+                 ELSE p.price
+               END AS effective_price
        FROM cart_items ci
        JOIN carts c ON c.id = ci.cart_id
        JOIN products p ON p.id = ci.product_id
@@ -84,7 +91,7 @@ exports.stkPush = async (req, res) => {
     }
 
     const subtotal = cartRes.rows.reduce(
-      (sum, row) => sum + Number(row.price) * row.quantity, 0
+      (sum, row) => sum + Number(row.effective_price) * row.quantity, 0
     );
 
     discountInfo = await calculateFirstOrderDiscount(userId, subtotal);
