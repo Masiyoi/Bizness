@@ -3,6 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Footer from '../components/common/Footer';
 
+// ── Payment logos ────────────────────────────────────────────────
+import mpesaLogo from '../../assets/M-PESA_LOGO-01.svg';
+import pesapalLogo from '../../assets/pesapal1.png';
+import secureBadge from '../../assets/securepayment.png';
+
 interface CartItem {
   id: number;
   product_id: number;
@@ -508,7 +513,7 @@ export default function Checkout() {
                 border: paymentMethod === 'mpesa' ? '5px solid #16a34a' : '1.5px solid #C9C9C9',
                 transition: 'all 0.15s',
               }} />
-              <img src="/src/assets/M-PESA_LOGO-01.svg" alt="M-Pesa" style={{ height: 22, objectFit: 'contain', flexShrink: 0 }} />
+              <img src={mpesaLogo} alt="M-Pesa" style={{ height: 22, objectFit: 'contain', flexShrink: 0 }} />
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span className="jost" style={{ fontWeight: 600, fontSize: 14, color: T.navy }}>M-Pesa</span>
                 <span className="jost" style={{ fontSize: 11, color: T.muted }}>STK Push to your phone</span>
@@ -526,12 +531,12 @@ export default function Checkout() {
                 transition: 'all 0.15s',
               }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                <img src="/src/assets/pesapal1.png" alt="Pesapal" style={{ height: 22, objectFit: 'contain' }} />
+                <img src={pesapalLogo} alt="Pesapal" style={{ height: 22, objectFit: 'contain' }} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span className="jost" style={{ fontWeight: 600, fontSize: 14, color: T.navy }}>Pesapal</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-                  <img src="/src/assets/M-PESA_LOGO-01.svg" alt="M-Pesa" style={{ height: 14, objectFit: 'contain' }} />
+                  <img src={mpesaLogo} alt="M-Pesa" style={{ height: 14, objectFit: 'contain' }} />
                   <img src="/src/assets/Airtel_logo.svg" alt="Airtel Money" style={{ height: 14, objectFit: 'contain' }} />
                   <img src="/src/assets/MasterCard-Logo.svg" alt="Mastercard" style={{ height: 16, objectFit: 'contain' }} />
                   <img src="/src/assets/Visa.png" alt="Visa" style={{ height: 12, objectFit: 'contain' }} />
@@ -571,7 +576,7 @@ export default function Checkout() {
             )}
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16 }}>
-              <img src="/src/assets/securepayment.png" alt="Secure payment" style={{ height: 16, objectFit: 'contain' }} />
+              <img src={secureBadge} alt="Secure payment" style={{ height: 16, objectFit: 'contain' }} />
               <span className="jost" style={{ fontSize: 11, color: T.muted }}>All payments are encrypted and secure</span>
             </div>
           </div>

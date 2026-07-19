@@ -5,6 +5,13 @@ import axios from 'axios';
 import Navbar       from '../components/common/Navbar';
 import Footer       from '../components/common/Footer';
 
+import mpesaLogo from '../../assets/M-PESA_LOGO-01.svg';
+import airtelLogo from '../../assets/Airtel_logo.svg';
+import visaLogo from '../../assets/Visa.png';
+import mastercardLogo from '../../assets/MasterCard-Logo.svg';
+import applePayLogo from '../../assets/Apple_Pay_logo.svg';
+import googlePayLogo from '../../assets/Google_Pay_Logo.svg';
+
 interface CartItem {
   id: number;
   product_id: number;
@@ -941,12 +948,12 @@ export default function Cart() {
                 <div style={{ marginBottom: 20 }}>
                   <div className="jost" style={{ fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#888', marginBottom: 10, textAlign: 'center' }}>We Accept</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
-                    <img src="/src/assets/M-PESA_LOGO-01.svg" alt="M-Pesa" style={{ height: 22, objectFit: 'contain' }} />
-                    <img src="/src/assets/Airtel_logo.svg" alt="Airtel Money" style={{ height: 22, objectFit: 'contain' }} />
-                    <img src="/src/assets/Visa.png" alt="Visa" style={{ height: 20, objectFit: 'contain' }} />
-                    <img src="/src/assets/MasterCard-Logo.svg" alt="Mastercard" style={{ height: 28, objectFit: 'contain' }} />
-                    <img src="/src/assets/Apple_Pay_logo.svg" alt="Apple Pay" style={{ height: 20, objectFit: 'contain' }} />
-                    <img src="/src/assets/Google_Pay_Logo.svg" alt="Google Pay" style={{ height: 24, objectFit: 'contain' }} />
+                    <img src={mpesaLogo} alt="M-Pesa" style={{ height: 22, objectFit: 'contain' }} />
+                    <img src={airtelLogo} alt="Airtel Money" style={{ height: 22, objectFit: 'contain' }} />
+                    <img src={visaLogo} alt="Visa" style={{ height: 20, objectFit: 'contain' }} />
+                    <img src={mastercardLogo} alt="Mastercard" style={{ height: 28, objectFit: 'contain' }} />
+                    <img src={applePayLogo} alt="Apple Pay" style={{ height: 20, objectFit: 'contain' }} />
+                    <img src={googlePayLogo} alt="Google Pay" style={{ height: 24, objectFit: 'contain' }} />
                   </div>
                 </div>
 
