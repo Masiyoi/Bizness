@@ -80,10 +80,10 @@ const css = `
   .lp-search::placeholder { color: var(--mid) }
   .lp-search-icon { color: var(--mid); font-size: 15px; flex-shrink:0 }
   .lp-result-count { font-family: var(--f-sans); font-size: 11px; color: var(--mid); white-space: nowrap; flex-shrink: 0; }
-  .lp-grid-wrap { padding: 20px 0 clamp(40px,6vw,80px); overflow: hidden; }
-  .lp-grid { width: 100%; box-sizing: border-box; display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px 20px; }
-  @media(max-width:1024px) { .lp-grid { grid-template-columns: repeat(3,1fr); gap: 24px 16px } }
-  @media(max-width:640px) { .lp-grid { grid-template-columns: repeat(2,1fr); gap: 20px 12px } }
+  .lp-grid-wrap { padding: 20px clamp(20px,5%,80px) clamp(40px,6vw,80px); overflow: hidden; }
+  .lp-grid { width: 100%; box-sizing: border-box; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px 16px; }
+  @media(max-width:1024px) { .lp-grid { grid-template-columns: repeat(3,1fr); gap: 16px 12px } }
+  @media(max-width:640px) { .lp-grid { grid-template-columns: repeat(2,1fr); gap: 12px 8px } }
   .lp-editorial { display: grid; grid-template-columns: 1fr 1fr; min-height: 70vh; border-bottom: 1px solid var(--rule); overflow: hidden; }
   @media(max-width:640px) { .lp-editorial { grid-template-columns: 1fr; min-height: auto } .lp-editorial-copy { padding: 32px 24px 40px } }
   .lp-editorial-img { position: relative; overflow: hidden; background: #111; }
@@ -424,7 +424,7 @@ export default function Homepage() {
 
       <Editorial onShop={selectCategory} />
 
-      <div ref={gridRef} style={{ scrollMarginTop: 80 }}>
+      <div ref={gridRef} style={{ scrollMarginTop: 80, background: '#fff' }}>
         <div className="lp-section-head">
           <div>
             <p className="lp-section-kicker">{activeCategory === 'All' ? 'The Collection' : activeCategory}</p>
@@ -573,7 +573,7 @@ export default function Homepage() {
             <div className="lp-grid">
               {[...Array(8)].map((_, i) => (
                 <div key={i}>
-                  <div className="lp-skel" style={{ width:'100%', aspectRatio:'3/4' }} />
+                  <div className="lp-skel" style={{ width:'100%', aspectRatio:'1' }} />
                   <div style={{ padding:'16px 14px' }}>
                     <div className="lp-skel" style={{ height:12, width:'65%', marginBottom:8 }}/>
                     <div className="lp-skel" style={{ height:10, width:'40%' }}/>

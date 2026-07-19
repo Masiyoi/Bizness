@@ -12,40 +12,42 @@ interface ProductCardProps {
   isAdmin:          boolean;
   onCartToggle:     (id: number) => void;
   onWishlistToggle: (id: number) => void;
-  comparePrice?:    number | string | null; // original price before discount (e.g. flash sales)
+  comparePrice?:    number | string | null;
 }
 
 const isTouchDevice = () =>
   typeof window !== 'undefined' &&
   window.matchMedia('(hover: none) and (pointer: coarse)').matches;
 
-const IMG_ASPECT = '125%';
-
 const S = {
   card: {
-    position:  'relative' as const,
-    background:'transparent',
-    width:     '100%',
-    alignSelf: 'start' as const,
-    minWidth:  0,
-    overflow:  'visible' as const,
+    position:      'relative' as const,
+    background:    'transparent',
+    width:         '100%',
+    display:       'flex',
+    flexDirection: 'column' as const,
+    gap:           '8px',
+    padding:       '0',
+    minWidth:      0,
+  } as React.CSSProperties,
+
+  imgContainer: {
+    position:      'relative' as const,
+    width:         '100%',
+    aspectRatio:   '1',
+    background:    'transparent',
+    overflow:      'hidden' as const,
+    display:       'flex',
+    alignItems:    'center',
+    justifyContent: 'center',
+    cursor:        'pointer' as const,
   } as React.CSSProperties,
 
   imgOuter: {
-    position:   'relative' as const,
-    width:      '100%',
-    paddingTop: IMG_ASPECT,
-    boxShadow:  '0 1px 6px rgba(0,0,0,0.07)',
-    overflow:   'visible' as const,
-    background: '#ffffff',
-    flexShrink: 0,
-  } as React.CSSProperties,
-
-  imgInner: {
-    position: 'absolute' as const,
-    inset:    0,
-    overflow: 'hidden' as const,
-    display:  'block',
+    position:   'absolute' as const,
+    inset:      0,
+    overflow:   'hidden' as const,
+    background: '#fff',
   } as React.CSSProperties,
 
   track: (index: number, dragging: boolean, dragOffset: number, count: number): React.CSSProperties => ({
@@ -82,7 +84,7 @@ const S = {
   soldOverlay: {
     position:       'absolute' as const,
     inset:          0,
-    background:     'rgba(239,239,239,0.65)',
+    background:     'rgba(0,0,0,0.7)',
     display:        'flex',
     alignItems:     'center',
     justifyContent: 'center',
@@ -94,97 +96,37 @@ const S = {
     background:    '#fff',
     color:         '#000',
     fontFamily:    "'DM Sans', sans-serif",
-    fontSize:      9,
+    fontSize:      11,
     fontWeight:    700,
-    letterSpacing: '2.5px',
+    letterSpacing: '2px',
     textTransform: 'uppercase' as const,
-    padding:       '6px 14px',
+    padding:       '8px 16px',
   } as React.CSSProperties,
 
-  newBadge: {
+  badge: {
     position:      'absolute' as const,
-    top:           10,
-    left:          10,
+    top:           12,
+    left:          12,
     background:    '#000',
     color:         '#fff',
     fontFamily:    "'DM Sans', sans-serif",
     fontSize:      9,
     fontWeight:    700,
-    letterSpacing: '2px',
+    letterSpacing: '1.5px',
     textTransform: 'uppercase' as const,
-    padding:       '4px 9px',
+    padding:       '5px 10px',
     zIndex:        2,
     pointerEvents: 'none' as const,
   } as React.CSSProperties,
-
-  stockBadge: {
-    position:      'absolute' as const,
-    top:           10,
-    left:          10,
-    background:    'rgba(255,255,255,0.92)',
-    color:         '#000',
-    fontFamily:    "'DM Sans', sans-serif",
-    fontSize:      9,
-    fontWeight:    700,
-    letterSpacing: '2px',
-    textTransform: 'uppercase' as const,
-    padding:       '4px 9px',
-    zIndex:        2,
-    pointerEvents: 'none' as const,
-  } as React.CSSProperties,
-
-  actionBtn: (visible: boolean, inCart: boolean): React.CSSProperties => ({
-    position:       'absolute',
-    bottom:         10,
-    right:          10,
-    width:          34,
-    height:         34,
-    borderRadius:   '50%',
-    background:     inCart ? '#0D1B3E' : '#fff',
-    border:         'none',
-    cursor:         'pointer',
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'center',
-    zIndex:         10,
-    opacity:        visible ? 1 : 0,
-    transform:      visible ? 'scale(1)' : 'scale(0.75)',
-    transition:     'opacity 0.2s ease, transform 0.2s ease, background 0.15s',
-    boxShadow:      '0 2px 10px rgba(0,0,0,0.18)',
-    pointerEvents:  visible ? 'auto' as const : 'none' as const,
-  }),
-
-  quickView: (visible: boolean): React.CSSProperties => ({
-    position:      'absolute',
-    bottom:        0,
-    left:          0,
-    right:         0,
-    background:    'rgba(0,0,0,0.82)',
-    color:         '#fff',
-    fontFamily:    "'DM Sans', sans-serif",
-    fontSize:      10,
-    fontWeight:    600,
-    letterSpacing: '2.5px',
-    textTransform: 'uppercase' as const,
-    textAlign:     'center' as const,
-    padding:       '11px 0',
-    paddingRight:  '52px',
-    border:        'none',
-    cursor:        'pointer',
-    zIndex:        4,
-    transform:     visible ? 'translateY(0)' : 'translateY(100%)',
-    transition:    'transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94)',
-    pointerEvents: visible ? 'auto' as const : 'none' as const,
-  }),
 
   dotsBar: (visible: boolean): React.CSSProperties => ({
     position:       'absolute',
-    bottom:         8,
-    left:           0,
-    right:          0,
+    bottom:         12,
+    left:           '50%',
+    transform:      'translateX(-50%)',
     display:        'flex',
     justifyContent: 'center',
-    gap:            4,
+    gap:            5,
     zIndex:         3,
     opacity:        visible ? 1 : 0,
     transition:     'opacity 0.2s',
@@ -192,23 +134,22 @@ const S = {
   }),
 
   dot: (active: boolean): React.CSSProperties => ({
-    width:        active ? 14 : 4,
-    height:       4,
-    borderRadius: 2,
-    background:   active ? '#fff' : 'rgba(255,255,255,0.55)',
+    width:        active ? 12 : 5,
+    height:       5,
+    borderRadius: 2.5,
+    background:   active ? '#fff' : 'rgba(255,255,255,0.5)',
     transition:   'width 0.25s ease, background 0.25s ease',
-    boxShadow:    '0 1px 3px rgba(0,0,0,0.3)',
   }),
 
   arrowBtn: (side: 'left' | 'right', visible: boolean): React.CSSProperties => ({
     position:       'absolute',
     top:            '50%',
-    [side]:         8,
-    transform:      visible ? 'translateY(-50%) scale(1)' : 'translateY(-50%) scale(0.8)',
-    width:          26,
-    height:         26,
+    [side]:         12,
+    transform:      visible ? 'translateY(-50%) scale(1)' : 'translateY(-50%) scale(0.7)',
+    width:          32,
+    height:         32,
     borderRadius:   '50%',
-    background:     'rgba(255,255,255,0.92)',
+    background:     'rgba(0,0,0,0.7)',
     border:         'none',
     cursor:         'pointer',
     display:        'flex',
@@ -217,106 +158,97 @@ const S = {
     zIndex:         6,
     opacity:        visible ? 1 : 0,
     transition:     'opacity 0.2s ease, transform 0.2s ease',
-    boxShadow:      '0 2px 8px rgba(0,0,0,0.15)',
     pointerEvents:  visible ? 'auto' as const : 'none' as const,
   }),
 
   arrowIcon: {
-    fontSize:   10,
-    color:      '#000',
+    fontSize:   16,
+    color:      '#fff',
     fontWeight: 700,
     lineHeight: 1,
     userSelect: 'none' as const,
   } as React.CSSProperties,
 
-  info: {
-    paddingTop:  9,
-    paddingLeft: 6,
-    paddingRight:6,
-    minHeight:   52,
+  quickViewFab: {
+    position:       'absolute' as const,
+    bottom:         10,
+    right:          10,
+    width:          34,
+    height:         34,
+    borderRadius:   '50%',
+    background:     '#fff',
+    border:         'none',
+    cursor:         'pointer',
+    display:        'flex',
+    alignItems:     'center',
+    justifyContent: 'center',
+    zIndex:         4,
+    boxShadow:      '0 2px 8px rgba(0,0,0,0.18)',
+    transition:     'transform 0.2s ease, background 0.2s ease',
   } as React.CSSProperties,
 
-  nameRow: {
+  quickViewFabIcon: {
+    fontSize:   18,
+    color:      '#0A0A0A',
+    fontWeight: 400,
+    lineHeight: 1,
+    userSelect: 'none' as const,
+  } as React.CSSProperties,
+
+  info: {
     display:        'flex',
-    justifyContent: 'space-between',
-    alignItems:     'baseline',
-    gap:            6,
+    flexDirection:  'column' as const,
+    gap:            '3px',
+    padding:        '0',
   } as React.CSSProperties,
 
   name: {
     fontFamily:    "'DM Sans', sans-serif",
-    fontSize:      12,
+    fontSize:      13,
     fontWeight:    500,
-    letterSpacing: '0.2px',
+    letterSpacing: '0.3px',
     color:         '#0A0A0A',
-    lineHeight:    1.35,
+    lineHeight:    1.4,
     overflow:      'hidden' as const,
     textOverflow:  'ellipsis' as const,
     whiteSpace:    'nowrap' as const,
-    flex:          1,
-    minWidth:      0,
   } as React.CSSProperties,
 
   priceWrap: {
     display:       'flex',
-    alignItems:    'baseline',
-    gap:           6,
-    flexShrink:    0,
+    alignItems:    'center',
+    gap:           8,
     whiteSpace:    'nowrap' as const,
+    flexWrap:      'wrap' as const,
   } as React.CSSProperties,
 
   compareAt: {
     fontFamily:    "'DM Sans', sans-serif",
-    fontSize:      11,
+    fontSize:      12,
     fontWeight:    400,
     color:         '#aaa',
-    textDecoration:'line-through' as const,
+    textDecoration: 'line-through' as const,
     letterSpacing: '0.1px',
   } as React.CSSProperties,
 
   price: {
     fontFamily:    "'DM Sans', sans-serif",
-    fontSize:      12,
-    fontWeight:    400,
+    fontSize:      13,
+    fontWeight:    500,
     color:         '#0A0A0A',
     letterSpacing: '0.1px',
-    whiteSpace:    'nowrap' as const,
-    flexShrink:    0,
   } as React.CSSProperties,
 
   priceSale: {
     fontFamily:    "'DM Sans', sans-serif",
-    fontSize:      12,
-    fontWeight:    600,
+    fontSize:      13,
+    fontWeight:    700,
     color:         '#C2410C',
     letterSpacing: '0.1px',
-    whiteSpace:    'nowrap' as const,
-    flexShrink:    0,
-  } as React.CSSProperties,
-
-  meta: {
-    fontFamily:    "'DM Sans', sans-serif",
-    fontSize:      10,
-    fontWeight:    400,
-    letterSpacing: '1px',
-    textTransform: 'uppercase' as const,
-    color:         '#aaa',
-    marginTop:     3,
-    lineHeight:    1,
   } as React.CSSProperties,
 };
 
 const SWIPE_THRESHOLD = 35;
-
-function CartIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-      <line x1="3" y1="6" x2="21" y2="6"/>
-      <path d="M16 10a4 4 0 01-8 0"/>
-    </svg>
-  );
-}
 
 export default function ProductCard({
   product, inCart, inWishlist, isAdmin, onCartToggle, onWishlistToggle, comparePrice,
@@ -326,7 +258,7 @@ export default function ProductCard({
     ? (product as any).images
     : product.image_url
       ? [product.image_url]
-      : ['https://placehold.co/400x480/EFEFEF/bbb?text=No+Image'];
+      : ['https://placehold.co/500x500/EFEFEF/bbb?text=No+Image'];
 
   const count = images.length;
 
@@ -334,31 +266,11 @@ export default function ProductCard({
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [activeIdx,     setActiveIdx]     = useState(0);
   const [dragOffset,    setDragOffset]    = useState(0);
-  // FIX: isTouch drives layout decisions (hide arrows on touch), but NOT overlay visibility.
-  // tapped tracks a short-lived "active" state after a tap, mirroring hover on desktop.
   const [isTouch,       setIsTouch]       = useState(false);
-  const [tapped,        setTapped]        = useState(false);
-  const tapTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    // Detect touch after mount to avoid SSR mismatches
     setIsTouch(isTouchDevice());
   }, []);
-
-  // On touch: show overlay briefly after a tap, then hide (mimics hover intent)
-  const handleCardTouchStart = useCallback(() => {
-    if (!isTouch) return;
-    setTapped(true);
-    if (tapTimer.current) window.clearTimeout(tapTimer.current);
-    tapTimer.current = window.setTimeout(() => setTapped(false), 2500);
-  }, [isTouch]);
-
-  useEffect(() => () => {
-    if (tapTimer.current) window.clearTimeout(tapTimer.current);
-  }, []);
-
-  // showOverlayUI: on desktop = hovered; on touch = tapped (not always-on)
-  const showOverlayUI = isTouch ? tapped : hovered;
 
   const dragging = useRef(false);
   const startX   = useRef(0);
@@ -421,9 +333,6 @@ export default function ProductCard({
   const isNew        = (product as any).created_at &&
     Date.now() - new Date((product as any).created_at).getTime() < 7 * 24 * 60 * 60 * 1000;
   const showLowStock = stock > 0 && stock <= 5;
-
-  // FIX: comparePrice is the ORIGINAL (higher) price; product.price is the sale (lower) price.
-  // hasDiscount is true when comparePrice > product.price.
   const hasDiscount = comparePrice != null && Number(comparePrice) > Number(product.price);
 
   return (
@@ -432,40 +341,41 @@ export default function ProductCard({
         style={S.card}
         onMouseEnter={() => !isTouch && setHovered(true)}
         onMouseLeave={onMouseLeaveCard}
-        onTouchStart={handleCardTouchStart}
       >
-        <div style={S.imgOuter}>
-          <Link
-            to={`/product/${product.id}`}
-            style={S.imgInner}
-            aria-label={product.name}
-            onClickCapture={onClickCapture}
-            onMouseDown={onMouseDown}
-            onMouseMove={onMouseMove}
-            onMouseUp={onMouseUp}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-          >
-            <div style={S.track(activeIdx, isDragging, dragOffset, count)}>
-              {images.map((src: string, i: number) => (
-                <div key={i} style={S.slide(count)}>
-                  <img
-                    src={toCardImage(src)}
-                    alt={i === 0 ? product.name : `${product.name} view ${i + 1}`}
-                    style={S.img()}
-                    draggable={false}
-                    onError={e => {
-                      (e.target as HTMLImageElement).src =
-                        'https://placehold.co/400x480/EFEFEF/bbb?text=No+Image';
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
+        <div style={S.imgContainer}>
+          <div style={S.imgOuter}>
+            <Link
+              to={`/product/${product.id}`}
+              style={{ display: 'block', width: '100%', height: '100%', overflow: 'hidden', border: 'none' }}
+              aria-label={product.name}
+              onClickCapture={onClickCapture}
+              onMouseDown={onMouseDown}
+              onMouseMove={onMouseMove}
+              onMouseUp={onMouseUp}
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+            >
+              <div style={S.track(activeIdx, isDragging, dragOffset, count)}>
+                {images.map((src: string, i: number) => (
+                  <div key={i} style={S.slide(count)}>
+                    <img
+                      src={toCardImage(src)}
+                      alt={i === 0 ? product.name : `${product.name} view ${i + 1}`}
+                      style={S.img()}
+                      draggable={false}
+                      onError={e => {
+                        (e.target as HTMLImageElement).src =
+                          'https://placehold.co/500x500/EFEFEF/bbb?text=No+Image';
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </Link>
 
-            {isNew        && <div style={S.newBadge}>New</div>}
-            {showLowStock && !isNew && <div style={S.stockBadge}>Only {stock} left</div>}
+            {isNew && <div style={S.badge}>New</div>}
+            {showLowStock && !isNew && <div style={{ ...S.badge, background: '#C2410C' }}>Only {stock} left</div>}
 
             {count > 1 && (
               <div style={S.dotsBar(isTouch || hovered || isDragging)}>
@@ -483,14 +393,15 @@ export default function ProductCard({
 
             {!isAdmin && stock > 0 && (
               <button
-                style={S.quickView(showOverlayUI)}
+                style={S.quickViewFab}
                 onClick={e => { e.preventDefault(); e.stopPropagation(); setQuickViewOpen(true); }}
                 onTouchEnd={e => { e.preventDefault(); e.stopPropagation(); setQuickViewOpen(true); }}
+                aria-label="Quick view"
               >
-                Quick View
+                <span style={S.quickViewFabIcon}>+</span>
               </button>
             )}
-          </Link>
+          </div>
 
           {count > 1 && !isTouch && (
             <>
@@ -498,36 +409,19 @@ export default function ProductCard({
               <button style={S.arrowBtn('right', hovered && activeIdx < count - 1)} onClick={next} aria-label="Next image"><span style={S.arrowIcon}>›</span></button>
             </>
           )}
-
-          {!isAdmin && stock > 0 && (
-            <button
-              style={S.actionBtn(showOverlayUI, inCart)}
-              onClick={e => { e.preventDefault(); e.stopPropagation(); setQuickViewOpen(true); }}
-              onTouchEnd={e => { e.preventDefault(); e.stopPropagation(); setQuickViewOpen(true); }}
-              aria-label={inCart ? 'View in bag' : 'Quick add'}
-            >
-              {inCart ? <CartIcon /> : (
-                <span style={{ fontSize: 20, lineHeight: 1, color: '#000', fontWeight: 300, userSelect: 'none', marginTop: -1 }}>+</span>
-              )}
-            </button>
-          )}
         </div>
 
-        <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', display: 'block' }}>
+        <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', color: 'inherit', border: 'none', display: 'block' }}>
           <div style={S.info}>
-            <div style={S.nameRow}>
-              <span style={S.name}>{product.name}</span>
-              <span style={S.priceWrap}>
-                {/* comparePrice = original full price (slashed); product.price = sale price (active) */}
-                {hasDiscount && (
-                  <span style={S.compareAt}>KSh {Number(comparePrice).toLocaleString()}</span>
-                )}
-                <span style={hasDiscount ? S.priceSale : S.price}>
-                  KSh {Number(product.price).toLocaleString()}
-                </span>
+            <div style={S.name}>{product.name}</div>
+            <div style={S.priceWrap}>
+              {hasDiscount && (
+                <span style={S.compareAt}>KSh {Number(comparePrice).toLocaleString()}</span>
+              )}
+              <span style={hasDiscount ? S.priceSale : S.price}>
+                KSh {Number(product.price).toLocaleString()}
               </span>
             </div>
-
           </div>
         </Link>
       </div>
@@ -541,7 +435,7 @@ export default function ProductCard({
           onCartToggle={onCartToggle}
           onWishlistToggle={onWishlistToggle}
           onClose={() => setQuickViewOpen(false)}
-          salePrice={comparePrice != null ? Number(comparePrice) : null}
+          salePrice={comparePrice != null ? Number(comparePrice) : undefined}
         />
       )}
     </>

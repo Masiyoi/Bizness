@@ -1,9 +1,7 @@
 // src/components/home/ReviewSection.tsx
 import { useNavigate } from 'react-router-dom';
-import { useRef } from 'react';
 import { AVATAR_COLORS, getInitials } from '../../constants/theme';
 import type { HomepageReview } from '../../constants/theme';
-import Ornament from '../ui/Ornament';
 
 interface ReviewSectionProps {
   reviews: HomepageReview[];
@@ -13,49 +11,32 @@ interface ReviewSectionProps {
 
 export default function ReviewSection({ reviews, loading, isAdmin }: ReviewSectionProps) {
   const navigate = useNavigate();
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const scroll = (dir: 'left' | 'right') => {
-    if (!scrollRef.current) return;
-    scrollRef.current.scrollBy({
-      left: dir === 'left' ? -320 : 320,
-      behavior: 'smooth',
-    });
-  };
 
   return (
     <section className="px-[5%] py-[clamp(40px,6vw,72px)] bg-white border-t border-b border-cream-deep">
       <div className="max-w-content mx-auto">
 
         {/* ── Header ── */}
-        <div className="flex justify-between items-end mb-[clamp(24px,4vw,40px)] flex-wrap gap-3">
-          <div>
-            <Ornament label="Verified Buyers" />
-            <h2 className="font-serif font-bold text-navy mt-1" style={{ fontSize: 'clamp(20px,3vw,28px)' }}>
-              What Our Customers Say
-            </h2>
+        <div className="relative flex flex-col items-center text-center mb-[clamp(24px,4vw,40px)]">
 
-            {!loading && reviews.length > 0 && (
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex gap-0.5">
-                  {[1,2,3,4,5].map(s => (
-                    <span key={s} style={{ fontSize: 13, color: '#0A0A0A' }}>★</span>
-                  ))}
-                </div>
-                <span className="font-sans text-[11px] text-muted font-semibold">
-                  {reviews.length}+ verified reviews
-                </span>
+          <span className="font-sans text-[10px] font-bold tracking-[2px] uppercase text-muted">
+            We'll Let It Speak For Itself
+          </span>
+          <h2 className="font-serif font-bold text-navy mt-1" style={{ fontSize: 'clamp(20px,3vw,28px)' }}>
+            From the Family
+          </h2>
+
+          {!loading && reviews.length > 0 && (
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <div className="flex gap-0.5">
+                {[1,2,3,4,5].map(s => (
+                  <span key={s} style={{ fontSize: 13, color: '#0A0A0A' }}>★</span>
+                ))}
               </div>
-            )}
-          </div>
-
-          {!isAdmin && (
-            <button
-              onClick={() => navigate('/reviews')}
-              className="font-sans text-[10px] font-bold tracking-[2px] uppercase bg-transparent border-[1.5px] border-cream-deep text-navy rounded-lg px-5 py-2.5 cursor-pointer transition-all duration-200 shrink-0 hover:border-black hover:text-black"
-            >
-              My Reviews
-            </button>
+              <span className="font-sans text-[11px] text-muted font-semibold">
+                {reviews.length}+ verified reviews
+              </span>
+            </div>
           )}
         </div>
 
@@ -86,133 +67,119 @@ export default function ReviewSection({ reviews, loading, isAdmin }: ReviewSecti
           </div>
         )}
 
-        {/* ── Horizontal Scroll Reviews ── */}
-        {!loading && reviews.length > 0 && (
-          <div className="relative">
+        {/* ── Vertical Sliding Review Wall (Generation-style, 3 cols desktop / 2 mobile) ── */}
+        {!loading && reviews.length > 0 && (() => {
+          const COLS = 3;
+          const columns: HomepageReview[][] = Array.from({ length: COLS }, () => []);
+          reviews.forEach((r, i) => columns[i % COLS].push(r));
+          const speeds = [9, 12, 7];
 
-            {/* Arrows */}
-            <button
-              onClick={() => scroll('left')}
-              className="hidden md:flex items-center justify-center absolute left-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white border border-cream-deep shadow hover:border-black hover:text-black"
-            >
-              ‹
-            </button>
-            <button
-              onClick={() => scroll('right')}
-              className="hidden md:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white border border-cream-deep shadow hover:border-black hover:text-black"
-            >
-              ›
-            </button>
-
+          return (
             <div
-              ref={scrollRef}
-              className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-hide"
+              className="relative overflow-hidden"
+              style={{
+                height: 'clamp(420px, 55vw, 520px)',
+                maskImage: 'linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
+              }}
             >
-              {reviews.map((review, idx) => {
-                const initials  = getInitials(review.full_name);
-                const avatarBg  = AVATAR_COLORS[review.id % AVATAR_COLORS.length];
-                const nameParts = review.full_name.split(' ');
-                const displayName = nameParts[0] + (nameParts[1] ? ` ${nameParts[1][0]}.` : '');
+              <style>{`
+                @keyframes lp-col-scroll {
+                  from { transform: translateY(-50%); }
+                  to   { transform: translateY(0); }
+                }
+              `}</style>
 
-                return (
-                  <div
-                    key={review.id}
-                    onClick={() => navigate(`/product/${review.product_id}`)}
-                    className="group min-w-[280px] max-w-[320px] snap-start bg-white rounded-[16px] overflow-hidden border-[1.5px] border-cream-deep cursor-pointer transition-all duration-200 hover:border-black hover:-translate-y-[3px] flex flex-col relative"
-                    style={{ animationDelay: `${idx * 0.05}s` }}
-                  >
-                    {/* Product strip — now black instead of navy */}
-                    <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-[#0A0A0A]">
-                      <img
-                        src={review.product_image ?? `https://placehold.co/40x40/0A0A0A/ffffff?text=LP`}
-                        alt={review.product_name}
-                        onError={e => {
-                          (e.target as HTMLImageElement).src =
-                            `https://placehold.co/40x40/0A0A0A/ffffff?text=LP`;
-                        }}
-                        className="w-10 h-10 rounded-lg object-cover shrink-0 border-2 border-white/20"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-sans text-[11px] font-bold text-white truncate">
-                          {review.product_name}
-                        </div>
-                        {review.category && (
-                          <div className="font-sans text-[9px] font-semibold text-white/50 uppercase tracking-[1.5px] mt-0.5">
-                            {review.category}
-                          </div>
-                        )}
-                      </div>
-                      <span className="font-sans text-[10px] font-bold text-white/70 tracking-[1px] opacity-0 group-hover:opacity-100 transition-opacity">
-                        View →
-                      </span>
-                    </div>
+              <div className="flex gap-4 h-full">
+                {columns.map((colReviews, colIdx) => {
+                  if (colReviews.length === 0) return null;
+                  const doubled = [...colReviews, ...colReviews];
 
-                    {/* Body */}
-                    <div className="p-4 flex-1 flex flex-col gap-2.5">
-                      {/* Decorative quote mark — now a faint black */}
-                      <div className="absolute top-[52px] right-3 font-serif text-[48px] text-black/8 select-none">
-                        "
-                      </div>
-
-                      {/* Stars + date */}
-                      <div className="flex justify-between items-center">
-                        <div className="flex gap-0.5">
-                          {[1,2,3,4,5].map(s => (
-                            <span
-                              key={s}
-                              style={{
-                                fontSize: 12,
-                                color: s <= review.rating ? '#0A0A0A' : '#D1D5DB',
-                              }}
-                            >
-                              ★
-                            </span>
-                          ))}
-                        </div>
-                        <span className="font-sans text-[10px] text-muted">
-                          {new Date(review.created_at).toLocaleDateString('en-KE', {
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </span>
-                      </div>
-
-                      {/* Comment */}
-                      <p
-                        className="font-sans text-[12px] text-[#3A3A4A] leading-[1.85] flex-1 overflow-hidden"
-                        style={{
-                          display: '-webkit-box',
-                          WebkitLineClamp: 4,
-                          WebkitBoxOrient: 'vertical' as any,
-                        }}
+                  return (
+                    <div
+                      key={colIdx}
+                      className={`flex-1 min-w-0 overflow-hidden ${colIdx === 2 ? 'hidden md:block' : ''}`}
+                    >
+                      <div
+                        className="flex flex-col gap-3"
+                        style={{ animation: `lp-col-scroll ${speeds[colIdx % speeds.length]}s linear infinite` }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.animationPlayState = 'paused'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.animationPlayState = 'running'; }}
                       >
-                        {review.comment}
-                      </p>
+                        {doubled.map((review, idx) => {
+                          const initials  = getInitials(review.full_name);
+                          const avatarBg  = AVATAR_COLORS[review.id % AVATAR_COLORS.length];
+                          const nameParts = review.full_name.split(' ');
+                          const displayName = nameParts[0] + (nameParts[1] ? ` ${nameParts[1][0]}.` : '');
 
-                      {/* Reviewer */}
-                      <div className="flex items-center gap-2.5 pt-2.5 border-t border-cream-deep mt-auto">
-                        <div
-                          className="w-[34px] h-[34px] rounded-full flex items-center justify-center border-2 border-cream-deep"
-                          style={{ background: avatarBg }}
-                        >
-                          <span className="text-white text-[11px] font-extrabold">{initials}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-sans text-[12px] font-bold text-navy truncate">
-                            {displayName}
-                          </div>
-                          <span className="text-[9px] font-bold text-[#3A3A3A] bg-[#F0F0F0] border border-[#D1D5DB] rounded-full px-2 py-0.5 mt-0.5 inline-flex items-center gap-1">
-                            ✓ Verified purchase
-                          </span>
-                        </div>
+                          return (
+                            <div
+                              key={`${review.id}-${colIdx}-${idx}`}
+                              onClick={() => navigate(`/product/${review.product_id}`)}
+                              className="group w-full max-w-[210px] mx-auto shrink-0 bg-white rounded-[12px] overflow-hidden border border-cream-deep cursor-pointer transition-all duration-200 hover:border-black flex flex-col relative"
+                            >
+                              {/* Product image — large, centered, top */}
+                              <div className="relative w-full h-[140px] bg-[#F5F5F5] overflow-hidden">
+                                <img
+                                  src={review.product_image ?? `https://placehold.co/400x400/0A0A0A/ffffff?text=LP`}
+                                  alt={review.product_name}
+                                  onError={e => {
+                                    (e.target as HTMLImageElement).src =
+                                      `https://placehold.co/400x400/0A0A0A/ffffff?text=LP`;
+                                  }}
+                                  className="w-full h-full object-cover"
+                                />
+                                <span className="absolute top-2.5 right-2.5 bg-white/90 backdrop-blur-sm text-[9px] font-bold text-[#0A0A0A] rounded-full px-2.5 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  View →
+                                </span>
+                              </div>
+
+                              {/* Rating + name — centered, under image */}
+                              <div className="flex flex-col items-center text-center gap-1 px-3 pt-2.5">
+                                <div className="flex gap-0.5">
+                                  {[1,2,3,4,5].map(s => (
+                                    <span
+                                      key={s}
+                                      style={{
+                                        fontSize: 11,
+                                        color: s <= review.rating ? '#0A0A0A' : '#D1D5DB',
+                                      }}
+                                    >
+                                      ★
+                                    </span>
+                                  ))}
+                                </div>
+                                <div className="font-sans text-[11px] font-bold text-navy">
+                                  {displayName}
+                                </div>
+                                <span className="text-[9px] font-bold text-[#3A3A3A] bg-[#F0F0F0] border border-[#D1D5DB] rounded-full px-2 py-0.5 inline-flex items-center gap-1">
+                                  ✓ Verified purchase
+                                </span>
+                              </div>
+
+                              {/* Review text — bottom */}
+                              <div className="px-3 pb-3 pt-2">
+                                <p className="font-sans text-[10.5px] text-[#3A3A4A] leading-[1.6] text-center line-clamp-3">
+                                  {review.comment}
+                                </p>
+                                <div className="font-sans text-[9px] text-muted text-center mt-1.5 truncate">
+                                  {new Date(review.created_at).toLocaleDateString('en-KE', {
+                                    month: 'short',
+                                    year: 'numeric',
+                                  })} · {review.product_name}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
       </div>
     </section>
