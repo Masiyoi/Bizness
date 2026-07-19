@@ -5,12 +5,12 @@ import axios from 'axios';
 import Navbar       from '../components/common/Navbar';
 import Footer       from '../components/common/Footer';
 
-import mpesaLogo from '../../assets/M-PESA_LOGO-01.svg';
-import airtelLogo from '../../assets/Airtel_logo.svg';
-import visaLogo from '../../assets/Visa.png';
-import mastercardLogo from '../../assets/MasterCard-Logo.svg';
-import applePayLogo from '../../assets/Apple_Pay_logo.svg';
-import googlePayLogo from '../../assets/Google_Pay_Logo.svg';
+import mpesaLogo from '../assets/M-PESA_LOGO-01.svg';
+import airtelLogo from '../assets/Airtel_logo.svg';
+import visaLogo from '../assets/Visa.png';
+import mastercardLogo from '../assets/MasterCard-Logo.svg';
+import applePayLogo from '../assets/Apple_Pay_logo.svg';
+import googlePayLogo from '../assets/Google_Pay_Logo.svg';
 
 interface CartItem {
   id: number;

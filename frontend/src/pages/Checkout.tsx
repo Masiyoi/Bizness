@@ -4,9 +4,9 @@ import axios from 'axios';
 import Footer from '../components/common/Footer';
 
 // ── Payment logos ────────────────────────────────────────────────
-import mpesaLogo from '../../assets/M-PESA_LOGO-01.svg';
-import pesapalLogo from '../../assets/pesapal1.png';
-import secureBadge from '../../assets/securepayment.png';
+import mpesaLogo from '../assets/M-PESA_LOGO-01.svg';
+import pesapalLogo from '../assets/pesapal1.png';
+import secureBadge from '../assets/securepayment.png';
 
 interface CartItem {
   id: number;
