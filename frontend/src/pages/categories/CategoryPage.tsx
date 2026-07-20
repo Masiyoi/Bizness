@@ -39,6 +39,7 @@ export default function CategoryPage({
   const [cartIds,    setCartIds]    = useState<number[]>([]);
   const [cartCount,  setCartCount]  = useState(0);
   const [wishlist,   setWishlist]   = useState<number[]>([]);
+  const [navSpacerHeight, setNavSpacerHeight] = useState(96);
 
   // ── Fetch products ─────────────────────────────────────────────
  useEffect(() => {
@@ -117,6 +118,19 @@ const toggleWishlist = async (productId: number) => {
     setUser(null); setCartIds([]); setCartCount(0); setWishlist([]);
   };
 
+  // ── Measure real navbar height (handles the announcement banner
+  //    appearing/disappearing without leaving a gap or overlap) ──
+  useEffect(() => {
+    const measure = () => {
+      const navEl = document.querySelector('nav');
+      if (navEl) setNavSpacerHeight(navEl.getBoundingClientRect().bottom);
+    };
+    measure();
+    const t = setTimeout(measure, 400); // re-check after banner-eligibility fetch resolves
+    window.addEventListener('resize', measure);
+    return () => { clearTimeout(t); window.removeEventListener('resize', measure); };
+  }, []);
+
   // ── Sort ───────────────────────────────────────────────────────
   const sorted = [...products].sort((a, b) => {
     if (sortBy === 'price-asc')  return Number(a.price) - Number(b.price);
@@ -131,7 +145,12 @@ const toggleWishlist = async (productId: number) => {
         cartCount={cartCount}
         wishlistCount={wishlist.length}
         onLogout={handleLogout}
+        transparentOnTop={false}
       />
+
+      {/* Dynamic spacer — matches the fixed navbar's real height so
+          content never overlaps or leaves a gap under it */}
+      <div style={{ height: navSpacerHeight }} />
 
       {/* ── Hero Banner ── */}
       <div className="relative w-full h-[38vw] min-h-[200px] max-h-[420px] overflow-hidden">
@@ -213,7 +232,10 @@ const toggleWishlist = async (productId: number) => {
             <p className="font-sans text-[13px] text-muted mb-6">
               We're stocking up {categoryName} — check back soon!
             </p>
-            <button onClick={() => navigate('/')} className="btn-gold">
+            <button
+              onClick={() => navigate('/')}
+              className="font-sans text-[11px] font-semibold tracking-[2px] uppercase bg-black text-white px-8 py-3.5 hover:bg-[#222] transition-colors"
+            >
               Back to Home →
             </button>
           </div>

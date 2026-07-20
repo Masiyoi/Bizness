@@ -11,6 +11,8 @@ import ProductCard     from '../components/home/ProductCard';
 import ReviewSection   from '../components/home/ReviewSection';
 import VideoCarousel, { VIDEO_TILES } from '../components/home/VideoCarousel';
 import FlashSaleStrip from '../components/home/FlashSaleStrip';
+import CategoryBanner   from '../components/home/CategoryBanner';
+import HeadwearSection  from '../components/home/HeadwearSection';
 
 import { readUser, ANNOUNCEMENTS } from '../constants/theme';
 import WhatsAppLogo from '../assets/Whatsapplogo.jpg';
@@ -353,7 +355,10 @@ export default function Homepage() {
 
   const handleLogout = () => { setUser(null); setCartIds([]); setCartCount(0); setWishlist([]); };
 
-  const categories = ['All', ...Array.from(new Set(products.map(p => p.category).filter(Boolean))).sort() as string[]];
+  const categories = [
+    'All', 'Tops', 'Bottoms', 'Outwear', 'Heels', 'Accessories',
+    'Bags', 'Footwear', 'Sets', 'Headgear', 'Hoodies and jackets',
+  ];
 
   const selectCategory = (cat: string) => {
     setCategory(cat); setSearch(''); setPage(1);
@@ -421,6 +426,16 @@ export default function Homepage() {
       <div className="lp-video-wrap">
         <VideoCarousel tiles={topVideo} />
       </div>
+
+      <HeadwearSection
+        products={products}
+        onExplore={() => selectCategory('Headgear')}
+        cartIds={cartIds}
+        wishlist={wishlist}
+        isAdmin={user?.role === 'admin'}
+        onCartToggle={toggleCart}
+        onWishlistToggle={toggleWishlist}
+      />
 
       <Editorial onShop={selectCategory} />
 
@@ -545,13 +560,11 @@ export default function Homepage() {
           </div>
         </div>
 
-        <div className="lp-cats">
-          {categories.map(cat => (
-            <button key={cat} className={`lp-cat-btn ${activeCategory === cat ? 'active' : ''}`} onClick={() => selectCategory(cat)}>
-              {cat}
-            </button>
-          ))}
-        </div>
+        <CategoryBanner
+          categories={categories}
+          activeCategory={activeCategory}
+          onSelect={selectCategory}
+        />
 
         <div className="lp-search-wrap">
           <span className="lp-search-icon">⌕</span>

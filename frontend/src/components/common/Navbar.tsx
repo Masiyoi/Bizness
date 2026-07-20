@@ -28,6 +28,7 @@ export default function Navbar({
   const location    = useLocation();
   const menuRef     = useRef<HTMLDivElement>(null);
   const shopMenuRef = useRef<HTMLDivElement>(null);
+  const saleMenuRef  = useRef<HTMLDivElement>(null);
 
   const [user,           setUser]           = useState<User | null>(readUser);
   const [showMenu,       setShowMenu]       = useState(false);
@@ -38,6 +39,9 @@ export default function Navbar({
   const [cartCount,      setCartCount]      = useState(cartCountProp ?? 0);
   const [wishlistCount,  setWishlistCount]  = useState(wishlistCountProp ?? 0);
   const [navCategories,  setNavCategories]  = useState<string[]>(categories);
+  const [showSaleMenu,   setShowSaleMenu]   = useState(false);
+  const [mobileShopOpen, setMobileShopOpen] = useState(false);
+  const [flashProducts,  setFlashProducts]  = useState<any[]>([]);
 
   const [lang, setLang] = useState(() => {
     const match = document.cookie.match(/googtrans=\/en\/([^;]+)/);
@@ -84,6 +88,14 @@ export default function Navbar({
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
+      if (saleMenuRef.current && !saleMenuRef.current.contains(e.target as Node)) setShowSaleMenu(false);
+    };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
       if (langRef.current && !langRef.current.contains(e.target as Node)) setShowLang(false);
     };
     document.addEventListener('mousedown', h);
@@ -119,14 +131,23 @@ export default function Navbar({
   }, [user?.id]);
 
   useEffect(() => {
+    axios.get('/api/products/flash-sales?limit=20')
+      .then(r => {
+        const all = Array.isArray(r.data) ? r.data : [];
+        const shuffled = [...all].sort(() => Math.random() - 0.5);
+        setFlashProducts(shuffled.slice(0, 3));
+      })
+      .catch(() => {});
+  }, []);
+
+  const ALL_CATEGORIES = [
+    'Tops', 'Bottoms', 'Outwear', 'Heels', 'Accessories',
+    'Bags', 'Footwear', 'Sets', 'Headgear', 'Hoodies and jackets',
+  ];
+
+  useEffect(() => {
     if (categories.length > 0) { setNavCategories(categories); return; }
-    axios.get('/api/products')
-      .then(res => {
-        const cats = Array.from(
-          new Set((res.data as any[]).map((p: any) => p.category).filter(Boolean))
-        ).sort() as string[];
-        setNavCategories(cats);
-      }).catch(() => {});
+    setNavCategories(ALL_CATEGORIES);
   }, [categories.length]);
 
   const fetchCounts = useCallback(() => {
@@ -194,9 +215,10 @@ export default function Navbar({
   const go = (path: string) => { navigate(path); setShowMenu(false); setMobileMenuOpen(false); };
 
   const categorySlugMap: Record<string, string> = {
-    'Dresses': 'dresses', 'New Arrivals': 'new-arrivals', 'Sneakers': 'sneakers',
-    'Bags': 'bags', 'Best Sellers': 'best-sellers', 'Designer Wear': 'designer-wear',
-    'Shoes': 'shoes', 'Heels': 'heels',
+    'Tops': 'tops', 'Bottoms': 'bottoms', 'Outwear': 'outwear', 'Heels': 'heels',
+    'Accessories': 'accessories', 'Bags': 'bags', 'Footwear': 'footwear',
+    'Sets': 'sets', 'Headgear': 'headgear', 'Hoodies and jackets': 'hoodies-and-jackets',
+    'New Arrivals': 'new-arrivals', 'Best Sellers': 'best-sellers',
   };
 
   const goCategory = (cat: string) => {
@@ -283,6 +305,42 @@ export default function Navbar({
 
             {/* Desktop: Shop dropdown + nav links */}
             <div className="hidden md:flex items-center gap-8">
+              {/* ── Sale — first, red, dropdown previews 3 random flash-sale items ── */}
+              <div ref={saleMenuRef} style={{ position: 'relative' }}>
+                <span className="nav-link flex items-center gap-1" style={{ color: '#EF4444', fontWeight: 700 }}
+                  onClick={() => setShowSaleMenu(s => !s)}>
+                  Sale
+                  <svg width="7" height="4" viewBox="0 0 7 4" fill="none"
+                    style={{ transition: 'transform 0.2s', transform: showSaleMenu ? 'rotate(180deg)' : 'none' }}>
+                    <path d="M1 1l2.5 2L6 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </span>
+                {showSaleMenu && (
+                  <div style={{ position: 'absolute', top: 'calc(100% + 16px)', left: '50%', transform: 'translateX(-50%)', background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, padding: 14, minWidth: 260, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 200, animation: 'fadeInDown 0.15s ease' }}>
+                    <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#EF4444', marginBottom: 10 }}>🔥 Flash Sale</div>
+                    {flashProducts.length === 0 ? (
+                      <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#999', padding: '4px 2px 8px' }}>No active sales right now</div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {flashProducts.map((p: any) => (
+                          <div key={p.id} onClick={() => { navigate(`/product/${p.id}`); setShowSaleMenu(false); }} style={{ width: 76, cursor: 'pointer' }}>
+                            <div style={{ width: 76, height: 76, borderRadius: 8, overflow: 'hidden', background: '#f0f0f0', marginBottom: 5 }}>
+                              <img src={(p.images && p.images[0]) || p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                            </div>
+                            <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 600, color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                            <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, color: '#EF4444' }}>KSh {Number(p.sale_price).toLocaleString()}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <button className="mitem" style={{ marginTop: 10, justifyContent: 'center', color: '#EF4444', fontWeight: 700 }} onClick={() => { navigate('/sale'); setShowSaleMenu(false); }}>
+                      Shop All Sale →
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Shop — categories dropdown ── */}
               {navCategories.length > 0 ? (
                 <div ref={shopMenuRef} style={{ position: 'relative' }}>
                   <span className="nav-link flex items-center gap-1" style={{ color: ink }}
@@ -310,8 +368,9 @@ export default function Navbar({
               ) : (
                 <span className="nav-link" style={{ color: ink }} onClick={() => navigate('/')}>Shop</span>
               )}
+
+              {/* ── Members Club — last ── */}
               <span className="nav-link" style={{ color: ink }} onClick={() => navigate('/members-club')}>Members Club</span>
-              <span className="nav-link" style={{ color: ink }} onClick={() => navigate('/sale')}>Sale</span>
             </div>
 
             {/* Mobile: hamburger THEN lang */}
@@ -558,38 +617,76 @@ export default function Navbar({
             <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '2.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)' }}>Shop by Category</span>
           </div>
 
-          {/* ── All Products ── */}
+          {/* ── Sale — red, always shows 3 flash-sale previews below it ── */}
+          <div style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', padding: '11px 14px 14px' }}>
+            <button
+              className="mitem"
+              style={{ padding: 0, marginBottom: flashProducts.length > 0 ? 10 : 0, color: '#EF4444', fontWeight: 700 }}
+              onClick={() => go('/sale')}
+            >
+              🔥 Sale
+            </button>
+            {flashProducts.length > 0 && (
+              <div style={{ display: 'flex', gap: 8 }}>
+                {flashProducts.map((p: any) => (
+                  <div key={p.id} onClick={() => go(`/product/${p.id}`)} style={{ width: 72, cursor: 'pointer' }}>
+                    <div style={{ width: 72, height: 72, borderRadius: 8, overflow: 'hidden', background: '#f0f0f0', marginBottom: 4 }}>
+                      <img src={(p.images && p.images[0]) || p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                    </div>
+                    <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 8, fontWeight: 700, color: '#EF4444' }}>KSh {Number(p.sale_price).toLocaleString()}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ── Shop — expandable, reveals All Products + category list ── */}
           <button
             className="mitem"
-            style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', borderRadius: 0, padding: '11px 14px', fontWeight: activeCategory === 'All' ? 600 : undefined }}
-            onClick={() => goCategory('All')}
+            style={{ borderBottom: mobileShopOpen ? 'none' : '1px solid rgba(0,0,0,0.05)', borderRadius: 0, padding: '11px 14px', fontWeight: 700 }}
+            onClick={() => setMobileShopOpen(o => !o)}
           >
-            All Products {activeCategory === 'All' && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
+            Shop
+            <span style={{ marginLeft: 'auto', fontSize: 10, transition: 'transform 0.2s', transform: mobileShopOpen ? 'rotate(180deg)' : 'none' }}>▾</span>
           </button>
 
-          {/* ── Category list ── */}
-          {navCategories.map(cat => (
-            <button
-              key={cat}
-              className="mitem"
-              style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', borderRadius: 0, padding: '11px 14px', fontWeight: activeCategory === cat ? 600 : undefined }}
-              onClick={() => goCategory(cat)}
-            >
-              {cat} {activeCategory === cat && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
-            </button>
-          ))}
+          {mobileShopOpen && (
+            <div style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', paddingBottom: 4 }}>
+              <button
+                className="mitem"
+                style={{ padding: '9px 14px 9px 26px', fontWeight: activeCategory === 'All' ? 600 : undefined }}
+                onClick={() => goCategory('All')}
+              >
+                All Products {activeCategory === 'All' && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
+              </button>
+              {navCategories.map(cat => (
+                <button
+                  key={cat}
+                  className="mitem"
+                  style={{ padding: '9px 14px 9px 26px', fontWeight: activeCategory === cat ? 600 : undefined }}
+                  onClick={() => goCategory(cat)}
+                >
+                  {cat} {activeCategory === cat && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
+                </button>
+              ))}
+            </div>
+          )}
 
-          {/* ── Visual category scroller ── */}
+          {/* ── Visual category scroller — circular tiles, auto-scrolls ── */}
           {(() => {
             const CAT_IMAGES: Record<string, { img: string; label: string }> = {
-              'Dresses':       { img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=300&q=80', label: 'Dresses' },
-              'Sneakers':      { img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&q=80', label: 'Sneakers' },
-              'Bags':          { img: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=300&q=80', label: 'Bags' },
-              'Heels':         { img: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=300&q=80', label: 'Heels' },
-              'Shoes':         { img: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=300&q=80', label: 'Shoes' },
-              'New Arrivals':  { img: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=300&q=80', label: 'New In' },
-              'Best Sellers':  { img: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=300&q=80', label: 'Best Sellers' },
-              'Designer Wear': { img: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80', label: 'Designer' },
+              'Tops':                 { img: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=300&q=80', label: 'Tops' },
+              'Bottoms':              { img: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=300&q=80', label: 'Bottoms' },
+              'Outwear':              { img: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&q=80', label: 'Outwear' },
+              'Heels':                { img: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=300&q=80', label: 'Heels' },
+              'Accessories':          { img: 'https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=300&q=80', label: 'Accessories' },
+              'Bags':                 { img: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=300&q=80', label: 'Bags' },
+              'Footwear':             { img: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=300&q=80', label: 'Footwear' },
+              'Sets':                 { img: 'https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?w=300&q=80', label: 'Sets' },
+              'Headgear':             { img: 'https://images.unsplash.com/photo-1521369909029-2afed882baee?w=300&q=80', label: 'Headgear' },
+              'Hoodies and jackets':  { img: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=300&q=80', label: 'Hoodies' },
+              'New Arrivals':         { img: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=300&q=80', label: 'New In' },
+              'Best Sellers':         { img: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=300&q=80', label: 'Best Sellers' },
             };
             const tiles = [
               { slug: 'All', img: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=300&q=80', label: 'All' },
@@ -599,51 +696,7 @@ export default function Navbar({
                 label: CAT_IMAGES[cat]?.label ?? cat,
               })),
             ];
-            return (
-              <div style={{ marginTop: 14, marginBottom: 2 }}>
-                <div style={{ marginBottom: 8 }}>
-                  <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '2.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)' }}>Browse</span>
-                </div>
-                <div style={{
-                  display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8,
-                  scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' as any,
-                }}>
-                  {tiles.map(tile => (
-                    <div
-                      key={tile.slug}
-                      onClick={() => goCategory(tile.slug)}
-                      style={{
-                        flexShrink: 0, width: 80, cursor: 'pointer',
-                        outline: activeCategory === tile.slug ? '2px solid #111' : 'none',
-                        outlineOffset: 2,
-                      }}
-                    >
-                      <div style={{ width: 80, height: 96, overflow: 'hidden', position: 'relative', background: '#f0f0f0' }}>
-                        <img
-                          src={tile.img}
-                          alt={tile.label}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'brightness(0.78)' }}
-                          onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/80x96/f0f0f0/999?text=LP'; }}
-                        />
-                        <div style={{
-                          position: 'absolute', inset: 0,
-                          background: 'linear-gradient(to top, rgba(0,0,0,0.62) 0%, transparent 55%)',
-                        }} />
-                        <span style={{
-                          position: 'absolute', bottom: 6, left: 0, right: 0,
-                          textAlign: 'center',
-                          fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700,
-                          letterSpacing: '1.5px', textTransform: 'uppercase', color: '#fff',
-                          lineHeight: 1.2, padding: '0 4px',
-                        }}>
-                          {tile.label}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
+            return <CircularCategoryScroller tiles={tiles} activeCategory={activeCategory} goCategory={goCategory} />;
           })()}
 
           {/* Sign in / join for guests */}
@@ -662,5 +715,72 @@ export default function Navbar({
         </div>
       )}
     </>
+  );
+}
+
+// ── Circular, auto-scrolling category tile strip (used in mobile menu) ─────────
+function CircularCategoryScroller({ tiles, activeCategory, goCategory }: {
+  tiles: { slug: string; img: string; label: string }[];
+  activeCategory: string;
+  goCategory: (cat: string) => void;
+}) {
+  const stripRef = useRef<HTMLDivElement>(null);
+  const [paused, setPaused] = useState(false);
+  const rafId = useRef<number | null>(null);
+  const resumeTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    const step = () => {
+      const el = stripRef.current;
+      if (el && !paused) {
+        const maxScroll = el.scrollWidth - el.clientWidth;
+        if (maxScroll > 0) {
+          if (el.scrollLeft >= maxScroll - 1) el.scrollLeft = 0;
+          else el.scrollLeft += 0.5;
+        }
+      }
+      rafId.current = requestAnimationFrame(step);
+    };
+    rafId.current = requestAnimationFrame(step);
+    return () => { if (rafId.current) cancelAnimationFrame(rafId.current); };
+  }, [paused]);
+
+  const pauseAndResume = () => {
+    setPaused(true);
+    if (resumeTimer.current) window.clearTimeout(resumeTimer.current);
+    resumeTimer.current = window.setTimeout(() => setPaused(false), 1800);
+  };
+
+  return (
+    <div style={{ marginTop: 14, marginBottom: 2, padding: '0 14px 14px' }}>
+      <div style={{ marginBottom: 8 }}>
+        <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '2.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)' }}>Browse</span>
+      </div>
+      <div
+        ref={stripRef}
+        onTouchStart={pauseAndResume}
+        onMouseDown={pauseAndResume}
+        style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' as any }}
+      >
+        {tiles.map(tile => (
+          <div key={tile.slug} onClick={() => goCategory(tile.slug)} style={{ flexShrink: 0, width: 68, cursor: 'pointer', textAlign: 'center' }}>
+            <div style={{
+              width: 68, height: 68, borderRadius: '50%', overflow: 'hidden', position: 'relative', background: '#f0f0f0',
+              outline: activeCategory === tile.slug ? '2px solid #111' : 'none', outlineOffset: 3,
+            }}>
+              <img
+                src={tile.img}
+                alt={tile.label}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'brightness(0.82)' }}
+                onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/80x80/f0f0f0/999?text=LP'; }}
+              />
+            </div>
+            <span style={{ display: 'block', marginTop: 5, fontFamily: "'Jost', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: '#333' }}>
+              {tile.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

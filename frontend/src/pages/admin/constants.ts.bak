@@ -98,16 +98,12 @@ export const TRACKING_TO_STATUS: Record<string, string> = {
 // Product categories
 // ─────────────────────────────────────────────────────────────────────────────
 export const CATEGORIES = [
-  'Tops',
-  'Bottoms',
-  'Outwear',
-  'Heels',
-  'Accessories',
+  'Dresses',
+  'Designer Wear',
+  'Sneakers',
   'Bags',
-  'Footwear',
-  'Sets',
-  'Headgear',
-  'Hoodies and jackets',
+  'Shoes',
+  'Heels',
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -21,14 +21,18 @@ import ResetPassword  from './pages/ResetPassword';
 import AdminDashboard from './pages/admin/AdminDashboard';
 
 // ── Category Pages ─────────────────────────────────────────────────────────────
-import Dresses      from './pages/categories/Dresses';
-import NewArrivals  from './pages/categories/NewArrivals';
-import Sneakers     from './pages/categories/Sneakers';
-import Bags         from './pages/categories/Bags';
-import BestSellers  from './pages/categories/BestSellers';
-import DesignerWear from './pages/categories/DesignerWear';
-import Shoes        from './pages/categories/Shoes';
-import Heels        from './pages/categories/Heels';
+import Tops           from './pages/categories/Tops';
+import Bottoms        from './pages/categories/Bottoms';
+import Outwear        from './pages/categories/Outwear';
+import Heels          from './pages/categories/Heels';
+import Accessories    from './pages/categories/Accessories';
+import Bags           from './pages/categories/Bags';
+import Footwear       from './pages/categories/Footwear';
+import Sets           from './pages/categories/Sets';
+import Headgear       from './pages/categories/Headgear';
+import HoodiesJackets from './pages/categories/HoodiesJackets';
+import NewArrivals    from './pages/categories/NewArrivals';
+import BestSellers    from './pages/categories/BestSellers';
 
 // ── Components ─────────────────────────────────────────────────────────────────
 import FloatingCart from './components/common/FloatingCart';
@@ -174,14 +178,18 @@ export default function App() {
         <Route path="/product/:id" element={<ProductDetail />} />
 
         {/* ── Categories ──────────────────────────────────────────────────────── */}
-        <Route path="/categories/dresses"       element={<Dresses />} />
-        <Route path="/categories/new-arrivals"  element={<NewArrivals />} />
-        <Route path="/categories/sneakers"      element={<Sneakers />} />
-        <Route path="/categories/bags"          element={<Bags />} />
-        <Route path="/categories/best-sellers"  element={<BestSellers />} />
-        <Route path="/categories/designer-wear" element={<DesignerWear />} />
-        <Route path="/categories/shoes"         element={<Shoes />} />
-        <Route path="/categories/heels"         element={<Heels />} />
+        <Route path="/categories/tops"                element={<Tops />} />
+        <Route path="/categories/bottoms"             element={<Bottoms />} />
+        <Route path="/categories/outwear"             element={<Outwear />} />
+        <Route path="/categories/heels"               element={<Heels />} />
+        <Route path="/categories/accessories"         element={<Accessories />} />
+        <Route path="/categories/bags"                element={<Bags />} />
+        <Route path="/categories/footwear"            element={<Footwear />} />
+        <Route path="/categories/sets"                element={<Sets />} />
+        <Route path="/categories/headgear"            element={<Headgear />} />
+        <Route path="/categories/hoodies-and-jackets" element={<HoodiesJackets />} />
+        <Route path="/categories/new-arrivals"        element={<NewArrivals />} />
+        <Route path="/categories/best-sellers"        element={<BestSellers />} />
 
         {/* ── Support ─────────────────────────────────────────────────────────── */}
         <Route path="/track-order" element={<TrackOrder />} />
