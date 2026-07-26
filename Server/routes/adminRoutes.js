@@ -17,6 +17,15 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
+// Separate limit for video (bigger files); images stay small
+const uploadProductMedia = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 },
+}).fields([
+  { name: 'images', maxCount: 8 },
+  { name: 'video',  maxCount: 1 },
+]);
+
 // ── Public ────────────────────────────────────────────────────────────────────
 router.get('/products',     getProducts);
 router.get('/products/:id', getProductById);
@@ -25,8 +34,8 @@ router.get('/products/:id', getProductById);
 router.get   ('/admin/stats',                 auth, adminOnly, getStats);
 router.get   ('/admin/orders',                auth, adminOnly, getOrders);
 router.patch ('/admin/orders/:id/status',     auth, adminOnly, updateOrderStatus);
-router.post  ('/admin/products',              auth, adminOnly, upload.array('images', 8), createProduct);
-router.put   ('/admin/products/:id',          auth, adminOnly, upload.array('images', 8), updateProduct);
+router.post  ('/admin/products',              auth, adminOnly, uploadProductMedia, createProduct);
+router.put   ('/admin/products/:id',          auth, adminOnly, uploadProductMedia, updateProduct);
 router.patch ('/admin/products/:id/stock',    auth, adminOnly, updateStock);
 router.delete('/admin/products/:id',          auth, adminOnly, deleteProduct);
 router.get   ('/admin/customers',             auth, adminOnly, getCustomers);        // ← fixed

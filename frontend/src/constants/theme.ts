@@ -151,6 +151,7 @@ export interface Product {
   created_at?: string;
   sale_price?:   number | null;
   sale_ends_at?: string | null;
+  video_url: string | null;
 }
 
 export interface User {

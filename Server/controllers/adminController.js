@@ -24,6 +24,15 @@ const uploadToCloudinary = (buffer) =>
     streamifier.createReadStream(buffer).pipe(stream);
   });
 
+const uploadVideoToCloudinary = (buffer) =>
+  new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: 'bizna_products_video', resource_type: 'video' },
+      (err, result) => (err ? reject(err) : resolve(result))
+    );
+    streamifier.createReadStream(buffer).pipe(stream);
+  });
+
 // ── Save variants for a product (upsert all, delete removed) ─────────────────
 const saveVariants = async (productId, variantsJson) => {
   let variants = [];
@@ -85,9 +94,11 @@ const normaliseProduct = (p) => ({
   features:    Array.isArray(p.features) ? p.features : [],
   colors:      Array.isArray(p.colors)   ? p.colors   : [],
   sizes:       Array.isArray(p.sizes)    ? p.sizes    : [],
+  complete_the_look: Array.isArray(p.complete_the_look) ? p.complete_the_look : [],
   cost_price:  p.cost_price  ? parseFloat(p.cost_price)  : null,
   sale_price:  p.sale_price  ? parseFloat(p.sale_price)  : null,
   sale_ends_at: p.sale_ends_at ?? null,
+  video_url:   p.video_url ?? null,
 });
 
 // ── GET /api/products  (public) ───────────────────────────────────────────────
@@ -161,16 +172,26 @@ exports.createProduct = async (req, res) => {
       colors       = '[]',
       sizes        = '[]',
       variants     = '[]',
+      complete_the_look = '[]',
       sale_price   = null,
       sale_ends_at = null,
     } = req.body;
 
     if (!name || !price) return res.status(400).json({ msg: 'Name and price are required' });
 
+    const imageFiles = req.files?.images || [];
+    const videoFile  = req.files?.video?.[0] || null;
+
     let imageUrls = [];
-    if (req.files && req.files.length > 0) {
-      const uploads = await Promise.all(req.files.map(f => uploadToCloudinary(f.buffer)));
+    if (imageFiles.length > 0) {
+      const uploads = await Promise.all(imageFiles.map(f => uploadToCloudinary(f.buffer)));
       imageUrls = uploads.map(u => u.secure_url);
+    }
+
+    let videoUrl = null;
+    if (videoFile) {
+      const videoUpload = await uploadVideoToCloudinary(videoFile.buffer);
+      videoUrl = videoUpload.secure_url;
     }
 
     let parsedVariants = [];
@@ -181,11 +202,12 @@ exports.createProduct = async (req, res) => {
     const colorsJson   = toJsonString(colors);
     const sizesJson    = toJsonString(sizes);
     const imagesJson   = JSON.stringify(imageUrls);
+    const completeTheLookJson = toJsonString(complete_the_look);
 
     const result = await db.query(
       `INSERT INTO products
-         (name, price, cost_price, category, description, features, stock, images, image_url, colors, sizes, sale_price, sale_ends_at)
-       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8::jsonb, $9, $10::jsonb, $11::jsonb, $12, $13)
+         (name, price, cost_price, category, description, features, stock, images, image_url, colors, sizes, sale_price, sale_ends_at, complete_the_look, video_url)
+       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8::jsonb, $9, $10::jsonb, $11::jsonb, $12, $13, $14::jsonb, $15)
        RETURNING *`,
       [
         name,
@@ -201,6 +223,8 @@ exports.createProduct = async (req, res) => {
         sizesJson,
         sale_price   || null,
         sale_ends_at || null,
+        completeTheLookJson,
+        videoUrl,
       ]
     );
 
@@ -229,15 +253,20 @@ exports.updateProduct = async (req, res) => {
       colors         = '[]',
       sizes          = '[]',
       variants       = '[]',
+      complete_the_look = '[]',
       sale_price     = null,
       sale_ends_at   = null,
+      existingVideo  = '',
     } = req.body;
 
     const productId = req.params.id;
 
+    const imageFiles = req.files?.images || [];
+    const videoFile   = req.files?.video?.[0] || null;
+
     let newUrls = [];
-    if (req.files && req.files.length > 0) {
-      const uploads = await Promise.all(req.files.map(f => uploadToCloudinary(f.buffer)));
+    if (imageFiles.length > 0) {
+      const uploads = await Promise.all(imageFiles.map(f => uploadToCloudinary(f.buffer)));
       newUrls = uploads.map(u => u.secure_url);
     }
 
@@ -249,6 +278,13 @@ exports.updateProduct = async (req, res) => {
 
     const allImgs = [...keptImages, ...newUrls];
 
+    // Video: new upload wins; otherwise keep existingVideo if still present, else cleared
+    let videoUrl = existingVideo || null;
+    if (videoFile) {
+      const videoUpload = await uploadVideoToCloudinary(videoFile.buffer);
+      videoUrl = videoUpload.secure_url;
+    }
+
     let parsedVariants = [];
     try { parsedVariants = JSON.parse(variants); } catch { parsedVariants = []; }
     const stockValue = parsedVariants.length ? sumVariantStock(parsedVariants) : parseInt(req.body.stock) || 0;
@@ -257,6 +293,7 @@ exports.updateProduct = async (req, res) => {
     const colorsJson   = toJsonString(colors);
     const sizesJson    = toJsonString(sizes);
     const imagesJson   = JSON.stringify(allImgs);
+    const completeTheLookJson = toJsonString(complete_the_look);
 
     const result = await db.query(
       `UPDATE products
@@ -273,8 +310,10 @@ exports.updateProduct = async (req, res) => {
            sizes        = $11::jsonb,
            sale_price   = $12,
            sale_ends_at = $13,
+           complete_the_look = $14::jsonb,
+           video_url    = $15,
            updated_at   = NOW()
-       WHERE id = $14
+       WHERE id = $16
        RETURNING *`,
       [
         name,
@@ -290,6 +329,8 @@ exports.updateProduct = async (req, res) => {
         sizesJson,
         sale_price   || null,
         sale_ends_at || null,
+        completeTheLookJson,
+        videoUrl,
         productId,
       ]
     );

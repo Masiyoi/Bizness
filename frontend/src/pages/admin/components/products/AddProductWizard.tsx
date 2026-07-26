@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import type { Product } from '../../types';
 import { T, CATEGORIES, lbl, inp } from '../../constants';
@@ -219,7 +219,8 @@ const updateSku = (color: string, size: string, sku: string) => {
 
 // ── Main Wizard ───────────────────────────────────────────────────────────────
 export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps) {
-  const fileRef = useRef<HTMLInputElement>(null);
+  const fileRef  = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLInputElement>(null);
   const [step,   setStep]   = useState<1|2|3>(1);
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState('');
@@ -228,6 +229,12 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
   const [files,        setFiles]        = useState<File[]>([]);
   const [previews,     setPreviews]     = useState<string[]>([]);
   const [existingImgs, setExistingImgs] = useState<string[]>(editProduct?.images || []);
+
+  // Video (optional single product video)
+  const [videoFile,     setVideoFile]     = useState<File | null>(null);
+  const [videoPreview,  setVideoPreview]  = useState<string>('');
+  const [existingVideo, setExistingVideo] = useState<string>((editProduct as any)?.video_url || '');
+  const [videoError,    setVideoError]    = useState('');
 
   // Core fields
   const [name,        setName]        = useState(editProduct?.name        || '');
@@ -257,6 +264,25 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
   }));
 }, [editProduct]);
   const [variants, setVariants] = useState<Variant[]>(initVariants);
+
+  // Complete the Look — linked products
+  const [completeTheLook, setCompleteTheLook] = useState<number[]>(
+    Array.isArray((editProduct as any)?.complete_the_look) ? (editProduct as any).complete_the_look : []
+  );
+  const [pickerProducts, setPickerProducts] = useState<Product[]>([]);
+  const [pickerSearch,   setPickerSearch]   = useState('');
+
+  useEffect(() => {
+    axios.get('/api/products')
+      .then(res => setPickerProducts(res.data.filter((p: Product) => p.id !== editProduct?.id)))
+      .catch(() => {});
+  }, [editProduct]);
+
+  const toggleCompleteTheLook = (productId: number) => {
+    setCompleteTheLook(prev =>
+      prev.includes(productId) ? prev.filter(id => id !== productId) : [...prev, productId]
+    );
+  };
 
   const syncVariants = useCallback((newColors: string[], newSizes: string[]) => {
     setVariants(prev => {
@@ -301,6 +327,22 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
     });
   };
 
+  const MAX_VIDEO_MB = 50;
+  const addVideo = (file: File | undefined) => {
+    if (!file) return;
+    setVideoError('');
+    if (!file.type.startsWith('video/')) { setVideoError('Please select a video file.'); return; }
+    if (file.size > MAX_VIDEO_MB * 1024 * 1024) { setVideoError(`Video must be under ${MAX_VIDEO_MB}MB.`); return; }
+    setVideoFile(file);
+    setVideoPreview(URL.createObjectURL(file));
+    setExistingVideo(''); // replacing existing video
+  };
+  const removeVideo = () => {
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    setVideoFile(null);
+    setVideoPreview('');
+  };
+
   const totalImgs = existingImgs.length + previews.length;
   const step1Ok   = totalImgs > 0;
   const step2Ok   = name.trim() !== '' && Number(price) > 0;
@@ -321,10 +363,14 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
       fd.append('colors',      JSON.stringify(colors));
       fd.append('sizes',       JSON.stringify(sizes));
       fd.append('variants',    JSON.stringify(variants.filter(v => v.stock > 0 || v.sku)));
+      fd.append('complete_the_look', JSON.stringify(completeTheLook));
       if (editProduct) fd.append('existingImages', JSON.stringify(existingImgs));
       fd.append('sale_price',   isFlashSale && salePrice ? salePrice : '');
       fd.append('sale_ends_at', isFlashSale && saleEndsAt ? new Date(saleEndsAt).toISOString() : '');
       files.forEach(f => fd.append('images', f));
+      // Video: existingVideo = keep current, videoFile = new upload, both empty = removed
+      fd.append('existingVideo', existingVideo || '');
+      if (videoFile) fd.append('video', videoFile);
       const hdrs = { ...authH().headers, 'Content-Type': 'multipart/form-data' };
       if (editProduct)
         await axios.put(`/api/admin/products/${editProduct.id}`, fd, { headers: hdrs });
@@ -457,6 +503,39 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
                 </>
               )}
               <input ref={fileRef} type="file" multiple accept="image/*" style={{ display: 'none' }} onChange={e => addFiles(Array.from(e.target.files || []))}/>
+
+              {/* ── Product video (optional) ── */}
+              <div style={{ marginTop: 20 }}>
+                <label style={lbl}>Product Video <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: T.grey2, fontSize: 10, marginLeft: 4 }}>(optional, max {50}MB)</span></label>
+
+                {!existingVideo && !videoPreview && (
+                  <div onClick={() => videoRef.current?.click()}
+                    onDragOver={e => { e.preventDefault(); (e.currentTarget as HTMLDivElement).style.borderColor = T.black; }}
+                    onDragLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = T.grey3; }}
+                    onDrop={e => { e.preventDefault(); (e.currentTarget as HTMLDivElement).style.borderColor = T.grey3; addVideo(e.dataTransfer.files?.[0]); }}
+                    style={{ border: `2px dashed ${T.grey3}`, borderRadius: 12, padding: '24px', textAlign: 'center', cursor: 'pointer', background: T.grey5 }}
+                  >
+                    <div style={{ fontSize: 26, marginBottom: 8 }}>🎬</div>
+                    <div style={{ fontFamily: 'Jost,sans-serif', fontWeight: 700, fontSize: 13, color: T.black, marginBottom: 4 }}>Drop a video here or click to browse</div>
+                    <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: T.grey1 }}>MP4, MOV, WebM</div>
+                  </div>
+                )}
+
+                {(existingVideo || videoPreview) && (
+                  <div style={{ position: 'relative', width: '100%', borderRadius: 12, overflow: 'hidden', background: '#000' }}>
+                    <video src={videoPreview || existingVideo} controls style={{ width: '100%', maxHeight: 220, display: 'block' }}/>
+                    <button onClick={() => { if (videoPreview) removeVideo(); else setExistingVideo(''); }}
+                      style={{ position: 'absolute', top: 8, right: 8, width: 26, height: 26, borderRadius: '50%', background: '#DC2626', color: T.white, border: `2px solid ${T.white}`, cursor: 'pointer', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                    {videoPreview && <div style={{ position: 'absolute', bottom: 8, left: 8, background: '#166534', color: T.white, fontSize: 9, fontWeight: 700, fontFamily: 'Jost,sans-serif', padding: '2px 7px', borderRadius: 4 }}>NEW</div>}
+                  </div>
+                )}
+
+                {videoError && (
+                  <div style={{ marginTop: 8, fontFamily: 'Jost,sans-serif', fontSize: 12, color: '#991B1B' }}>⚠ {videoError}</div>
+                )}
+
+                <input ref={videoRef} type="file" accept="video/*" style={{ display: 'none' }} onChange={e => addVideo(e.target.files?.[0])}/>
+              </div>
 
               <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
                 <button onClick={onClose} style={ghostBtn}>Cancel</button>
@@ -641,6 +720,55 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
               <div>
                 <label style={lbl}>Description <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: T.grey2, fontSize: 10, marginLeft: 4 }}>(optional)</span></label>
                 <textarea className="wz-input" placeholder="Describe what makes this product special…" value={description} onChange={e => setDescription(e.target.value)} rows={3} style={{ ...inp, resize: 'vertical', lineHeight: 1.65 }}/>
+              </div>
+
+              {/* Complete the Look */}
+              <div>
+                <label style={lbl}>Complete the Look <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: T.grey2, fontSize: 10, marginLeft: 4 }}>(optional — link products shown together on the product page)</span></label>
+                {completeTheLook.length > 0 && (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                    {completeTheLook.map(id => {
+                      const p = pickerProducts.find(pp => pp.id === id);
+                      if (!p) return null;
+                      return <TagPill key={id} label={p.name} onRemove={() => toggleCompleteTheLook(id)}/>;
+                    })}
+                  </div>
+                )}
+                <input
+                  className="wz-input"
+                  placeholder="Search products to link…"
+                  value={pickerSearch}
+                  onChange={e => setPickerSearch(e.target.value)}
+                  style={{ ...inp, marginBottom: 8 }}
+                />
+                <div style={{ maxHeight: 180, overflowY: 'auto', border: `1px solid ${T.grey3}`, borderRadius: 9, background: T.grey5 }}>
+                  {pickerProducts
+                    .filter(p => p.name.toLowerCase().includes(pickerSearch.trim().toLowerCase()))
+                    .slice(0, 30)
+                    .map(p => {
+                      const selected = completeTheLook.includes(p.id);
+                      return (
+                        <div
+                          key={p.id}
+                          onClick={() => toggleCompleteTheLook(p.id)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px',
+                            cursor: 'pointer', background: selected ? '#F0FDF4' : 'transparent',
+                            borderBottom: `1px solid ${T.grey3}`,
+                          }}
+                        >
+                          <img src={p.image_url} alt="" style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 6, flexShrink: 0, background: T.grey4 }}/>
+                          <span style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.black, flex: 1 }}>{p.name}</span>
+                          <span style={{ fontSize: 14, color: selected ? '#166534' : T.grey2 }}>{selected ? '✓' : '+'}</span>
+                        </div>
+                      );
+                    })}
+                  {pickerProducts.length === 0 && (
+                    <div style={{ padding: '12px', fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.grey1, textAlign: 'center' }}>
+                      No other products available yet.
+                    </div>
+                  )}
+                </div>
               </div>
 
               {error && (

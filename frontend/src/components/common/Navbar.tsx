@@ -2,7 +2,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation }  from 'react-router-dom';
 import axios            from 'axios';
-import { ANNOUNCEMENTS, getInitials, readUser } from '../../constants/theme';
+import { getInitials, readUser } from '../../constants/theme';
 import type { User } from '../../constants/theme';
 
 interface NavbarProps {
@@ -149,7 +149,7 @@ export default function Navbar({
   const REGULAR_BANNERS = [
     'Free shipping on orders above KSh 3,000',
     'Get 10% off after 10 orders',
-    'Earn points by referring friends to the family',
+    'Earn points by referring friends',
   ];
 
   useEffect(() => {
@@ -264,7 +264,6 @@ export default function Navbar({
 
   // ── Colour tokens ─────────────────────────────────────────────────────────
   const ink       = isTransparent ? '#fff'                  : '#111';
-  const inkFaint  = isTransparent ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.45)';
   const badgeBg   = isTransparent ? 'rgba(255,255,255,0.9)' : '#111';
   const badgeFg   = isTransparent ? '#111'                  : '#fff';
 
@@ -322,10 +321,9 @@ export default function Navbar({
       {/* ── Main navbar ── */}
       <nav style={{
         position: 'fixed', top: 32, left: 0, right: 0, zIndex: 100,
-        transition: 'top 0.3s ease',
         background: isTransparent ? 'transparent' : (mobileMenuOpen ? 'rgba(255,255,255,0.28)' : '#fff'),
         borderBottom: isTransparent ? 'none' : (mobileMenuOpen ? '1px solid rgba(255,255,255,0.25)' : '1px solid rgba(0,0,0,0.09)'),
-        transition: 'background 0.4s ease, border-color 0.4s ease',
+        transition: 'top 0.3s ease, background 0.4s ease, border-color 0.4s ease',
         backdropFilter: isTransparent ? 'none' : (mobileMenuOpen ? 'blur(20px) saturate(180%)' : 'blur(12px)'),
         WebkitBackdropFilter: isTransparent ? 'none' : (mobileMenuOpen ? 'blur(20px) saturate(180%)' : 'blur(12px)') as any,
       }}>

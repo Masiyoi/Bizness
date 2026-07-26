@@ -16,8 +16,10 @@ const normaliseProduct = (p) => ({
   features: parseJson(p.features),
   colors:   parseJson(p.colors),
   sizes:    parseJson(p.sizes),
+  complete_the_look: parseJson(p.complete_the_look),
   sale_price:   p.sale_price   ? parseFloat(p.sale_price)  : null,
   sale_ends_at: p.sale_ends_at ?? null,
+  video_url:    p.video_url ?? null,
 });
 
 // ── GET /api/products  (public) ───────────────────────────────────────────────

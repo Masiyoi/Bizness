@@ -376,6 +376,11 @@ export default function ProductCard({
 
             {isNew && <div style={S.badge}>New</div>}
             {showLowStock && !isNew && <div style={{ ...S.badge, background: '#C2410C' }}>Only {stock} left</div>}
+            {(product as any).video_url && (
+              <div style={{ ...S.badge, left: 'auto', right: 12, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ fontSize: 8 }}>▶</span> Video
+              </div>
+            )}
 
             {count > 1 && (
               <div style={S.dotsBar(isTouch || hovered || isDragging)}>
