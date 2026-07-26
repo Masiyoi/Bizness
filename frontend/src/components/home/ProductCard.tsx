@@ -24,11 +24,14 @@ const S = {
     position:      'relative' as const,
     background:    'transparent',
     width:         '100%',
+    maxWidth:      '100%',
+    boxSizing:     'border-box' as const,
     display:       'flex',
     flexDirection: 'column' as const,
     gap:           '8px',
     padding:       '0',
     minWidth:      0,
+    overflow:      'hidden' as const,
   } as React.CSSProperties,
 
   imgContainer: {
@@ -203,15 +206,20 @@ const S = {
   } as React.CSSProperties,
 
   name: {
-    fontFamily:    "'DM Sans', sans-serif",
-    fontSize:      13,
-    fontWeight:    500,
-    letterSpacing: '0.3px',
-    color:         '#0A0A0A',
-    lineHeight:    1.4,
-    overflow:      'hidden' as const,
-    textOverflow:  'ellipsis' as const,
-    whiteSpace:    'nowrap' as const,
+    fontFamily:     "'DM Sans', sans-serif",
+    fontSize:       13,
+    fontWeight:     500,
+    letterSpacing:  '0.3px',
+    color:          '#0A0A0A',
+    lineHeight:     1.4,
+    minWidth:       0,
+    maxWidth:       '100%',
+    overflow:       'hidden' as const,
+    whiteSpace:     'normal' as const,
+    wordBreak:      'break-word' as const,
+    display:        '-webkit-box' as const,
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical' as const,
   } as React.CSSProperties,
 
   priceWrap: {
@@ -346,6 +354,7 @@ export default function ProductCard({
           <div style={S.imgOuter}>
             <Link
               to={`/product/${product.id}`}
+              state={{ preview: product }}
               style={{ display: 'block', width: '100%', height: '100%', overflow: 'hidden', border: 'none' }}
               aria-label={product.name}
               onClickCapture={onClickCapture}
@@ -416,7 +425,7 @@ export default function ProductCard({
           )}
         </div>
 
-        <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', color: 'inherit', border: 'none', display: 'block' }}>
+        <Link to={`/product/${product.id}`} state={{ preview: product }} style={{ textDecoration: 'none', color: 'inherit', border: 'none', display: 'block' }}>
           <div style={S.info}>
             <div style={S.name}>{product.name}</div>
             <div style={S.priceWrap}>

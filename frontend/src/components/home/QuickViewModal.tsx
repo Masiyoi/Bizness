@@ -1,5 +1,6 @@
 // src/components/home/QuickViewModal.tsx
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { T, isNewProduct } from '../../constants/theme';
 import type { Product } from '../../constants/theme';
@@ -68,7 +69,7 @@ export default function QuickViewModal({
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  return (
+  return createPortal(
     <>
       <style>{`
         @keyframes qv-fade-in {
@@ -331,7 +332,8 @@ export default function QuickViewModal({
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 

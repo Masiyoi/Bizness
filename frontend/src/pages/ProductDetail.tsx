@@ -1,12 +1,22 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import viewingIcon from '../assets/adstrip/viewing.png';
+import sellingfastIcon from '../assets/adstrip/sellingfast.png';
+import addtocartIcon from '../assets/adstrip/add-to-cart.png';
+import hoursIcon from '../assets/adstrip/24-hours.png';
+import informationIcon from '../assets/adstrip/information.png';
+import orderIcon from '../assets/adstrip/orderplaced.png';
+import returnIcon from '../assets/adstrip/return.png';
+import toppickIcon from '../assets/adstrip/toppick.png';
+import deliveryIcon from '../assets/adstrip/delivery (2).png';
 
 import Navbar         from '../components/common/Navbar';
 import Footer         from '../components/common/Footer';
 import InstagramStrip from '../components/common/InstagramStrip';
 import bookmarkIcon from '../assets/bookmark.png';
 import bookmarkedIcon from '../assets/bookmarked.png';
+import zoomInIcon from '../assets/zoom-in.png';
 import ProductCard    from '../components/home/ProductCard';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -32,6 +42,8 @@ interface Product {
   colors:      string[];
   sizes:       string[];
   variants:    Variant[];
+  complete_the_look: number[];
+  video_url:   string | null;
 }
 
 interface Review {
@@ -65,14 +77,21 @@ const T = {
 };
 
 // ── Social proof messages ──────────────────────────────────────────────────────
-const SOCIAL_PROOF = [
-  '👀 3 people are viewing this right now',
-  '🔥 Selling fast — only a few left',
-  '🛍️ Someone in Nairobi just added this to cart',
-  '⚡ 12 people bought this in the last 24 hours',
-  '💬 "Exactly as described!" — recent buyer',
-  '📦 Orders placed now ship within 24 hrs',
-  '🏆 Top pick in this category this week',
+interface ProofItem {
+  icon: string | null;
+  text: string;
+}
+
+const SOCIAL_PROOF: ProofItem[] = [
+  { icon: viewingIcon, text: '3 people are viewing this right now' },
+  { icon: sellingfastIcon, text: 'Selling fast — only a few left' },
+  { icon: addtocartIcon, text: 'Someone in Nairobi just added this to cart' },
+  { icon: hoursIcon, text: '12 people bought this in the last 24 hours' },
+  { icon: informationIcon, text: '"Exactly as described!" — recent buyer' },
+  { icon: orderIcon, text: 'Orders placed now ship within 24 hrs' },
+  { icon: toppickIcon, text: 'Top pick in this category this week' },
+  { icon: returnIcon, text: 'Return policy free 3day returns' },
+  { icon: deliveryIcon, text: 'Same day delivery in Nairobi CBD' },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -108,76 +127,233 @@ function Stars({ rating, size = 13 }: { rating: number; size?: number }) {
 // stock = -1 means "selection not made yet, hide overlays"
 // stock =  0 means "genuinely sold out, show overlay"
 // stock >  0 means show low-stock badge if <= 5
-function Slideshow({ images, productName, stock }: {
-  images:      string[];
+function Slideshow({ media, productName, stock }: {
+  media:       { type: 'image' | 'video'; src: string }[];
   productName: string;
   stock:       number;
 }) {
-  const [active, setActive] = useState(0);
-  const touchStartX = useRef(0);
-  const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
+  const [active, setActive]         = useState(0);
+  const [zoomLevels, setZoomLevels] = useState<Record<number, number>>({});
+  const [zoomDir, setZoomDir]       = useState<Record<number, 1 | -1>>({});
+  const [panOffsets, setPanOffsets] = useState<Record<number, { x: number; y: number }>>({});
+  const videoRef     = useRef<HTMLVideoElement>(null);
+  const mediaBoxRef  = useRef<HTMLDivElement>(null);
+  const MAX_ZOOM  = 3;
+  const ZOOM_STEP = 0.5;
+
+  const clampPan = (x: number, y: number, scale: number) => {
+    const box = mediaBoxRef.current;
+    const w = box?.clientWidth  ?? 300;
+    const h = box?.clientHeight ?? 300;
+    const maxX = Math.max(0, ((scale - 1) * w) / 2);
+    const maxY = Math.max(0, ((scale - 1) * h) / 2);
+    return {
+      x: Math.min(maxX, Math.max(-maxX, x)),
+      y: Math.min(maxY, Math.max(-maxY, y)),
+    };
+  };
+
+  // Same button zooms in step-by-step up to MAX_ZOOM, then — on further
+  // clicks — zooms back out step-by-step instead of snapping to 1
+  const bumpZoom = (idx: number) => {
+    const current = zoomLevels[idx] ?? 1;
+    const dir     = zoomDir[idx] ?? 1;
+    let next    = current + ZOOM_STEP * dir;
+    let nextDir = dir;
+    if (next >= MAX_ZOOM) { next = MAX_ZOOM; nextDir = -1; }
+    else if (next <= 1)   { next = 1;        nextDir = 1;  }
+
+    setZoomDir(prev => ({ ...prev, [idx]: nextDir }));
+    setZoomLevels(prev => ({ ...prev, [idx]: next }));
+    setPanOffsets(prev => {
+      if (next === 1) return { ...prev, [idx]: { x: 0, y: 0 } };
+      const existing = prev[idx] ?? { x: 0, y: 0 };
+      return { ...prev, [idx]: clampPan(existing.x, existing.y, next) };
+    });
+  };
+
+  // ── Pan (drag-to-move) while zoomed in ──
+  const dragPan = useRef<{ idx: number; startX: number; startY: number; startOffX: number; startOffY: number } | null>(null);
+
+  const panStart = (idx: number, clientX: number, clientY: number) => {
+    if ((zoomLevels[idx] ?? 1) <= 1) return;
+    const existing = panOffsets[idx] ?? { x: 0, y: 0 };
+    dragPan.current = { idx, startX: clientX, startY: clientY, startOffX: existing.x, startOffY: existing.y };
+  };
+  const panMove = (clientX: number, clientY: number) => {
+    const d = dragPan.current;
+    if (!d) return;
+    const scale = zoomLevels[d.idx] ?? 1;
+    const next  = clampPan(d.startOffX + (clientX - d.startX), d.startOffY + (clientY - d.startY), scale);
+    setPanOffsets(prev => ({ ...prev, [d.idx]: next }));
+  };
+  const panEnd = () => { dragPan.current = null; };
+
+  const touchStartX  = useRef(0);
+  const onTouchStart = (e: React.TouchEvent) => {
+    if ((zoomLevels[active] ?? 1) > 1) { panStart(active, e.touches[0].clientX, e.touches[0].clientY); return; }
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const onTouchMoveMain = (e: React.TouchEvent) => {
+    if (dragPan.current) {
+      // Stop the page/viewport from scrolling or gesture-panning while the
+      // user is actively dragging the zoomed image around with a finger
+      e.preventDefault();
+      e.stopPropagation();
+      panMove(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  };
   const onTouchEnd   = (e: React.TouchEvent) => {
+    if (dragPan.current) { panEnd(); return; }
     const dx = e.changedTouches[0].clientX - touchStartX.current;
     if (Math.abs(dx) < 40) return;
-    if (dx < 0) setActive(a => (a + 1) % images.length);
-    else        setActive(a => (a - 1 + images.length) % images.length);
+    if (dx < 0) setActive(a => (a + 1) % media.length);
+    else        setActive(a => (a - 1 + media.length) % media.length);
   };
+
+  const onMouseDownMain = (e: React.MouseEvent) => { panStart(active, e.clientX, e.clientY); };
+  const onMouseMoveMain = (e: React.MouseEvent) => { panMove(e.clientX, e.clientY); };
+  const onMouseUpMain   = () => panEnd();
+
+  const getPoster = (videoUrl: string) => videoUrl.replace(/\.(mp4|mov|webm|mkv|m4v)(\?.*)?$/i, '.jpg');
+
+  // Play the video only while its slide is the active one; pause the moment the user scrolls away
+  useEffect(() => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    if (media[active]?.type === 'video') {
+      vid.play().catch(() => {});
+    } else {
+      vid.pause();
+    }
+  }, [active, media]);
+
+  useEffect(() => {
+    setZoomLevels(prev => (prev[active] ? { ...prev, [active]: 1 } : prev));
+    setZoomDir(prev => (prev[active] ? { ...prev, [active]: 1 } : prev));
+    setPanOffsets(prev => (prev[active] ? { ...prev, [active]: { x: 0, y: 0 } } : prev));
+  }, [active]);
 
   return (
     <div style={{ display:'flex', gap:0 }}>
       {/* ── Left vertical thumbnail strip (desktop only) ── */}
-      {images.length > 1 && (
+      {media.length > 1 && (
         <div className="lp-thumb-strip" style={{
           display:'flex', flexDirection:'column', gap:4,
           marginRight:8, flexShrink:0, width:80,
         }}>
-          {images.map((img, i) => (
+          {media.map((m, i) => (
             <div key={i} onClick={() => setActive(i)} style={{
               width:80, height:80, flexShrink:0, cursor:'pointer',
               border:`2px solid ${i === active ? '#000' : 'transparent'}`,
-              overflow:'hidden', background:'#f2f2f2',
+              overflow:'hidden', background:'#f2f2f2', position:'relative',
             }}>
-              <img src={img} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}
+              <img
+                src={m.type === 'video' ? getPoster(m.src) : m.src}
+                alt=""
+                style={{ width:'100%', height:'100%', objectFit:'cover' }}
                 onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/80x80/f2f2f2/000?text=LP'; }}
               />
+              {m.type === 'video' && (
+                <div style={{
+                  position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center',
+                  background:'rgba(0,0,0,0.25)',
+                }}>
+                  <span style={{
+                    width:22, height:22, borderRadius:'50%', background:'rgba(255,255,255,0.9)',
+                    display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:'#000',
+                  }}>▶</span>
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {/* ── Main image ── */}
+      {/* ── Main media ── */}
       <div style={{ flex:1, position:'relative' }}>
         <div
+          ref={mediaBoxRef}
           onTouchStart={onTouchStart}
+          onTouchMove={onTouchMoveMain}
           onTouchEnd={onTouchEnd}
-          style={{ overflow:'hidden', background:'#f2f2f2', lineHeight:0, aspectRatio:'1/1', position:'relative' }}
+          onMouseDown={onMouseDownMain}
+          onMouseMove={onMouseMoveMain}
+          onMouseUp={onMouseUpMain}
+          onMouseLeave={onMouseUpMain}
+          style={{
+            overflow:'hidden', background:'#f2f2f2', lineHeight:0, aspectRatio:'1/1', position:'relative',
+            cursor: (zoomLevels[active] ?? 1) > 1 ? 'grab' : 'default',
+            touchAction: (zoomLevels[active] ?? 1) > 1 ? 'none' : 'pan-y',
+          }}
         >
-          {/* Image carousel using sliding track (like ProductCard) */}
+          {/* Media carousel using sliding track (like ProductCard) */}
           <div style={{
             display:'flex',
-            width:`${images.length * 100}%`,
+            width:`${media.length * 100}%`,
             height:'100%',
-            transform:`translateX(${-active * (100 / images.length)}%)`,
+            transform:`translateX(${-active * (100 / media.length)}%)`,
             transition:'transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94)',
           }}>
-            {images.map((img, i) => (
+            {media.map((m, i) => (
               <div key={i} style={{
-                flex:`0 0 ${100 / images.length}%`,
+                flex:`0 0 ${100 / media.length}%`,
                 height:'100%',
                 position:'relative',
                 background:'#f2f2f2',
               }}>
-                <img
-                  src={img}
-                  alt={productName}
-                  style={{
-                    width:'100%',
-                    height:'100%',
-                    display:'block',
-                    objectFit:'cover',
-                  }}
-                  onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/600x600/f2f2f2/000?text=LP'; }}
-                />
+                {m.type === 'video' ? (
+                  <video
+                    ref={videoRef}
+                    src={m.src}
+                    controls
+                    playsInline
+                    muted
+                    preload="metadata"
+                    style={{ width:'100%', height:'100%', display:'block', objectFit:'cover', background:'#000' }}
+                  />
+                ) : (
+                  <>
+                    <img
+                      src={m.src}
+                      alt={productName}
+                      style={{
+                        width:'100%',
+                        height:'100%',
+                        display:'block',
+                        objectFit:'cover',
+                        transform:`scale(${zoomLevels[i] ?? 1}) translate(${(panOffsets[i]?.x ?? 0) / (zoomLevels[i] ?? 1)}px, ${(panOffsets[i]?.y ?? 0) / (zoomLevels[i] ?? 1)}px)`,
+                        transformOrigin:'center center',
+                        transition: dragPan.current ? 'none' : 'transform 0.3s ease',
+                        cursor: (zoomLevels[i] ?? 1) > 1 ? 'grab' : 'zoom-in',
+                      }}
+                      draggable={false}
+                      onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/600x600/f2f2f2/000?text=LP'; }}
+                    />
+                    <button
+                      onMouseDown={e => e.stopPropagation()}
+                      onClick={e => { e.preventDefault(); e.stopPropagation(); bumpZoom(i); }}
+                      aria-label={(zoomLevels[i] ?? 1) > 1 && (zoomDir[i] ?? 1) === -1 ? 'Zoom out' : 'Zoom in'}
+                      style={{
+                        position:'absolute', bottom:12, right:12, zIndex:3,
+                        width:34, height:34, borderRadius:'50%',
+                        background:'rgba(255,255,255,0.9)', border:'none', cursor:'pointer',
+                        display:'flex', alignItems:'center', justifyContent:'center',
+                        boxShadow:'0 2px 8px rgba(0,0,0,0.18)',
+                      }}
+                    >
+                      <img
+                        src={zoomInIcon}
+                        alt=""
+                        style={{
+                          width:18, height:18, objectFit:'contain',
+                          transform: (zoomLevels[i] ?? 1) > 1 && (zoomDir[i] ?? 1) === -1 ? 'rotate(45deg)' : 'none',
+                          transition:'transform 0.2s ease',
+                        }}
+                      />
+                    </button>
+                  </>
+                )}
               </div>
             ))}
           </div>
@@ -195,12 +371,12 @@ function Slideshow({ images, productName, stock }: {
           )}
           
           {/* ── Dot indicators ── */}
-          {images.length > 1 && (
+          {media.length > 1 && (
             <div style={{
               position:'absolute', bottom:12, left:'50%', transform:'translateX(-50%)',
               display:'flex', gap:6, zIndex:2,
             }}>
-              {images.map((_, i) => (
+              {media.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => setActive(i)}
@@ -212,7 +388,7 @@ function Slideshow({ images, productName, stock }: {
                     transition:'all 0.25s ease', padding:0,
                     boxShadow:'0 2px 4px rgba(0,0,0,0.2)',
                   }}
-                  aria-label={`View image ${i + 1}`}
+                  aria-label={`View item ${i + 1}`}
                   aria-current={i === active ? 'true' : 'false'}
                 />
               ))}
@@ -223,26 +399,37 @@ function Slideshow({ images, productName, stock }: {
 
 
         {/* Mobile thumbnail strip (replaces dot indicators) */}
-        {images.length > 1 && (
+        {media.length > 1 && (
           <div className="lp-mobile-thumbs" style={{
             display:'none !important', gap:6, marginTop:8,
             overflowX:'auto', scrollbarWidth:'none',
           }}>
-            {images.map((img, i) => (
+            {media.map((m, i) => (
               <div
                 key={i}
                 onClick={() => setActive(i)}
                 style={{
                   flexShrink:0, width:64, height:64, cursor:'pointer',
                   border:`2px solid ${i === active ? '#000' : 'transparent'}`,
-                  overflow:'hidden', background:'#f2f2f2',
+                  overflow:'hidden', background:'#f2f2f2', position:'relative',
                 }}
               >
                 <img
-                  src={img} alt=""
+                  src={m.type === 'video' ? getPoster(m.src) : m.src} alt=""
                   style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}
                   onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/64x64/f2f2f2/000?text=LP'; }}
                 />
+                {m.type === 'video' && (
+                  <div style={{
+                    position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center',
+                    background:'rgba(0,0,0,0.25)',
+                  }}>
+                    <span style={{
+                      width:18, height:18, borderRadius:'50%', background:'rgba(255,255,255,0.9)',
+                      display:'flex', alignItems:'center', justifyContent:'center', fontSize:8, color:'#000',
+                    }}>▶</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -265,6 +452,8 @@ function SocialProofBadge() {
     return () => clearInterval(cycle);
   }, []);
 
+  const item = SOCIAL_PROOF[msgIdx];
+
   return (
     <div style={{
       display:'flex', alignItems:'center', gap:10,
@@ -274,12 +463,22 @@ function SocialProofBadge() {
       transform: visible ? 'translateY(0)' : 'translateY(-4px)',
       transition:'opacity 0.35s ease, transform 0.35s ease',
     }}>
-      <div style={{
-        width:8, height:8, borderRadius:'50%', background:'#4A9A4A',
-        flexShrink:0, boxShadow:'0 0 0 3px rgba(74,154,74,0.2)', animation:'pulse 2s infinite',
-      }}/>
+      {item.icon ? (
+        <img
+          src={item.icon}
+          alt=""
+          style={{
+            width:24, height:24, flexShrink:0, objectFit:'contain',
+          }}
+        />
+      ) : (
+        <div style={{
+          width:8, height:8, borderRadius:'50%', background:'#4A9A4A',
+          flexShrink:0, boxShadow:'0 0 0 3px rgba(74,154,74,0.2)', animation:'pulse 2s infinite',
+        }}/>
+      )}
       <span style={{ fontFamily:"'Jost',sans-serif", fontSize:12, color:T.navy, fontWeight:500, lineHeight:1.4 }}>
-        {SOCIAL_PROOF[msgIdx]}
+        {item.text}
       </span>
     </div>
   );
@@ -299,8 +498,8 @@ function VariantStockBadge({ variant, hasVariants, selectionComplete, productSto
     return (
       <span style={{
         background:'transparent', border:'none',
-        color:'#888', borderRadius:0, padding:'0',
-        fontFamily:"'Inter',sans-serif", fontSize:10, fontWeight:600,
+        color:'#000', borderRadius:0, padding:'0',
+        fontFamily:"'Inter',sans-serif", fontSize:10, fontWeight:800,
         letterSpacing:'1px', textTransform:'uppercase' as const,
       }}>
         {selectedColor && hasSizeDim ? 'Select a size' : 'Select options'}
@@ -358,62 +557,157 @@ function VariantStockBadge({ variant, hasVariants, selectionComplete, productSto
   );
 }
 
-// ── Related Products ──────────────────────────────────────────────────────────
-function RelatedProducts({ category, currentId }: { category: string; currentId: number }) {
-  const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading,  setLoading]  = useState(true);
+// ── Product Carousel Section ──────────────────────────────────────────────────
+function ProductCarouselSection({ title, products, currentId }: { title: string; products: Product[]; currentId: number }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    axios.get('/api/products')
-      .then(res => {
-        const all: Product[] = res.data;
-        const others  = all.filter(p => p.id !== currentId);
-        const sameCat = others.filter(p =>
-          (p.category ?? '').trim().toLowerCase() === (category ?? '').trim().toLowerCase()
-        );
-        setProducts(sameCat.length >= 1 ? sameCat.slice(0,4) : others.slice(0,4));
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [category, currentId]);
+  if (products.length === 0) return null;
 
-  if (loading || products.length === 0) return null;
+  // Group products into chunks of 3 so each scroll-snap "page" shows 3 cards
+  const chunks: Product[][] = [];
+  for (let i = 0; i < products.length; i += 3) {
+    chunks.push(products.slice(i, i + 3));
+  }
 
   return (
-    <div style={{ marginTop:56 }}>
-      <div style={{ marginBottom:24 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
-          <div style={{ width:28, height:1, background:'#111111' }}/>
-          <span style={{
-            fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700,
-            letterSpacing:'2.5px', textTransform:'uppercase', color:'rgba(0,0,0,0.4)',
-          }}>
-            You may also like
-          </span>
-          <div style={{ flex:1, height:1, background:'#E8E8E8' }}/>
-        </div>
-        <h2 style={{
-          fontFamily:"'Jost',sans-serif", fontWeight:700,
-          fontSize:'clamp(16px,2.5vw,22px)', color:'#000000', letterSpacing:'-0.2px',
-        }}>
-          Related Products
-        </h2>
-      </div>
-
-      <div className="related-grid" style={{ display:'grid', gridTemplateColumns:'repeat(2,minmax(0,1fr))', gap:16 }}>
-        {products.map(p => (
-          <ProductCard
-            key={p.id}
-            product={p}
-            inCart={false}
-            inWishlist={false}
-            isAdmin={false}
-            onCartToggle={() => { navigate(`/product/${p.id}`); window.scrollTo({ top:0, behavior:'smooth' }); }}
-            onWishlistToggle={() => {}}
-          />
+    <div style={{ marginBottom: 16 }}>
+      <h3 style={{
+        fontFamily: "'Jost',sans-serif", fontWeight: 700,
+        fontSize: 'clamp(14px,2vw,18px)', color: '#000000',
+        marginBottom: 8, letterSpacing: '-0.2px',
+      }}>
+        {title}
+      </h3>
+      <div
+        ref={scrollRef}
+        style={{
+          display: 'flex',
+          gap: 16,
+          overflowX: 'auto',
+          scrollBehavior: 'smooth',
+          scrollSnapType: 'x mandatory',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          paddingBottom: 8,
+        }}
+        className="lp-carousel"
+      >
+        {chunks.map((chunk, ci) => (
+          <div
+            key={ci}
+            style={{
+              display: 'flex',
+              alignItems: 'stretch',
+              gap: 16,
+              flex: '0 0 100%',
+              scrollSnapAlign: 'start',
+            }}
+          >
+            {chunk.map(p => (
+              <div
+                key={p.id}
+                className="lp-carousel-item"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flex: '0 0 calc((100% - 32px) / 3)',
+                  cursor: 'pointer',
+                  position: 'relative',
+                }}
+              >
+                <ProductCard
+                  product={p}
+                  inCart={false}
+                  inWishlist={false}
+                  isAdmin={false}
+                  onCartToggle={() => {}}
+                  onWishlistToggle={() => {}}
+                />
+              </div>
+            ))}
+          </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ── Shared products cache (avoids RelatedProducts + CompleteTheLookGrid both
+//    fetching the entire /api/products catalog separately on every page load) ──
+let _allProductsCache: { data: Product[]; ts: number } | null = null;
+let _allProductsInFlight: Promise<Product[]> | null = null;
+const PRODUCTS_CACHE_TTL = 60000; // 60s
+
+function fetchAllProductsCached(): Promise<Product[]> {
+  const now = Date.now();
+  if (_allProductsCache && now - _allProductsCache.ts < PRODUCTS_CACHE_TTL) {
+    return Promise.resolve(_allProductsCache.data);
+  }
+  if (_allProductsInFlight) return _allProductsInFlight;
+  _allProductsInFlight = axios.get('/api/products')
+    .then(res => {
+      _allProductsCache = { data: res.data, ts: Date.now() };
+      _allProductsInFlight = null;
+      return res.data;
+    })
+    .catch(err => { _allProductsInFlight = null; throw err; });
+  return _allProductsInFlight;
+}
+
+// ── Related Products (Three Sections) ──────────────────────────────────────
+function RelatedProducts({ category, currentId }: { category: string; currentId: number }) {
+  const navigate = useNavigate();
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [recentlyViewed, setRecentlyViewed] = useState<number[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchAllProductsCached()
+      .then(data => { if (!cancelled) { setAllProducts(data); setLoading(false); } })
+      .catch(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('recentlyViewed');
+    const viewed = stored ? JSON.parse(stored) : [];
+    const updated = [currentId, ...viewed.filter((id: number) => id !== currentId)].slice(0, 20);
+    localStorage.setItem('recentlyViewed', JSON.stringify(updated));
+    setRecentlyViewed(updated);
+  }, [currentId]);
+
+  if (loading) return null;
+
+  const customersAlsoBought = allProducts
+    .filter(p =>
+      p.id !== currentId &&
+      (p.category ?? '').trim().toLowerCase() === (category ?? '').trim().toLowerCase()
+    )
+    .slice(0, 8);
+
+  const boughtIds = new Set(customersAlsoBought.map(p => p.id));
+  const customersAlsoViewed = allProducts
+    .filter(p =>
+      p.id !== currentId &&
+      !boughtIds.has(p.id) &&
+      (p.category ?? '').trim().toLowerCase() === (category ?? '').trim().toLowerCase()
+    )
+    .slice(0, 8);
+
+  const recentProducts = recentlyViewed
+    .filter(id => id !== currentId)
+    .slice(0, 8)
+    .map(id => allProducts.find(p => p.id === id))
+    .filter((p): p is Product => !!p);
+
+  if (customersAlsoBought.length === 0 && customersAlsoViewed.length === 0 && recentProducts.length === 0) return null;
+
+  return (
+    <div style={{ marginTop: 24 }}>
+      {customersAlsoBought.length > 0 && <ProductCarouselSection title="Customers Also Bought" products={customersAlsoBought} currentId={currentId} />}
+      {customersAlsoViewed.length > 0 && <ProductCarouselSection title="Customers Also Viewed" products={customersAlsoViewed} currentId={currentId} />}
+      {recentProducts.length > 0 && <ProductCarouselSection title="Recently Viewed" products={recentProducts} currentId={currentId} />}
     </div>
   );
 }
@@ -563,7 +857,7 @@ function ReviewsSection({ productId }: { productId: number }) {
 }
 
 // ── Accordion Row ────────────────────────────────────────────────────────────
-function AccordionRow({ label, body }: { label: string; body: string }) {
+function AccordionRow({ label, body, children }: { label: string; body?: string; children?: React.ReactNode }) {
   const [open, setOpen] = React.useState(false);
   return (
     <div>
@@ -591,28 +885,121 @@ function AccordionRow({ label, body }: { label: string; body: string }) {
       </button>
       <div style={{
         overflow:'hidden',
-        maxHeight: open ? 400 : 0,
-        transition:'max-height 0.35s ease',
+        maxHeight: open ? 2000 : 0,
+        transition:'max-height 0.4s ease',
       }}>
-        <p style={{
-          fontFamily:"'Jost',sans-serif", fontSize:13, color:'#555',
-          lineHeight:1.8, paddingBottom:18,
-        }}>
-          {body}
-        </p>
+        <div style={{ paddingBottom:18 }}>
+          {children ? children : (
+            <p style={{
+              fontFamily:"'Jost',sans-serif", fontSize:13, color:'#555',
+              lineHeight:1.8,
+            }}>
+              {body}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
+}
+
+// ── Complete the Look Grid ────────────────────────────────────────────────────
+function CompleteTheLookGrid({ ids, currentId }: { ids: number[]; currentId: number }) {
+  const navigate = useNavigate();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading,  setLoading]  = useState(true);
+
+  useEffect(() => {
+    if (!ids || ids.length === 0) { setLoading(false); return; }
+    fetchAllProductsCached()
+      .then(all => {
+        const matched = ids
+          .map(pid => all.find(p => p.id === pid))
+          .filter((p): p is Product => !!p && p.id !== currentId);
+        setProducts(matched);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [ids, currentId]);
+
+  if (loading) {
+    return (
+      <p style={{ fontFamily:"'Jost',sans-serif", fontSize:13, color:'#888' }}>
+        Loading complementary pieces…
+      </p>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <p style={{ fontFamily:"'Jost',sans-serif", fontSize:13, color:'#555', lineHeight:1.8 }}>
+        Style this piece with complementary items from our collection. Mix and match to create your signature aesthetic.
+      </p>
+    );
+  }
+
+  return (
+    <div className="related-grid" style={{ display:'grid', gridTemplateColumns:'repeat(2,minmax(0,1fr))', gap:16 }}>
+      {products.map(p => (
+        <div key={p.id} style={{ position:'relative', overflow:'hidden' }}>
+          <ProductCard
+            product={p}
+            inCart={false}
+            inWishlist={false}
+            isAdmin={false}
+            onCartToggle={() => { navigate(`/product/${p.id}`); window.scrollTo({ top:0, behavior:'smooth' }); }}
+            onWishlistToggle={() => {}}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Normalize raw API/list product shape (JSON-string fields → arrays, etc.) ──
+function normalizeProduct(raw: any): Product {
+  const p = { ...raw };
+  if (!p.images || p.images.length === 0) p.images = p.image_url ? [p.image_url] : [];
+  if (typeof p.images === 'string') p.images = JSON.parse(p.images);
+  if (typeof p.features === 'string') p.features = JSON.parse(p.features || '[]');
+  if (typeof p.colors === 'string') p.colors = JSON.parse(p.colors || '[]');
+  if (!Array.isArray(p.colors)) p.colors = [];
+  if (typeof p.sizes === 'string') p.sizes = JSON.parse(p.sizes || '[]');
+  if (!Array.isArray(p.sizes)) p.sizes = [];
+  if (typeof p.complete_the_look === 'string') p.complete_the_look = JSON.parse(p.complete_the_look || '[]');
+  if (!Array.isArray(p.complete_the_look)) p.complete_the_look = [];
+  return p;
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function ProductDetail() {
   const { id }   = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const navState = location.state as { preview?: Product } | null;
+  const previewProduct = navState?.preview ? normalizeProduct(navState.preview) : null;
 
-  const [product,       setProduct]       = useState<Product|null>(null);
-  const [variants,      setVariants]      = useState<Variant[]>([]);
-  const [loading,       setLoading]       = useState(true);
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [id]);
+
+  const [product,       setProduct]       = useState<Product|null>(previewProduct);
+  const [variants,      setVariants]      = useState<Variant[]>(previewProduct?.variants || []);
+  const [loading,       setLoading]       = useState(!previewProduct);
+
+  // Re-seed from the freshly-clicked card's full data on every navigation, not
+  // just the first mount (this component instance is reused across /product/:id
+  // changes, so a useState initializer alone only ever fires once).
+  useEffect(() => {
+    if (previewProduct) {
+      setProduct(previewProduct);
+      setVariants(previewProduct.variants || []);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
   const [qty,           setQty]           = useState(1);
   const [inCart,        setInCart]        = useState(false);
   const [adding,        setAdding]        = useState(false);
@@ -625,6 +1012,7 @@ export default function ProductDetail() {
   const [wishlistCount, setWishlistCount] = useState(0);
   const [inWishlist,    setInWishlist]    = useState(false);
   const [salePrice,     setSalePrice]     = useState<number | null>(null);
+  const [ratingStats,   setRatingStats]   = useState<ReviewStats | null>(null);
 
   // ── Derived variant state ──────────────────────────────────────────────────
   const hasVariants  = variants.length > 0;
@@ -736,14 +1124,7 @@ export default function ProductDetail() {
   useEffect(() => {
     axios.get(`/api/products/${id}`)
       .then(res => {
-        const p = res.data;
-        if (!p.images || p.images.length === 0) p.images = p.image_url ? [p.image_url] : [];
-        if (typeof p.images   === 'string') p.images   = JSON.parse(p.images);
-        if (typeof p.features === 'string') p.features = JSON.parse(p.features || '[]');
-        if (typeof p.colors   === 'string') p.colors   = JSON.parse(p.colors   || '[]');
-        if (!Array.isArray(p.colors))       p.colors   = [];
-        if (typeof p.sizes    === 'string') p.sizes    = JSON.parse(p.sizes    || '[]');
-        if (!Array.isArray(p.sizes))        p.sizes    = [];
+        const p = normalizeProduct(res.data);
         setProduct(p);
         setVariants(p.variants || []);
         setLoading(false);
@@ -760,6 +1141,14 @@ export default function ProductDetail() {
           .find(p => p.id === Number(id));
         if (match) setSalePrice(match.sale_price);
       })
+      .catch(() => {});
+  }, [id]);
+
+  // Fetch review rating summary for this product
+  useEffect(() => {
+    setRatingStats(null);
+    axios.get(`/api/reviews/product/${id}`)
+      .then(res => setRatingStats(res.data.stats))
       .catch(() => {});
   }, [id]);
 
@@ -895,6 +1284,9 @@ export default function ProductDetail() {
   };
 
   // ── Loading ────────────────────────────────────────────────────────────────
+  // Only reached on a hard refresh / pasted link / back-forward nav with no
+  // preview data carried over — a click from anywhere in the app renders the
+  // full page immediately via the seeded preview product above, no wait.
   if (loading) return (
     <div style={{
       minHeight:'100vh', background:'#FFFFFF',
@@ -920,6 +1312,10 @@ export default function ProductDetail() {
   const images    = product.images.length
     ? product.images
     : ['https://placehold.co/600x600/F0EAD8/0D1B3E?text=Luku+Prime'];
+  const media: { type: 'image' | 'video'; src: string }[] = [
+    ...images.map(img => ({ type: 'image' as const, src: img })),
+    ...(product.video_url ? [{ type: 'video' as const, src: product.video_url }] : []),
+  ];
   const hasColors = Array.isArray(product.colors) && product.colors.length > 0;
   const hasSizes  = Array.isArray(product.sizes)  && product.sizes.length  > 0;
   const qtyMax    = effectiveStock;
@@ -963,12 +1359,12 @@ export default function ProductDetail() {
           </span>
         </div>
 
-        <div className="lp-fade lp-grid">
+        <div className="lp-grid">
 
           {/* ── Slideshow ── */}
           <div className="lp-img-bleed">
             <Slideshow
-              images={images}
+              media={media}
               productName={product.name}
               stock={slideshowStock}
             />
@@ -1007,8 +1403,8 @@ export default function ProductDetail() {
 
 
 
-            {/* Price + stock badge */}
-            <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20, flexWrap:'wrap' }}>
+            {/* Price */}
+            <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:8, flexWrap:'wrap' }}>
               {salePrice !== null ? (
                 <div style={{ display:'flex', alignItems:'baseline', gap:10, flexWrap:'wrap' }}>
                   <span style={{
@@ -1040,29 +1436,18 @@ export default function ProductDetail() {
                   KSh {Number(product.price).toLocaleString()}
                 </span>
               )}
-              <VariantStockBadge
-                variant={selectedVariant}
-                hasVariants={hasVariants}
-                selectionComplete={selectionComplete}
-                productStock={product.stock}
-                selectedColor={selectedColor}
-                hasSizeDim={hasSizeDim}
-              />
             </div>
 
-            <SocialProofBadge/>
-
-            {product.description && (
-              <div style={{ marginBottom:20 }}>
-                <div style={s.lbl}>Description</div>
-                <p style={{
-                  fontFamily:"'Jost',sans-serif", fontSize:14,
-                  color:'rgba(13,27,62,0.75)', lineHeight:1.8,
-                }}>
-                  {product.description}
-                </p>
+            {ratingStats && ratingStats.total > 0 && (
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:20 }}>
+                <Stars rating={ratingStats.average ?? 0} size={14}/>
+                <span style={{ fontFamily:"'Jost',sans-serif", fontSize:12, color:T.muted }}>
+                  {Number(ratingStats.average).toFixed(1)} ({ratingStats.total} review{ratingStats.total !== 1 ? 's' : ''})
+                </span>
               </div>
             )}
+
+            <SocialProofBadge/>
 
             {product.features?.length > 0 && (
               <div style={{ marginBottom:20 }}>
@@ -1082,11 +1467,24 @@ export default function ProductDetail() {
               </div>
             )}
 
+            {hasVariants && (
+              <div style={{ marginBottom:12 }}>
+                <VariantStockBadge
+                  variant={selectedVariant}
+                  hasVariants={hasVariants}
+                  selectionComplete={selectionComplete}
+                  productStock={product.stock}
+                  selectedColor={selectedColor}
+                  hasSizeDim={hasSizeDim}
+                />
+              </div>
+            )}
+
             {/* ── COLOUR SELECTOR ── */}
             {hasColors && (
-              <div style={{ marginBottom:22 }}>
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-                  <div style={s.lbl}>Colour</div>
+              <div className="lp-color-block" style={{ marginBottom:22 }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+                  <div style={{ ...s.lbl, color:'#000', fontWeight:800 }}>Colour</div>
                   {selectedColor && (
                     <span style={{ fontFamily:"'Jost',sans-serif", fontSize:12, fontWeight:700, color:T.navy }}>
                       {selectedColor}
@@ -1098,14 +1496,14 @@ export default function ProductDetail() {
                 </div>
 
                 {/* Colour swatches — circular product image thumbnails */}
-                <div style={{ display:'flex', flexWrap:'wrap', gap:12, marginBottom:14 }}>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:10, marginBottom:10 }}>
                   {product.colors.map((color, i) => {
                     const active     = selectedColor === color;
                     const soldOut    = isColorSoldOut(color);
                     const colorStock = getColorStock(color);
                     const thumb      = product.images[i] || product.images[0] || product.image_url;
                     return (
-                      <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, width:54 }}>
+                      <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, width:46 }}>
                         <button
                           title={soldOut
                             ? `${color} — sold out`
@@ -1114,7 +1512,7 @@ export default function ProductDetail() {
                               : color}
                           onClick={() => !soldOut && handleColorChange(color)}
                           style={{
-                            width:48, height:48, borderRadius:'50%', padding:0, border:'none',
+                            width:40, height:40, borderRadius:'50%', padding:0, border:'none',
                             boxShadow: active
                               ? '0 0 0 2px #fff, 0 0 0 4px #000'
                               : '0 0 0 2px transparent',
@@ -1143,9 +1541,9 @@ export default function ProductDetail() {
                           )}
                         </button>
                         <span style={{
-                          fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight: active ? 700 : 500,
+                          fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700,
                           color: soldOut ? T.muted : active ? '#000' : '#666',
-                          textAlign:'center', maxWidth:54,
+                          textAlign:'center', maxWidth:46,
                           overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
                         }}>
                           {color}
@@ -1163,8 +1561,8 @@ export default function ProductDetail() {
             {/* ── SIZE SELECTOR ── */}
             {hasSizes && (
               <div style={{ marginBottom:22 }}>
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-                  <div style={s.lbl}>Size</div>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+                  <div style={{ ...s.lbl, color:'#000', fontWeight:800 }}>Size</div>
                   {selectedSize && (
                     <span style={{ fontFamily:"'Jost',sans-serif", fontSize:12, fontWeight:700, color:T.navy }}>
                       {selectedSize}
@@ -1175,7 +1573,7 @@ export default function ProductDetail() {
                   )}
                 </div>
 
-                <div className={sizeError ? 'lp-shake' : ''} style={{ display:'flex', flexWrap:'wrap', gap:10, marginBottom:10 }}>
+                <div className={sizeError ? 'lp-shake' : ''} style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:8 }}>
                   {product.sizes
                     .filter(size =>
                       // FIX: only show sizes that exist for the selected color (or all if no color chosen)
@@ -1188,7 +1586,7 @@ export default function ProductDetail() {
                       const soldOut   = isSizeSoldOut(size);
                       const sizeStock = getSizeStock(size);
                       return (
-                        <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, minWidth:52 }}>
+                        <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, minWidth:40 }}>
                           <button
                             onClick={() => !soldOut && handleSizeChange(size)}
                             title={soldOut
@@ -1197,11 +1595,11 @@ export default function ProductDetail() {
                                 ? `${size} — ${sizeStock} available`
                                 : size}
                             style={{
-                              width:'100%', padding:'10px 14px', borderRadius:0,
+                              width:'100%', padding:'7px 10px', borderRadius:0,
                               border: active ? '2px solid #000' : '1.5px solid #D0D0D0',
                               background: soldOut ? '#F5F5F5' : active ? '#000' : '#fff',
                               fontFamily:"'Inter',sans-serif", fontSize:12,
-                              fontWeight: active ? 700 : 500,
+                              fontWeight:700,
                               color: soldOut ? '#AAA' : active ? '#fff' : '#000',
                               cursor: soldOut ? 'not-allowed' : 'pointer',
                               opacity: soldOut ? 0.5 : 1,
@@ -1232,18 +1630,14 @@ export default function ProductDetail() {
                   <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:'#4A7A4A', fontWeight:600 }}>
                     ✓ Size {selectedSize} selected{inCart ? ' · saved to cart' : ''}
                   </div>
-                ) : (
-                  <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:T.muted }}>
-                    {product.sizes.length} size{product.sizes.length !== 1 ? 's' : ''} available — pick one above
-                  </div>
-                )}
+                ) : null}
               </div>
             )}
 
             {/* ── QUANTITY ── */}
             {!productSoldOut && effectiveStock > 0 && (
               <div style={{ marginBottom:22 }}>
-                <div style={s.lbl}>Quantity</div>
+                <div style={{ ...s.lbl, color:'#000' }}>Quantity</div>
                 <div style={{ display:'flex', alignItems:'center', gap:14 }}>
                   <button className="lp-qty" onClick={() => setQty(q => Math.max(1, q-1))}>−</button>
                   <span style={{
@@ -1307,14 +1701,15 @@ export default function ProductDetail() {
                 label: 'Product Care Guide',
                 content: 'Dry clean or gentle hand wash recommended. Avoid harsh chemicals. Store in cool, dry place away from direct sunlight.',
               },
-              {
-                key: 'complete-look',
-                label: 'Complete the Look',
-                content: 'Style this piece with complementary items from our collection. Mix and match to create your signature aesthetic.',
-              },
             ].map(({ key, label, content: body }) => (
               <AccordionRow key={key} label={label} body={body} />
             ))}
+
+            {product.complete_the_look && product.complete_the_look.length > 0 && (
+              <AccordionRow label="Complete the Look">
+                <CompleteTheLookGrid ids={product.complete_the_look} currentId={product.id} />
+              </AccordionRow>
+            )}
 
             <ReviewsSection productId={product.id}/>
 
@@ -1394,12 +1789,30 @@ const css = `
     .lp-thumb-strip { display:none !important }
     .lp-mobile-thumbs { display:none !important }
     .lp-grid > div:last-child { padding:20px 16px 0 }
+    .lp-color-block { margin-bottom:10px !important; }
   }
   @media(min-width:769px) {
     .lp-mobile-dots { display:none !important }
   }
 
   /* Related card — image scales naturally, hover lifts it */
+  .lp-carousel::-webkit-scrollbar { display: none }
+  .lp-carousel { -ms-overflow-style: none }
+  .lp-carousel-item {
+    transition: transform 0.2s ease;
+    height: 100%;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  .lp-carousel-item:hover { transform: scale(1.02) }
+  .lp-carousel-item > * {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
   .related-card:hover .related-img { transform:scale(1.04) }
   .related-img { transition:transform 0.4s ease !important }
   @media(min-width:640px) {
@@ -1409,8 +1822,8 @@ const css = `
 
 const s: Record<string, React.CSSProperties> = {
   lbl: {
-    fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700,
-    letterSpacing:'2.5px', color:'rgba(0,0,0,0.45)',
-    textTransform:'uppercase', marginBottom:10,
+    fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:800,
+    letterSpacing:'2.5px', color:'#000',
+    textTransform:'uppercase', marginBottom:6,
   },
 };
