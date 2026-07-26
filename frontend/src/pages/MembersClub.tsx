@@ -8,6 +8,17 @@ import Footer from '../components/common/Footer';
 import { readUser } from '../constants/theme';
 import type { User } from '../constants/theme';
 
+// Icon imports — must be imported (not string paths) so Vite bundles/hashes them for production
+import signupIcon from '../assets/signup.png';
+import walletIcon from '../assets/wallet.png';
+import redeemPointsIcon from '../assets/redeem-points.png';
+import shoppingBagIcon from '../assets/shopping-bag.png';
+import paymentIcon from '../assets/payment.png';
+import satisfactionIcon from '../assets/satisfaction.png';
+import referIcon from '../assets/refer.png';
+import igColouredIcon from '../assets/IGcoloured.png';
+import fireworksIcon from '../assets/fireworks-.png';
+
 // ── Types ────────────────────────────────────────────────────────────────────
 interface MemberProfile {
   credits:       number;
@@ -58,12 +69,12 @@ const TIERS = [
 ];
 
 const EARN_WAYS = [
-  { label: 'First order ever',        credits: 100, icon: '/src/assets/shopping-bag.png' },
-  { label: 'Every KSh 100 spent',     credits: 1,   icon: '/src/assets/payment.png' },
-  { label: 'Write a product review',  credits: 20,  icon: '/src/assets/satisfaction.png' },
-  { label: 'Refer a friend',          credits: 150, icon: '/src/assets/refer.png' },
-  { label: 'Follow us on Instagram',  credits: 30,  icon: '/src/assets/IGcoloured.png' },
-  { label: 'Birthday month bonus',    credits: 50,  icon: '/src/assets/fireworks-.png' },
+  { label: 'First order ever',        credits: 100, icon: shoppingBagIcon },
+  { label: 'Every KSh 100 spent',     credits: 1,   icon: paymentIcon },
+  { label: 'Write a product review',  credits: 20,  icon: satisfactionIcon },
+  { label: 'Refer a friend',          credits: 150, icon: referIcon },
+  { label: 'Follow us on Instagram',  credits: 30,  icon: igColouredIcon },
+  { label: 'Birthday month bonus',    credits: 50,  icon: fireworksIcon },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -330,15 +341,15 @@ export default function MembersClub() {
           {[
             { step: 'Step 1', title: 'Sign Up', desc: 'Create an account and get 150 points',
               icon: (
-                <img src="/src/assets/signup.png" alt="Sign Up" style={{width: 44, height: 44, objectFit: 'contain'}} />
+                <img src={signupIcon} alt="Sign Up" style={{width: 44, height: 44, objectFit: 'contain'}} />
               ) },
             { step: 'Step 2', title: 'Earn Points', desc: 'Earn points every time you shop',
               icon: (
-                <img src="/src/assets/wallet.png" alt="Earn Points" style={{width: 44, height: 44, objectFit: 'contain'}} />
+                <img src={walletIcon} alt="Earn Points" style={{width: 44, height: 44, objectFit: 'contain'}} />
               ) },
             { step: 'Step 3', title: 'Redeem Points', desc: 'Redeem rewards',
               icon: (
-                <img src="/src/assets/redeem-points.png" alt="Redeem Points" style={{width: 44, height: 44, objectFit: 'contain'}} />
+                <img src={redeemPointsIcon} alt="Redeem Points" style={{width: 44, height: 44, objectFit: 'contain'}} />
               ) },
           ].map((s, i) => (
             <div key={s.step} className={`mc-fade mc-d${i + 2}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
