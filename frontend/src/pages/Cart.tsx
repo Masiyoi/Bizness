@@ -5,6 +5,8 @@ import axios from 'axios';
 import Navbar       from '../components/common/Navbar';
 import Footer       from '../components/common/Footer';
 
+import trolleyIcon from '../assets/trolley.png';
+import deleteIcon from '../assets/delete.png';
 import mpesaLogo from '../assets/M-PESA_LOGO-01.svg';
 import airtelLogo from '../assets/Airtel_logo.svg';
 import visaLogo from '../assets/Visa.png';
@@ -385,10 +387,17 @@ export default function Cart() {
   });
 
   if (loading) return (
-    <div style={{ background: T.cream, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
-      <div style={{ fontSize: 40 }}>🛒</div>
-      <p style={{ fontFamily: "'DM Sans',sans-serif", color: T.muted, letterSpacing: '1px', fontSize: 13 }}>Loading your cart…</p>
-    </div>
+    <>
+      <Navbar />
+      <div style={{
+        background: T.cream, minHeight: '100vh', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', flexDirection: 'column', gap: 16,
+        paddingTop: 96,
+      }}>
+        <img src={trolleyIcon} alt="" style={{ width: 48, height: 48, objectFit: 'contain', opacity: 0.85 }} />
+        <p style={{ fontFamily: "'DM Sans',sans-serif", color: T.muted, letterSpacing: '1px', fontSize: 13 }}>Loading your cart…</p>
+      </div>
+    </>
   );
 
   return (
@@ -502,7 +511,7 @@ export default function Cart() {
      <Navbar />
 
       {/* ── PAGE BODY ── */}
-      <div className="cart-body-pad" style={{ padding: 'clamp(20px,4vw,40px) clamp(16px,4%,5%) 24px', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+      <div className="cart-body-pad" style={{ padding: 'clamp(20px,4vw,40px) clamp(16px,4%,5%) 24px', paddingTop: 'calc(96px + clamp(20px,4vw,40px))', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
 
         {error && (
           <div className="jost" style={{ background: '#FDF0EE', border: '1px solid #F5C6C0', borderRadius: 10, padding: '12px 18px', color: '#C0392B', fontSize: 13, marginBottom: 24 }}>
@@ -512,14 +521,16 @@ export default function Cart() {
 
         {items.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '55vh', textAlign: 'center', padding: '0 16px' }}>
-            <div style={{ width: 90, height: 90, borderRadius: '50%', background: T.creamMid, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, marginBottom: 24, border: `1px solid ${T.creamDeep}` }}>🛒</div>
+            <div style={{ width: 90, height: 90, borderRadius: '50%', background: T.creamMid, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, border: `1px solid ${T.creamDeep}` }}>
+              <img src={trolleyIcon} alt="" style={{ width: 42, height: 42, objectFit: 'contain' }} />
+            </div>
             <div className="ornament" style={{ justifyContent: 'center' }}>
               <div className="ornament-line" /><div className="ornament-diamond" />
               <span className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '3px', color: T.gold, textTransform: 'uppercase' }}>Empty</span>
               <div className="ornament-diamond" /><div className="ornament-line" />
             </div>
             <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 'clamp(22px,5vw,30px)', color: T.navy, marginBottom: 12 }}>Your cart is empty</h2>
-            <p className="jost" style={{ fontSize: 14, color: T.muted, marginBottom: 32, lineHeight: 1.7, fontWeight: 300 }}>
+            <p className="jost" style={{ fontSize: 14, color: '#1a1a1a', marginBottom: 32, lineHeight: 1.7, fontWeight: 400 }}>
               Looks like you haven't added anything yet.<br />Discover our premium collection.
             </p>
             <button className="cta-primary" style={{ width: 'auto', padding: '14px 44px' }} onClick={() => navigate('/')}>
@@ -677,7 +688,9 @@ export default function Cart() {
                           <span className="jost" style={{ fontWeight: 700, fontSize: 14, minWidth: 22, textAlign: 'center', color: T.navy }}>{item.quantity}</span>
                           <button className="qty-btn" onClick={() => updateQty(item.id, item.quantity + 1)} disabled={isBusy}>+</button>
                         </div>
-                        <button className="remove-btn" onClick={() => removeItem(item.id)} disabled={isBusy} title="Remove item">🗑️</button>
+                        <button className="remove-btn" onClick={() => removeItem(item.id)} disabled={isBusy} title="Remove item">
+                          <img src={deleteIcon} alt="Remove" style={{ width: 16, height: 16, objectFit: 'contain', opacity: isBusy ? 0.5 : 0.75 }} />
+                        </button>
                       </div>
 
                     </div>
