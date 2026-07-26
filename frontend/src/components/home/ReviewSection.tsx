@@ -13,7 +13,7 @@ export default function ReviewSection({ reviews, loading, isAdmin }: ReviewSecti
   const navigate = useNavigate();
 
   return (
-    <section className="px-[5%] py-[clamp(40px,6vw,72px)] bg-white border-t border-b border-cream-deep">
+    <section className="px-[5%] py-[clamp(40px,6vw,72px)] bg-white border-b border-cream-deep">
       <div className="max-w-content mx-auto">
 
         {/* ── Header ── */}

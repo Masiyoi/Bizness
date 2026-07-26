@@ -170,9 +170,13 @@ function Tile({ tile }: { tile: VideoTile }) {
       <div
         style={{
           position: 'absolute',
-          bottom: 28,
-          left: 28,
-          right: 28,
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '100%',
+          maxWidth: 560,
+          padding: '0 28px',
+          textAlign: 'center',
           color: textColor,
         }}
       >
@@ -192,7 +196,7 @@ function Tile({ tile }: { tile: VideoTile }) {
           style={{
             fontFamily: 'sans-serif',
             fontSize: 'clamp(12px, 1.4vw, 15px)',
-            margin: '0 0 16px',
+            margin: '0 auto 16px',
             opacity: 0.88,
             maxWidth: 440,
             lineHeight: 1.55,
@@ -208,6 +212,7 @@ function Tile({ tile }: { tile: VideoTile }) {
           style={{
             display: 'inline-flex',
             alignItems: 'center',
+            justifyContent: 'center',
             gap: 7,
             fontFamily: 'sans-serif',
             fontSize: 12,

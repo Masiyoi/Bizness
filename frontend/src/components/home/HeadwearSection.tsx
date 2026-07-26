@@ -34,13 +34,16 @@ export default function HeadwearSection({
     const el = wrapRef.current;
     if (!el || headwear.length === 0) return;
     let raf: number;
-    const speed = 0.4; // px per frame — slides leftward
+    const speed = 0.4; // px per frame — slides rightward
+
+    // Start at the midpoint so we can count down toward 0 and loop seamlessly
+    el.scrollLeft = el.scrollWidth / 2;
 
     const step = () => {
       if (!pausedRef.current && el) {
         const half = el.scrollWidth / 2;
-        el.scrollLeft += speed;
-        if (el.scrollLeft >= half) el.scrollLeft -= half;
+        el.scrollLeft -= speed;
+        if (el.scrollLeft <= 0) el.scrollLeft += half;
       }
       raf = requestAnimationFrame(step);
     };
@@ -65,26 +68,27 @@ export default function HeadwearSection({
         .hw-section {
           display: flex;
           align-items: stretch;
-          border-bottom: 1px solid rgba(0,0,0,0.10);
           background: #fff;
         }
         .hw-cover {
           flex: 0 0 clamp(140px, 34vw, 260px);
-          display: flex;
-          flex-direction: column;
+          position: relative;
+          overflow: hidden;
           border-right: 1px solid rgba(0,0,0,0.10);
-          padding: clamp(10px,2vw,32px);
           cursor: pointer;
           background: none;
           border-top: none; border-left: none; border-bottom: none;
+          padding: 0;
           text-align: left;
+          display: block;
         }
         .hw-cover-imgwrap {
+          position: absolute;
+          inset: 0;
           width: 100%;
-          aspect-ratio: 4 / 5;
+          height: 100%;
           overflow: hidden;
           background: #eee;
-          margin-bottom: 10px;
         }
         .hw-cover-img {
           width: 100%;
@@ -94,17 +98,29 @@ export default function HeadwearSection({
           transition: transform 0.5s ease;
         }
         .hw-cover:hover .hw-cover-img { transform: scale(1.04); }
+        .hw-cover-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.05) 55%, transparent 100%);
+        }
         .hw-cover-label {
+          position: absolute;
+          top: 50%;
+          left: clamp(10px,2vw,20px);
+          right: clamp(10px,2vw,20px);
+          transform: translateY(-50%);
+          text-align: center;
           font-family: var(--f-sans, 'DM Sans', system-ui, sans-serif);
-          font-size: clamp(8.5px, 1.6vw, 12px);
-          font-weight: 700;
-          letter-spacing: 1.5px;
+          font-size: clamp(18px, 3.4vw, 32px);
+          font-weight: 800;
+          letter-spacing: 0.5px;
           text-transform: uppercase;
-          color: #0A0A0A;
-          line-height: 1.4;
+          color: #fff;
+          line-height: 1.15;
+          text-shadow: 0 2px 18px rgba(0,0,0,0.4);
         }
         @media (min-width: 640px) {
-          .hw-cover-label { letter-spacing: 2.5px; }
+          .hw-cover-label { letter-spacing: 1px; }
         }
         .hw-slider-col {
           flex: 1;
@@ -117,10 +133,10 @@ export default function HeadwearSection({
         .hw-slider-kicker {
           font-family: var(--f-sans, 'DM Sans', system-ui, sans-serif);
           font-size: 10px;
-          font-weight: 500;
+          font-weight: 700;
           letter-spacing: 3px;
           text-transform: uppercase;
-          color: #888;
+          color: #0A0A0A;
           margin-bottom: 12px;
         }
         .hw-slider {
@@ -223,7 +239,8 @@ export default function HeadwearSection({
             height={400}
           />
         </div>
-        <span className="hw-cover-label">Explore Our Headwear Collection</span>
+        <div className="hw-cover-overlay" />
+        <span className="hw-cover-label">Headwear Collection</span>
       </button>
 
       <div className="hw-slider-col">

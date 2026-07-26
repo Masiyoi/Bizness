@@ -165,7 +165,7 @@ export default function FlashSaleStrip({
   if (!loading && products.length === 0) return null;
 
   return (
-    <section style={{ borderTop: '1px solid rgba(0,0,0,0.08)', borderBottom: '1px solid rgba(0,0,0,0.08)', background: '#FFFFFF', overflow: 'hidden' }}>
+    <section style={{ borderBottom: '1px solid rgba(0,0,0,0.08)', background: '#FFFFFF', overflow: 'hidden' }}>
       {/* Header */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -190,7 +190,7 @@ export default function FlashSaleStrip({
                 fontFamily: 'Jost,sans-serif', fontSize: 11, fontWeight: 600,
                 letterSpacing: '2px', textTransform: 'uppercase',
                 background: '#fff', color: '#0A0A0A',
-                border: '1px solid rgba(0,0,0,0.15)', padding: '9px 18px',
+                border: 'none', padding: '9px 18px',
                 cursor: 'pointer',
               }}
             >

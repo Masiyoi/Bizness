@@ -70,7 +70,6 @@ export default function CategoryBanner({ categories, activeCategory, onSelect }:
         .cb-wrap {
           overflow-x: auto;
           overflow-y: hidden;
-          border-bottom: 1px solid rgba(0,0,0,0.10);
           background: #fff;
           -webkit-overflow-scrolling: touch;
           scrollbar-width: thin;

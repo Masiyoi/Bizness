@@ -40,7 +40,6 @@ export default function Navbar({
   const [wishlistCount,  setWishlistCount]  = useState(wishlistCountProp ?? 0);
   const [navCategories,  setNavCategories]  = useState<string[]>(categories);
   const [showSaleMenu,   setShowSaleMenu]   = useState(false);
-  const [mobileShopOpen, setMobileShopOpen] = useState(false);
   const [flashProducts,  setFlashProducts]  = useState<any[]>([]);
 
   const [lang, setLang] = useState(() => {
@@ -54,6 +53,7 @@ export default function Navbar({
   // Defaults true (guests are always potential first-time buyers) — flips to
   // false only once we confirm a logged-in user has already used the discount.
   const [firstOrderEligible, setFirstOrderEligible] = useState(true);
+  const [regularBannerIndex, setRegularBannerIndex] = useState(0);
   const langRef          = useRef<HTMLDivElement>(null);
 
   // ── Scroll detection ──────────────────────────────────────────────────────
@@ -121,6 +121,20 @@ export default function Navbar({
   useEffect(() => { if (cartCountProp     !== undefined) setCartCount(cartCountProp);         }, [cartCountProp]);
   useEffect(() => { if (wishlistCountProp !== undefined) setWishlistCount(wishlistCountProp); }, [wishlistCountProp]);
 
+  // Freeze background scroll while the mobile menu is open — otherwise
+  // scrolling past the end of the dropdown chains into the page behind it.
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    const prevOverscroll = document.body.style.overscrollBehavior;
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehavior = 'none';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.overscrollBehavior = prevOverscroll;
+    };
+  }, [mobileMenuOpen]);
+
   // First-order discount banner — only checkable once a user is logged in;
   // guests keep seeing the banner as an incentive to sign up and order.
   useEffect(() => {
@@ -130,12 +144,28 @@ export default function Navbar({
       .catch(() => {}); // fine to fail silently — banner just stays as-is
   }, [user?.id]);
 
+  // Rotating marketing banner shown to customers who no longer see the
+  // first-order offer (already redeemed it, or are an already-converted user).
+  const REGULAR_BANNERS = [
+    'Free shipping on orders above KSh 3,000',
+    'Get 10% off after 10 orders',
+    'Earn points by referring friends to the family',
+  ];
+
+  useEffect(() => {
+    if (firstOrderEligible) return;
+    const id = setInterval(() => {
+      setRegularBannerIndex(i => (i + 1) % REGULAR_BANNERS.length);
+    }, 4000);
+    return () => clearInterval(id);
+  }, [firstOrderEligible]);
+
   useEffect(() => {
     axios.get('/api/products/flash-sales?limit=20')
       .then(r => {
         const all = Array.isArray(r.data) ? r.data : [];
         const shuffled = [...all].sort(() => Math.random() - 0.5);
-        setFlashProducts(shuffled.slice(0, 3));
+        setFlashProducts(shuffled.slice(0, 4));
       })
       .catch(() => {});
   }, []);
@@ -279,23 +309,25 @@ export default function Navbar({
         }
       `}</style>
 
-      {/* ── Announcement marquee — hidden once a logged-in user has used their first-order discount ── */}
-      {firstOrderEligible && (
-        <div style={{ background: '#000', height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 101 }}>
-          <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: '3px', color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase' }}>
-            Get 10% off on your first order
-          </span>
-        </div>
-      )}
+      {/* ── Announcement marquee — first-order offer for new/guest visitors, rotating perks for returning customers ── */}
+      <div style={{ background: '#000', height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 101 }}>
+        <span
+          key={firstOrderEligible ? 'first-order' : regularBannerIndex}
+          style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: '3px', color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', animation: 'fadeInDown 0.4s ease' }}
+        >
+          {firstOrderEligible ? 'Get 10% off on your first order' : REGULAR_BANNERS[regularBannerIndex]}
+        </span>
+      </div>
 
       {/* ── Main navbar ── */}
       <nav style={{
-        position: 'fixed', top: firstOrderEligible ? 32 : 0, left: 0, right: 0, zIndex: 100,
+        position: 'fixed', top: 32, left: 0, right: 0, zIndex: 100,
         transition: 'top 0.3s ease',
-        background: isTransparent ? 'transparent' : '#fff',
-        borderBottom: isTransparent ? 'none' : '1px solid rgba(0,0,0,0.09)',
+        background: isTransparent ? 'transparent' : (mobileMenuOpen ? 'rgba(255,255,255,0.28)' : '#fff'),
+        borderBottom: isTransparent ? 'none' : (mobileMenuOpen ? '1px solid rgba(255,255,255,0.25)' : '1px solid rgba(0,0,0,0.09)'),
         transition: 'background 0.4s ease, border-color 0.4s ease',
-        backdropFilter: isTransparent ? 'none' : 'blur(12px)',
+        backdropFilter: isTransparent ? 'none' : (mobileMenuOpen ? 'blur(20px) saturate(180%)' : 'blur(12px)'),
+        WebkitBackdropFilter: isTransparent ? 'none' : (mobileMenuOpen ? 'blur(20px) saturate(180%)' : 'blur(12px)') as any,
       }}>
 
         <div style={{ padding: '0 5%', height: 64, display: 'flex', alignItems: 'center', position: 'relative' }}>
@@ -564,7 +596,7 @@ export default function Navbar({
 
       {/* ── Search bar (desktop) ── */}
       {showSearch && (
-        <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.09)', padding: '12px 5%', position: 'fixed', top: firstOrderEligible ? 96 : 64, left: 0, right: 0, zIndex: 99, transition: 'top 0.3s ease' }}>
+        <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.09)', padding: '12px 5%', position: 'fixed', top: 96, left: 0, right: 0, zIndex: 99, transition: 'top 0.3s ease' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, maxWidth: 520, margin: '0 auto', borderBottom: '1px solid rgba(0,0,0,0.18)', paddingBottom: 8 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(0,0,0,0.35)', flexShrink: 0 }}>
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -584,7 +616,7 @@ export default function Navbar({
 
       {/* ── Mobile category menu (hamburger) — categories only ── */}
       {mobileMenuOpen && (
-        <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.09)', padding: '16px 5%', position: 'fixed', top: firstOrderEligible ? 96 : 64, left: 0, right: 0, zIndex: 99, transition: 'top 0.3s ease' }}>
+        <div style={{ background: 'rgba(255,255,255,0.28)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)' as any, borderBottom: '1px solid rgba(255,255,255,0.25)', padding: '16px 5% 28px', position: 'fixed', top: 96, left: 0, right: 0, bottom: 0, zIndex: 99, transition: 'top 0.3s ease', overflowY: 'auto', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' as any }}>
 
           {/* ── Top row: Home + Members Club side by side ── */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
@@ -640,37 +672,30 @@ export default function Navbar({
             )}
           </div>
 
-          {/* ── Shop — expandable, reveals All Products + category list ── */}
-          <button
-            className="mitem"
-            style={{ borderBottom: mobileShopOpen ? 'none' : '1px solid rgba(0,0,0,0.05)', borderRadius: 0, padding: '11px 14px', fontWeight: 700 }}
-            onClick={() => setMobileShopOpen(o => !o)}
-          >
+          {/* ── Shop — always-expanded category list, no toggle ── */}
+          <div className="mitem" style={{ borderRadius: 0, padding: '11px 14px', fontWeight: 700, cursor: 'default' }}>
             Shop
-            <span style={{ marginLeft: 'auto', fontSize: 10, transition: 'transform 0.2s', transform: mobileShopOpen ? 'rotate(180deg)' : 'none' }}>▾</span>
-          </button>
+          </div>
 
-          {mobileShopOpen && (
-            <div style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', paddingBottom: 4 }}>
+          <div style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', paddingBottom: 4 }}>
+            <button
+              className="mitem"
+              style={{ padding: '9px 14px 9px 26px', fontWeight: activeCategory === 'All' ? 600 : undefined }}
+              onClick={() => goCategory('All')}
+            >
+              All Products {activeCategory === 'All' && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
+            </button>
+            {navCategories.map(cat => (
               <button
+                key={cat}
                 className="mitem"
-                style={{ padding: '9px 14px 9px 26px', fontWeight: activeCategory === 'All' ? 600 : undefined }}
-                onClick={() => goCategory('All')}
+                style={{ padding: '9px 14px 9px 26px', fontWeight: activeCategory === cat ? 600 : undefined }}
+                onClick={() => goCategory(cat)}
               >
-                All Products {activeCategory === 'All' && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
+                {cat} {activeCategory === cat && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
               </button>
-              {navCategories.map(cat => (
-                <button
-                  key={cat}
-                  className="mitem"
-                  style={{ padding: '9px 14px 9px 26px', fontWeight: activeCategory === cat ? 600 : undefined }}
-                  onClick={() => goCategory(cat)}
-                >
-                  {cat} {activeCategory === cat && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
-                </button>
-              ))}
-            </div>
-          )}
+            ))}
+          </div>
 
           {/* ── Visual category scroller — circular tiles, auto-scrolls ── */}
           {(() => {

@@ -146,7 +146,7 @@ function ProductStrip() {
   if (images.length === 0) return null;
 
   return (
-    <div style={{ overflow: 'hidden', marginBottom: 32, marginLeft: 'calc(-1 * clamp(16px,5%,48px))', marginRight: 'calc(-1 * clamp(16px,5%,48px))' }}>
+    <div style={{ overflow: 'hidden', marginBottom: 0, marginLeft: 'calc(-1 * clamp(16px,5%,48px))', marginRight: 'calc(-1 * clamp(16px,5%,48px))' }}>
       <style>{`
         @keyframes ft-scroll {
           0%   { transform: translateX(0) }
@@ -154,8 +154,8 @@ function ProductStrip() {
         }
         .ft-strip-track {
           display: flex;
-          gap: 6px;
-          animation: ft-scroll 60s linear infinite;
+          gap: 0;
+          animation: ft-scroll 200s linear infinite;
           width: max-content;
           will-change: transform;
         }
@@ -509,7 +509,6 @@ const css = `
     gap: 16px;
     margin-top: 40px;
     padding-top: 24px;
-    border-top: 1px solid #e0e0e0;
   }
   .ft-payments {
     display: flex;

@@ -1,6 +1,14 @@
 // src/pages/company/Careers.tsx
 import PageShell, { Section, Prose, AccentCard, InfoGrid } from '../../components/common/PageShell';
 
+// ── Careers-page icon assets ─────────────────────────────────────────
+import startupIcon    from '../../assets/careers/startup.png';
+import discountIcon   from '../../assets/careers/discount.png';
+import growIcon       from '../../assets/careers/grow.png';
+import creativityIcon from '../../assets/careers/creativity.png';
+import remoteIcon     from '../../assets/careers/remote.png';
+import supportIcon    from '../../assets/careers/support.png';
+
 const ROLES = [
   { title: 'Fashion Buyer / Sourcing Lead', type: 'Full-time · Nairobi', desc: 'Identify and source the freshest drops from local and international suppliers. You live and breathe fashion trends.' },
   { title: 'Delivery Rider', type: 'Part-time / Contract · Nairobi CBD', desc: 'Reliable rider with a motorbike for same-day deliveries within Nairobi. Good attitude and punctuality essential.' },
@@ -15,24 +23,6 @@ export default function Careers() {
       title="Careers at Luku Prime"
       subtitle="Join a team that's redefining fashion in Kenya. We're growing fast and looking for passionate people."
     >
-      <Section title="Why Work With Us">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 }}>
-          {[
-            { icon: '🔥', perk: 'Fast-growing startup energy' },
-            { icon: '👗', perk: 'Staff discounts on all products' },
-            { icon: '📈', perk: 'Room to grow quickly' },
-            { icon: '🎨', perk: 'Creative, fashion-forward culture' },
-            { icon: '💻', perk: 'Flexible remote roles available' },
-            { icon: '🤝', perk: 'Tight-knit, supportive team' },
-          ].map(p => (
-            <div key={p.perk} style={{ background: '#fff', border: '1px solid rgba(10,22,40,0.08)', borderRadius: 10, padding: '14px 16px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <span style={{ fontSize: 20 }}>{p.icon}</span>
-              <span style={{ fontSize: 13, color: '#0A1628', fontWeight: 600, lineHeight: 1.5 }}>{p.perk}</span>
-            </div>
-          ))}
-        </div>
-      </Section>
-
       <Section title="Open Positions">
         {ROLES.map(role => (
           <div key={role.title} style={{
@@ -60,6 +50,24 @@ export default function Careers() {
             </a>
           </div>
         ))}
+      </Section>
+
+      <Section title="Why Work With Us">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 }}>
+          {[
+            { icon: startupIcon,    perk: 'Fast-growing startup energy' },
+            { icon: discountIcon,   perk: 'Staff discounts on all products' },
+            { icon: growIcon,       perk: 'Room to grow quickly' },
+            { icon: creativityIcon, perk: 'Creative, fashion-forward culture' },
+            { icon: remoteIcon,     perk: 'Flexible remote roles available' },
+            { icon: supportIcon,    perk: 'Tight-knit, supportive team' },
+          ].map(p => (
+            <div key={p.perk} style={{ background: '#fff', border: '1px solid rgba(10,22,40,0.08)', borderRadius: 10, padding: '14px 16px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <img src={p.icon} alt="" style={{ width: 22, height: 22, objectFit: 'contain', flexShrink: 0 }} />
+              <span style={{ fontSize: 13, color: '#0A1628', fontWeight: 600, lineHeight: 1.5 }}>{p.perk}</span>
+            </div>
+          ))}
+        </div>
       </Section>
 
       <AccentCard>

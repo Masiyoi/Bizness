@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import { readUser } from '../constants/theme';
@@ -31,6 +32,7 @@ const TIERS = [
     color:    '#CD7F32',
     bg:       'rgba(205,127,50,0.08)',
     border:   'rgba(205,127,50,0.25)',
+    lottie:   '/animations/bronze_coin.lottie',
     perks:    ['Early access to sales', 'Birthday bonus (50 credits)', 'Member-only newsletter'],
   },
   {
@@ -40,6 +42,7 @@ const TIERS = [
     color:    '#B8960C',
     bg:       'rgba(184,150,12,0.08)',
     border:   'rgba(184,150,12,0.28)',
+    lottie:   '/animations/Gold_Coin.lottie',
     perks:    ['All Bronze perks', 'Free shipping on orders over KSh 3,000', '10% discount code monthly', 'Priority customer support'],
   },
   {
@@ -49,17 +52,18 @@ const TIERS = [
     color:    '#6A7FA8',
     bg:       'rgba(106,127,168,0.08)',
     border:   'rgba(106,127,168,0.28)',
+    lottie:   '/animations/Red_Diamond.lottie',
     perks:    ['All Gold perks', 'Free shipping on every order', 'Exclusive early drops', 'Personal stylist access', 'VIP event invites'],
   },
 ];
 
 const EARN_WAYS = [
-  { label: 'First order ever',        credits: 100, icon: '🛍️' },
-  { label: 'Every KSh 100 spent',     credits: 1,   icon: '💳' },
-  { label: 'Write a product review',  credits: 20,  icon: '✍️' },
-  { label: 'Refer a friend',          credits: 150, icon: '🤝' },
-  { label: 'Follow us on Instagram',  credits: 30,  icon: '📸' },
-  { label: 'Birthday month bonus',    credits: 50,  icon: '🎂' },
+  { label: 'First order ever',        credits: 100, icon: '/src/assets/shopping-bag.png' },
+  { label: 'Every KSh 100 spent',     credits: 1,   icon: '/src/assets/payment.png' },
+  { label: 'Write a product review',  credits: 20,  icon: '/src/assets/satisfaction.png' },
+  { label: 'Refer a friend',          credits: 150, icon: '/src/assets/refer.png' },
+  { label: 'Follow us on Instagram',  credits: 30,  icon: '/src/assets/IGcoloured.png' },
+  { label: 'Birthday month bonus',    credits: 50,  icon: '/src/assets/fireworks-.png' },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -132,10 +136,9 @@ const css = `
   .mc-btn-ghost:hover { border-color: #111; background: rgba(0,0,0,0.03); }
 
   .tier-card {
-    border: 1px solid var(--rule);
     padding: clamp(24px,3vw,40px);
     position: relative; overflow: hidden;
-    transition: border-color 0.25s, transform 0.25s;
+    transition: transform 0.25s;
     cursor: default;
   }
   .tier-card:hover { transform: translateY(-2px); }
@@ -143,9 +146,7 @@ const css = `
   .earn-row {
     display: flex; align-items: center; gap: 16px;
     padding: 14px 0;
-    border-bottom: 1px solid var(--rule);
   }
-  .earn-row:last-child { border-bottom: none; }
 
   .activity-row {
     display: flex; align-items: center; justify-content: space-between;
@@ -158,7 +159,7 @@ const css = `
     background-size: 200% 100%; animation: pulse 1.4s ease infinite; }
 
   @media(max-width:640px) {
-    .mc-tiers-grid  { grid-template-columns: 1fr !important; }
+    .mc-tiers-grid  { grid-template-columns: 1fr !important; gap: 8px !important; }
     .mc-hero-credit { font-size: clamp(56px,18vw,96px) !important; }
   }
 `;
@@ -245,57 +246,109 @@ export default function MembersClub() {
         onLogout={() => { setUser(null); setCartCount(0); setWishlistCount(0); }}
       />
 
-      {/* ── HERO ── */}
+      {/* ── HERO — full-bleed image banner ── */}
       <section style={{
-        paddingTop: 'clamp(96px,14vw,160px)',
-        paddingBottom: 'clamp(56px,8vw,96px)',
-        paddingLeft: 'clamp(20px,5%,80px)',
-        paddingRight: 'clamp(20px,5%,80px)',
-        borderBottom: '1px solid rgba(0,0,0,0.08)',
-        background: '#fff',
+        position: 'relative',
+        minHeight: 'clamp(360px,52vw,560px)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         textAlign: 'center',
+        padding: 'clamp(96px,14vw,140px) clamp(20px,5%,80px) clamp(48px,6vw,72px)',
+        overflow: 'hidden',
       }}>
-        <p className="mc-fade mc-d1" style={{
-          fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700,
-          letterSpacing: '4px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.35)',
-          marginBottom: 20,
-        }}>
-          Luku Prime
-        </p>
-        <h1 className="mc-fade mc-d2" style={{
-          fontFamily: "'Cormorant Garamond', serif", fontWeight: 300, fontStyle: 'italic',
-          fontSize: 'clamp(40px,7vw,88px)', color: '#0A0A0A',
-          letterSpacing: '-1px', lineHeight: 1.0, marginBottom: 20,
-        }}>
-          Members Club
-        </h1>
-        <p className="mc-fade mc-d3" style={{
-          fontFamily: "'Jost', sans-serif", fontWeight: 300, fontSize: 'clamp(13px,1.5vw,15px)',
-          color: '#888', lineHeight: 1.8, maxWidth: 460, margin: '0 auto 36px',
-        }}>
-          Shop, earn credits, unlock privileges. Three tiers. One community built around fashion that means something.
-        </p>
+        <img
+          src="https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?w=1600&q=80"
+          alt="Members Club"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.55)' }}
+        />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <h1 className="mc-fade mc-d1" style={{
+            fontFamily: "'Jost', sans-serif", fontWeight: 800, fontSize: 'clamp(30px,6vw,52px)',
+            color: '#fff', letterSpacing: '1px', textTransform: 'uppercase', lineHeight: 1.1, marginBottom: 18,
+          }}>
+            Members Club
+          </h1>
+          <p className="mc-fade mc-d2" style={{
+            fontFamily: "'Jost', sans-serif", fontWeight: 300, fontSize: 'clamp(13px,1.5vw,15px)',
+            color: 'rgba(255,255,255,0.82)', lineHeight: 1.8, maxWidth: 440, margin: '0 auto 32px',
+          }}>
+            Join Luku Prime Members Club and get rewarded while you shop.
+          </p>
 
-        {!user && (
-          <div className="mc-fade mc-d4" style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button className="mc-btn-primary" onClick={handleJoin}>Join the Club</button>
-            <button className="mc-btn-ghost" onClick={() => navigate('/login')}>Sign In</button>
-          </div>
-        )}
+          {!user && (
+            <div className="mc-fade mc-d3" style={{ display: 'flex', gap: 0, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={handleJoin}
+                style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', background: '#fff', color: '#111', border: 'none', padding: '16px 36px', cursor: 'pointer', transition: 'opacity 0.2s' }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+              >
+                Join Now
+              </button>
+              <button
+                onClick={() => navigate('/login')}
+                style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', background: 'transparent', color: '#fff', border: '1px solid rgba(255,255,255,0.6)', padding: '16px 36px', cursor: 'pointer', transition: 'background 0.2s' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                Login
+              </button>
+            </div>
+          )}
 
-        {user && !loading && !isMember && (
-          <div className="mc-fade mc-d4">
-            <button className="mc-btn-primary" onClick={handleJoin} disabled={joining}>
-              {joining ? 'Joining…' : 'Join the Club — It\'s Free'}
-            </button>
-          </div>
-        )}
+          {user && !loading && !isMember && (
+            <div className="mc-fade mc-d3">
+              <button
+                onClick={handleJoin} disabled={joining}
+                style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', background: '#fff', color: '#111', border: 'none', padding: '16px 36px', cursor: joining ? 'not-allowed' : 'pointer', opacity: joining ? 0.6 : 1 }}
+              >
+                {joining ? 'Joining…' : "Join the Club — It's Free"}
+              </button>
+            </div>
+          )}
 
-        {user && isMember && profile && (
-          <div className="mc-fade mc-d4" style={{ display: 'inline-block' }}>
-            <TierBadge tier={tier} size="lg" />
-          </div>
-        )}
+          {user && isMember && profile && (
+            <div className="mc-fade mc-d3" style={{ display: 'inline-block' }}>
+              <TierBadge tier={tier} size="lg" />
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS — Step 1 to 3 ── */}
+      <section style={{
+        background: '#fff',
+        padding: 'clamp(48px,7vw,88px) clamp(20px,5%,40px)', textAlign: 'center',
+      }}>
+        <h2 className="mc-fade mc-d1" style={{
+          fontFamily: "'Jost', sans-serif", fontWeight: 800, fontSize: 'clamp(22px,3.5vw,34px)',
+          color: '#0A0A0A', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 'clamp(36px,5vw,56px)',
+        }}>
+          How It Works
+        </h2>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(36px,5vw,52px)', maxWidth: 420, margin: '0 auto' }}>
+          {[
+            { step: 'Step 1', title: 'Sign Up', desc: 'Create an account and get 150 points',
+              icon: (
+                <img src="/src/assets/signup.png" alt="Sign Up" style={{width: 44, height: 44, objectFit: 'contain'}} />
+              ) },
+            { step: 'Step 2', title: 'Earn Points', desc: 'Earn points every time you shop',
+              icon: (
+                <img src="/src/assets/wallet.png" alt="Earn Points" style={{width: 44, height: 44, objectFit: 'contain'}} />
+              ) },
+            { step: 'Step 3', title: 'Redeem Points', desc: 'Redeem rewards',
+              icon: (
+                <img src="/src/assets/redeem-points.png" alt="Redeem Points" style={{width: 44, height: 44, objectFit: 'contain'}} />
+              ) },
+          ].map((s, i) => (
+            <div key={s.step} className={`mc-fade mc-d${i + 2}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+              <p style={{ fontFamily: "'Jost', sans-serif", fontWeight: 700, fontSize: 12, letterSpacing: '2px', textTransform: 'uppercase', color: '#0A0A0A' }}>{s.step}</p>
+              <div style={{ margin: '4px 0' }}>{s.icon}</div>
+              <p style={{ fontFamily: "'Jost', sans-serif", fontWeight: 700, fontSize: 14, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#0A0A0A' }}>{s.title}</p>
+              <p style={{ fontFamily: "'Jost', sans-serif", fontWeight: 400, fontSize: 13, color: '#222' }}>{s.desc}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* ── MEMBER DASHBOARD (logged in + member) ── */}
@@ -404,11 +457,11 @@ export default function MembersClub() {
 
       {/* ── TIERS SECTION (always visible) ── */}
       <section style={{
-        background: '#fff', borderTop: '1px solid rgba(0,0,0,0.08)', borderBottom: '1px solid rgba(0,0,0,0.08)',
+        background: '#fff',
         padding: 'clamp(48px,7vw,96px) clamp(20px,5%,80px)',
       }}>
         <div style={{ maxWidth: 1040, margin: '0 auto' }}>
-          <p className="mc-fade mc-d1" style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.35)', marginBottom: 12, textAlign: 'center' }}>
+          <p className="mc-fade mc-d1" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 700, fontSize: 14, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#0A0A0A', marginBottom: 12, textAlign: 'center' }}>
             The Tiers
           </p>
           <h2 className="mc-fade mc-d2" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 300, fontStyle: 'italic', fontSize: 'clamp(28px,4vw,48px)', color: '#0A0A0A', textAlign: 'center', marginBottom: 'clamp(36px,5vw,60px)', letterSpacing: '-0.5px' }}>
@@ -418,15 +471,28 @@ export default function MembersClub() {
           <div className="mc-tiers-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 'clamp(12px,2vw,24px)' }}>
             {TIERS.map((t, i) => (
               <div key={t.name} className={`tier-card mc-fade mc-d${i + 2}`}
-                style={{ borderColor: profile && getTier(profile.credits).name === t.name ? t.color : 'rgba(0,0,0,0.08)', background: profile && getTier(profile.credits).name === t.name ? t.bg : '#fff' }}>
+                style={{ background: profile && getTier(profile.credits).name === t.name ? t.bg : '#fff' }}>
                 {profile && getTier(profile.credits).name === t.name && (
                   <div style={{ position: 'absolute', top: 0, right: 0, background: t.color, padding: '4px 12px', fontFamily: "'Jost', sans-serif", fontSize: 8, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#fff' }}>
                     Your tier
                   </div>
                 )}
-                <TierBadge tier={t} size="sm" />
-                <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#aaa', margin: '10px 0 20px', letterSpacing: '0.5px' }}>
-                  {t.max === Infinity ? `${t.min.toLocaleString()}+ credits` : `${t.min}–${t.max.toLocaleString()} credits`}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                  <span style={{
+                    fontFamily: "'Jost', sans-serif", fontSize: 13, fontWeight: 700,
+                    letterSpacing: '2.5px', textTransform: 'uppercase', color: t.color,
+                  }}>
+                    {t.name}
+                  </span>
+                  <DotLottieReact
+                    src={t.lottie}
+                    loop
+                    autoplay
+                    style={{ width: 64, height: 64, flexShrink: 0 }}
+                  />
+                </div>
+                <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#111', margin: '10px 0 20px', letterSpacing: '0.5px' }}>
+                  {t.max === Infinity ? `${t.min.toLocaleString()}+ points` : `${t.min}–${t.max.toLocaleString()} points`}
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {t.perks.map((perk, pi) => (
@@ -444,19 +510,20 @@ export default function MembersClub() {
 
       {/* ── EARN SECTION ── */}
       <section style={{
+        background: '#fff',
         maxWidth: 640, margin: '0 auto',
         padding: 'clamp(48px,7vw,96px) clamp(20px,5%,40px)',
       }}>
-        <p className="mc-fade mc-d1" style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.35)', marginBottom: 12 }}>
+        <p className="mc-fade mc-d1" style={{ fontFamily: "'Jost', sans-serif", fontWeight: 700, fontSize: 14, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#0A0A0A', marginBottom: 12 }}>
           How It Works
         </p>
         <h2 className="mc-fade mc-d2" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 300, fontStyle: 'italic', fontSize: 'clamp(28px,4vw,44px)', color: '#0A0A0A', marginBottom: 'clamp(28px,4vw,44px)', lineHeight: 1.1, letterSpacing: '-0.5px' }}>
           Every action earns.<br/>Credits never expire.
         </h2>
-        <div className="mc-fade mc-d3" style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.08)', padding: '0 clamp(16px,3vw,32px)' }}>
+        <div className="mc-fade mc-d3" style={{ background: 'transparent', padding: '0 clamp(16px,3vw,32px)' }}>
           {EARN_WAYS.map((way, i) => (
             <div key={i} className="earn-row">
-              <span style={{ fontSize: 22, flexShrink: 0, width: 36, textAlign: 'center' }}>{way.icon}</span>
+              <img src={way.icon} alt={way.label} style={{ width: 28, height: 28, objectFit: 'contain', flexShrink: 0 }} />
               <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 13, color: '#222', flex: 1, fontWeight: 400 }}>{way.label}</span>
               <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 700, color: '#111', flexShrink: 0 }}>
                 +{way.credits} <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 400, color: '#aaa' }}>cr</span>
