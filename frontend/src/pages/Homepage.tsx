@@ -115,12 +115,12 @@ const css = `
   .lp-wa-tooltip { position: fixed; bottom: 96px; right: 28px; z-index: 9999; background: #0a0a0a; color: #fff; font-family: 'DM Sans', system-ui, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 1px; padding: 7px 14px; border-radius: 4px; white-space: nowrap; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity 0.18s, transform 0.18s; }
   .lp-wa-fab:hover + .lp-wa-tooltip, .lp-wa-fab:focus + .lp-wa-tooltip { opacity: 1; transform: translateY(0); }
   @media(max-width:640px) { .lp-wa-fab { width: 50px; height: 50px; bottom: 20px; right: 20px; } .lp-wa-fab img { width: 50px; height: 50px; } .lp-wa-tooltip { display: none; } }
-  .lp-bestsellers { position: relative; min-height: 88vh; overflow: hidden; display: flex; align-items: center; justify-content: center; text-align: center; }
+  .lp-bestsellers { position: relative; min-height: 70vh; overflow: hidden; display: flex; align-items: center; justify-content: center; text-align: center; }
   .lp-bestsellers img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.55); }
   .lp-bestsellers-content { position: relative; z-index: 1; max-width: 560px; padding: 0 24px; }
   .lp-bestsellers-title { font-family: var(--f-sans); font-size: clamp(32px,6vw,64px); font-weight: 800; text-transform: uppercase; color: #fff; letter-spacing: -1px; line-height: 1; margin-bottom: 20px; text-shadow: 0 2px 24px rgba(0,0,0,0.4); }
   .lp-bestsellers-desc { font-family: var(--f-sans); font-size: clamp(13px,1.4vw,15px); font-weight: 300; color: rgba(255,255,255,0.85); line-height: 1.8; margin-bottom: 32px; }
-  @media(max-width:640px) { .lp-bestsellers { min-height: 80vw; } }
+  @media(max-width:640px) { .lp-bestsellers { min-height: 380px; } }
   .lp-video-wrap-top { border-top: 1px solid var(--rule); }
 `;
 

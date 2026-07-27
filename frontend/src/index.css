@@ -7,7 +7,7 @@
 /* ── Base resets ──────────────────────────────────────────────── */
 @layer base {
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #F9F5EC; font-family: 'Jost', sans-serif; }
+  body { background: #FFFFFF; font-family: 'Jost', sans-serif; }
   a    { text-decoration: none; color: inherit; }
 }
 
@@ -17,7 +17,7 @@
   /* Skeleton shimmer */
   .skel {
     @apply rounded-md;
-    background: linear-gradient(90deg, #F0EAD8 25%, #F9F5EC 50%, #F0EAD8 75%);
+    background: linear-gradient(90deg, #E8E8E8 25%, #FFFFFF 50%, #E8E8E8 75%);
     background-size: 200% 100%;
     animation: shimmer 1.4s infinite;
   }

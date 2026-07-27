@@ -8,6 +8,7 @@ import Footer      from '../../components/common/Footer';
 import ProductCard from '../../components/home/ProductCard';
 import Ornament    from '../../components/ui/Ornament';
 import { readUser } from '../../constants/theme';
+import emptyIcon from '../../assets/empty.png';
 import type { Product, User } from '../../constants/theme';
 
 
@@ -227,7 +228,7 @@ const toggleWishlist = async (productId: number) => {
         {/* Empty state */}
         {!loading && sorted.length === 0 && (
           <div className="text-center py-20">
-            <div className="text-5xl mb-4">🛍️</div>
+            <img src={emptyIcon} alt="No products available" className="w-20 h-20 mx-auto mb-4 opacity-70 object-contain" />
             <p className="font-sans font-bold text-[16px] text-navy mb-2">No products here yet</p>
             <p className="font-sans text-[13px] text-muted mb-6">
               We're stocking up {categoryName} — check back soon!

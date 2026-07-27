@@ -114,7 +114,10 @@ function BuyerRoute({ children }: { children: React.ReactNode }) {
 axios.interceptors.response.use(
   res => res,
   err => {
-    if (err.response?.status === 401) {
+    // Allow specific calls to opt out of the global redirect (e.g. a
+    // post-success cleanup request that shouldn't blow away a success screen)
+    const skipRedirect = err.config?.headers?.['X-Skip-Auth-Redirect'];
+    if (err.response?.status === 401 && !skipRedirect) {
       localStorage.removeItem('user');
       window.location.hash = '/login';
     }

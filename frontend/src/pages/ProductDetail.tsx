@@ -15,6 +15,7 @@ import Navbar         from '../components/common/Navbar';
 import Footer         from '../components/common/Footer';
 import InstagramStrip from '../components/common/InstagramStrip';
 import bookmarkIcon from '../assets/bookmark.png';
+import addedIcon from '../assets/added.png';
 import bookmarkedIcon from '../assets/bookmarked.png';
 import zoomInIcon from '../assets/zoom-in.png';
 import ProductCard    from '../components/home/ProductCard';
@@ -1003,7 +1004,7 @@ export default function ProductDetail() {
   const [qty,           setQty]           = useState(1);
   const [inCart,        setInCart]        = useState(false);
   const [adding,        setAdding]        = useState(false);
-  const [toast,         setToast]         = useState('');
+  const [toast,         setToast]         = useState<{ text: string; icon?: string } | null>(null);
   const [selectedColor, setSelectedColor] = useState('');
   const [colorError,    setColorError]    = useState(false);
   const [selectedSize,  setSelectedSize]  = useState('');
@@ -1167,9 +1168,9 @@ export default function ProductDetail() {
     }).catch(() => {});
   }, [id]);
 
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(''), 2800);
+  const showToast = (msg: string, icon?: string) => {
+    setToast({ text: msg, icon });
+    setTimeout(() => setToast(null), 2800);
   };
 
   // ── Wishlist ───────────────────────────────────────────────────────────────
@@ -1273,7 +1274,7 @@ export default function ProductDetail() {
           selected_size:  selectedSize  || null,
         });
         setInCart(true);
-        showToast('🛒 Added to cart!');
+        showToast('Added to cart!', addedIcon);
         window.dispatchEvent(new CustomEvent('cartUpdated'));
       }
     } catch {
@@ -1324,7 +1325,14 @@ export default function ProductDetail() {
     <div className="font-serif bg-cream min-h-screen text-navy overflow-x-hidden">
       <style>{css}</style>
 
-      {toast && <div className="lp-toast">{toast}</div>}
+      {toast && (
+        <div className="lp-toast" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+          {toast.icon && (
+            <img src={toast.icon} alt="" style={{ width:18, height:18, objectFit:'contain', flexShrink:0 }} />
+          )}
+          <span>{toast.text}</span>
+        </div>
+      )}
 
       <Navbar
         cartCount={cartCount}
@@ -1744,10 +1752,10 @@ const css = `
 
   .lp-toast {
     position:fixed; top:18px; left:50%; transform:translateX(-50%);
-    background:#111111; color:#FFFFFF;
+    background:#FFFFFF; color:#111111;
     font-family:'Jost',sans-serif; font-size:13px; font-weight:700; letter-spacing:1px;
     border-radius:8px; padding:12px 24px; z-index:9999;
-    box-shadow:0 8px 28px rgba(13,27,62,0.3); border:1px solid rgba(200,169,81,0.25);
+    box-shadow:0 8px 28px rgba(0,0,0,0.18); border:1px solid rgba(0,0,0,0.1);
     animation:slideIn 0.3s ease forwards; max-width:calc(100vw - 32px); text-align:center;
   }
   .lp-back {

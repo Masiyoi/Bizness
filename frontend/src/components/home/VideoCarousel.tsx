@@ -36,8 +36,8 @@ export const VIDEO_TILES: VideoTile[] = [
     headline: 'Voice of the Streets',
     sub: 'Classy look from the streets of Nairobi.',
     ctaLabel: 'Explore our collection',
-    ctaHref: '/categories/best-sellers',
-    tileHref: '/categories/best-sellers',
+    ctaHref: '/categories/headgear',
+    tileHref: '/categories/headgear',
     accentLight: true,
   },
 ];

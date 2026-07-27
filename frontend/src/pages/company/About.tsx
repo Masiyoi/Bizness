@@ -251,8 +251,8 @@ function TabPress() {
         <div style={{ background: 'transparent', padding: 0 }}>
           <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 12 }}>Media Enquiries</div>
           <div style={{ fontSize: 14, color: '#000', lineHeight: 2 }}>
-            <div>✉️ <a href="mailto:lukuprime254@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>lukuprime254@gmail.com</a></div>
-            <div>📞 <a href="tel:+254707099935" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 707 099 935</a></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={emailIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <a href="mailto:lukuprime254@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>lukuprime254@gmail.com</a></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={telephoneIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <a href="tel:+254707099935" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 707 099 935</a></div>
             <div style={{ marginTop: 8, fontSize: 12, color: '#000' }}>Use subject line <em>"Press Enquiry — [Topic]"</em> for faster response.</div>
           </div>
         </div>

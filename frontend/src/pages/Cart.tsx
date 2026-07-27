@@ -13,6 +13,8 @@ import visaLogo from '../assets/Visa.png';
 import mastercardLogo from '../assets/MasterCard-Logo.svg';
 import applePayLogo from '../assets/Apple_Pay_logo.svg';
 import googlePayLogo from '../assets/Google_Pay_Logo.svg';
+import locationIcon from '../assets/location.png';
+import freeIcon from '../assets/free.png';
 
 interface CartItem {
   id: number;
@@ -466,6 +468,7 @@ export default function Cart() {
           .item-name { font-size: 13px !important; }
           .item-thumb { width: 58px; height: 58px; }
         }
+
         .fade-in { animation: fadeIn 0.3s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes popupFadeUp { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
@@ -483,9 +486,24 @@ export default function Cart() {
           position: absolute; top: calc(100% + 4px); left: 0; right: 0;
           background: #fff; border: 1px solid rgba(0,0,0,0.10);
           box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+          border-radius: 10px;
           z-index: 999; overflow: hidden;
           animation: popupFadeUp 0.18s cubic-bezier(0.22,0.68,0,1.2) both;
           max-height: 260px; overflow-y: auto;
+        }
+        /* On mobile, the popup pushes content below it down instead of
+           floating over the next field — but keeps the same card styling
+           (border, shadow, rounded corners) as the delivery-method dropdown.
+           position: relative (not static) so its z-index actually applies —
+           otherwise the fixed outside-click overlay (z-index:998) paints on
+           top and blocks taps/scrolling inside the list. */
+        @media (max-width: 768px) {
+          .lk-dd-popup {
+            position: relative;
+            z-index: 1000;
+            margin-top: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+          }
         }
         .lk-dd-popup-header {
           padding: 10px 14px 8px; border-bottom: 1px solid rgba(0,0,0,0.06);
@@ -785,14 +803,17 @@ export default function Cart() {
                   <div className="form-field fade-in">
                     <label className="field-label">Pickup Location</label>
                     <div style={{ background: T.cream, border: '1px solid rgba(0,0,0,0.1)', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: 18 }}>🏪</span>
+                      <img src={locationIcon} alt="" style={{ width: 20, height: 20, objectFit: 'contain', flexShrink: 0 }} />
                       <div>
                         <div className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy }}>Luku Prime — Nairobi CBD</div>
                         <div className="jost" style={{ fontSize: 11, color: T.muted }}>Moi Avenue</div>
                       </div>
                     </div>
                     <div style={{ background: 'rgba(74,122,74,0.08)', border: '1px solid rgba(74,122,74,0.25)', borderRadius: 10, padding: '10px 14px', marginTop: 10 }}>
-                      <p className="jost" style={{ fontSize: 12, color: '#4A7A4A', fontWeight: 500 }}>🏪 You'll collect your order at this branch — no delivery fee!</p>
+                      <p className="jost" style={{ fontSize: 12, color: '#4A7A4A', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <img src={locationIcon} alt="" style={{ width: 15, height: 15, objectFit: 'contain', flexShrink: 0 }} />
+                        You'll collect your order at this branch — no delivery fee!
+                      </p>
                     </div>
                   </div>
                 ) : (
@@ -864,11 +885,15 @@ export default function Cart() {
                     {shipping.firstName && <div className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy, marginBottom: 2 }}>{shipping.firstName} {shipping.lastName}</div>}
                     {shipping.phone && <div className="jost" style={{ fontSize: 12, color: T.muted }}>{shipping.phone}</div>}
                     {deliveryZone === 'pickup' && shipping.pickupLocation && (
-                      <div className="jost" style={{ fontSize: 12, color: T.gold, marginTop: 4, fontWeight: 600 }}>🏪 {shipping.pickupLocation}</div>
+                      <div className="jost" style={{ fontSize: 12, color: T.gold, marginTop: 4, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <img src={locationIcon} alt="" style={{ width: 14, height: 14, objectFit: 'contain', flexShrink: 0 }} />
+                        {shipping.pickupLocation}
+                      </div>
                     )}
                     {deliveryZone !== 'pickup' && (shipping.county || shipping.town) && (
-                      <div className="jost" style={{ fontSize: 12, color: T.gold, marginTop: 4, fontWeight: 600 }}>
-                        📍 {[shipping.town, shipping.county].filter(Boolean).join(', ')}
+                      <div className="jost" style={{ fontSize: 12, color: T.gold, marginTop: 4, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <img src={locationIcon} alt="" style={{ width: 14, height: 14, objectFit: 'contain', flexShrink: 0 }} />
+                        {[shipping.town, shipping.county].filter(Boolean).join(', ')}
                       </div>
                     )}
                   </div>
@@ -949,7 +974,9 @@ export default function Cart() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                   <span className="jost" style={{ fontSize: 13, color: T.muted }}>Delivery</span>
                   <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: deliveryFee === 0 ? '#2D6A2D' : '#000' }}>
-                    {deliveryFee === 0 ? 'FREE 🎉' : `KSh ${deliveryFee}`}
+                    {deliveryFee === 0
+                      ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>FREE <img src={freeIcon} alt="" style={{ width: 16, height: 16, objectFit: 'contain' }} /></span>
+                      : `KSh ${deliveryFee}`}
                   </span>
                 </div>
                 <div style={{ height: 1, background: `linear-gradient(90deg,transparent,${T.gold},transparent)`, margin: '16px 0' }} />
