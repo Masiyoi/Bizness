@@ -51,6 +51,7 @@ exports.stkPush = async (req, res) => {
     shipping       = {},
     selectedColors = {},
     selectedSizes  = {},
+    reserved_order_number = null,
   } = req.body;
   const userId = req.user.id;
 
@@ -154,6 +155,7 @@ exports.stkPush = async (req, res) => {
           shipping, selectedColors, selectedSizes, delivery_zone, delivery_fee,
           discount_amount: discountInfo.discountAmount,
           discount_type: discountInfo.eligible ? 'first_order' : null,
+          reserved_order_number,
         }),
       ]
     );
@@ -215,6 +217,7 @@ exports.mpesaCallback = async (req, res) => {
       const deliveryFee  = shippingMeta.delivery_fee  || payment.delivery_fee  || 0;
       const discountAmount = Number(shippingMeta.discount_amount) || 0;
       const discountType   = shippingMeta.discount_type || null;
+      const reservedOrderNumber = shippingMeta.reserved_order_number || null;
 
       // 3. Fetch the user's cart items with product details
       const cartRes = await db.query(
@@ -260,8 +263,8 @@ exports.mpesaCallback = async (req, res) => {
         `INSERT INTO orders
            (user_id, payment_id, status, tracking_status, total, delivery_fee,
             delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt,
-            discount_type, discount_amount)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+            discount_type, discount_amount, order_number)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
         [
           payment.user_id,
           payment.id,
@@ -277,6 +280,7 @@ exports.mpesaCallback = async (req, res) => {
           receipt,
           discountType,
           discountAmount,
+          reservedOrderNumber,
         ]
       );
 
@@ -317,6 +321,7 @@ exports.mpesaCallback = async (req, res) => {
           const deliveryFee  = shippingMeta.delivery_fee  || payment.delivery_fee  || 0;
           const discountAmount = Number(shippingMeta.discount_amount) || 0;
           const discountType   = shippingMeta.discount_type || null;
+          const reservedOrderNumber = shippingMeta.reserved_order_number || null;
 
           const cartRes = await db.query(
             `SELECT
@@ -347,8 +352,8 @@ exports.mpesaCallback = async (req, res) => {
             `INSERT INTO orders
                (user_id, payment_id, status, tracking_status, total, delivery_fee,
                 delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt,
-                discount_type, discount_amount)
-             VALUES ($1, $2, 'cancelled', 'Payment Failed', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+                discount_type, discount_amount, order_number)
+             VALUES ($1, $2, 'cancelled', 'Payment Failed', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
             [
               payment.user_id,
               payment.id,
@@ -362,6 +367,7 @@ exports.mpesaCallback = async (req, res) => {
               null,
               discountType,
               discountAmount,
+              reservedOrderNumber,
             ]
           );
 

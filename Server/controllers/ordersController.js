@@ -1,5 +1,26 @@
 const db = require('../config/db');
 
+// ── GET /api/orders/reserve-number  — reserve the next order number ─────────
+/**
+ * Pulls the next value from the order_number sequence and formats it the
+ * same way the DB trigger (trg_generate_order_number) does, WITHOUT
+ * inserting an orders row. The frontend calls this once when the checkout
+ * summary loads so it can display the order number before payment starts.
+ * The reserved value is then threaded through stk-push / pesapal-initiate
+ * and set explicitly on the eventual INSERT INTO orders — the trigger only
+ * fires when order_number IS NULL, so it just no-ops there.
+ */
+exports.reserveOrderNumber = async (req, res) => {
+  try {
+    const result = await db.query(`SELECT nextval('orders_order_number_seq') AS n`);
+    const orderNumber = 'ON-' + String(result.rows[0].n).padStart(6, '0');
+    return res.json({ orderNumber });
+  } catch (err) {
+    console.error('reserveOrderNumber error:', err.message);
+    return res.status(500).json({ msg: 'Failed to reserve order number' });
+  }
+};
+
 // ── GET /api/orders  — all orders for the logged-in user ─────────────────────
 exports.getOrders = async (req, res) => {
   const userId = req.user.id;
@@ -127,5 +148,23 @@ exports.getOrderById = async (req, res) => {
   } catch (err) {
     console.error('getOrderById error:', err.message);
     return res.status(500).json({ msg: 'Failed to fetch order' });
+  }
+};
+
+// Server/controllers/ordersController.js
+
+exports.reserveOrderNumber = async (req, res) => {
+  const userId = req.user.id;
+  try {
+    // Generate a unique reserved order number
+    const reserved = `ORD-${userId}-${Date.now()}`;
+    
+    // Optional: store in DB for audit, or just return it
+    // For now, simple return — no DB storage needed
+    
+    res.json({ reserved_order_number: reserved });
+  } catch (err) {
+    console.error('Reserve order number error:', err.message);
+    res.status(500).json({ msg: 'Failed to reserve order number' });
   }
 };

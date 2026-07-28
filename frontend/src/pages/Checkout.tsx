@@ -62,6 +62,7 @@ export default function Checkout() {
   const tickRef    = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [items, setItems]                       = useState<CartItem[]>([]);
+  const [reservedOrderNumber, setReservedOrderNumber] = useState<string | null>(null);
   const [loading, setLoading]                   = useState(true);
   const [step, setStep]                         = useState<CheckoutStep>('summary');
   const [paymentMethod, setPaymentMethod]       = useState<PaymentMethod | null>(null);
@@ -101,6 +102,17 @@ export default function Checkout() {
 
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
+    
+    // Reserve order number at checkout start
+    axios.post('/api/orders/reserve-number')
+      .then(res => setReservedOrderNumber(res.data.reserved_order_number))
+      .catch(err => console.error('Failed to reserve order number:', err.message));
+    
+    // Reserve order number at checkout load
+    axios.post('/api/orders/reserve-number')
+      .then(res => setReservedOrderNumber(res.data.reserved_order_number))
+      .catch(err => console.error('Reserve number error:', err.message));
+
     axios.get('/api/cart')
       .then(res => { setItems(res.data); setLoading(false); })
       .catch(() => { setLoading(false); navigate('/cart'); });
@@ -208,6 +220,7 @@ export default function Checkout() {
         shipping:       passedShipping ?? {},
         selectedColors: passedColors,
         selectedSizes:  passedSizes,
+        reserved_order_number: reservedOrderNumber,
       });
 
       setCheckoutRequestId(res.data.checkoutRequestId);
@@ -275,6 +288,7 @@ export default function Checkout() {
         shipping:       passedShipping,
         selectedColors: passedColors,
         selectedSizes:  passedSizes,
+        reserved_order_number: reservedOrderNumber,
       });
 
       // Save tracking ID in case user comes back via callback URL
@@ -800,7 +814,17 @@ export default function Checkout() {
               </div>
             )}
 
-            <div className="totals-box" style={{ background: 'transparent', borderRadius: 0, padding: '18px 0', textAlign: 'left', marginBottom: 24 }}>
+
+
+        {reservedOrderNumber && <div style={{ padding: '12px', background: '#F5F5F5', marginBottom: 24, borderRadius: 8 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: T.muted, marginBottom: 6 }}>ORDER NUMBER</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: T.navy }}>{reservedOrderNumber}</div>
+        </div>}
+        {reservedOrderNumber && <div style={{ padding: '12px', background: '#F5F5F5', marginBottom: 24, borderRadius: 8 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: T.muted, marginBottom: 6 }}>ORDER NUMBER</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: T.navy }}>{reservedOrderNumber}</div>
+        </div>}
+        <div className="totals-box" style={{ background: 'transparent', borderRadius: 0, padding: '18px 0', textAlign: 'left', marginBottom: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <span className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy }}>Subtotal</span>
                 <span className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy }}>KSh {subtotal.toLocaleString()}</span>
