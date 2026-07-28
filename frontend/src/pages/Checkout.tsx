@@ -142,11 +142,29 @@ export default function Checkout() {
   const hashParams = new URLSearchParams(hashQueryString);
   const searchParams = new URLSearchParams(window.location.search);
   const trackingId = hashParams.get('OrderTrackingId') || searchParams.get('OrderTrackingId');
+
   if (trackingId) {
-    setPesapalTrackingId(trackingId);
-    setPaymentMethod('pesapal');
-    setStep('waiting');
-    startPesapalPolling(trackingId);
+    // BUG FIX: without this guard + URL cleanup, a stale OrderTrackingId left
+    // in the address bar (browser back/forward, or a client-side navigate
+    // that doesn't touch window.location.search) re-triggers this effect on
+    // a LATER, unrelated checkout visit. Polling then hits an
+    // already-completed order in the DB and jumps straight to the success
+    // screen before the new payment was ever made.
+    const alreadyConsumed = sessionStorage.getItem('pesapal_consumed_tracking_id') === trackingId;
+
+    // Strip the query param immediately so it can never be re-read on a
+    // future mount of this page (covers both the hash-query and
+    // search-query shapes Pesapal may use).
+    const cleanPath = window.location.pathname + window.location.hash.split('?')[0];
+    window.history.replaceState({}, '', cleanPath);
+
+    if (!alreadyConsumed) {
+      sessionStorage.setItem('pesapal_consumed_tracking_id', trackingId);
+      setPesapalTrackingId(trackingId);
+      setPaymentMethod('pesapal');
+      setStep('waiting');
+      startPesapalPolling(trackingId);
+    }
   }
 }, []);
 
