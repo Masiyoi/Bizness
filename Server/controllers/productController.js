@@ -20,30 +20,40 @@ const normaliseProduct = (p) => ({
   sale_price:   p.sale_price   ? parseFloat(p.sale_price)  : null,
   sale_ends_at: p.sale_ends_at ?? null,
   video_url:    p.video_url ?? null,
+  rating:       p.rating != null ? parseFloat(p.rating) : null,
+  review_count: p.review_count != null ? parseInt(p.review_count, 10) : 0,
 });
+
+// Reused by every listing query below to attach rating + review_count
+const RATING_JOIN = `
+  LEFT JOIN LATERAL (
+    SELECT ROUND(AVG(rating), 1) AS avg_rating, COUNT(*) AS review_count
+    FROM reviews WHERE reviews.product_id = p.id
+  ) rv ON true`;
+const RATING_SELECT = `p.*, rv.avg_rating::float AS rating, COALESCE(rv.review_count, 0)::int AS review_count`;
 
 // ── GET /api/products  (public) ───────────────────────────────────────────────
 exports.getProducts = async (req, res) => {
   try {
     const { category, search, sort } = req.query;
 
-    let query  = `SELECT * FROM products WHERE 1=1`;
+    let query  = `SELECT ${RATING_SELECT} FROM products p ${RATING_JOIN} WHERE 1=1`;
     const vals = [];
 
     if (category) {
       vals.push(category);
-      query += ` AND category = $${vals.length}`;
+      query += ` AND p.category = $${vals.length}`;
     }
 
     if (search) {
       vals.push(`%${search}%`);
-      query += ` AND name ILIKE $${vals.length}`;
+      query += ` AND p.name ILIKE $${vals.length}`;
     }
 
     query +=
-      sort === 'price_asc'  ? ' ORDER BY price ASC'  :
-      sort === 'price_desc' ? ' ORDER BY price DESC' :
-                              ' ORDER BY created_at DESC';
+      sort === 'price_asc'  ? ' ORDER BY p.price ASC'  :
+      sort === 'price_desc' ? ' ORDER BY p.price DESC' :
+                              ' ORDER BY p.created_at DESC';
 
     const result = await db.query(query, vals);
     res.json(result.rows.map(normaliseProduct));
@@ -99,9 +109,10 @@ exports.getNewArrivals = async (req, res) => {
   try {
     const { limit = 20 } = req.query;
     const result = await db.query(
-      `SELECT * FROM products
-       WHERE created_at >= NOW() - INTERVAL '3 weeks'
-       ORDER BY created_at DESC
+      `SELECT ${RATING_SELECT} FROM products p
+       ${RATING_JOIN}
+       WHERE p.created_at >= NOW() - INTERVAL '3 weeks'
+       ORDER BY p.created_at DESC
        LIMIT $1`,
       [parseInt(limit)]
     );
@@ -164,14 +175,16 @@ exports.getBestSellers = async (req, res) => {
     // Using unnest to preserve the sort order from countMap
     const placeholders = qualifyingIds.map((_, i) => `$${i + 1}`).join(', ');
     const productsResult = await db.query(
-      `SELECT * FROM products
-       WHERE id IN (${placeholders})`,
+      `SELECT ${RATING_SELECT} FROM products p
+       ${RATING_JOIN}
+       WHERE p.id IN (${placeholders})`,
       qualifyingIds
     );
 
     // Step 5 — re-sort by our countMap order (SQL IN doesn't guarantee order)
     const sorted = productsResult.rows
       .map(normaliseProduct)
+      .map(p => ({ ...p, is_bestseller: true }))
       .sort((a, b) => (countMap[b.id] || 0) - (countMap[a.id] || 0));
 
     res.json(sorted);
@@ -186,11 +199,12 @@ exports.getFlashSales = async (req, res) => {
   try {
     const { limit = 20 } = req.query;
     const result = await db.query(
-      `SELECT * FROM products
-       WHERE sale_price IS NOT NULL
-         AND sale_price < price
-         AND (sale_ends_at IS NULL OR sale_ends_at > NOW())
-       ORDER BY (price - sale_price) DESC
+      `SELECT ${RATING_SELECT} FROM products p
+       ${RATING_JOIN}
+       WHERE p.sale_price IS NOT NULL
+         AND p.sale_price < p.price
+         AND (p.sale_ends_at IS NULL OR p.sale_ends_at > NOW())
+       ORDER BY (p.price - p.sale_price) DESC
        LIMIT $1`,
       [parseInt(limit)]
     );

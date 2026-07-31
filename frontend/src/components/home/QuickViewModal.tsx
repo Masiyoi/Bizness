@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { T, isNewProduct } from '../../constants/theme';
+import { isNewProduct } from '../../constants/theme';
 import type { Product } from '../../constants/theme';
 
 interface QuickViewModalProps {
@@ -16,6 +16,23 @@ interface QuickViewModalProps {
   salePrice?: number;
 }
 
+// ── Monochrome design tokens — crisp, futuristic, restrained ─────────────────
+const C = {
+  ink:      '#0A0A0A',
+  paper:    '#FFFFFF',
+  line:     'rgba(10,10,10,0.12)',
+  lineMid:  'rgba(10,10,10,0.28)',
+  muted:    '#8C8C8C',
+  backdrop:  'rgba(8,8,8,0.62)',
+  accent:    '#C2410C', // sale / urgency only — matches ProductCard
+  cart:      '#DC2626', // Add to Cart
+  cartDark:  '#B91C1C',
+  wishlist:  '#16A34A', // Add to Wishlist
+  wishlistDark: '#15803D',
+};
+const BODY = "'DM Sans', sans-serif";
+const MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+
 export default function QuickViewModal({
   product, inCart, inWishlist, isAdmin, onCartToggle, onWishlistToggle, onClose, salePrice,
 }: QuickViewModalProps) {
@@ -26,7 +43,7 @@ export default function QuickViewModal({
     ? product.images
     : product.image_url
       ? [product.image_url]
-      : ['https://placehold.co/420x520/F0EAD8/0D1B3E?text=Luku+Prime'];
+      : ['https://placehold.co/420x520/0A0A0A/FFFFFF?text=Luku+Prime'];
   const count = images.length;
 
   const [activeIdx, setActiveIdx]   = useState(0);
@@ -72,49 +89,76 @@ export default function QuickViewModal({
   return createPortal(
     <>
       <style>{`
-        @keyframes qv-fade-in {
-          from { opacity: 0; } to { opacity: 1; }
+        @keyframes qv-backdrop-in {
+          from { opacity: 0; backdrop-filter: blur(0px); }
+          to   { opacity: 1; backdrop-filter: blur(10px); }
         }
-        @keyframes qv-scale-in {
-          from { opacity: 0; transform: scale(0.94) translateY(8px); }
-          to   { opacity: 1; transform: scale(1)    translateY(0);   }
+        @keyframes qv-panel-in {
+          from { opacity: 0; transform: scale(0.96) translateY(10px); filter: blur(6px); }
+          to   { opacity: 1; transform: scale(1)    translateY(0);    filter: blur(0);   }
         }
-        .qv-panel {
-          flex-direction: row;
+        @keyframes qv-scan {
+          0%   { top: 0%;   opacity: 0; }
+          8%   { opacity: 0.9; }
+          92%  { opacity: 0.9; }
+          100% { top: 100%; opacity: 0; }
         }
-        .qv-image-pane {
-          flex: 0 0 46%;
-          min-height: 460px;
+        @media (prefers-reduced-motion: reduce) {
+          .qv-backdrop, .qv-panel, .qv-scan { animation: none !important; }
         }
+
+        .qv-panel { flex-direction: row; }
+        .qv-image-pane { flex: 0 0 58%; min-height: 460px; }
+        .qv-details-pane { min-height: 0; -webkit-overflow-scrolling: touch; }
+
         @media (max-width: 720px) {
-          .qv-panel {
-            flex-direction: column !important;
-            max-height: 92vh !important;
-          }
-          .qv-image-pane {
-            flex: 0 0 auto !important;
-            min-height: 0 !important;
-            height: 220px !important;
-          }
-          .qv-details-pane {
-            padding: 24px 20px 28px !important;
-          }
+          .qv-panel { flex-direction: column !important; max-height: 92vh !important; }
+          .qv-image-pane { flex: 0 0 auto !important; min-height: 0 !important; height: 300px !important; }
+          .qv-details-pane { padding: 22px 18px 24px !important; }
         }
-        .qv-wishlist-btn:hover {
-          background: ${T.navy} !important;
-          color: #fff !important;
+
+        .qv-icon-btn {
+          background: rgba(255,255,255,0.08);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border: 1px solid rgba(255,255,255,0.22);
+          transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
         }
+        .qv-icon-btn:hover:not(:disabled) {
+          background: rgba(255,255,255,0.18);
+          border-color: rgba(255,255,255,0.4);
+        }
+        .qv-icon-btn:active:not(:disabled) { transform: scale(0.94); }
+
+        .qv-close-btn {
+          transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+        .qv-close-btn:hover { background: ${C.ink} !important; color: ${C.paper} !important; border-color: ${C.ink} !important; }
+
+        .qv-cart-btn { transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease; }
+        .qv-cart-btn:hover:not(:disabled) { opacity: 0.88; }
+
+        .qv-wishlist-btn { transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease; }
+        .qv-wishlist-btn:hover { background: ${C.wishlist} !important; color: ${C.paper} !important; border-color: ${C.wishlist} !important; }
+
+        .qv-bracket { transition: opacity 0.25s ease, inset 0.25s ease; }
+        .qv-image-pane:hover .qv-bracket { opacity: 1 !important; }
+
+        a.qv-full-link { transition: opacity 0.15s ease; }
+        a.qv-full-link:hover { opacity: 1 !important; }
+
+        *:focus-visible { outline: 2px solid ${C.ink}; outline-offset: 2px; }
       `}</style>
 
       {/* Backdrop */}
       <div
+        className="qv-backdrop"
         onClick={onClose}
         style={{
           position: 'fixed', inset: 0,
-          background: 'rgba(13,27,62,0.48)',
-          backdropFilter: 'blur(4px)',
+          background: C.backdrop,
           zIndex: 1000,
-          animation: 'qv-fade-in 0.22s ease forwards',
+          animation: 'qv-backdrop-in 0.28s ease forwards',
         }}
       />
 
@@ -130,25 +174,22 @@ export default function QuickViewModal({
           className="qv-panel"
           style={{
             pointerEvents: 'all',
-            background: '#fff',
-            borderRadius: 8,
+            background: C.paper,
+            borderRadius: 3,
             overflow: 'hidden',
             width: '100%',
             maxWidth: 840,
             maxHeight: '86vh',
             display: 'flex',
-            boxShadow: '0 32px 80px rgba(13,27,62,0.24)',
-            animation: 'qv-scale-in 0.26s cubic-bezier(0.25,0.46,0.45,0.94) forwards',
+            border: `1px solid ${C.line}`,
+            boxShadow: '0 44px 100px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)',
+            animation: 'qv-panel-in 0.36s cubic-bezier(0.16,1,0.3,1) forwards',
           }}
         >
           {/* Image carousel */}
           <div
             className="qv-image-pane"
-            style={{
-              position: 'relative',
-              background: '#F7F5F0',
-              overflow: 'hidden',
-            }}
+            style={{ position: 'relative', background: C.ink, overflow: 'hidden' }}
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
@@ -173,21 +214,36 @@ export default function QuickViewModal({
                     draggable={false}
                     onError={e => {
                       (e.target as HTMLImageElement).src =
-                        `https://placehold.co/420x520/F0EAD8/0D1B3E?text=Luku+Prime`;
+                        `https://placehold.co/420x520/0A0A0A/FFFFFF?text=Luku+Prime`;
                     }}
                   />
                 </div>
               ))}
             </div>
 
-            {isNew && stock > 0 && <div style={badgeStyle(T.gold, T.navy)}>NEW</div>}
+            {/* Viewfinder corner brackets — signature element */}
+            <CornerBrackets />
+
+            {/* One-time scan-line sweep on open */}
+            <div
+              className="qv-scan"
+              style={{
+                position: 'absolute', left: 0, right: 0, height: 1,
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent)',
+                boxShadow: '0 0 12px 1px rgba(255,255,255,0.7)',
+                zIndex: 3, pointerEvents: 'none',
+                animation: 'qv-scan 1.1s cubic-bezier(0.4,0,0.2,1) 0.15s forwards',
+              }}
+            />
+
+            {isNew && stock > 0 && <div style={chipStyle('left')}>NEW</div>}
             {product.category && !isNew && stock > 0 && (
-              <div style={badgeStyle(T.navy, T.gold)}>{product.category}</div>
+              <div style={chipStyle('left')}>{product.category}</div>
             )}
             {stock === 0 && (
               <div style={{
                 position: 'absolute', inset: 0,
-                background: 'rgba(13,27,62,0.5)',
+                background: 'rgba(0,0,0,0.68)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 zIndex: 2,
               }}>
@@ -198,6 +254,7 @@ export default function QuickViewModal({
             {count > 1 && (
               <>
                 <button
+                  className="qv-icon-btn"
                   onClick={prevImg}
                   disabled={activeIdx === 0}
                   aria-label="Previous image"
@@ -206,6 +263,7 @@ export default function QuickViewModal({
                   <span style={arrowIconStyle}>‹</span>
                 </button>
                 <button
+                  className="qv-icon-btn"
                   onClick={nextImg}
                   disabled={activeIdx === count - 1}
                   aria-label="Next image"
@@ -215,7 +273,7 @@ export default function QuickViewModal({
                 </button>
 
                 <div style={{
-                  position: 'absolute', bottom: 10, left: 0, right: 0,
+                  position: 'absolute', bottom: 12, left: 0, right: 0,
                   display: 'flex', justifyContent: 'center', gap: 4, zIndex: 3,
                 }}>
                   {images.map((_, i) => (
@@ -223,10 +281,9 @@ export default function QuickViewModal({
                       key={i}
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); goTo(i); }}
                       style={{
-                        width: i === activeIdx ? 16 : 5, height: 5, borderRadius: 2.5,
-                        background: i === activeIdx ? '#fff' : 'rgba(255,255,255,0.55)',
+                        width: i === activeIdx ? 16 : 5, height: 2,
+                        background: i === activeIdx ? '#fff' : 'rgba(255,255,255,0.4)',
                         cursor: 'pointer', transition: 'width 0.25s ease, background 0.25s ease',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
                       }}
                     />
                   ))}
@@ -238,62 +295,64 @@ export default function QuickViewModal({
           {/* Details */}
           <div className="qv-details-pane" style={{
             flex: 1, overflowY: 'auto',
-            padding: '40px 36px 36px',
+            padding: '38px 34px 34px',
             display: 'flex', flexDirection: 'column',
             position: 'relative',
           }}>
             {/* Close button */}
             <button
+              className="qv-close-btn"
               onClick={onClose}
               style={{
                 position: 'absolute', top: 16, right: 16,
-                background: 'none', border: 'none', cursor: 'pointer',
-                width: 32, height: 32, borderRadius: '50%',
+                background: 'transparent', border: `1px solid ${C.line}`, cursor: 'pointer',
+                width: 30, height: 30, borderRadius: 2,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#999', fontSize: 16, transition: 'color 0.2s, background 0.2s',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = '#F5F5F5';
-                e.currentTarget.style.color = T.navy;
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = 'none';
-                e.currentTarget.style.color = '#999';
+                color: C.muted, fontSize: 14,
               }}
               aria-label="Close"
             >
               ✕
             </button>
 
+            {/* Eyebrow */}
+            <span style={{
+              fontFamily: MONO, fontSize: 9.5, fontWeight: 500,
+              letterSpacing: '2.5px', color: C.muted, textTransform: 'uppercase',
+              marginBottom: 8,
+            }}>
+              Quick View
+            </span>
+
             {/* Name */}
             <h2 style={{
-              fontFamily: 'Georgia, serif',
-              fontSize: 22, fontWeight: 600,
-              color: T.navy, margin: '0 0 10px',
-              lineHeight: 1.25, paddingRight: 36,
+              fontFamily: BODY,
+              fontSize: 21, fontWeight: 600,
+              color: C.ink, margin: '0 0 12px',
+              lineHeight: 1.3, paddingRight: 30, letterSpacing: '-0.2px',
             }}>
               {product.name}
             </h2>
 
             {/* Price + stock */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
               {salePrice != null ? (
                 <div style={{ display:'flex', alignItems:'baseline', gap:8, flexWrap:'wrap' }}>
-                  <span style={{ fontFamily:'sans-serif', fontSize:19, fontWeight:700, color:'#C2410C' }}>
+                  <span style={{ fontFamily: BODY, fontSize:18, fontWeight:700, color: C.accent }}>
                     KSh {salePrice.toLocaleString()}
                   </span>
-                  <span style={{ fontFamily:'sans-serif', fontSize:14, fontWeight:400, color:'#aaa', textDecoration:'line-through' }}>
+                  <span style={{ fontFamily: BODY, fontSize:13, fontWeight:400, color: C.muted, textDecoration:'line-through' }}>
                     KSh {Number(product.price).toLocaleString()}
                   </span>
-                  <span style={{ background:'#EF4444', color:'#fff', fontFamily:'sans-serif', fontWeight:700, fontSize:10, padding:'2px 8px', borderRadius:4 }}>
+                  <span style={{
+                    fontFamily: MONO, color: C.accent, fontWeight: 600, fontSize: 10,
+                    padding: '2px 6px', border: `1px solid ${C.accent}`, borderRadius: 2,
+                  }}>
                     -{Math.round(((Number(product.price) - salePrice) / Number(product.price)) * 100)}%
                   </span>
                 </div>
               ) : (
-                <span style={{
-                  fontFamily: 'sans-serif', fontSize: 19,
-                  fontWeight: 700, color: T.navy,
-                }}>
+                <span style={{ fontFamily: BODY, fontSize: 18, fontWeight: 700, color: C.ink }}>
                   KSh {Number(product.price).toLocaleString()}
                 </span>
               )}
@@ -303,22 +362,22 @@ export default function QuickViewModal({
             {/* Description */}
             {product.description && (
               <p style={{
-                fontFamily: 'sans-serif', fontSize: 13.5,
-                color: '#666', lineHeight: 1.7, margin: '0 0 20px',
+                fontFamily: BODY, fontSize: 13,
+                color: '#555', lineHeight: 1.7, margin: '0 0 20px',
               }}>
                 {product.description}
               </p>
             )}
 
             {/* Divider */}
-            <div style={{ height: 1, background: '#EBEBEB', margin: '0 0 18px' }} />
+            <div style={{ height: 1, background: C.line, margin: '0 0 18px' }} />
 
             {/* Meta */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 28 }}>
-              {product.category && <MetaRow label="Category"     value={product.category} />}
-              {product.sku      && <MetaRow label="SKU"          value={product.sku} />}
-              <MetaRow label="Availability" value={stock > 0 ? `${stock} units` : 'Unavailable'} />
-            </div>
+            {product.sku && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 26 }}>
+                <MetaRow label="SKU" value={product.sku} />
+              </div>
+            )}
 
             <div style={{ flex: 1 }} />
 
@@ -339,6 +398,21 @@ export default function QuickViewModal({
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+function CornerBrackets() {
+  const base: React.CSSProperties = {
+    position: 'absolute', width: 18, height: 18,
+    border: 'none', opacity: 0.55, zIndex: 3, pointerEvents: 'none',
+  };
+  return (
+    <>
+      <div className="qv-bracket" style={{ ...base, top: 14, left: 14, borderTop: '1.5px solid #fff', borderLeft: '1.5px solid #fff' }} />
+      <div className="qv-bracket" style={{ ...base, top: 14, right: 14, borderTop: '1.5px solid #fff', borderRight: '1.5px solid #fff' }} />
+      <div className="qv-bracket" style={{ ...base, bottom: 14, left: 14, borderBottom: '1.5px solid #fff', borderLeft: '1.5px solid #fff' }} />
+      <div className="qv-bracket" style={{ ...base, bottom: 14, right: 14, borderBottom: '1.5px solid #fff', borderRight: '1.5px solid #fff' }} />
+    </>
+  );
+}
+
 function CTAs({ isAdmin, stock, inCart, inWishlist, productId, onCartToggle, onWishlistToggle, onClose }: {
   isAdmin: boolean; stock: number; inCart: boolean; inWishlist: boolean;
   productId: number;
@@ -349,14 +423,14 @@ function CTAs({ isAdmin, stock, inCart, inWishlist, productId, onCartToggle, onW
   if (isAdmin) {
     return (
       <Link to={`/product/${productId}`} style={{ textDecoration: 'none' }}>
-        <button onClick={onClose} style={{
+        <button className="qv-cart-btn" onClick={onClose} style={{
           width: '100%', padding: '13px 0',
-          background: T.navy, color: T.gold,
-          border: 'none', borderRadius: 6, cursor: 'pointer',
-          fontFamily: 'sans-serif', fontSize: 10, fontWeight: 700,
+          background: C.ink, color: C.paper,
+          border: 'none', borderRadius: 2, cursor: 'pointer',
+          fontFamily: MONO, fontSize: 10, fontWeight: 600,
           letterSpacing: '1.5px', textTransform: 'uppercase',
         }}>
-          👁️ View Full Details
+          View Full Details
         </button>
       </Link>
     );
@@ -365,16 +439,17 @@ function CTAs({ isAdmin, stock, inCart, inWishlist, productId, onCartToggle, onW
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <button
+        className="qv-cart-btn"
         disabled={stock === 0}
         onClick={() => { if (stock > 0) onCartToggle(productId); }}
         style={{
           width: '100%', padding: '13px 0',
-          border: inCart ? '1.5px solid #F5C6C0' : 'none',
-          borderRadius: 6, cursor: stock === 0 ? 'not-allowed' : 'pointer',
-          fontFamily: 'sans-serif', fontSize: 10, fontWeight: 700,
+          border: inCart ? `1px solid ${C.cart}` : 'none',
+          borderRadius: 10, cursor: stock === 0 ? 'not-allowed' : 'pointer',
+          fontFamily: MONO, fontSize: 10, fontWeight: 600,
           letterSpacing: '1.5px', textTransform: 'uppercase',
-          background: stock === 0 ? '#F0EAD8' : inCart ? '#FDF0EE' : T.gold,
-          color:      stock === 0 ? '#9CA3AF' : inCart ? '#C0392B' : T.navy,
+          background: stock === 0 ? '#EDEDED' : inCart ? C.paper : C.cart,
+          color:      stock === 0 ? '#AAAAAA' : inCart ? C.cart : C.paper,
         }}
       >
         {stock === 0 ? 'Sold Out' : inCart ? '✕ Remove from Cart' : 'Add to Cart'}
@@ -385,24 +460,26 @@ function CTAs({ isAdmin, stock, inCart, inWishlist, productId, onCartToggle, onW
         onClick={() => onWishlistToggle(productId)}
         style={{
           width: '100%', padding: '11px 0',
-          background: 'transparent',
-          border: `1.5px solid ${T.navy}`,
-          borderRadius: 6, cursor: 'pointer',
-          fontFamily: 'sans-serif', fontSize: 10, fontWeight: 700,
+          background: inWishlist ? C.wishlist : 'transparent',
+          border: `1px solid ${C.wishlist}`,
+          borderRadius: 10, cursor: 'pointer',
+          fontFamily: MONO, fontSize: 10, fontWeight: 600,
           letterSpacing: '1.5px', textTransform: 'uppercase',
-          color: T.navy, transition: 'background 0.2s, color 0.2s',
+          color: inWishlist ? C.paper : C.wishlist,
         }}
       >
-        {inWishlist ? '❤️ Remove from Wishlist' : '🤍 Add to Wishlist'}
+        {inWishlist ? '♥ Remove from Wishlist' : '♡ Add to Wishlist'}
       </button>
 
       <Link
         to={`/product/${productId}`}
         onClick={onClose}
+        className="qv-full-link"
         style={{
-          textAlign: 'center', fontFamily: 'sans-serif',
-          fontSize: 11, color: T.navy, opacity: 0.5,
-          textDecoration: 'underline', marginTop: 2, letterSpacing: '0.5px',
+          textAlign: 'center', fontFamily: MONO,
+          fontSize: 10.5, color: C.ink, opacity: 0.55,
+          textDecoration: 'underline', textUnderlineOffset: 3,
+          marginTop: 2, letterSpacing: '0.5px',
         }}
       >
         View full product page →
@@ -413,23 +490,23 @@ function CTAs({ isAdmin, stock, inCart, inWishlist, productId, onCartToggle, onW
 
 function StockPill({ stock }: { stock: number }) {
   if (stock === 0)
-    return <span style={pillStyle('#C0392B', '#FDF0EE', '#F5C6C0')}>Out of stock</span>;
+    return <span style={pillStyle(C.accent)}>● Out of stock</span>;
   if (stock <= 5)
-    return <span style={pillStyle('#8A6A20', 'rgba(196,160,74,0.1)', 'rgba(196,160,74,0.3)')}>⚠ Only {stock} left</span>;
-  return <span style={pillStyle('#4A7A4A', '#EEF3EE', '#C8DFC8')}>✓ In Stock</span>;
+    return <span style={pillStyle(C.accent)}>● Only {stock} left</span>;
+  return <span style={pillStyle(C.ink)}>● In Stock</span>;
 }
 
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
       <span style={{
-        fontFamily: 'sans-serif', fontSize: 10, fontWeight: 700,
-        color: '#999', letterSpacing: '1px',
-        textTransform: 'uppercase', minWidth: 90,
+        fontFamily: MONO, fontSize: 9.5, fontWeight: 500,
+        color: C.muted, letterSpacing: '1.5px',
+        textTransform: 'uppercase', minWidth: 92,
       }}>
         {label}
       </span>
-      <span style={{ fontFamily: 'sans-serif', fontSize: 13, color: '#333' }}>{value}</span>
+      <span style={{ fontFamily: BODY, fontSize: 13, color: '#333' }}>{value}</span>
     </div>
   );
 }
@@ -438,47 +515,50 @@ function arrowStyle(side: 'left' | 'right', disabled: boolean): React.CSSPropert
   return {
     position: 'absolute',
     top: '50%',
-    [side]: 10,
+    [side]: 12,
     transform: 'translateY(-50%)',
     width: 28, height: 28,
-    borderRadius: '50%',
-    background: disabled ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.92)',
-    border: 'none',
+    borderRadius: 2,
     cursor: disabled ? 'default' : 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     zIndex: 4,
-    opacity: disabled ? 0.4 : 1,
-    transition: 'opacity 0.2s',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+    opacity: disabled ? 0.25 : 1,
   };
 }
 
 const arrowIconStyle: React.CSSProperties = {
-  fontSize: 16, color: '#000', fontWeight: 700,
+  fontSize: 15, color: '#fff', fontWeight: 600,
   lineHeight: 1, userSelect: 'none',
 };
 
-function badgeStyle(bg: string, color: string): React.CSSProperties {
+function chipStyle(side: 'left' | 'right'): React.CSSProperties {
   return {
-    position: 'absolute', top: 10, left: 10,
-    background: bg, color,
-    fontFamily: 'sans-serif', fontSize: 8, fontWeight: 800,
-    letterSpacing: '2px', padding: '3px 8px',
-    textTransform: 'uppercase', zIndex: 2,
-  };
+    position: 'absolute', top: 12, [side]: 12,
+    background: 'rgba(255,255,255,0.1)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255,255,255,0.25)',
+    color: '#fff',
+    fontFamily: MONO, fontSize: 9, fontWeight: 500,
+    letterSpacing: '1.5px', padding: '4px 9px',
+    textTransform: 'uppercase', zIndex: 2, borderRadius: 2,
+  } as React.CSSProperties;
 }
 
-function pillStyle(color: string, bg: string, border: string): React.CSSProperties {
+function pillStyle(color: string): React.CSSProperties {
   return {
-    fontFamily: 'sans-serif', fontSize: 9, fontWeight: 700,
-    color, background: bg, border: `1px solid ${border}`,
-    borderRadius: 3, padding: '2px 6px',
+    fontFamily: MONO, fontSize: 9.5, fontWeight: 500,
+    color, letterSpacing: '0.5px',
   };
 }
 
 const soldOutStyle: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.95)', color: '#0D1B3E',
-  fontFamily: 'sans-serif', fontWeight: 700,
-  fontSize: 9, letterSpacing: '2px',
-  textTransform: 'uppercase', padding: '5px 14px', borderRadius: 3,
+  background: 'rgba(255,255,255,0.1)',
+  backdropFilter: 'blur(10px)',
+  WebkitBackdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255,255,255,0.3)',
+  color: '#fff',
+  fontFamily: MONO, fontWeight: 600,
+  fontSize: 9.5, letterSpacing: '2.5px',
+  textTransform: 'uppercase', padding: '7px 16px', borderRadius: 2,
 };

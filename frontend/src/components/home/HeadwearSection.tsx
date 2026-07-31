@@ -204,6 +204,11 @@ export default function HeadwearSection({
           font-size: 16px;
           color: #0A0A0A;
           line-height: 1;
+          transition: background 0.2s ease, color 0.2s ease;
+        }
+        .hw-item-qv.in-cart {
+          background: #0A0A0A;
+          color: #fff;
         }
         .hw-item-info {
           padding-top: 8px;
@@ -258,7 +263,8 @@ export default function HeadwearSection({
         >
           <div className="hw-track">
             {loop.map((p, i) => {
-              const stock = p.stock ?? 0;
+              const stock  = p.stock ?? 0;
+              const inCart = cartIds.includes(p.id);
               return (
                 <div key={`${p.id}-${i}`} className="hw-item">
                   <Link to={`/product/${p.id}`} className="hw-item-imgwrap">
@@ -280,11 +286,15 @@ export default function HeadwearSection({
                     )}
                     {!isAdmin && stock > 0 && (
                       <button
-                        className="hw-item-qv"
+                        className={`hw-item-qv${inCart ? ' in-cart' : ''}`}
                         onClick={e => { e.preventDefault(); e.stopPropagation(); setQuickViewProduct(p); }}
-                        aria-label="Quick view"
+                        aria-label={inCart ? 'In cart — open quick view' : 'Quick view'}
                       >
-                        +
+                        {inCart ? (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+                          </svg>
+                        ) : '+'}
                       </button>
                     )}
                   </Link>

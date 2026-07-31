@@ -8,6 +8,7 @@ import { toCardImage } from '../../utils/cloudinary';
 interface ProductCardProps {
   product:          Product & { images?: string[] };
   inCart:           boolean;
+  cartQuantity?:    number;
   inWishlist:       boolean;
   isAdmin:          boolean;
   onCartToggle:     (id: number) => void;
@@ -106,10 +107,19 @@ const S = {
     padding:       '8px 16px',
   } as React.CSSProperties,
 
-  badge: {
+  badgeStack: (side: 'left' | 'right'): React.CSSProperties => ({
     position:      'absolute' as const,
     top:           12,
-    left:          12,
+    [side]:        12,
+    display:       'flex',
+    flexDirection: 'column' as const,
+    alignItems:    side === 'left' ? 'flex-start' as const : 'flex-end' as const,
+    gap:           6,
+    zIndex:        2,
+    pointerEvents: 'none' as const,
+  }),
+
+  badge: {
     background:    '#000',
     color:         '#fff',
     fontFamily:    "'DM Sans', sans-serif",
@@ -118,8 +128,26 @@ const S = {
     letterSpacing: '1.5px',
     textTransform: 'uppercase' as const,
     padding:       '5px 10px',
-    zIndex:        2,
-    pointerEvents: 'none' as const,
+  } as React.CSSProperties,
+
+  ratingRow: {
+    display:    'flex',
+    alignItems: 'center',
+    gap:        2,
+  } as React.CSSProperties,
+
+  star: (filled: boolean): React.CSSProperties => ({
+    fontSize:   12,
+    color:      filled ? '#F5A524' : '#E0E0E0',
+    lineHeight: 1,
+  }),
+
+  colorsText: {
+    fontFamily:    "'DM Sans', sans-serif",
+    fontSize:      12,
+    fontWeight:    400,
+    color:         '#888',
+    letterSpacing: '0.1px',
   } as React.CSSProperties,
 
   dotsBar: (visible: boolean): React.CSSProperties => ({
@@ -172,14 +200,15 @@ const S = {
     userSelect: 'none' as const,
   } as React.CSSProperties,
 
-  quickViewFab: {
+  quickViewFab: (inCart: boolean): React.CSSProperties => ({
     position:       'absolute' as const,
     bottom:         10,
     right:          10,
     width:          34,
     height:         34,
     borderRadius:   '50%',
-    background:     '#fff',
+    background:     inCart ? '#0A0A0A' : '#fff',
+    color:          inCart ? '#fff' : '#0A0A0A',
     border:         'none',
     cursor:         'pointer',
     display:        'flex',
@@ -188,7 +217,7 @@ const S = {
     zIndex:         4,
     boxShadow:      '0 2px 8px rgba(0,0,0,0.18)',
     transition:     'transform 0.2s ease, background 0.2s ease',
-  } as React.CSSProperties,
+  }),
 
   quickViewFabIcon: {
     fontSize:   18,
@@ -259,7 +288,7 @@ const S = {
 const SWIPE_THRESHOLD = 35;
 
 export default function ProductCard({
-  product, inCart, inWishlist, isAdmin, onCartToggle, onWishlistToggle, comparePrice,
+  product, inCart, cartQuantity, inWishlist, isAdmin, onCartToggle, onWishlistToggle, comparePrice,
 }: ProductCardProps) {
   const stock  = product.stock ?? 0;
   const images = (product as any).images?.length >= 1
@@ -341,7 +370,12 @@ export default function ProductCard({
   const isNew        = (product as any).created_at &&
     Date.now() - new Date((product as any).created_at).getTime() < 7 * 24 * 60 * 60 * 1000;
   const showLowStock = stock > 0 && stock <= 5;
-  const hasDiscount = comparePrice != null && Number(comparePrice) > Number(product.price);
+  const hasDiscount  = comparePrice != null && Number(comparePrice) > Number(product.price);
+  const rating       = (product as any).rating as number | undefined;
+  const reviewCount   = (product as any).review_count as number | undefined;
+  const colorCount    = ((product as any).colors?.length ?? (product as any).color_count) as number | undefined;
+  const isBestseller  = Boolean((product as any).is_bestseller || (product as any).bestseller);
+  const qtyInCart     = cartQuantity ?? (inCart ? 1 : 0);
 
   return (
     <>
@@ -383,11 +417,23 @@ export default function ProductCard({
               </div>
             </Link>
 
-            {isNew && <div style={S.badge}>New</div>}
-            {showLowStock && !isNew && <div style={{ ...S.badge, background: '#C2410C' }}>Only {stock} left</div>}
-            {(product as any).video_url && (
-              <div style={{ ...S.badge, left: 'auto', right: 12, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ fontSize: 8 }}>▶</span> Video
+            {(isNew || showLowStock || hasDiscount) && (
+              <div style={S.badgeStack('left')}>
+                {hasDiscount && <div style={{ ...S.badge, background: '#C2410C' }}>Sale</div>}
+                {isNew && !hasDiscount && <div style={S.badge}>New</div>}
+                {showLowStock && <div style={{ ...S.badge, background: '#C2410C' }}>Only {stock} left</div>}
+              </div>
+            )}
+
+            {(stock === 0 || isBestseller || (product as any).video_url) && (
+              <div style={S.badgeStack('right')}>
+                {stock === 0 && <div style={S.badge}>Sold Out</div>}
+                {isBestseller && <div style={{ ...S.badge, background: '#2563EB' }}>Bestseller</div>}
+                {(product as any).video_url && (
+                  <div style={{ ...S.badge, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ fontSize: 8 }}>▶</span> Video
+                  </div>
+                )}
               </div>
             )}
 
@@ -399,20 +445,20 @@ export default function ProductCard({
               </div>
             )}
 
-            {stock === 0 && (
-              <div style={S.soldOverlay}>
-                <span style={S.soldLabel}>Sold Out</span>
-              </div>
-            )}
-
             {!isAdmin && stock > 0 && (
               <button
-                style={S.quickViewFab}
+                style={S.quickViewFab(qtyInCart > 0)}
                 onClick={e => { e.preventDefault(); e.stopPropagation(); setQuickViewOpen(true); }}
                 onTouchEnd={e => { e.preventDefault(); e.stopPropagation(); setQuickViewOpen(true); }}
-                aria-label="Quick view"
+                aria-label={qtyInCart > 0 ? `${qtyInCart} in cart — open quick view` : 'Quick view'}
               >
-                <span style={S.quickViewFabIcon}>+</span>
+                {qtyInCart > 0 ? (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+                  </svg>
+                ) : (
+                  <span style={S.quickViewFabIcon}>+</span>
+                )}
               </button>
             )}
           </div>
@@ -428,6 +474,18 @@ export default function ProductCard({
         <Link to={`/product/${product.id}`} state={{ preview: product }} style={{ textDecoration: 'none', color: 'inherit', border: 'none', display: 'block' }}>
           <div style={S.info}>
             <div style={S.name}>{product.name}</div>
+            {rating != null ? (
+              <div style={S.ratingRow}>
+                {[1, 2, 3, 4, 5].map(i => (
+                  <span key={i} style={S.star(i <= Math.round(rating))}>★</span>
+                ))}
+                {reviewCount != null && (
+                  <span style={{ ...S.colorsText, marginLeft: 4 }}>({reviewCount})</span>
+                )}
+              </div>
+            ) : colorCount != null && colorCount > 1 ? (
+              <div style={S.colorsText}>Available in {colorCount} colors</div>
+            ) : null}
             <div style={S.priceWrap}>
               {hasDiscount && (
                 <span style={S.compareAt}>KSh {Number(comparePrice).toLocaleString()}</span>

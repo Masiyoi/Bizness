@@ -34,8 +34,6 @@ export default function Navbar({
   const [showMenu,       setShowMenu]       = useState(false);
   const [showShopMenu,   setShowShopMenu]   = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showSearch,     setShowSearch]     = useState(false);
-  const [search,         setSearch]         = useState('');
   const [cartCount,      setCartCount]      = useState(cartCountProp ?? 0);
   const [wishlistCount,  setWishlistCount]  = useState(wishlistCountProp ?? 0);
   const [navCategories,  setNavCategories]  = useState<string[]>(categories);
@@ -67,7 +65,7 @@ export default function Navbar({
 
   // Transparent ONLY on homepage: prop enabled, on home route, not scrolled, no overlays open
   const isOnHomepage = location.pathname === '/';
-  const isTransparent = transparentOnTop && isOnHomepage && !scrolled && !mobileMenuOpen && !showSearch && !showMenu;
+  const isTransparent = transparentOnTop && isOnHomepage && !scrolled && !mobileMenuOpen && !showMenu;
 
   // ── Outside-click closers ─────────────────────────────────────────────────
   useEffect(() => {
@@ -292,6 +290,24 @@ export default function Navbar({
         }
         .nav-icon-btn:hover { opacity: 0.5; }
 
+        .brand-logo {
+          font-family: 'Cormorant Garamond', serif;
+          text-transform: uppercase;
+          line-height: 1;
+          white-space: nowrap;
+          transition: color 0.4s ease;
+          font-size: 15px;
+          font-weight: 700;
+          letter-spacing: 1.5px;
+        }
+        @media (min-width: 768px) {
+          .brand-logo {
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: 6px;
+          }
+        }
+
         .mitem {
           display: flex; align-items: center; gap: 8px; padding: 9px 14px;
           font-family: 'Jost', sans-serif; font-size: 12px; letter-spacing: 1px;
@@ -328,10 +344,10 @@ export default function Navbar({
         WebkitBackdropFilter: isTransparent ? 'none' : (mobileMenuOpen ? 'blur(20px) saturate(180%)' : 'blur(12px)') as any,
       }}>
 
-        <div style={{ padding: '0 5%', height: 64, display: 'flex', alignItems: 'center', position: 'relative' }}>
+        <div style={{ padding: '0 5%', height: 64, display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center' }}>
 
           {/* ── LEFT ── */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
 
             {/* Desktop: Shop dropdown + nav links */}
             <div className="hidden md:flex items-center gap-8">
@@ -442,15 +458,15 @@ export default function Navbar({
           </div>
 
           {/* ── CENTER: Brand ── */}
-          <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', cursor: 'pointer', userSelect: 'none' }}
+          <div style={{ justifySelf: 'center', cursor: 'pointer', userSelect: 'none' }}
             onClick={() => navigate('/')}>
-            <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, fontWeight: 300, letterSpacing: '6px', textTransform: 'uppercase', color: ink, lineHeight: 1, transition: 'color 0.4s ease' }}>
+            <span className="brand-logo" style={{ color: ink }}>
               Luku Prime
             </span>
           </div>
 
           {/* ── RIGHT ── */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
 
             {/* ── Language picker ── */}
             <div ref={langRef} className="hidden md:block" style={{ position: 'relative' }}>
@@ -478,13 +494,6 @@ export default function Navbar({
             </div>
             {/* Hidden GT element (required by the script) */}
             <div id="google_translate_element" style={{ display: 'none' }} />
-
-            {/* Desktop search */}
-            <button className="nav-icon-btn hidden md:flex" style={{ color: ink }} onClick={() => setShowSearch(x => !x)} title="Search">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-              </svg>
-            </button>
 
             {/* Wishlist — desktop only */}
             {user?.role !== 'admin' && (
@@ -591,26 +600,6 @@ export default function Navbar({
           </div>
         </div>
       </nav>
-
-      {/* ── Search bar (desktop) ── */}
-      {showSearch && (
-        <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.09)', padding: '12px 5%', position: 'fixed', top: 96, left: 0, right: 0, zIndex: 99, transition: 'top 0.3s ease' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, maxWidth: 520, margin: '0 auto', borderBottom: '1px solid rgba(0,0,0,0.18)', paddingBottom: 8 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(0,0,0,0.35)', flexShrink: 0 }}>
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && navigate(`/?search=${search}`)}
-              placeholder="Search Luku Prime…"
-              autoFocus
-              style={{ fontFamily: "'Jost', sans-serif", fontSize: 13, letterSpacing: '1px', background: 'transparent', border: 'none', outline: 'none', flex: 1, color: '#111' }}
-            />
-            {search && <button onClick={() => setSearch('')} className="nav-icon-btn" style={{ color: 'rgba(0,0,0,0.3)', fontSize: 12 }}>✕</button>}
-          </div>
-        </div>
-      )}
 
       {/* ── Mobile category menu (hamburger) — categories only ── */}
       {mobileMenuOpen && (

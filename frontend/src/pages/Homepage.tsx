@@ -354,18 +354,33 @@ export default function Homepage() {
 
   const toggleCart = async (productId: number) => {
     if (!user) { navigate('/login'); return; }
-    if (cartIds.includes(productId)) {
-      try {
-        await axios.delete(`/api/cart/${productId}`);
-        setCartIds(p => p.filter(id => id !== productId));
-        setCartCount(p => Math.max(0, p - 1));
-      } catch (e: any) { if (e.response?.status === 401) navigate('/login'); }
+    const wasInCart = cartIds.includes(productId);
+
+    // Optimistic update — flip the UI instantly, reconcile with the server after
+    if (wasInCart) {
+      setCartIds(p => p.filter(id => id !== productId));
+      setCartCount(p => Math.max(0, p - 1));
     } else {
-      try {
+      setCartIds(p => [...p, productId]);
+      setCartCount(p => p + 1);
+    }
+
+    try {
+      if (wasInCart) {
+        await axios.delete(`/api/cart/${productId}`);
+      } else {
         await axios.post('/api/cart', { product_id: productId, quantity: 1 });
+      }
+    } catch (e: any) {
+      // Roll back on failure so the UI doesn't lie about cart state
+      if (wasInCart) {
         setCartIds(p => [...p, productId]);
         setCartCount(p => p + 1);
-      } catch (e: any) { if (e.response?.status === 401) navigate('/login'); }
+      } else {
+        setCartIds(p => p.filter(id => id !== productId));
+        setCartCount(p => Math.max(0, p - 1));
+      }
+      if (e.response?.status === 401) navigate('/login');
     }
   };
 
