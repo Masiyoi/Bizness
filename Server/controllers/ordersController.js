@@ -14,7 +14,7 @@ exports.reserveOrderNumber = async (req, res) => {
   try {
     const result = await db.query(`SELECT nextval('orders_order_number_seq') AS n`);
     const orderNumber = 'ON-' + String(result.rows[0].n).padStart(6, '0');
-    return res.json({ orderNumber });
+    return res.json({ reserved_order_number: orderNumber });
   } catch (err) {
     console.error('reserveOrderNumber error:', err.message);
     return res.status(500).json({ msg: 'Failed to reserve order number' });
@@ -148,23 +148,5 @@ exports.getOrderById = async (req, res) => {
   } catch (err) {
     console.error('getOrderById error:', err.message);
     return res.status(500).json({ msg: 'Failed to fetch order' });
-  }
-};
-
-// Server/controllers/ordersController.js
-
-exports.reserveOrderNumber = async (req, res) => {
-  const userId = req.user.id;
-  try {
-    // Generate a unique reserved order number
-    const reserved = `ORD-${userId}-${Date.now()}`;
-    
-    // Optional: store in DB for audit, or just return it
-    // For now, simple return — no DB storage needed
-    
-    res.json({ reserved_order_number: reserved });
-  } catch (err) {
-    console.error('Reserve order number error:', err.message);
-    res.status(500).json({ msg: 'Failed to reserve order number' });
   }
 };

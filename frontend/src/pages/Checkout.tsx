@@ -107,11 +107,6 @@ export default function Checkout() {
     axios.post('/api/orders/reserve-number')
       .then(res => setReservedOrderNumber(res.data.reserved_order_number))
       .catch(err => console.error('Failed to reserve order number:', err.message));
-    
-    // Reserve order number at checkout load
-    axios.post('/api/orders/reserve-number')
-      .then(res => setReservedOrderNumber(res.data.reserved_order_number))
-      .catch(err => console.error('Reserve number error:', err.message));
 
     axios.get('/api/cart')
       .then(res => { setItems(res.data); setLoading(false); })
@@ -240,9 +235,9 @@ export default function Checkout() {
     pollRef.current = setInterval(async () => {
       try {
         const res = await axios.get(`/api/payments/status/${reqId}`);
-        const { status, mpesa_receipt } = res.data;
+        const { status, mpesa_receipt, order_number } = res.data;
         if (status === 'completed') {
-          clearAll(); setReceipt(mpesa_receipt || ''); setStep('success');
+          clearAll(); setReceipt(mpesa_receipt || ''); if (order_number) setOrderNumber(order_number); setStep('success');
           // Fire-and-forget: never let a failed/expired-session cart delete
           // affect the success screen that's already rendered.
           axios.delete('/api/cart').catch(() => {});
@@ -257,7 +252,7 @@ export default function Checkout() {
         await axios.get(`/api/payments/query/${reqId}`);
         const res = await axios.get(`/api/payments/status/${reqId}`);
         if (res.data.status === 'completed') {
-          setReceipt(res.data.mpesa_receipt || ''); setStep('success');
+          setReceipt(res.data.mpesa_receipt || ''); if (res.data.order_number) setOrderNumber(res.data.order_number); setStep('success');
           axios.delete('/api/cart').catch(() => {});
         } else {
           setFailMsg('Payment timed out. If charged, contact support.'); setStep('failed');
@@ -311,9 +306,9 @@ export default function Checkout() {
     pollRef.current = setInterval(async () => {
       try {
         const res = await axios.get(`/api/payments/pesapal/status/${trackingId}`);
-        const { status, confirmation_code } = res.data;
+        const { status, confirmation_code, order_number } = res.data;
         if (status === 'completed') {
-          clearAll(); setReceipt(confirmation_code || ''); setStep('success');
+          clearAll(); setReceipt(confirmation_code || ''); if (order_number) setOrderNumber(order_number); setStep('success');
         } else if (status === 'failed') {
           clearAll(); setFailMsg('Payment was not completed.'); setStep('failed');
         }
@@ -446,7 +441,14 @@ export default function Checkout() {
               <div className="ornament-diamond" /><div className="ornament-line" />
             </div>
             <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 26, color: T.navy, marginBottom: 4 }}>Your Order</h1>
-            <p className="jost" style={{ color: T.muted, fontSize: 13, marginBottom: 28, fontWeight: 300 }}>Review before proceeding to payment</p>
+            <p className="jost" style={{ color: T.muted, fontSize: 13, marginBottom: 16, fontWeight: 300 }}>Review before proceeding to payment</p>
+
+            {reservedOrderNumber && (
+              <div style={{ padding: '10px 14px', background: '#F5F5F5', borderRadius: 8, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: T.muted }}>Order Number</span>
+                <span className="jost" style={{ fontSize: 13, fontWeight: 800, color: T.navy }}>{reservedOrderNumber}</span>
+              </div>
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
               {items.map(item => (
@@ -816,13 +818,9 @@ export default function Checkout() {
 
 
 
-        {reservedOrderNumber && <div style={{ padding: '12px', background: '#F5F5F5', marginBottom: 24, borderRadius: 8 }}>
+        {orderNumber && <div style={{ padding: '12px', background: '#F5F5F5', marginBottom: 24, borderRadius: 8 }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: T.muted, marginBottom: 6 }}>ORDER NUMBER</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: T.navy }}>{reservedOrderNumber}</div>
-        </div>}
-        {reservedOrderNumber && <div style={{ padding: '12px', background: '#F5F5F5', marginBottom: 24, borderRadius: 8 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: T.muted, marginBottom: 6 }}>ORDER NUMBER</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: T.navy }}>{reservedOrderNumber}</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: T.navy }}>{orderNumber}</div>
         </div>}
         <div className="totals-box" style={{ background: 'transparent', borderRadius: 0, padding: '18px 0', textAlign: 'left', marginBottom: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
