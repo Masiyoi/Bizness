@@ -290,6 +290,11 @@ exports.loginUser = async (req, res) => {
       httpOnly: true,
       secure:   true,
       sameSite: 'none',
+      // Once frontend and API share the lukuprime.shop domain family, this
+      // makes the cookie first-party everywhere under it — sidesteps
+      // Brave/Safari third-party-cookie blocking entirely, rather than
+      // relying on SameSite=None (which those browsers can still block).
+      domain:   '.lukuprime.shop',
       maxAge:   7 * 24 * 60 * 60 * 1000,
     });
 
@@ -348,7 +353,7 @@ exports.googleAuth = async (req, res) => {
       user = newUser.rows[0];
     }
     const token = generateToken(user.id, user.role);
-    res.cookie('token', token, { httpOnly:true, secure:true, sameSite:'none', maxAge:7*24*60*60*1000 });
+    res.cookie('token', token, { httpOnly:true, secure:true, sameSite:'none', domain:'.lukuprime.shop', maxAge:7*24*60*60*1000 });
     return res.json({ token, user: { id:user.id, full_name:user.full_name, email:user.email, is_verified:user.is_verified, role:user.role, profile_picture:user.profile_picture } });
   } catch (err) {
     console.error('Google auth error:', err.message);
@@ -518,10 +523,13 @@ exports.resetPassword = async (req, res) => {
 };
 
 exports.logoutUser = (req, res) => {
+  // domain must match exactly what was used to SET the cookie, or the
+  // browser treats this as a different cookie and silently fails to clear it.
   res.clearCookie('token', {
     httpOnly: true,
     secure:   true,
     sameSite: 'none',
+    domain:   '.lukuprime.shop',
   });
   res.json({ msg: 'Logged out.' });
 };
