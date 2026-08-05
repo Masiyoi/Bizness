@@ -49,11 +49,8 @@ type DeliveryZone = 'pickup' | 'cbd' | 'environs' | 'county';
 
 interface ShippingInfo {
   firstName:      string;
-  lastName:       string;
   phone:          string;
-  email:          string;
   county:         string;
-  town:           string;
   pickupLocation: string;
   additionalInfo: string;
 }
@@ -78,8 +75,8 @@ const KENYA_COUNTIES = [
 const PICKUP_LOCATION_FIXED = 'Luku Prime — Nairobi CBD (Moi Avenue)';
 
 const EMPTY_SHIPPING: ShippingInfo = {
-  firstName: '', lastName: '', phone: '', email: '',
-  county: '', town: '', pickupLocation: '', additionalInfo: '',
+  firstName: '', phone: '',
+  county: '', pickupLocation: '', additionalInfo: '',
 };
 
 const parseArr = (raw: any): string[] => {
@@ -328,8 +325,7 @@ export default function Cart() {
 
   const validateField = (field: keyof ShippingInfo, value: string) => {
     let msg = '';
-    if (field === 'firstName'  && !value.trim()) msg = 'First name is required';
-    if (field === 'lastName'   && !value.trim()) msg = 'Last name is required';
+    if (field === 'firstName'  && !value.trim()) msg = 'Full name is required';
     if (field === 'phone') {
       if (!value.trim()) msg = 'Phone number is required';
       else if (!/^(\+?254|0)[17]\d{8}$/.test(value.replace(/\s/g, ''))) msg = 'Enter a valid Kenyan phone number';
@@ -341,7 +337,7 @@ export default function Cart() {
   };
 
   const validateAll = () => {
-    const fields: (keyof ShippingInfo)[] = ['firstName', 'lastName', 'phone', 'county', 'pickupLocation'];
+    const fields: (keyof ShippingInfo)[] = ['firstName', 'phone', 'county', 'pickupLocation'];
     setFormTouched(Object.fromEntries(fields.map(f => [f, true])));
     let ok = true;
     fields.forEach(f => { if (!validateField(f, shipping[f])) ok = false; });
@@ -728,19 +724,11 @@ export default function Cart() {
                   Tell us where to deliver or who's picking up your order.
                 </p>
 
-                <div className="form-row">
-                  <div className="form-field" style={{ marginBottom: 0 }}>
-                    <label className="field-label">First Name *</label>
-                    <input type="text" placeholder="e.g. Amina" value={shipping.firstName}
-                      onChange={e => setField('firstName', e.target.value)} onBlur={() => touch('firstName')} style={inputStyle('firstName')} />
-                    {formTouched.firstName && formErrors.firstName && <span className="field-error">{formErrors.firstName}</span>}
-                  </div>
-                  <div className="form-field" style={{ marginBottom: 0 }}>
-                    <label className="field-label">Last Name *</label>
-                    <input type="text" placeholder="e.g. Wanjiku" value={shipping.lastName}
-                      onChange={e => setField('lastName', e.target.value)} onBlur={() => touch('lastName')} style={inputStyle('lastName')} />
-                    {formTouched.lastName && formErrors.lastName && <span className="field-error">{formErrors.lastName}</span>}
-                  </div>
+                <div className="form-field">
+                  <label className="field-label">Full Name *</label>
+                  <input type="text" placeholder="e.g. Amina Wanjiku" value={shipping.firstName}
+                    onChange={e => setField('firstName', e.target.value)} onBlur={() => touch('firstName')} style={inputStyle('firstName')} />
+                  {formTouched.firstName && formErrors.firstName && <span className="field-error">{formErrors.firstName}</span>}
                 </div>
 
                 <div className="form-field">
@@ -751,12 +739,6 @@ export default function Cart() {
                       onChange={e => setField('phone', e.target.value)} onBlur={() => touch('phone')} style={{ ...inputStyle('phone'), paddingLeft: 36 }} />
                   </div>
                   {formTouched.phone && formErrors.phone && <span className="field-error">{formErrors.phone}</span>}
-                </div>
-
-                <div className="form-field">
-                  <label className="field-label">Email <span style={{ color: T.muted, fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 11 }}>(optional — for order updates)</span></label>
-                  <input type="email" placeholder="amina@example.com" value={shipping.email}
-                    onChange={e => setField('email', e.target.value)} style={inputStyle('email')} />
                 </div>
 
                 <div style={{ marginBottom: 20 }}>
@@ -852,11 +834,6 @@ export default function Cart() {
                       </div>
                       {formTouched.county && formErrors.county && <span className="field-error">{formErrors.county}</span>}
                     </div>
-                    <div className="form-field fade-in">
-                      <label className="field-label">Town / Estate <span style={{ color: T.muted, fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 11 }}>(optional)</span></label>
-                      <input type="text" placeholder="e.g. Kilimani, Westlands, Nyali…" value={shipping.town}
-                        onChange={e => setField('town', e.target.value)} style={inputStyle('town')} />
-                    </div>
                   </>
                 )}
 
@@ -882,7 +859,7 @@ export default function Cart() {
                 {(shipping.firstName || shipping.county || shipping.pickupLocation) && (
                   <div style={{ background: T.cream, border: 'none', borderRadius: 12, padding: '12px 14px', marginBottom: 18 }}>
                     <div className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.muted, marginBottom: 6 }}>Delivering to</div>
-                    {shipping.firstName && <div className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy, marginBottom: 2 }}>{shipping.firstName} {shipping.lastName}</div>}
+                    {shipping.firstName && <div className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy, marginBottom: 2 }}>{shipping.firstName}</div>}
                     {shipping.phone && <div className="jost" style={{ fontSize: 12, color: T.muted }}>{shipping.phone}</div>}
                     {deliveryZone === 'pickup' && shipping.pickupLocation && (
                       <div className="jost" style={{ fontSize: 12, color: T.gold, marginTop: 4, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -890,10 +867,10 @@ export default function Cart() {
                         {shipping.pickupLocation}
                       </div>
                     )}
-                    {deliveryZone !== 'pickup' && (shipping.county || shipping.town) && (
+                    {deliveryZone !== 'pickup' && shipping.county && (
                       <div className="jost" style={{ fontSize: 12, color: T.gold, marginTop: 4, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                         <img src={locationIcon} alt="" style={{ width: 14, height: 14, objectFit: 'contain', flexShrink: 0 }} />
-                        {[shipping.town, shipping.county].filter(Boolean).join(', ')}
+                        {shipping.county}
                       </div>
                     )}
                   </div>

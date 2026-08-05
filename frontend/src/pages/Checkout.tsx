@@ -98,7 +98,7 @@ export default function Checkout() {
   const passedZone = (location.state as { deliveryZone?: DeliveryZone } | null)?.deliveryZone;
   const deliveryZone: DeliveryZone = passedZone ?? 'cbd';
   const passedShipping = (location.state as any)?.shipping as
-    { firstName?: string; lastName?: string; phone?: string; county?: string; town?: string; pickupLocation?: string; additionalInfo?: string } | undefined;
+    { firstName?: string; phone?: string; county?: string; pickupLocation?: string; additionalInfo?: string } | undefined;
   const passedColors = (location.state as any)?.selectedColors as Record<number, string> | undefined;
   const passedSizes  = (location.state as any)?.selectedSizes as Record<number, string> | undefined;
   const deliveryFee   = DELIVERY_OPTIONS.find(o => o.value === deliveryZone)!.fee;
@@ -537,7 +537,7 @@ export default function Checkout() {
             {(passedShipping?.firstName || passedShipping?.county || passedShipping?.pickupLocation) && (
               <div style={{ marginTop: 24 }}>
                 <div className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.muted, marginBottom: 8 }}>Delivering To</div>
-                {passedShipping?.firstName && <div className="jost" style={{ fontSize: 14, fontWeight: 700, color: T.navy, marginBottom: 3 }}>{passedShipping.firstName} {passedShipping.lastName}</div>}
+                {passedShipping?.firstName && <div className="jost" style={{ fontSize: 14, fontWeight: 700, color: T.navy, marginBottom: 3 }}>{passedShipping.firstName}</div>}
                 {passedShipping?.phone && <div className="jost" style={{ fontSize: 13, color: T.muted }}>{passedShipping.phone}</div>}
                 {deliveryZone === 'pickup' && passedShipping?.pickupLocation && (
                   <div className="jost" style={{ fontSize: 13, color: T.gold, marginTop: 6, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -545,10 +545,10 @@ export default function Checkout() {
                     {passedShipping.pickupLocation}
                   </div>
                 )}
-                {deliveryZone !== 'pickup' && (passedShipping?.county || passedShipping?.town) && (
+                {deliveryZone !== 'pickup' && passedShipping?.county && (
                   <div className="jost" style={{ fontSize: 13, color: T.gold, marginTop: 6, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <img src={locationIcon} alt="" style={{ width: 16, height: 16, objectFit: 'contain', flexShrink: 0 }} />
-                    {[passedShipping?.town, passedShipping?.county].filter(Boolean).join(', ')}
+                    {passedShipping?.county}
                   </div>
                 )}
                 {passedShipping?.additionalInfo && (
@@ -827,7 +827,7 @@ export default function Checkout() {
             {(passedShipping?.firstName || passedShipping?.county || passedShipping?.pickupLocation) && (
               <div style={{ background: 'transparent', padding: '14px 0', marginBottom: 20, textAlign: 'left' }}>
                 <div className="jost" style={{ fontSize: 10, fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.navy, marginBottom: 8 }}>Delivered To</div>
-                {passedShipping?.firstName && <div className="jost" style={{ fontSize: 14, fontWeight: 700, color: T.navy, marginBottom: 3 }}>{passedShipping.firstName} {passedShipping.lastName}</div>}
+                {passedShipping?.firstName && <div className="jost" style={{ fontSize: 14, fontWeight: 700, color: T.navy, marginBottom: 3 }}>{passedShipping.firstName}</div>}
                 {passedShipping?.phone && <div className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy }}>{passedShipping.phone}</div>}
                 {deliveryZone === 'pickup' && passedShipping?.pickupLocation && (
                   <div className="jost" style={{ fontSize: 13, color: T.gold, marginTop: 6, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -835,10 +835,10 @@ export default function Checkout() {
                     {passedShipping.pickupLocation}
                   </div>
                 )}
-                {deliveryZone !== 'pickup' && (passedShipping?.county || passedShipping?.town) && (
+                {deliveryZone !== 'pickup' && passedShipping?.county && (
                   <div className="jost" style={{ fontSize: 13, color: T.gold, marginTop: 6, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <img src={locationIcon} alt="" style={{ width: 16, height: 16, objectFit: 'contain', flexShrink: 0 }} />
-                    {[passedShipping?.town, passedShipping?.county].filter(Boolean).join(', ')}
+                    {passedShipping?.county}
                   </div>
                 )}
                 {passedShipping?.additionalInfo && (
