@@ -57,9 +57,15 @@ const DELIVERY_OPTIONS: { value: DeliveryZone; label: string; fee: number }[] = 
 export default function Checkout() {
   const navigate   = useNavigate();
   const location   = useLocation();
-  const pollRef    = useRef<ReturnType<typeof setInterval> | null>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const tickRef    = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollRef     = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timeoutRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tickRef     = useRef<ReturnType<typeof setInterval> | null>(null);
+  // True once this confirmation attempt has been resolved (success, failure,
+  // or manual cancel). Guards against a slow, already-in-flight poll request
+  // resolving AFTER a faster later request already resolved things — without
+  // this, a stale response (e.g. a late 401) can overwrite a success screen
+  // that's already showing, even though the payment genuinely succeeded.
+  const resolvedRef = useRef(false);
 
   const [items, setItems]                       = useState<CartItem[]>([]);
   const [reservedOrderNumber, setReservedOrderNumber] = useState<string | null>(null);
@@ -243,12 +249,14 @@ export default function Checkout() {
   };
 
   const startMpesaPolling = (reqId: string) => {
+    resolvedRef.current = false;
     setElapsed(0);
     let seconds = 0;
     tickRef.current = setInterval(() => { seconds++; setElapsed(seconds); }, 1000);
     pollRef.current = setInterval(async () => {
       try {
         const res = await axios.get(`/api/payments/status/${reqId}`);
+        if (resolvedRef.current) return; // a faster, later response already resolved this — ignore the stale one
         const { status, mpesa_receipt, order_number } = res.data;
         if (status === 'completed') {
           clearAll(); setReceipt(mpesa_receipt || ''); if (order_number) setOrderNumber(order_number); setStep('success');
@@ -314,6 +322,7 @@ export default function Checkout() {
 
   // Poll Pesapal status after customer returns from redirect
   const startPesapalPolling = (trackingId: string) => {
+    resolvedRef.current = false;
     setElapsed(0);
     let seconds = 0;
     tickRef.current = setInterval(() => { seconds++; setElapsed(seconds); }, 1000);
@@ -322,6 +331,7 @@ export default function Checkout() {
         const res = await axios.get(`/api/payments/pesapal/status/${trackingId}`, {
           headers: { 'X-Skip-Auth-Redirect': 'true' },
         });
+        if (resolvedRef.current) return; // a faster, later response already resolved this — ignore the stale one
         const { status, confirmation_code, order_number } = res.data;
         if (status === 'completed') {
           clearAll(); setReceipt(confirmation_code || ''); if (order_number) setOrderNumber(order_number); setStep('success');
@@ -329,6 +339,7 @@ export default function Checkout() {
           clearAll(); setFailMsg('Payment was not completed.'); setStep('failed');
         }
       } catch (err: any) {
+        if (resolvedRef.current) return; // payment already confirmed one way or another — a late error from an older request must not override that
         if (err?.response?.status === 401) {
           // Session expired while we were confirming payment. The order
           // itself is safe (Pesapal's IPN creates it server-side, not tied
@@ -348,6 +359,10 @@ export default function Checkout() {
   };
 
   const clearAll = () => {
+    // Stopping the interval/timeout here can't cancel a request that's
+    // already been sent — this flag is what stops that request's eventual
+    // response from being acted on once we've already resolved.
+    resolvedRef.current = true;
     if (pollRef.current)    clearInterval(pollRef.current);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     if (tickRef.current)    clearInterval(tickRef.current);
