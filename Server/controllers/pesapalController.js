@@ -52,6 +52,99 @@ const registerIPN = async (token) => {
   return res.data.ipn_id;
 };
 
+// ── Shared: create the order + clear the cart for a completed Pesapal payment ──
+// Idempotent — safe to call from both the IPN webhook and the frontend's
+// live-status-check fallback, whichever gets to "completed" first. Without
+// this, only the IPN path created the order and cleared the cart; if the
+// live check learned about completion first (or the IPN was delayed/never
+// arrived), the payment got marked completed but the cart was left
+// untouched — which is why items stayed in cart after a successful payment.
+const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
+  const existing = await db.query(
+    `SELECT o.id FROM orders o
+     JOIN payments p ON p.id = o.payment_id
+     WHERE p.checkout_request_id = $1`,
+    [orderTrackingId]
+  );
+  if (existing.rows.length > 0) return; // already fulfilled — IPN and live-check raced
+
+  const paymentRes = await db.query(
+    `SELECT id, user_id, amount, phone, delivery_zone, delivery_fee, shipping_meta
+     FROM payments WHERE checkout_request_id = $1`,
+    [orderTrackingId]
+  );
+  if (paymentRes.rows.length === 0) {
+    return console.error('fulfillPesapalPayment: payment row not found for', orderTrackingId);
+  }
+
+  const payment       = paymentRes.rows[0];
+  const shippingMeta  = payment.shipping_meta || {};
+  const { shipping = {}, selectedColors = {}, selectedSizes = {} } = shippingMeta;
+  const deliveryZone  = shippingMeta.delivery_zone || payment.delivery_zone || 'cbd';
+  const deliveryFee   = shippingMeta.delivery_fee  || payment.delivery_fee  || 0;
+  const discountAmount = Number(shippingMeta.discount_amount) || 0;
+  const discountType   = shippingMeta.discount_type || null;
+  const reservedOrderNumber = shippingMeta.reserved_order_number || null;
+
+  const cartRes = await db.query(
+    `SELECT
+       ci.id, ci.product_id, ci.quantity, ci.selected_color, ci.selected_size,
+       p.name, p.price, p.image_url, p.category
+     FROM carts c
+     JOIN cart_items ci ON ci.cart_id = c.id
+     JOIN products   p  ON p.id = ci.product_id
+     WHERE c.user_id = $1`,
+    [payment.user_id]
+  );
+
+  const itemsArray = cartRes.rows.map(item => ({
+    id:             item.id,
+    product_id:     item.product_id,
+    name:           item.name,
+    price:          item.price,
+    image_url:      item.image_url,
+    category:       item.category,
+    quantity:       item.quantity,
+    selected_color: item.selected_color || selectedColors[String(item.id)] || null,
+    selected_size:  item.selected_size  || selectedSizes[String(item.id)]  || null,
+  }));
+
+  const itemsSnapshot = { items: itemsArray, shipping, deliveryZone };
+
+  await db.query(
+    `INSERT INTO orders
+       (user_id, payment_id, status, tracking_status, total, delivery_fee,
+        delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt,
+        discount_type, discount_amount, order_number)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+    [
+      payment.user_id,
+      payment.id,
+      'confirmed',
+      'Payment Confirmed',
+      payment.amount,
+      deliveryFee,
+      deliveryZone,
+      JSON.stringify(itemsSnapshot),
+      `${shipping.firstName || ''} ${shipping.lastName || ''}`.trim() || 'Customer',
+      shipping.email || '',
+      shipping.phone || payment.phone,
+      confirmationCode,
+      discountType,
+      discountAmount,
+      reservedOrderNumber,
+    ]
+  );
+
+  await db.query(
+    `DELETE FROM cart_items
+     WHERE cart_id = (SELECT id FROM carts WHERE user_id = $1)`,
+    [payment.user_id]
+  );
+
+  console.log(`✅ Pesapal order fulfilled — user ${payment.user_id} — ref ${confirmationCode}`);
+};
+
 // ── POST /api/payments/pesapal/initiate ───────────────────────────────────────
 /**
  * Creates a Pesapal order and returns a redirect_url.
@@ -232,86 +325,10 @@ exports.pesapalIPN = async (req, res) => {
         [confirmation_code, payment_status_description, OrderTrackingId]
       );
 
-      // 2. Fetch the payment row
-      const paymentRes = await db.query(
-        `SELECT id, user_id, amount, phone, delivery_zone, delivery_fee, shipping_meta
-         FROM payments WHERE checkout_request_id = $1`,
-        [OrderTrackingId]
-      );
-
-      if (paymentRes.rows.length === 0) {
-        return console.error('Pesapal IPN: payment row not found for', OrderTrackingId);
-      }
-
-      const payment     = paymentRes.rows[0];
-      const shippingMeta = payment.shipping_meta || {};
-      const { shipping = {}, selectedColors = {}, selectedSizes = {} } = shippingMeta;
-      const deliveryZone = shippingMeta.delivery_zone || payment.delivery_zone || 'cbd';
-      const deliveryFee  = shippingMeta.delivery_fee  || payment.delivery_fee  || 0;
-      const discountAmount = Number(shippingMeta.discount_amount) || 0;
-      const discountType   = shippingMeta.discount_type || null;
-      const reservedOrderNumber = shippingMeta.reserved_order_number || null;
-
-      // 3. Fetch cart items
-      const cartRes = await db.query(
-        `SELECT
-           ci.id, ci.product_id, ci.quantity, ci.selected_color, ci.selected_size,
-           p.name, p.price, p.image_url, p.category
-         FROM carts c
-         JOIN cart_items ci ON ci.cart_id = c.id
-         JOIN products   p  ON p.id = ci.product_id
-         WHERE c.user_id = $1`,
-        [payment.user_id]
-      );
-
-      const itemsArray = cartRes.rows.map(item => ({
-        id:             item.id,
-        product_id:     item.product_id,
-        name:           item.name,
-        price:          item.price,
-        image_url:      item.image_url,
-        category:       item.category,
-        quantity:       item.quantity,
-        selected_color: item.selected_color || selectedColors[String(item.id)] || null,
-        selected_size:  item.selected_size  || selectedSizes[String(item.id)]  || null,
-      }));
-
-      const itemsSnapshot = { items: itemsArray, shipping, deliveryZone };
-
-      // 4. Create the order — same structure as M-Pesa orders
-      await db.query(
-        `INSERT INTO orders
-           (user_id, payment_id, status, tracking_status, total, delivery_fee,
-            delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt,
-            discount_type, discount_amount, order_number)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
-        [
-          payment.user_id,
-          payment.id,
-          'confirmed',
-          'Payment Confirmed',
-          payment.amount,
-          deliveryFee,
-          deliveryZone,
-          JSON.stringify(itemsSnapshot),
-          `${shipping.firstName || ''} ${shipping.lastName || ''}`.trim() || 'Customer',
-          shipping.email || '',
-          shipping.phone || payment.phone,
-          confirmation_code,
-          discountType,
-          discountAmount,
-          reservedOrderNumber,
-        ]
-      );
-
-      // 5. Clear cart
-      await db.query(
-        `DELETE FROM cart_items
-         WHERE cart_id = (SELECT id FROM carts WHERE user_id = $1)`,
-        [payment.user_id]
-      );
-
-      console.log(`✅ Pesapal order created — user ${payment.user_id} — ref ${confirmation_code} — KSh ${amount}`);
+      // 2-5. Create the order + clear the cart (idempotent — safe even if
+      // the frontend's live-status-check fallback already did this first).
+      await fulfillPesapalPayment(OrderTrackingId, confirmation_code);
+      console.log(`✅ Pesapal IPN processed — ref ${confirmation_code} — KSh ${amount}`);
 
     } else if (status === 'failed' || status === 'invalid') {
       await db.query(
@@ -448,8 +465,25 @@ exports.getPesapalStatus = async (req, res) => {
              WHERE checkout_request_id = $2`,
             [confirmation_code, orderTrackingId]
           );
+          // The IPN webhook is what normally creates the order and clears
+          // the cart, but it's async and can lag or fail to arrive. Without
+          // this call, a user whose frontend learned "completed" here
+          // before the IPN fired would see success with their cart never
+          // emptied and no order ever created.
+          await fulfillPesapalPayment(orderTrackingId, confirmation_code);
           payment.status            = 'completed';
           payment.confirmation_code = confirmation_code;
+
+          const orderLookup = await db.query(
+            `SELECT order_number, created_at AS order_created_at, total AS order_total
+             FROM orders WHERE payment_id = (SELECT id FROM payments WHERE checkout_request_id = $1)`,
+            [orderTrackingId]
+          );
+          if (orderLookup.rows.length > 0) {
+            payment.order_number     = orderLookup.rows[0].order_number;
+            payment.order_created_at = orderLookup.rows[0].order_created_at;
+            payment.order_total      = orderLookup.rows[0].order_total;
+          }
         } else if (liveStatus === 'failed' || liveStatus === 'invalid') {
           await db.query(
             `UPDATE payments SET status = 'failed', updated_at = NOW()

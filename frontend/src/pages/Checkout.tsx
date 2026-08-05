@@ -102,7 +102,21 @@ export default function Checkout() {
 
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
-    
+
+    // If we're returning from a Pesapal redirect, the OrderTrackingId
+    // effect below owns this render (it drives polling + success/failure
+    // UI). Skip the normal reserve-number/cart-fetch flow here so a 401,
+    // or an already-emptied cart (the IPN may finish and clear the cart
+    // before the browser even gets back to us), can't redirect us away
+    // from an in-progress payment confirmation.
+    const mountHash = window.location.hash;
+    const mountHashQuery = mountHash.includes('?') ? mountHash.split('?')[1] : '';
+    const returningFromPesapal = !!(
+      new URLSearchParams(mountHashQuery).get('OrderTrackingId') ||
+      new URLSearchParams(window.location.search).get('OrderTrackingId')
+    );
+    if (returningFromPesapal) { setLoading(false); return; }
+
     // Reserve order number at checkout start
     axios.post('/api/orders/reserve-number')
       .then(res => setReservedOrderNumber(res.data.reserved_order_number))
@@ -305,14 +319,27 @@ export default function Checkout() {
     tickRef.current = setInterval(() => { seconds++; setElapsed(seconds); }, 1000);
     pollRef.current = setInterval(async () => {
       try {
-        const res = await axios.get(`/api/payments/pesapal/status/${trackingId}`);
+        const res = await axios.get(`/api/payments/pesapal/status/${trackingId}`, {
+          headers: { 'X-Skip-Auth-Redirect': 'true' },
+        });
         const { status, confirmation_code, order_number } = res.data;
         if (status === 'completed') {
           clearAll(); setReceipt(confirmation_code || ''); if (order_number) setOrderNumber(order_number); setStep('success');
         } else if (status === 'failed') {
           clearAll(); setFailMsg('Payment was not completed.'); setStep('failed');
         }
-      } catch { /* keep polling */ }
+      } catch (err: any) {
+        if (err?.response?.status === 401) {
+          // Session expired while we were confirming payment. The order
+          // itself is safe (Pesapal's IPN creates it server-side, not tied
+          // to this tab) — stop polling and send them to log back in
+          // instead of silently wiping them out mid-confirmation.
+          clearAll();
+          setFailMsg('Your session expired while confirming payment. If you were charged, please log in and check your Orders page.');
+          setStep('failed');
+        }
+        /* other errors: keep polling */
+      }
     }, 3000);
     timeoutRef.current = setTimeout(() => {
       clearAll();

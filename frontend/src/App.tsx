@@ -119,6 +119,13 @@ axios.interceptors.response.use(
     const skipRedirect = err.config?.headers?.['X-Skip-Auth-Redirect'];
     if (err.response?.status === 401 && !skipRedirect) {
       localStorage.removeItem('user');
+      // Strip any leftover query string (e.g. a Pesapal ?OrderTrackingId=...
+      // that never got the chance to be consumed/cleared by the Checkout
+      // page) so it can't resurrect a stale payment-return flow the next
+      // time the user lands on /checkout.
+      if (window.location.search) {
+        window.history.replaceState({}, '', window.location.pathname + window.location.hash.split('?')[0]);
+      }
       window.location.hash = '/login';
     }
     return Promise.reject(err);
@@ -137,17 +144,24 @@ function FloatingCartManager() {
     allowedPaths.includes(pathname) ||
     allowedPrefixes.some(prefix => pathname.startsWith(prefix));
 
-  const fetchCount = () => {
-    const user = getUser();
-    // Don't fetch cart for unauthenticated users or admins
-    if (!user || user.role === 'admin') { setCartCount(0); return; }
-    // Cookie is sent automatically via axios.defaults.withCredentials = true
-    axios.get('/api/cart')
-      .then(r => setCartCount(r.data.reduce((s: number, i: any) => s + i.quantity, 0)))
-      .catch(() => setCartCount(0));
-  };
-
   useEffect(() => {
+    const fetchCount = () => {
+      const user = getUser();
+      // Don't fetch cart for unauthenticated users or admins
+      if (!user || user.role === 'admin') { setCartCount(0); return; }
+      // Don't touch the cart while the floating cart isn't even shown (e.g.
+      // on /checkout). A 'focus' event fires the instant the user switches
+      // back from Pesapal's hosted payment page — letting that request
+      // force a logout right as the success screen should appear was the
+      // root cause of "successful payment logs me out".
+      if (!shouldShow) return;
+      // X-Skip-Auth-Redirect: this is a best-effort background count,
+      // never a reason to force-logout someone mid checkout-confirmation.
+      axios.get('/api/cart', { headers: { 'X-Skip-Auth-Redirect': 'true' } })
+        .then(r => setCartCount(r.data.reduce((s: number, i: any) => s + i.quantity, 0)))
+        .catch(() => setCartCount(0));
+    };
+
     fetchCount();
     window.addEventListener('cartUpdated', fetchCount);
     window.addEventListener('focus',       fetchCount);
@@ -155,7 +169,7 @@ function FloatingCartManager() {
       window.removeEventListener('cartUpdated', fetchCount);
       window.removeEventListener('focus',       fetchCount);
     };
-  }, []);
+  }, [shouldShow]);
 
   if (!shouldShow) return null;
 
