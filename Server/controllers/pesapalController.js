@@ -86,10 +86,20 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
   const discountType   = shippingMeta.discount_type || null;
   const reservedOrderNumber = shippingMeta.reserved_order_number || null;
 
+  // NOTE: mirrors the same sale-price CASE WHEN used in initiatePayment's
+  // total calculation, so the snapshot stores what was actually charged
+  // instead of the regular (pre-sale) price.
   const cartRes = await db.query(
     `SELECT
        ci.id, ci.product_id, ci.quantity, ci.selected_color, ci.selected_size,
-       p.name, p.price, p.image_url, p.category
+       p.name, p.image_url, p.category,
+       CASE
+          WHEN p.sale_price IS NOT NULL
+           AND p.sale_price < p.price
+           AND (p.sale_ends_at IS NULL OR p.sale_ends_at > NOW())
+         THEN p.sale_price
+         ELSE p.price
+       END AS effective_price
      FROM carts c
      JOIN cart_items ci ON ci.cart_id = c.id
      JOIN products   p  ON p.id = ci.product_id
@@ -101,7 +111,7 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
     id:             item.id,
     product_id:     item.product_id,
     name:           item.name,
-    price:          item.price,
+    price:          item.effective_price,
     image_url:      item.image_url,
     category:       item.category,
     quantity:       item.quantity,
