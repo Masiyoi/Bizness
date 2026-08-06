@@ -460,7 +460,7 @@ export default function Checkout() {
         .amount-pill{display:flex;flex-direction:column;align-items:center;background:#000;border:1px solid #333;border-radius:0;padding:20px;margin:20px 0;gap:6px}
         .progress-box{background:#F5F5F5;border:1px solid #E0E0E0;border-radius:0;padding:18px 20px;margin-bottom:20px;text-align:left}
         .step-list{display:flex;flex-direction:column;gap:14px;background:#F5F5F5;border:1px solid #E0E0E0;border-radius:0;padding:18px 20px;margin-bottom:20px;text-align:left}
-        .receipt-box{background:#16a34a;border:1px solid #15803d;border-radius:0;padding:18px 24px;margin-bottom:20px;text-align:center}
+        .receipt-box{background:#00C48C;border:1px solid #00A876;border-radius:0;padding:18px 24px;margin-bottom:20px;text-align:center}
         .status-circle{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 24px}
 
         /* Divider */
@@ -755,10 +755,11 @@ export default function Checkout() {
           <div className="lp-card fade-in" style={{ textAlign: 'center' }}>
             <video
               autoPlay
+              loop
               muted
               playsInline
               className="check-pop"
-              style={{ width: 88, height: 88, objectFit: 'contain', margin: '0 auto 24px', display: 'block' }}
+              style={{ width: 160, height: 160, objectFit: 'contain', margin: '0 auto 24px', display: 'block' }}
             >
               <source src="/animations/Payment%20Successful.webm" type="video/webm" />
             </video>
