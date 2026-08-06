@@ -92,9 +92,7 @@ export default function Checkout() {
   const [serverAmount, setServerAmount]           = useState<number | null>(null);
   const [resolvedZone, setResolvedZone]           = useState<DeliveryZone | null>(null);
   const [resolvedDeliveryFee, setResolvedDeliveryFee] = useState<number | null>(null);
-  const [resolvedShipping, setResolvedShipping]   = useState
-    { firstName?: string; phone?: string; county?: string; pickupLocation?: string; additionalInfo?: string } | null
-  >(null);
+  const [resolvedShipping, setResolvedShipping] = useState<{ firstName?: string; phone?: string; county?: string; pickupLocation?: string; additionalInfo?: string } | null>(null);
 
   // Shared state
   const [failMsg, setFailMsg]                   = useState('');

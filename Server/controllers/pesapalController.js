@@ -114,9 +114,9 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
   await db.query(
     `INSERT INTO orders
        (user_id, payment_id, status, tracking_status, total, delivery_fee,
-        delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt,
+        delivery_zone, items_snapshot, customer_name, mpesa_phone, mpesa_receipt,
         discount_type, discount_amount, order_number)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
     [
       payment.user_id,
       payment.id,
@@ -387,9 +387,9 @@ exports.pesapalIPN = async (req, res) => {
           await db.query(
             `INSERT INTO orders
                (user_id, payment_id, status, tracking_status, total, delivery_fee,
-                delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt,
+                delivery_zone, items_snapshot, customer_name, mpesa_phone, mpesa_receipt,
                 discount_type, discount_amount, order_number)
-             VALUES ($1, $2, 'cancelled', 'Payment Failed', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+             VALUES ($1, $2, 'cancelled', 'Payment Failed', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
             [
               payment.user_id,
               payment.id,
