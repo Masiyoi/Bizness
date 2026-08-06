@@ -25,6 +25,8 @@ interface CartItem {
   price: string;
   image_url: string;
   quantity: number;
+  selected_color?: string | null;
+  selected_size?:  string | null;
 }
 
 type CheckoutStep = 'summary' | 'waiting' | 'success' | 'failed' | 'pesapal-redirect';
@@ -83,6 +85,17 @@ export default function Checkout() {
   const [pesapalLoading, setPesapalLoading]     = useState(false);
   const [pesapalTrackingId, setPesapalTrackingId] = useState('');
 
+  // Authoritative order data from the server — the Pesapal redirect is a full
+  // page reload, which wipes the cart items, delivery zone, and shipping info
+  // this page would otherwise use from router state. These override that
+  // stale/empty local state once the server tells us what was actually charged.
+  const [serverAmount, setServerAmount]           = useState<number | null>(null);
+  const [resolvedZone, setResolvedZone]           = useState<DeliveryZone | null>(null);
+  const [resolvedDeliveryFee, setResolvedDeliveryFee] = useState<number | null>(null);
+  const [resolvedShipping, setResolvedShipping]   = useState
+    { firstName?: string; phone?: string; county?: string; pickupLocation?: string; additionalInfo?: string } | null
+  >(null);
+
   // Shared state
   const [failMsg, setFailMsg]                   = useState('');
   const [serverError, setServerError]           = useState('');
@@ -96,12 +109,17 @@ export default function Checkout() {
   });
   
   const passedZone = (location.state as { deliveryZone?: DeliveryZone } | null)?.deliveryZone;
-  const deliveryZone: DeliveryZone = passedZone ?? 'cbd';
+  const deliveryZone: DeliveryZone = resolvedZone ?? passedZone ?? 'cbd';
   const passedShipping = (location.state as any)?.shipping as
     { firstName?: string; phone?: string; county?: string; pickupLocation?: string; additionalInfo?: string } | undefined;
+  // Falls back to the server-recorded shipping info once the Pesapal
+  // redirect has wiped passedShipping (router state doesn't survive a full
+  // page reload) — normal M-Pesa flow never leaves the page, so
+  // passedShipping is always present there and this fallback is a no-op.
+  const effectiveShipping = passedShipping ?? resolvedShipping ?? undefined;
   const passedColors = (location.state as any)?.selectedColors as Record<number, string> | undefined;
   const passedSizes  = (location.state as any)?.selectedSizes as Record<number, string> | undefined;
-  const deliveryFee   = DELIVERY_OPTIONS.find(o => o.value === deliveryZone)!.fee;
+  const deliveryFee   = resolvedDeliveryFee ?? DELIVERY_OPTIONS.find(o => o.value === deliveryZone)!.fee;
   const deliveryLabel = DELIVERY_OPTIONS.find(o => o.value === deliveryZone)!.label;
 
   const user = localStorage.getItem('user');
@@ -203,7 +221,7 @@ export default function Checkout() {
 
   const subtotal          = items.reduce((s, i) => s + getEffectivePrice(i) * i.quantity, 0);
   const discountedSubtotal = Math.max(subtotal - discount.discountAmount, 0);
-  const total              = discountedSubtotal + deliveryFee;
+  const total              = serverAmount ?? (discountedSubtotal + deliveryFee);
 
   const validatePhone = (val: string) => {
     const cleaned = val.replace(/\s+/g, '').replace(/^0/, '254').replace(/^\+/, '');
@@ -332,6 +350,20 @@ export default function Checkout() {
           headers: { 'X-Skip-Auth-Redirect': 'true' },
         });
         if (resolvedRef.current) return; // a faster, later response already resolved this — ignore the stale one
+
+        if (res.data.amount != null) setServerAmount(Number(res.data.amount));
+        if (res.data.items_snapshot?.items) setItems(res.data.items_snapshot.items);
+        if (res.data.items_snapshot?.shipping) setResolvedShipping(res.data.items_snapshot.shipping);
+        if (res.data.delivery_zone) setResolvedZone(res.data.delivery_zone);
+        if (res.data.delivery_fee != null) setResolvedDeliveryFee(Number(res.data.delivery_fee));
+        if (res.data.discount_type) {
+          setDiscount({
+            eligible: true,
+            discountAmount: Number(res.data.discount_amount) || 0,
+            discountLabel: 'First-Order Discount', // cosmetic — adjust to match your discountController's exact wording if it differs
+          });
+        }
+
         const { status, confirmation_code, order_number } = res.data;
         if (status === 'completed') {
           clearAll(); setReceipt(confirmation_code || ''); if (order_number) setOrderNumber(order_number); setStep('success');
@@ -534,26 +566,26 @@ export default function Checkout() {
               ))}
             </div>
 
-            {(passedShipping?.firstName || passedShipping?.county || passedShipping?.pickupLocation) && (
+            {(effectiveShipping?.firstName || effectiveShipping?.county || effectiveShipping?.pickupLocation) && (
               <div style={{ marginTop: 24 }}>
                 <div className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.muted, marginBottom: 8 }}>Delivering To</div>
-                {passedShipping?.firstName && <div className="jost" style={{ fontSize: 14, fontWeight: 700, color: T.navy, marginBottom: 3 }}>{passedShipping.firstName}</div>}
-                {passedShipping?.phone && <div className="jost" style={{ fontSize: 13, color: T.muted }}>{passedShipping.phone}</div>}
-                {deliveryZone === 'pickup' && passedShipping?.pickupLocation && (
+                {effectiveShipping?.firstName && <div className="jost" style={{ fontSize: 14, fontWeight: 700, color: T.navy, marginBottom: 3 }}>{effectiveShipping.firstName}</div>}
+                {effectiveShipping?.phone && <div className="jost" style={{ fontSize: 13, color: T.muted }}>{effectiveShipping.phone}</div>}
+                {deliveryZone === 'pickup' && effectiveShipping?.pickupLocation && (
                   <div className="jost" style={{ fontSize: 13, color: T.gold, marginTop: 6, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <img src={locationIcon} alt="" style={{ width: 16, height: 16, objectFit: 'contain', flexShrink: 0 }} />
-                    {passedShipping.pickupLocation}
+                    {effectiveShipping.pickupLocation}
                   </div>
                 )}
-                {deliveryZone !== 'pickup' && passedShipping?.county && (
+                {deliveryZone !== 'pickup' && effectiveShipping?.county && (
                   <div className="jost" style={{ fontSize: 13, color: T.gold, marginTop: 6, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <img src={locationIcon} alt="" style={{ width: 16, height: 16, objectFit: 'contain', flexShrink: 0 }} />
-                    {passedShipping?.county}
+                    {effectiveShipping?.county}
                   </div>
                 )}
-                {passedShipping?.additionalInfo && (
+                {effectiveShipping?.additionalInfo && (
                   <div className="jost" style={{ fontSize: 12, color: T.muted, marginTop: 8, lineHeight: 1.6, fontStyle: 'italic' }}>
-                    "{passedShipping.additionalInfo}"
+                    "{effectiveShipping.additionalInfo}"
                   </div>
                 )}
               </div>
@@ -783,8 +815,8 @@ export default function Checkout() {
               <div className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.muted, marginBottom: 8 }}>Order Summary</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {items.map(item => {
-                  const color = passedColors?.[item.id];
-                  const size  = passedSizes?.[item.id];
+                  const color = passedColors?.[item.id] ?? item.selected_color;
+                  const size  = passedSizes?.[item.id]  ?? item.selected_size;
                   return (
                     <div key={item.id} className="item-card">
                       <div style={{ width: 48, height: 48, overflow: 'hidden', flexShrink: 0, background: '#F5F5F5' }}>
@@ -824,26 +856,26 @@ export default function Checkout() {
               </div>
             </div>
 
-            {(passedShipping?.firstName || passedShipping?.county || passedShipping?.pickupLocation) && (
+            {(effectiveShipping?.firstName || effectiveShipping?.county || effectiveShipping?.pickupLocation) && (
               <div style={{ background: 'transparent', padding: '14px 0', marginBottom: 20, textAlign: 'left' }}>
                 <div className="jost" style={{ fontSize: 10, fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.navy, marginBottom: 8 }}>Delivered To</div>
-                {passedShipping?.firstName && <div className="jost" style={{ fontSize: 14, fontWeight: 700, color: T.navy, marginBottom: 3 }}>{passedShipping.firstName}</div>}
-                {passedShipping?.phone && <div className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy }}>{passedShipping.phone}</div>}
-                {deliveryZone === 'pickup' && passedShipping?.pickupLocation && (
+                {effectiveShipping?.firstName && <div className="jost" style={{ fontSize: 14, fontWeight: 700, color: T.navy, marginBottom: 3 }}>{effectiveShipping.firstName}</div>}
+                {effectiveShipping?.phone && <div className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy }}>{effectiveShipping.phone}</div>}
+                {deliveryZone === 'pickup' && effectiveShipping?.pickupLocation && (
                   <div className="jost" style={{ fontSize: 13, color: T.gold, marginTop: 6, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <img src={locationIcon} alt="" style={{ width: 16, height: 16, objectFit: 'contain', flexShrink: 0 }} />
-                    {passedShipping.pickupLocation}
+                    {effectiveShipping.pickupLocation}
                   </div>
                 )}
-                {deliveryZone !== 'pickup' && passedShipping?.county && (
+                {deliveryZone !== 'pickup' && effectiveShipping?.county && (
                   <div className="jost" style={{ fontSize: 13, color: T.gold, marginTop: 6, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <img src={locationIcon} alt="" style={{ width: 16, height: 16, objectFit: 'contain', flexShrink: 0 }} />
-                    {passedShipping?.county}
+                    {effectiveShipping?.county}
                   </div>
                 )}
-                {passedShipping?.additionalInfo && (
+                {effectiveShipping?.additionalInfo && (
                   <div className="jost" style={{ fontSize: 12, color: T.muted, marginTop: 8, lineHeight: 1.6, fontStyle: 'italic' }}>
-                    "{passedShipping.additionalInfo}"
+                    "{effectiveShipping.additionalInfo}"
                   </div>
                 )}
               </div>

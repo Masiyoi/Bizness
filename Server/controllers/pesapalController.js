@@ -201,7 +201,12 @@ exports.initiatePayment = async (req, res) => {
   }
 
   // Generate a unique merchant reference for this order
-  const merchantReference = `PP-${userId}-${Date.now()}`;
+  // Show the human-readable order number on Pesapal's hosted page — kept
+  // unique per submission attempt (a timestamp suffix) since Pesapal
+  // requires each order id to be unique, even on a retried payment.
+  const merchantReference = reserved_order_number
+    ? `${reserved_order_number}-${Date.now()}`
+    : `PP-${userId}-${Date.now()}`;
 
   try {
     const token = await getPesapalToken();
@@ -430,8 +435,13 @@ exports.getPesapalStatus = async (req, res) => {
          p.result_desc,
          p.amount,
          o.order_number,
-         o.created_at AS order_created_at,
-         o.total      AS order_total
+         o.created_at    AS order_created_at,
+         o.total         AS order_total,
+         o.delivery_fee,
+         o.delivery_zone,
+         o.items_snapshot,
+         o.discount_type,
+         o.discount_amount
        FROM payments p
        LEFT JOIN orders o ON o.payment_id = p.id
        WHERE p.checkout_request_id = $1`,
@@ -471,7 +481,8 @@ exports.getPesapalStatus = async (req, res) => {
           payment.confirmation_code = confirmation_code;
 
           const orderLookup = await db.query(
-            `SELECT order_number, created_at AS order_created_at, total AS order_total
+            `SELECT order_number, created_at AS order_created_at, total AS order_total,
+                    delivery_fee, delivery_zone, items_snapshot, discount_type, discount_amount
              FROM orders WHERE payment_id = (SELECT id FROM payments WHERE checkout_request_id = $1)`,
             [orderTrackingId]
           );
@@ -479,6 +490,11 @@ exports.getPesapalStatus = async (req, res) => {
             payment.order_number     = orderLookup.rows[0].order_number;
             payment.order_created_at = orderLookup.rows[0].order_created_at;
             payment.order_total      = orderLookup.rows[0].order_total;
+            payment.delivery_fee     = orderLookup.rows[0].delivery_fee;
+            payment.delivery_zone    = orderLookup.rows[0].delivery_zone;
+            payment.items_snapshot   = orderLookup.rows[0].items_snapshot;
+            payment.discount_type    = orderLookup.rows[0].discount_type;
+            payment.discount_amount  = orderLookup.rows[0].discount_amount;
           }
         } else if (liveStatus === 'failed' || liveStatus === 'invalid') {
           await db.query(
