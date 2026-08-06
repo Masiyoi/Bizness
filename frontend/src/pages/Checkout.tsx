@@ -11,7 +11,6 @@ import checkoutIcon from '../assets/checkout.png';
 import locationIcon from '../assets/location.png';
 import freeIcon from '../assets/free.png';
 import bookingIcon from '../assets/booking.png';
-import approveIcon from '../assets/approve.png';
 import cardIcon from '../assets/card.png';
 import shoppingBagsIcon from '../assets/shopping-bags.png';
 import airtelLogo from '../assets/Airtel_logo.svg';
@@ -73,7 +72,7 @@ export default function Checkout() {
   const [reservedOrderNumber, setReservedOrderNumber] = useState<string | null>(null);
   const [loading, setLoading]                   = useState(true);
   const [step, setStep]                         = useState<CheckoutStep>('summary');
-  const [paymentMethod, setPaymentMethod]       = useState<PaymentMethod | null>(null);
+  const [paymentMethod, setPaymentMethod]       = useState<PaymentMethod | null>('pesapal');
 
   // M-Pesa state
   const [pushing, setPushing]                   = useState(false);
@@ -461,7 +460,7 @@ export default function Checkout() {
         .amount-pill{display:flex;flex-direction:column;align-items:center;background:#000;border:1px solid #333;border-radius:0;padding:20px;margin:20px 0;gap:6px}
         .progress-box{background:#F5F5F5;border:1px solid #E0E0E0;border-radius:0;padding:18px 20px;margin-bottom:20px;text-align:left}
         .step-list{display:flex;flex-direction:column;gap:14px;background:#F5F5F5;border:1px solid #E0E0E0;border-radius:0;padding:18px 20px;margin-bottom:20px;text-align:left}
-        .receipt-box{background:#000;border:1px solid #333;border-radius:0;padding:18px 24px;margin-bottom:20px;text-align:center}
+        .receipt-box{background:#16a34a;border:1px solid #15803d;border-radius:0;padding:18px 24px;margin-bottom:20px;text-align:center}
         .status-circle{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 24px}
 
         /* Divider */
@@ -634,40 +633,14 @@ export default function Checkout() {
               Choose how you'd like to pay
             </p>
 
-            {/* Payment methods list */}
+            {/* Payment method — Pesapal only, static display */}
             <div className="pay-method-list">
-            {/* M-Pesa option */}
-            <div
-              className={`pay-method-card ${paymentMethod === 'mpesa' ? 'selected' : 'unselected'}`}
-              onClick={() => setPaymentMethod('mpesa')}
-            >
-              <div style={{
-                width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
-                border: paymentMethod === 'mpesa' ? '5px solid #16a34a' : '1.5px solid #C9C9C9',
-                transition: 'all 0.15s',
-              }} />
-              <img src={mpesaLogo} alt="M-Pesa" style={{ height: 22, objectFit: 'contain', flexShrink: 0 }} />
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span className="jost" style={{ fontWeight: 600, fontSize: 14, color: T.navy }}>M-Pesa</span>
-                <span className="jost" style={{ fontSize: 11, color: T.muted }}>STK Push to your phone</span>
-              </div>
-            </div>
-
-            {/* Pesapal option */}
-            <div
-              className={`pay-method-card ${paymentMethod === 'pesapal' ? 'selected' : 'unselected'}`}
-              onClick={() => setPaymentMethod('pesapal')}
-            >
-              <div style={{
-                width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
-                border: paymentMethod === 'pesapal' ? '5px solid #16a34a' : '1.5px solid #C9C9C9',
-                transition: 'all 0.15s',
-              }} />
+            <div className="pay-method-card" style={{ cursor: 'default' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                 <img src={pesapalLogo} alt="Pesapal" style={{ height: 22, objectFit: 'contain' }} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span className="jost" style={{ fontWeight: 600, fontSize: 14, color: T.navy }}>Pesapal</span>
+                <span className="jost" style={{ fontWeight: 600, fontSize: 14, color: T.navy }}>Pay with Pesapal</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
                   <img src={mpesaLogo} alt="M-Pesa" style={{ height: 14, objectFit: 'contain' }} />
                   <img src={airtelLogo} alt="Airtel Money" style={{ height: 14, objectFit: 'contain' }} />
@@ -684,29 +657,12 @@ export default function Checkout() {
               </div>
             )}
 
-            {paymentMethod === 'mpesa' && (
-              <button className="cta-gold" onClick={handleMpesaPay} disabled={pushing} style={{ marginTop: 4, background: '#16a34a' }}>
-                {pushing
-                  ? <><span style={{ display: 'inline-block', animation: 'pulse 0.8s ease infinite' }}>⏳</span> Sending prompt…</>
-                  : <>Pay with M-Pesa →</>
-                }
-              </button>
-            )}
-
-            {paymentMethod === 'pesapal' && (
-              <button className="cta-gold" onClick={handlePesapalPay} disabled={pesapalLoading} style={{ marginTop: 4, background: '#16a34a' }}>
-                {pesapalLoading
-                  ? <><span style={{ display: 'inline-block', animation: 'pulse 0.8s ease infinite' }}>⏳</span> Redirecting to Pesapal…</>
-                  : <>Continue with Pesapal →</>
-                }
-              </button>
-            )}
-
-            {!paymentMethod && (
-              <button className="cta-gold" disabled style={{ opacity: 0.4, marginTop: 4 }}>
-                Select a payment method above
-              </button>
-            )}
+            <button className="cta-gold" onClick={handlePesapalPay} disabled={pesapalLoading} style={{ marginTop: 4, background: '#16a34a' }}>
+              {pesapalLoading
+                ? <><span style={{ display: 'inline-block', animation: 'pulse 0.8s ease infinite' }}>⏳</span> Redirecting to Pesapal…</>
+                : <>Continue with Pesapal →</>
+              }
+            </button>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16 }}>
               <img src={secureBadge} alt="Secure payment" style={{ height: 16, objectFit: 'contain' }} />
@@ -797,7 +753,15 @@ export default function Checkout() {
         {/* ── STEP: SUCCESS ── */}
         {step === 'success' && (
           <div className="lp-card fade-in" style={{ textAlign: 'center' }}>
-            <img src={approveIcon} alt="Payment Confirmed" className="check-pop" style={{ width: 88, height: 88, objectFit: 'contain', margin: '0 auto 24px', display: 'block' }} />
+            <video
+              autoPlay
+              muted
+              playsInline
+              className="check-pop"
+              style={{ width: 88, height: 88, objectFit: 'contain', margin: '0 auto 24px', display: 'block' }}
+            >
+              <source src="/animations/Payment%20Successful.webm" type="video/webm" />
+            </video>
 
             <div className="ornament" style={{ justifyContent: 'center' }}>
               <div className="ornament-line" /><div className="ornament-diamond" />
@@ -810,7 +774,7 @@ export default function Checkout() {
             </p>
 
             <div style={{ marginBottom: 20, textAlign: 'left' }}>
-              <div className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.muted, marginBottom: 8 }}>Order Summary</div>
+              <div className="jost" style={{ fontSize: 10, fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.muted, marginBottom: 8 }}>Order Summary</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {items.map(item => {
                   const color = passedColors?.[item.id] ?? item.selected_color;
@@ -828,7 +792,7 @@ export default function Checkout() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 13, color: T.navy, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
                         <div className="jost" style={{ fontSize: 11, color: T.muted, marginTop: 3, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
-                          <span>Qty: {item.quantity}</span>
+                          <span style={{ fontWeight: 700 }}>Qty: {item.quantity}</span>
                           {color && (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 700, color: T.navy }}>
                               <span style={{ color: T.creamDeep, fontWeight: 400 }}>·</span>
@@ -891,7 +855,7 @@ export default function Checkout() {
 
 
         {orderNumber && <div style={{ padding: '12px', background: '#F5F5F5', marginBottom: 24, borderRadius: 8 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: T.muted, marginBottom: 6 }}>ORDER NUMBER</div>
+          <div style={{ fontSize: 10, fontWeight: 800, color: T.muted, marginBottom: 6 }}>ORDER NUMBER</div>
           <div style={{ fontSize: 16, fontWeight: 800, color: T.navy }}>{orderNumber}</div>
         </div>}
         <div className="totals-box" style={{ background: 'transparent', borderRadius: 0, padding: '18px 0', textAlign: 'left', marginBottom: 24 }}>
