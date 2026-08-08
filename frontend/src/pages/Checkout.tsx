@@ -16,6 +16,7 @@ import shoppingBagsIcon from '../assets/shopping-bags.png';
 import airtelLogo from '../assets/Airtel_logo.svg';
 import mastercardLogo from '../assets/MasterCard-Logo.svg';
 import visaLogo from '../assets/Visa.png';
+import lottie, { AnimationItem } from 'lottie-web';
 
 interface CartItem {
   id: number;
@@ -67,6 +68,8 @@ export default function Checkout() {
   // this, a stale response (e.g. a late 401) can overwrite a success screen
   // that's already showing, even though the payment genuinely succeeded.
   const resolvedRef = useRef(false);
+  const successAnimRef = useRef<HTMLDivElement | null>(null);
+  const successAnimInstance = useRef<AnimationItem | null>(null);
 
   const [items, setItems]                       = useState<CartItem[]>([]);
   const [reservedOrderNumber, setReservedOrderNumber] = useState<string | null>(null);
@@ -215,6 +218,23 @@ export default function Checkout() {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     if (tickRef.current)    clearInterval(tickRef.current);
   }, []);
+
+  useEffect(() => {
+    if (step !== 'success' || !successAnimRef.current) return;
+
+    successAnimInstance.current = lottie.loadAnimation({
+      container: successAnimRef.current,
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      path: '/animations/Message%20Sent%20Successfully%20_%20Plane.json',
+    });
+
+    return () => {
+      successAnimInstance.current?.destroy();
+      successAnimInstance.current = null;
+    };
+  }, [step]);
 
   const subtotal          = items.reduce((s, i) => s + getEffectivePrice(i) * i.quantity, 0);
   const discountedSubtotal = Math.max(subtotal - discount.discountAmount, 0);
@@ -753,16 +773,11 @@ export default function Checkout() {
         {/* ── STEP: SUCCESS ── */}
         {step === 'success' && (
           <div className="lp-card fade-in" style={{ textAlign: 'center' }}>
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
+            <div
+              ref={successAnimRef}
               className="check-pop"
-              style={{ width: 160, height: 160, objectFit: 'contain', margin: '0 auto 24px', display: 'block' }}
-            >
-              <source src="/animations/Payment%20Successful.webm" type="video/webm" />
-            </video>
+              style={{ width: 160, height: 160, margin: '0 auto 24px' }}
+            />
 
             <div className="ornament" style={{ justifyContent: 'center' }}>
               <div className="ornament-line" /><div className="ornament-diamond" />
