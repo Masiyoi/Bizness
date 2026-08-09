@@ -1,4 +1,4 @@
-?// src/pages/MembersClub.tsx
+// src/pages/MembersClub.tsx
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
