@@ -5,7 +5,6 @@ const { validationResult } = require('express-validator');
 const { OAuth2Client } = require('google-auth-library');
 const nodemailer = require('nodemailer');
 const crypto     = require('crypto');
-
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const { registerMember } = require('./membersController');
 // Generates a unique 8-char referral code for a new user. Retries on the
@@ -18,7 +17,6 @@ const generateReferralCode = async () => {
   }
   throw new Error('Could not generate a unique referral code');
 };
-
 // ── Constants ─────────────────────────────────────────────────────────────────
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_MINUTES     = 30;
@@ -28,21 +26,17 @@ const MIN_PASSWORD_LENGTH = 8;
 const MAX_NAME_LENGTH     = 100;
 const RECAPTCHA_MIN_SCORE = 0.5;
 const RESET_TOKEN_EXPIRY_MINUTES = 30
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const generateToken = (userId, role) =>
   jwt.sign({ id: userId, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
-
 const createTransporter = () =>
   nodemailer.createTransport({
     service: 'gmail',
     auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
   });
-
 const sendPasswordResetEmail = async (email, fullName, token) => {
   const transporter = createTransporter();   // reuse your existing createTransporter()
   const resetUrl    = `${process.env.CLIENT_URL}/#/reset-password/${token}`;
- 
   await transporter.sendMail({
     from:    `"Luku Prime" <${process.env.EMAIL_USER}>`,
     to:      email,
@@ -89,7 +83,6 @@ const safeCompare = (a, b) => {
   }
   return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 };
-
 // ── reCAPTCHA v3 verification ─────────────────────────────────────────────────
 const verifyRecaptcha = async (token) => {
   if (!token) return false;
@@ -109,7 +102,6 @@ const verifyRecaptcha = async (token) => {
     return false;
   }
 };
-
 // ── Account lockout helpers ───────────────────────────────────────────────────
 const recordFailedLogin = async (userId) => {
   await db.query(
@@ -125,7 +117,6 @@ const recordFailedLogin = async (userId) => {
     [MAX_FAILED_ATTEMPTS, userId]
   );
 };
-
 const clearFailedLogins = async (userId) => {
   await db.query(
     `UPDATE users
@@ -136,12 +127,10 @@ const clearFailedLogins = async (userId) => {
     [userId]
   );
 };
-
 const isAccountLocked = (user) => {
   if (!user.locked_until) return false;
   return new Date(user.locked_until) > new Date();
 };
-
 // ── Verification email ────────────────────────────────────────────────────────
 const sendVerificationEmail = async (email, fullName, token) => {
   const transporter = createTransporter();
@@ -175,16 +164,13 @@ const sendVerificationEmail = async (email, fullName, token) => {
     `,
   });
 };
-
 // ─────────────────────────────────────────────────────────────────────────────
 // REGISTER
 // ─────────────────────────────────────────────────────────────────────────────
 exports.registerBuyer = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-
   const { full_name, email, password, recaptchaToken, referral_code } = req.body;
-
   // ── Character limits ──────────────────────────────────────────────────────
   if (!full_name || full_name.trim().length > MAX_NAME_LENGTH)
     return res.status(400).json({ msg: `Name must be under ${MAX_NAME_LENGTH} characters.` });
@@ -192,35 +178,41 @@ exports.registerBuyer = async (req, res) => {
     return res.status(400).json({ msg: 'Invalid email address.' });
   if (!password || password.length < MIN_PASSWORD_LENGTH || password.length > MAX_PASSWORD_LENGTH)
     return res.status(400).json({ msg: `Password must be ${MIN_PASSWORD_LENGTH}–${MAX_PASSWORD_LENGTH} characters.` });
-
   // ── reCAPTCHA ─────────────────────────────────────────────────────────────
   const captchaOk = await verifyRecaptcha(recaptchaToken);
   if (!captchaOk)
     return res.status(400).json({ msg: 'reCAPTCHA verification failed. Please try again.' });
-
   try {
     const existing = await db.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
     if (existing.rows.length > 0)
       return res.status(400).json({ msg: 'An account with this email already exists.' });
-
+    // Resolve referrer (if a referral code was provided) before creating the
+    // account. Invalid/unknown codes are silently ignored — referral isn't
+    // required for signup, and we never reveal whether a code was valid.
+    let referredBy = null;
+    if (referral_code && typeof referral_code === 'string') {
+      const { rows: [referrer] } = await db.query(
+        'SELECT id FROM users WHERE referral_code = $1',
+        [referral_code.trim().toUpperCase()]
+      );
+      if (referrer) referredBy = referrer.id;
+    }
     const salt          = await bcrypt.genSalt(12);
     const password_hash = await bcrypt.hash(password, salt);
     const verToken      = crypto.randomBytes(32).toString('hex');
     const verExpiry     = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
+    const ownReferralCode = await generateReferralCode();
     try {
       await sendVerificationEmail(email, full_name.trim(), verToken);
     } catch (emailErr) {
       console.error('Email send error:', emailErr.message);
       return res.status(500).json({ msg: 'Could not send verification email. Please try again.' });
     }
-
     await db.query(
-      `INSERT INTO users (full_name, email, password_hash, verification_token, verification_token_expiry, is_verified)
-       VALUES ($1, $2, $3, $4, $5, FALSE)`,
-      [full_name.trim(), email.toLowerCase(), password_hash, verToken, verExpiry]
+      `INSERT INTO users (full_name, email, password_hash, verification_token, verification_token_expiry, is_verified, referral_code, referred_by)
+       VALUES ($1, $2, $3, $4, $5, FALSE, $6, $7)`,
+      [full_name.trim(), email.toLowerCase(), password_hash, verToken, verExpiry, ownReferralCode, referredBy]
     );
-
     return res.status(201).json({
       msg: `Verification link sent to ${email}. Check your inbox.`,
     });
@@ -229,39 +221,31 @@ exports.registerBuyer = async (req, res) => {
     return res.status(500).json({ msg: 'Server error. Please try again.' });
   }
 };
-
 // ─────────────────────────────────────────────────────────────────────────────
 // LOGIN
 // ─────────────────────────────────────────────────────────────────────────────
 exports.loginUser = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-
   const { email, password, recaptchaToken } = req.body;
-
   // ── Character limits ──────────────────────────────────────────────────────
   if (!email || email.length > MAX_EMAIL_LENGTH)
     return res.status(400).json({ msg: 'Invalid email address.' });
   if (!password || password.length > MAX_PASSWORD_LENGTH)
     return res.status(400).json({ msg: 'Invalid credentials.' });
-
   // ── reCAPTCHA ─────────────────────────────────────────────────────────────
   const captchaOk = await verifyRecaptcha(recaptchaToken);
   if (!captchaOk)
     return res.status(400).json({ msg: 'reCAPTCHA verification failed. Please try again.' });
-
   try {
     const result = await db.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
-
     // Generic message — don't reveal whether email exists
     if (result.rows.length === 0) {
       // Still run a fake bcrypt to prevent timing attacks
       await bcrypt.compare(password, '$2b$12$invalidhashpadding000000000000000000000000000000000000');
       return res.status(400).json({ msg: 'Invalid email or password.' });
     }
-
     const user = result.rows[0];
-
     // ── Lockout check ─────────────────────────────────────────────────────
     if (isAccountLocked(user)) {
       const lockedUntil = new Date(user.locked_until);
@@ -272,10 +256,8 @@ exports.loginUser = async (req, res) => {
         lockedUntil: lockedUntil.toISOString(),
       });
     }
-
     if (!user.password_hash)
       return res.status(400).json({ msg: 'This account uses Google Sign-In. Please log in with Google.' });
-
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       await recordFailedLogin(user.id);
@@ -286,17 +268,14 @@ exports.loginUser = async (req, res) => {
         : `Invalid email or password. ${attemptsLeft} attempt${attemptsLeft !== 1 ? 's' : ''} remaining.`;
       return res.status(400).json({ msg });
     }
-
     if (!user.is_verified)
       return res.status(403).json({
         msg: 'Please verify your email before logging in.',
         unverified: true,
       });
-
     // ── Success — clear failed attempts ───────────────────────────────────
     await clearFailedLogins(user.id);
     const token = generateToken(user.id, user.role);
-
     res.cookie('token', token, {
       httpOnly: true,
       secure:   true,
@@ -308,7 +287,6 @@ exports.loginUser = async (req, res) => {
       domain:   '.lukuprime.shop',
       maxAge:   7 * 24 * 60 * 60 * 1000,
     });
-
     return res.json({
       token,
       user: {
@@ -325,7 +303,6 @@ exports.loginUser = async (req, res) => {
     return res.status(500).json({ msg: 'Server error. Please try again.' });
   }
 };
-
 // ─────────────────────────────────────────────────────────────────────────────
 // GOOGLE AUTH  (unchanged — Google handles its own bot protection)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -341,9 +318,7 @@ exports.googleAuth = async (req, res) => {
     // Double-check audience claim
     if (payload.aud !== process.env.GOOGLE_CLIENT_ID)
       return res.status(401).json({ msg: 'Invalid Google token audience.' });
-
     const { sub: google_id, email, name: full_name, picture } = payload;
-
     let result = await db.query(
       'SELECT * FROM users WHERE google_id = $1 OR email = $2',
       [google_id, email.toLowerCase()]
@@ -377,7 +352,6 @@ exports.googleAuth = async (req, res) => {
     return res.status(401).json({ msg: 'Google authentication failed.' });
   }
 };
-
 // ─────────────────────────────────────────────────────────────────────────────
 // VERIFY EMAIL / RESEND  (unchanged)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -408,7 +382,6 @@ exports.verifyEmail = async (req, res) => {
     return res.status(500).json({ msg: 'Server error. Please try again.' });
   }
 };
-
 exports.resendVerification = async (req, res) => {
   const { email } = req.body;
   if (!email || email.length > MAX_EMAIL_LENGTH) return res.status(400).json({ msg: 'Valid email required.' });
@@ -428,48 +401,38 @@ exports.resendVerification = async (req, res) => {
     return res.status(500).json({ msg: 'Server error. Please try again.' });
   }
 };
-
  exports.forgotPassword = async (req, res) => {
   const { email, recaptchaToken } = req.body;
- 
   // Character limit
   if (!email || email.length > 254)
     return res.status(400).json({ msg: 'Valid email required.' });
- 
   // reCAPTCHA (reuse your existing verifyRecaptcha helper)
   const captchaOk = await verifyRecaptcha(recaptchaToken);
   if (!captchaOk)
     return res.status(400).json({ msg: 'reCAPTCHA verification failed. Please try again.' });
- 
   try {
     const result = await db.query(
       'SELECT id, full_name, email FROM users WHERE email = $1 AND is_verified = TRUE',
       [email.toLowerCase()]
     );
- 
     // Always return success — never reveal whether email is registered
     if (!result.rows.length) {
       return res.json({ msg: 'If that email is registered, a reset link is on its way.' });
     }
- 
     const user       = result.rows[0];
     const resetToken = crypto.randomBytes(32).toString('hex');
     const expiry     = new Date(Date.now() + RESET_TOKEN_EXPIRY_MINUTES * 60 * 1000);
- 
     await db.query(
       'UPDATE users SET reset_token = $1, reset_token_expiry = $2 WHERE id = $3',
       [resetToken, expiry, user.id]
     );
- 
     await sendPasswordResetEmail(user.email, user.full_name, resetToken);
- 
     return res.json({ msg: 'If that email is registered, a reset link is on its way.' });
   } catch (err) {
     console.error('forgotPassword error:', err.message);
     return res.status(500).json({ msg: 'Server error. Please try again.' });
   }
 };
- 
 // ─── VALIDATE RESET TOKEN ─────────────────────────────────────────────────────
 // GET /api/auth/reset-password/:token
 // Called by the frontend on mount to check if the token is still valid before
@@ -477,7 +440,6 @@ exports.resendVerification = async (req, res) => {
 exports.validateResetToken = async (req, res) => {
   const { token } = req.params;
   if (!token) return res.status(400).json({ msg: 'Token required.' });
- 
   try {
     const result = await db.query(
       `SELECT id FROM users
@@ -485,24 +447,20 @@ exports.validateResetToken = async (req, res) => {
          AND reset_token_expiry > NOW()`,
       [token]
     );
- 
     if (!result.rows.length)
       return res.status(400).json({ msg: 'Reset link is invalid or has expired.' });
- 
     return res.json({ valid: true });
   } catch (err) {
     console.error('validateResetToken error:', err.message);
     return res.status(500).json({ msg: 'Server error. Please try again.' });
   }
 };
- 
 // ─── RESET PASSWORD ───────────────────────────────────────────────────────────
 // POST /api/auth/reset-password/:token
 // Body: { password }
 exports.resetPassword = async (req, res) => {
   const { token }    = req.params;
   const { password } = req.body;
- 
   // Length + complexity checks
   if (!password || password.length < 8 || password.length > 128)
     return res.status(400).json({ msg: 'Password must be 8–128 characters.' });
@@ -510,7 +468,6 @@ exports.resetPassword = async (req, res) => {
     return res.status(400).json({ msg: 'Password must contain at least one uppercase letter.' });
   if (!/[0-9]/.test(password))
     return res.status(400).json({ msg: 'Password must contain at least one number.' });
- 
   try {
     const result = await db.query(
       `SELECT id FROM users
@@ -518,14 +475,11 @@ exports.resetPassword = async (req, res) => {
          AND reset_token_expiry > NOW()`,
       [token]
     );
- 
     if (!result.rows.length)
       return res.status(400).json({ msg: 'Reset link is invalid or has expired.' });
- 
     const userId       = result.rows[0].id;
     const salt         = await bcrypt.genSalt(12);
     const password_hash = await bcrypt.hash(password, salt);
- 
     await db.query(
       `UPDATE users
        SET password_hash      = $1,
@@ -539,14 +493,12 @@ exports.resetPassword = async (req, res) => {
        WHERE id = $2`,
       [password_hash, userId]
     );
- 
     return res.json({ msg: 'Password reset successfully! You can now sign in.' });
   } catch (err) {
     console.error('resetPassword error:', err.message);
     return res.status(500).json({ msg: 'Server error. Please try again.' });
   }
 };
-
 exports.logoutUser = (req, res) => {
   // domain must match exactly what was used to SET the cookie, or the
   // browser treats this as a different cookie and silently fails to clear it.

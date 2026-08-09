@@ -1,21 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
-
 declare global {
   interface Window {
     google: any;
     grecaptcha: any;
   }
 }
-
 interface FormData {
   full_name: string; email: string; password: string; confirm_password: string;
 }
 interface FieldError {
   full_name?: string; email?: string; password?: string; confirm_password?: string;
 }
-
 const getPasswordStrength = (p: string) => {
   let s = 0;
   if (p.length >= 8) s++; if (/[A-Z]/.test(p)) s++;
@@ -24,7 +21,6 @@ const getPasswordStrength = (p: string) => {
 };
 const strengthLabel = ["","Weak","Fair","Good","Strong"];
 const strengthColor = ["","#ef4444","#f59e0b","#3b82f6","#22c55e"];
-
 const getRecaptchaToken = (action: string): Promise<string> => {
   return new Promise((resolve) => {
     window.grecaptcha.ready(async () => {
@@ -36,9 +32,13 @@ const getRecaptchaToken = (action: string): Promise<string> => {
     });
   });
 };
-
 export default function Register() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  // Captures ?ref=CODE from a shared referral link, e.g. /register?ref=AB12CD34.
+  // Passed through to /api/auth/register; the backend silently ignores
+  // unknown/invalid codes, so this is safe even if the link is stale.
+  const referralCode = searchParams.get("ref") || undefined;
   const [formData, setFormData] = useState<FormData>({ full_name:"", email:"", password:"", confirm_password:"" });
   const [errors, setErrors] = useState<FieldError>({});
   const [serverError, setServerError] = useState("");
@@ -50,7 +50,6 @@ export default function Register() {
   const [resendMsg, setResendMsg] = useState("");
   const [showEmailForm, setShowEmailForm] = useState(false);
   const passwordStrength = getPasswordStrength(formData.password);
-
   const handleGoogleResponse = useCallback(async (response: { credential: string }) => {
     setGoogleLoading(true); setServerError("");
     try {
@@ -63,7 +62,6 @@ export default function Register() {
       setServerError(err.response?.data?.msg || "Google sign-in failed.");
     } finally { setGoogleLoading(false); }
   }, [navigate]);
-
   useEffect(() => {
     const t = setTimeout(() => {
       if (window.google) {
@@ -73,7 +71,6 @@ export default function Register() {
     }, 300);
     return () => clearTimeout(t);
   }, [handleGoogleResponse]);
-
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://www.google.com/recaptcha/api.js?render=6LdlHMQsAAAAAJ5Ft84oddhVF0cUKkU7u65Xlb2o";
@@ -85,7 +82,6 @@ export default function Register() {
       if (badge) badge.remove();
     };
   }, []);
-
   const validate = (): boolean => {
     const e: FieldError = {};
     if (!formData.full_name.trim()) e.full_name = "Full name is required.";
@@ -98,13 +94,11 @@ export default function Register() {
     setErrors(e);
     return Object.keys(e).length === 0;
   };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(p => ({ ...p, [name]: value }));
     setErrors(p => ({ ...p, [name]: undefined }));
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
@@ -116,13 +110,13 @@ export default function Register() {
         email: formData.email,
         password: formData.password,
         recaptchaToken,
+        referral_code: referralCode,
       });
       setRegisteredEmail(formData.email);
     } catch (err: any) {
       setServerError(err.response?.data?.msg || err.response?.data?.errors?.[0]?.msg || "Registration failed.");
     } finally { setLoading(false); }
   };
-
   const handleResend = async () => {
     setResendLoading(true); setResendMsg("");
     try {
@@ -131,7 +125,6 @@ export default function Register() {
     } catch { setResendMsg("Failed to resend. Please try again."); }
     finally { setResendLoading(false); }
   };
-
   // ── Check inbox screen ───────────────────────────────────────────────────
   if (registeredEmail) return (
     <div style={s.page}>
@@ -161,34 +154,35 @@ export default function Register() {
       </div>
     </div>
   );
-
   // ── Registration form ────────────────────────────────────────────────────
   return (
     <div style={s.page}>
       <style>{css}</style>
-
       {/* Left brand panel */}
       <div className="lp-left">
         <div style={{ position:"absolute", top:28, left:28, width:80, height:80, border:"1px solid rgba(0,0,0,0.06)", borderRadius:4, pointerEvents:"none" }} />
         <div style={{ position:"absolute", bottom:28, right:28, width:60, height:60, border:"1px solid rgba(0,0,0,0.04)", borderRadius:4, pointerEvents:"none" }} />
-
         <div style={s.logoMark}>
           <span style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:700, fontSize:22, color:"#fff" }}>LP</span>
         </div>
-
         <div style={{ display:"flex", alignItems:"center", gap:10, width:"100%", marginBottom:22, zIndex:1, position:"relative" }}>
           <div style={{ flex:1, height:1, background:"linear-gradient(90deg,transparent,rgba(0,0,0,0.15))" }} />
           <div style={{ width:4, height:4, background:"rgba(0,0,0,0.2)", transform:"rotate(45deg)", flexShrink:0 }} />
           <div style={{ flex:1, height:1, background:"linear-gradient(90deg,rgba(0,0,0,0.15),transparent)" }} />
         </div>
-
         <h2 style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:300, fontSize:28, color:"#0a0a0a", textAlign:"center", lineHeight:1.2, marginBottom:14, zIndex:1, position:"relative" }}>
           Join Us Today
         </h2>
         <p style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:300, fontSize:13, color:"rgba(0,0,0,0.4)", textAlign:"center", lineHeight:1.8, maxWidth:260, zIndex:1, position:"relative" }}>
           Kenya's premium destination for the finest fashion.
         </p>
-
+        {referralCode && (
+          <div style={{ marginTop: 28, background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.1)", borderRadius: 6, padding: "10px 16px", zIndex: 1, position: "relative", textAlign: "center" }}>
+            <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(0,0,0,0.55)" }}>
+              🎁 You were invited by a friend — sign up to connect your accounts
+            </span>
+          </div>
+        )}
         <div style={{ marginTop:44, display:"flex", flexDirection:"column", gap:14, width:"100%", zIndex:1, position:"relative" }}>
           {[["👑","Exclusive drops & deals"],["🚚","Fast delivery across Kenya"],["🔒","Secure M-Pesa checkout"],["↩️","30-day hassle-free returns"]].map(([icon,text]) => (
             <div key={text} style={{ display:"flex", alignItems:"center", gap:12 }}>
@@ -198,18 +192,15 @@ export default function Register() {
           ))}
         </div>
       </div>
-
       {/* Right form panel */}
       <div style={s.right}>
         <div className="lp-card" style={s.card}>
-
           {/* Mobile-only logo */}
           <div className="lp-mobile-logo">
             <div style={{ width:40, height:40, borderRadius:3, background:"#000", display:"flex", alignItems:"center", justifyContent:"center" }}>
               <span style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:700, fontSize:13, color:"#fff" }}>LP</span>
             </div>
           </div>
-
           {/* Image Hero */}
           <div style={{
             width: "100%", borderRadius: 12, overflow: "hidden",
@@ -230,25 +221,25 @@ export default function Register() {
               color: "#0a0a0a", letterSpacing: -0.3, lineHeight: 1.2
             }}>Let's Go Shopping</p>
           </div>
-
           <div style={{ marginBottom:22 }}>
             <div style={s.tag}>New Member</div>
             <h1 style={s.heading}>Create Account</h1>
             <p style={s.sub}>Join thousands of Luku Prime shoppers</p>
           </div>
-
+          {referralCode && (
+            <div style={{ background: "rgba(22,101,52,0.05)", border: "1px solid rgba(22,101,52,0.18)", borderRadius: 6, padding: "10px 16px", marginBottom: 18, fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#166534" }}>
+              🎁 Referral code applied — you're all set to sign up.
+            </div>
+          )}
           {serverError && <div style={s.errorBox}>{serverError}</div>}
-
           <div style={{ marginBottom:18, minHeight:44 }}>
             {googleLoading ? <div style={s.gLoad}>Signing in with Google…</div> : <div id="google-btn" style={{ width:"100%", minHeight:44 }} />}
           </div>
-
           <div style={s.orRow}>
             <span style={s.divLine}/>
             <span style={s.divText}>OR</span>
             <span style={s.divLine}/>
           </div>
-
           <div
             style={{ ...s.emailToggle, cursor: "pointer" }}
             onClick={() => setShowEmailForm(x => !x)}
@@ -271,7 +262,6 @@ export default function Register() {
               +
             </span>
           </div>
-
           <div className={`lp-collapse ${showEmailForm ? "lp-collapse-open" : ""}`}>
           <form onSubmit={handleSubmit} noValidate style={{ display:"flex", flexDirection:"column", gap:14 }}>
             <div>
@@ -289,7 +279,6 @@ export default function Register() {
               />
               {errors.full_name && <span style={s.err}>{errors.full_name}</span>}
             </div>
-
             <div>
               <label style={s.label}>Email Address</label>
               <input
@@ -305,7 +294,6 @@ export default function Register() {
               />
               {errors.email && <span style={s.err}>{errors.email}</span>}
             </div>
-
             <div>
               <label style={s.label}>Password</label>
               <div style={{ position:"relative" }}>
@@ -336,7 +324,6 @@ export default function Register() {
               )}
               {errors.password && <span style={s.err}>{errors.password}</span>}
             </div>
-
             <div>
               <label style={s.label}>Confirm Password</label>
               <input
@@ -352,13 +339,11 @@ export default function Register() {
               />
               {errors.confirm_password && <span style={s.err}>{errors.confirm_password}</span>}
             </div>
-
             <button type="submit" disabled={loading} className="lp-submit">
               {loading ? "Creating account…" : "Create Account →"}
             </button>
           </form>
           </div>
-
           <div style={{ height:1, background:"rgba(0,0,0,0.07)", margin:"24px 0" }}/>
           <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, color:"rgba(0,0,0,0.4)", textAlign:"center", marginBottom:14 }}>
             Already have an account? <span className="lp-link" onClick={() => navigate("/login")}>Sign In</span>
@@ -371,45 +356,33 @@ export default function Register() {
     </div>
   );
 }
-
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
   .lp-inp{background:#fff;border:1px solid rgba(0,0,0,0.12);border-radius:6px;padding:13px 16px;color:#0a0a0a;font-size:14px;font-family:'DM Sans',sans-serif;width:100%;outline:none;letter-spacing:0.2px;transition:border-color 0.2s,box-shadow 0.2s}
   .lp-inp:focus{border-color:rgba(0,0,0,0.4);box-shadow:0 0 0 3px rgba(0,0,0,0.06)}
   .lp-inp::placeholder{color:rgba(0,0,0,0.25)}
-
   .lp-submit{width:100%;border:none;border-radius:6px;padding:14px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;background:#000;color:#fff;transition:all 0.22s;margin-top:4px}
   .lp-submit:hover:not(:disabled){background:#222;transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,0.15)}
   .lp-submit:disabled{opacity:0.4;cursor:not-allowed}
-
   .lp-link{color:#000;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif;font-size:12px;transition:opacity 0.2s;opacity:0.6}
   .lp-link:hover{opacity:1}
-
   .lp-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;color:rgba(0,0,0,0.3);transition:color 0.2s;padding:0}
   .lp-eye:hover{color:#000}
-
   @keyframes lpFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
   .lp-card{animation:lpFadeUp 0.4s ease both}
-
   .lp-collapse{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 0.3s ease,opacity 0.25s ease,margin-top 0.3s ease;margin-top:0}
   .lp-collapse > form{overflow:hidden;min-height:0}
   .lp-collapse-open{grid-template-rows:1fr;opacity:1;margin-top:4px}
-
   .lp-left{width:420px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 44px;position:relative;overflow:hidden;border-right:1px solid rgba(0,0,0,0.07);background:#f9f9f9}
-
   .lp-mobile-logo{display:none;align-items:center;gap:12px;margin-bottom:28px}
-
   .lp-outline-btn{width:100%;border:1px solid rgba(0,0,0,0.2);border-radius:6px;padding:13px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;background:transparent;color:rgba(0,0,0,0.6);transition:all 0.2s}
   .lp-outline-btn:hover:not(:disabled){border-color:#000;color:#000;background:rgba(0,0,0,0.03)}
-
   @media(max-width:768px){
     .lp-left{display:none !important}
     .lp-mobile-logo{display:flex !important}
   }
 `;
-
 const s: Record<string, React.CSSProperties> = {
   page:     { minHeight:"100vh", display:"flex", fontFamily:"'DM Sans',sans-serif", background:"#fff", overflow:"hidden" },
   logoMark: { width:72, height:72, borderRadius:6, marginBottom:36, background:"#000", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 4px 20px rgba(0,0,0,0.12)", position:"relative", zIndex:1 },

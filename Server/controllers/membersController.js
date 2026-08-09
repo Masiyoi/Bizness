@@ -5,27 +5,23 @@
 //   module.exports = new Pool({ connectionString: process.env.DATABASE_URL });
 // Adjust the import below to match your project's actual db module.
 const pool = require('../config/db');
-
+const crypto = require('crypto');
 // Tier thresholds — keep these in sync with TIERS in src/pages/MembersClub.tsx
 const TIERS = [
   { name: 'Bronze',  min: 0,    max: 499 },
   { name: 'Gold',    min: 500,  max: 1999 },
   { name: 'Diamond', min: 2000, max: Infinity },
 ];
-
 // One-time bonus points paid out the moment a member crosses into a new tier
 const TIER_BONUS = {
   Gold:    50,
   Diamond: 150,
 };
-
 const SIGNUP_BONUS = 150; // awarded once, when the account/member record is created
 const JOIN_BONUS    = 20;  // awarded once, when the user explicitly joins the club
-
 function tierFor(points) {
   return TIERS.find(t => points >= t.min && points <= t.max) ?? TIERS[0];
 }
-
 /**
  * Adds points to a member's balance and logs the activity. If the new
  * balance crosses into a higher tier, the tier-completion bonus for that
@@ -40,17 +36,14 @@ async function addPoints(memberId, points, description) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-
     const { rows: [before] } = await client.query(
       'SELECT points FROM members WHERE id = $1 FOR UPDATE',
       [memberId]
     );
     if (!before) throw new Error('Member not found');
-
     const beforeTier  = tierFor(before.points);
     const afterPoints = before.points + points;
     const afterTier   = tierFor(afterPoints);
-
     await client.query(
       'UPDATE members SET points = $1, tier = $2 WHERE id = $3',
       [afterPoints, afterTier.name, memberId]
@@ -59,22 +52,17 @@ async function addPoints(memberId, points, description) {
       'INSERT INTO member_activities (member_id, description, points) VALUES ($1, $2, $3)',
       [memberId, description, points]
     );
-
     let tierBonusAwarded = null;
-
     if (afterTier.name !== beforeTier.name && TIER_BONUS[afterTier.name]) {
       const bonus = TIER_BONUS[afterTier.name];
       const finalPoints = afterPoints + bonus;
-
       await client.query('UPDATE members SET points = $1 WHERE id = $2', [finalPoints, memberId]);
       await client.query(
         'INSERT INTO member_activities (member_id, description, points) VALUES ($1, $2, $3)',
         [memberId, `Reached ${afterTier.name} tier — bonus reward`, bonus]
       );
-
       tierBonusAwarded = { tier: afterTier.name, bonus };
     }
-
     await client.query('COMMIT');
     return { tierChanged: afterTier.name !== beforeTier.name, tierBonusAwarded };
   } catch (err) {
@@ -84,7 +72,6 @@ async function addPoints(memberId, points, description) {
     client.release();
   }
 }
-
 /**
  * Call this from your existing user-registration flow, right after a new
  * account is created. It creates the member record and pays the one-time
@@ -97,16 +84,13 @@ async function registerMember(userId) {
     [userId]
   );
   if (existing) return existing.id;
-
   const { rows: [member] } = await pool.query(
     'INSERT INTO members (user_id, points, tier, club_joined) VALUES ($1, 0, $2, false) RETURNING id',
     [userId, TIERS[0].name]
   );
-
   await addPoints(member.id, SIGNUP_BONUS, 'Signed up — welcome bonus');
   return member.id;
 }
-
 // POST /api/members/join
 // A separate, explicit action from signup — pays its own bonus and is
 // safe to call whether or not registerMember already ran for this user.
@@ -117,7 +101,6 @@ async function joinClub(req, res) {
       'SELECT id, club_joined FROM members WHERE user_id = $1',
       [userId]
     );
-
     // Safety net in case registerMember wasn't wired into the signup flow yet —
     // still creates the record, but does NOT retroactively pay the signup bonus
     // here, so hook registerMember into registration to avoid missing it.
@@ -128,21 +111,17 @@ async function joinClub(req, res) {
       );
       member = created;
     }
-
     if (member.club_joined) {
       return res.status(409).json({ error: 'Already joined the club' });
     }
-
     await pool.query('UPDATE members SET club_joined = true WHERE id = $1', [member.id]);
     await addPoints(member.id, JOIN_BONUS, 'Joined the Club');
-
     res.status(201).json({ joined: true });
   } catch (err) {
     console.error('joinClub error:', err);
     res.status(500).json({ error: 'Could not join Members Club' });
   }
 }
-
 // GET /api/members/profile
 async function getProfile(req, res) {
   const userId = req.user.id;
@@ -152,19 +131,16 @@ async function getProfile(req, res) {
       [userId]
     );
     if (!member) return res.status(404).json({ error: 'Not a member' });
-
     // Lifetime total ever earned — differs from member.points once you add
     // a redemption/spend feature, since points can drop but this won't.
     const { rows: [{ total_earned }] } = await pool.query(
       'SELECT COALESCE(SUM(points), 0)::int AS total_earned FROM member_activities WHERE member_id = $1 AND points > 0',
       [member.id]
     );
-
     const { rows: activities } = await pool.query(
       'SELECT id, description, points, created_at FROM member_activities WHERE member_id = $1 ORDER BY created_at DESC LIMIT 20',
       [member.id]
     );
-
     res.json({
       points: member.points,
       tier: member.tier,
@@ -179,7 +155,48 @@ async function getProfile(req, res) {
     res.status(500).json({ error: 'Could not load profile' });
   }
 }
-
+// Generates a short, URL-safe referral code (fallback for accounts created
+// before referral codes were assigned at signup/Google-auth time).
+function generateReferralCode() {
+  return crypto.randomBytes(4).toString('hex').toUpperCase().slice(0, 8);
+}
+// GET /api/members/referral-link
+// Returns the member's referral code + a full shareable signup URL,
+// generating and persisting a code on first request if the user
+// somehow doesn't have one yet (e.g. pre-existing accounts).
+async function getReferralLink(req, res) {
+  const userId = req.user.id;
+  try {
+    const { rows: [user] } = await pool.query(
+      'SELECT referral_code FROM users WHERE id = $1',
+      [userId]
+    );
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    let code = user.referral_code;
+    if (!code) {
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const candidate = generateReferralCode();
+        try {
+          await pool.query('UPDATE users SET referral_code = $1 WHERE id = $2', [candidate, userId]);
+          code = candidate;
+          break;
+        } catch (err) {
+          if (err.code === '23505') continue; // collision — retry with a new code
+          throw err;
+        }
+      }
+      if (!code) throw new Error('Could not generate a unique referral code');
+    }
+    const baseUrl = process.env.FRONTEND_URL || 'https://lukuprime.shop';
+    res.json({
+      referral_code: code,
+      referral_url: `${baseUrl}/register?ref=${code}`,
+    });
+  } catch (err) {
+    console.error('getReferralLink error:', err);
+    res.status(500).json({ error: 'Could not load referral link' });
+  }
+}
 // Points earned per KSh 100 spent on a confirmed order — keep in sync with
 // the "Every KSh 100 spent" row in EARN_WAYS in src/pages/MembersClub.tsx
 const SPEND_POINTS_PER_KSH100 = 1;
@@ -257,4 +274,4 @@ async function getTotalPointsRewarded(req, res) {
     res.status(500).json({ error: 'Could not load total points rewarded' });
   }
 }
-module.exports = { registerMember, joinClub, getProfile, addPoints, awardOrderPoints, awardReferralBonus, tierFor, TIERS, TIER_BONUS, getTotalPointsRewarded };
+module.exports = { registerMember, joinClub, getProfile, addPoints, awardOrderPoints, awardReferralBonus, getReferralLink, tierFor, TIERS, TIER_BONUS, getTotalPointsRewarded };
