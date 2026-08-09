@@ -1,4 +1,4 @@
-﻿// src/controllers/membersController.js
+// src/controllers/membersController.js
 //
 // Assumes a shared pg Pool exported from ../db, e.g.:
 //   const { Pool } = require('pg');
