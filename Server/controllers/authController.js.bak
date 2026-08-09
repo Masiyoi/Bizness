@@ -356,18 +356,12 @@ exports.googleAuth = async (req, res) => {
         user.google_id = google_id; user.is_verified = true;
       }
     } else {
-      const ownReferralCode = await generateReferralCode();
       const newUser = await db.query(
-        `INSERT INTO users (full_name, email, google_id, is_verified, profile_picture, referral_code)
-         VALUES ($1, $2, $3, TRUE, $4, $5) RETURNING id, full_name, email, is_verified, role, profile_picture`,
-        [full_name, email.toLowerCase(), google_id, picture, ownReferralCode]
+        `INSERT INTO users (full_name, email, google_id, is_verified, profile_picture)
+         VALUES ($1, $2, $3, TRUE, $4) RETURNING id, full_name, email, is_verified, role, profile_picture`,
+        [full_name, email.toLowerCase(), google_id, picture]
       );
       user = newUser.rows[0];
-      try {
-        await registerMember(user.id);
-      } catch (memberErr) {
-        console.error('registerMember error (googleAuth):', memberErr.message);
-      }
     }
     const token = generateToken(user.id, user.role);
     res.cookie('token', token, { httpOnly:true, secure:true, sameSite:'none', domain:'.lukuprime.shop', maxAge:7*24*60*60*1000 });

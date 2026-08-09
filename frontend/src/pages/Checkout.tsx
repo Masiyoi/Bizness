@@ -16,7 +16,7 @@ import shoppingBagsIcon from '../assets/shopping-bags.png';
 import airtelLogo from '../assets/Airtel_logo.svg';
 import mastercardLogo from '../assets/MasterCard-Logo.svg';
 import visaLogo from '../assets/Visa.png';
-import lottie, { AnimationItem } from 'lottie-web';
+import lottie, { type AnimationItem } from 'lottie-web';
 
 interface CartItem {
   id: number;

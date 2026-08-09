@@ -152,9 +152,6 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
     [payment.user_id]
   );
 
-  // Award members-club points now that the order is confirmed and the
-  // cart is cleared. No-op for non-members; never throws.
-  await awardOrderPoints(payment.user_id, payment.amount);
   console.log(`✅ Pesapal order fulfilled — user ${payment.user_id} — ref ${confirmationCode}`);
 };
 
