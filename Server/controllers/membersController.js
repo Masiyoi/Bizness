@@ -1,4 +1,4 @@
-// src/controllers/membersController.js
+﻿// src/controllers/membersController.js
 //
 // Assumes a shared pg Pool exported from ../db, e.g.:
 //   const { Pool } = require('pg');
@@ -6,7 +6,7 @@
 // Adjust the import below to match your project's actual db module.
 const pool = require('../config/db');
 const crypto = require('crypto');
-// Tier thresholds — keep these in sync with TIERS in src/pages/MembersClub.tsx
+// Tier thresholds â€” keep these in sync with TIERS in src/pages/MembersClub.tsx
 const TIERS = [
   { name: 'Bronze',  min: 0,    max: 499 },
   { name: 'Gold',    min: 500,  max: 1999 },
@@ -27,7 +27,7 @@ function tierFor(points) {
  * balance crosses into a higher tier, the tier-completion bonus for that
  * tier is automatically credited and logged as a second activity row.
  *
- * Call this anywhere points get earned — order completion, review
+ * Call this anywhere points get earned â€” order completion, review
  * submission, referral confirmation, the join flow, etc.
  *
  * Returns { tierChanged, tierBonusAwarded }.
@@ -59,7 +59,7 @@ async function addPoints(memberId, points, description) {
       await client.query('UPDATE members SET points = $1 WHERE id = $2', [finalPoints, memberId]);
       await client.query(
         'INSERT INTO member_activities (member_id, description, points) VALUES ($1, $2, $3)',
-        [memberId, `Reached ${afterTier.name} tier — bonus reward`, bonus]
+        [memberId, `Reached ${afterTier.name} tier â€” bonus reward`, bonus]
       );
       tierBonusAwarded = { tier: afterTier.name, bonus };
     }
@@ -75,7 +75,7 @@ async function addPoints(memberId, points, description) {
 /**
  * Call this from your existing user-registration flow, right after a new
  * account is created. It creates the member record and pays the one-time
- * signup bonus. Idempotent — safe to call even if a member row somehow
+ * signup bonus. Idempotent â€” safe to call even if a member row somehow
  * already exists (e.g. re-registration edge cases).
  */
 async function registerMember(userId) {
@@ -88,11 +88,11 @@ async function registerMember(userId) {
     'INSERT INTO members (user_id, points, tier, club_joined) VALUES ($1, 0, $2, false) RETURNING id',
     [userId, TIERS[0].name]
   );
-  await addPoints(member.id, SIGNUP_BONUS, 'Signed up — welcome bonus');
+  await addPoints(member.id, SIGNUP_BONUS, 'Signed up â€” welcome bonus');
   return member.id;
 }
 // POST /api/members/join
-// A separate, explicit action from signup — pays its own bonus and is
+// A separate, explicit action from signup â€” pays its own bonus and is
 // safe to call whether or not registerMember already ran for this user.
 async function joinClub(req, res) {
   const userId = req.user.id; // set by your auth middleware
@@ -101,7 +101,7 @@ async function joinClub(req, res) {
       'SELECT id, club_joined FROM members WHERE user_id = $1',
       [userId]
     );
-    // Safety net in case registerMember wasn't wired into the signup flow yet —
+    // Safety net in case registerMember wasn't wired into the signup flow yet â€”
     // still creates the record, but does NOT retroactively pay the signup bonus
     // here, so hook registerMember into registration to avoid missing it.
     if (!member) {
@@ -131,7 +131,7 @@ async function getProfile(req, res) {
       [userId]
     );
     if (!member) return res.status(404).json({ error: 'Not a member' });
-    // Lifetime total ever earned — differs from member.points once you add
+    // Lifetime total ever earned â€” differs from member.points once you add
     // a redemption/spend feature, since points can drop but this won't.
     const { rows: [{ total_earned }] } = await pool.query(
       'SELECT COALESCE(SUM(points), 0)::int AS total_earned FROM member_activities WHERE member_id = $1 AND points > 0',
@@ -181,7 +181,7 @@ async function getReferralLink(req, res) {
           code = candidate;
           break;
         } catch (err) {
-          if (err.code === '23505') continue; // collision — retry with a new code
+          if (err.code === '23505') continue; // collision â€” retry with a new code
           throw err;
         }
       }
@@ -190,21 +190,21 @@ async function getReferralLink(req, res) {
     const baseUrl = process.env.FRONTEND_URL || 'https://lukuprime.shop';
     res.json({
       referral_code: code,
-      referral_url: `${baseUrl}/register?ref=${code}`,
+      referral_url: `${baseUrl}/#/register?ref=${code}`,
     });
   } catch (err) {
     console.error('getReferralLink error:', err);
     res.status(500).json({ error: 'Could not load referral link' });
   }
 }
-// Points earned per KSh 100 spent on a confirmed order — keep in sync with
+// Points earned per KSh 100 spent on a confirmed order â€” keep in sync with
 // the "Every KSh 100 spent" row in EARN_WAYS in src/pages/MembersClub.tsx
 const SPEND_POINTS_PER_KSH100 = 1;
-// One-time bonus for a member's first confirmed order — keep in sync with
+// One-time bonus for a member's first confirmed order â€” keep in sync with
 // "First order ever" in EARN_WAYS in src/pages/MembersClub.tsx
 const FIRST_ORDER_BONUS = 100;
 // One-time bonus paid to the REFERRER when their referred friend's first
-// order is confirmed — keep in sync with "Refer a friend" in EARN_WAYS
+// order is confirmed â€” keep in sync with "Refer a friend" in EARN_WAYS
 // in src/pages/MembersClub.tsx
 const REFERRAL_BONUS = 150;
 /**
@@ -224,7 +224,7 @@ async function awardReferralBonus(referredUserId) {
       [referredUser.referred_by]
     );
     if (!referrerMember || !referrerMember.club_joined) return;
-    await addPoints(referrerMember.id, REFERRAL_BONUS, 'Referred a friend — bonus reward');
+    await addPoints(referrerMember.id, REFERRAL_BONUS, 'Referred a friend â€” bonus reward');
     await pool.query('UPDATE users SET referral_rewarded_at = NOW() WHERE id = $1', [referredUserId]);
   } catch (err) {
     console.error('awardReferralBonus error:', err.message);
@@ -233,7 +233,7 @@ async function awardReferralBonus(referredUserId) {
 /**
  * Call this right after an order is inserted (e.g. from
  * fulfillPesapalPayment / the M-Pesa equivalent), once status = 'confirmed'.
- * No-ops silently if the user isn't a members-club member — order points
+ * No-ops silently if the user isn't a members-club member â€” order points
  * are a club perk, not a blanket reward. Never throws: a points failure
  * should not roll back or block order fulfillment.
  */
@@ -251,7 +251,7 @@ async function awardOrderPoints(userId, orderTotal) {
     const isFirstOrder = Number(count) === 1;
     const spendPoints = Math.floor(Number(orderTotal) / 100) * SPEND_POINTS_PER_KSH100;
     if (spendPoints > 0) {
-      await addPoints(member.id, spendPoints, `Order purchase — KSh ${orderTotal}`);
+      await addPoints(member.id, spendPoints, `Order purchase â€” KSh ${orderTotal}`);
     }
     if (isFirstOrder) {
       await addPoints(member.id, FIRST_ORDER_BONUS, 'First order bonus');
@@ -262,7 +262,7 @@ async function awardOrderPoints(userId, orderTotal) {
   }
 }
 // GET /api/members/admin/total-points-rewarded
-// Admin-only stat — total points ever paid out across all members.
+// Admin-only stat â€” total points ever paid out across all members.
 async function getTotalPointsRewarded(req, res) {
   try {
     const { rows: [{ total_rewarded }] } = await pool.query(
