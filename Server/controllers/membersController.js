@@ -244,4 +244,17 @@ async function awardOrderPoints(userId, orderTotal) {
     console.error('awardOrderPoints error:', err.message);
   }
 }
-module.exports = { registerMember, joinClub, getProfile, addPoints, awardOrderPoints, awardReferralBonus, tierFor, TIERS, TIER_BONUS };
+// GET /api/members/admin/total-points-rewarded
+// Admin-only stat — total points ever paid out across all members.
+async function getTotalPointsRewarded(req, res) {
+  try {
+    const { rows: [{ total_rewarded }] } = await pool.query(
+      'SELECT COALESCE(SUM(points), 0)::int AS total_rewarded FROM member_activities WHERE points > 0'
+    );
+    res.json({ total_points_rewarded: total_rewarded });
+  } catch (err) {
+    console.error('getTotalPointsRewarded error:', err);
+    res.status(500).json({ error: 'Could not load total points rewarded' });
+  }
+}
+module.exports = { registerMember, joinClub, getProfile, addPoints, awardOrderPoints, awardReferralBonus, tierFor, TIERS, TIER_BONUS, getTotalPointsRewarded };
