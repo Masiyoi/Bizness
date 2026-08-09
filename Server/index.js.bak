@@ -71,7 +71,6 @@ app.use('/api/reviews',     reviewRoutes);
 app.use('/api/subscribers', subscribersRoutes);
 app.use('/api/instagram',   instagramRoutes);
 app.use('/api/discount',    discountRoutes);
-app.use('/api/members',     membersRoutes);
 app.use('/api/admin', auth, adminOnly, analyticsRoutes);
 
 const PORT = process.env.PORT || 5000;

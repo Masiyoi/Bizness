@@ -7,24 +7,6 @@ const express = require('express');
 const router  = express.Router();
 const pool    = require('../config/db');       // your pg Pool instance
 const auth    = require('../middleware/auth'); // JWT middleware → sets req.user
-const { addPoints } = require('./membersController');
-// Points awarded per review — keep in sync with "Write a product review"
-// in EARN_WAYS in src/pages/MembersClub.tsx
-const REVIEW_POINTS = 20;
-// No-ops for non-members; never throws — a points failure shouldn't block
-// a review from being saved.
-async function awardReviewPoints(pool, userId) {
-  try {
-    const { rows: [member] } = await pool.query(
-      'SELECT id, club_joined FROM members WHERE user_id = $1',
-      [userId]
-    );
-    if (!member || !member.club_joined) return;
-    await addPoints(member.id, REVIEW_POINTS, 'Wrote a product review');
-  } catch (err) {
-    console.error('awardReviewPoints error:', err.message);
-  }
-}
 
 // ── helpers ────────────────────────────────────────────────────
 const notFound = (res, msg = 'Review not found') => res.status(404).json({ error: msg });

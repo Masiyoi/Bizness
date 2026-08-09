@@ -414,9 +414,6 @@ useEffect(() => {
             <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#bbb', marginTop: 20, letterSpacing: '1px' }}>
               Member since {fmtDate(profile.joined_at)}
             </p>
-            <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#bbb', marginTop: 6, letterSpacing: '1px' }}>
-              {(profile.total_points_earned ?? profile.points).toLocaleString()} points earned all-time
-            </p>
           </div>
 
           {/* Tier perks */}
