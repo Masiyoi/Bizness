@@ -1,4 +1,4 @@
-﻿// src/pages/MembersClub.tsx
+?// src/pages/MembersClub.tsx
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -8,7 +8,7 @@ import Footer from '../components/common/Footer';
 import { readUser } from '../constants/theme';
 import type { User } from '../constants/theme';
 
-// Icon imports â€” must be imported (not string paths) so Vite bundles/hashes them for production
+// Icon imports — must be imported (not string paths) so Vite bundles/hashes them for production
 import signupIcon from '../assets/signup.png';
 import walletIcon from '../assets/wallet.png';
 import redeemPointsIcon from '../assets/redeem-points.png';
@@ -19,7 +19,7 @@ import referIcon from '../assets/refer.png';
 import igColouredIcon from '../assets/IGcoloured.png';
 import fireworksIcon from '../assets/fireworks-.png';
 
-// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Types ────────────────────────────────────────────────────────────────────
 interface MemberProfile {
   points:        number;
   tier:          'Bronze' | 'Gold' | 'Diamond';
@@ -36,7 +36,7 @@ interface Activity {
   created_at:  string;
 }
 
-// â”€â”€ Tier config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Tier config ──────────────────────────────────────────────────────────────
 const TIERS = [
   {
     name:     'Bronze' as const,
@@ -80,7 +80,7 @@ const EARN_WAYS = [
   { label: 'Birthday month bonus',    points: 50,  icon: fireworksIcon },
 ];
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Helpers ──────────────────────────────────────────────────────────────────
 function getTier(points: number) {
   return TIERS.find(t => points >= t.min && points <= t.max) ?? TIERS[0];
 }
@@ -105,7 +105,7 @@ function TierBadge({ tier, size = 'md' }: { tier: typeof TIERS[0]; size?: 'sm' |
     </span>
   );
 }
-// â”€â”€ CSS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── CSS ──────────────────────────────────────────────────────────────────────
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -177,7 +177,7 @@ const css = `
   }
 `;
 
-// â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Main ─────────────────────────────────────────────────────────────────────
 export default function MembersClub() {
   const navigate = useNavigate();
   const [user,    setUser]    = useState<User | null>(readUser);
@@ -218,10 +218,10 @@ useEffect(() => {
     setJoining(true);
     try {
       await axios.post('/api/members/join');
-      showToast('âœ¦ Welcome to Luku Prime Members Club!');
+      showToast('✦ Welcome to Luku Prime Members Club!');
       fetchProfile();
     } catch {
-      showToast('Could not join â€” please try again.');
+      showToast('Could not join — please try again.');
     } finally {
       setJoining(false);
     }
@@ -258,7 +258,7 @@ useEffect(() => {
         onLogout={() => { setUser(null); setCartCount(0); setWishlistCount(0); }}
       />
 
-      {/* â”€â”€ HERO â€” full-bleed image banner â”€â”€ */}
+      {/* ── HERO — full-bleed image banner ── */}
       <section style={{
         position: 'relative',
         minHeight: 'clamp(360px,52vw,560px)',
@@ -313,7 +313,7 @@ useEffect(() => {
                 onClick={handleJoin} disabled={joining}
                 style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', background: '#fff', color: '#111', border: 'none', padding: '16px 36px', cursor: joining ? 'not-allowed' : 'pointer', opacity: joining ? 0.6 : 1 }}
               >
-                {joining ? 'Joiningâ€¦' : "Join the Club â€” It's Free"}
+                {joining ? 'Joining…' : "Join the Club — It's Free"}
               </button>
             </div>
           )}
@@ -326,7 +326,7 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* â”€â”€ HOW IT WORKS â€” Step 1 to 3 â”€â”€ */}
+      {/* ── HOW IT WORKS — Step 1 to 3 ── */}
       <section style={{
         background: '#fff',
         padding: 'clamp(48px,7vw,88px) clamp(20px,5%,40px)', textAlign: 'center',
@@ -363,7 +363,7 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* â”€â”€ MEMBER DASHBOARD (logged in + member) â”€â”€ */}
+      {/* ── MEMBER DASHBOARD (logged in + member) ── */}
       {user && isMember && profile && !loading && (
         <section style={{
           maxWidth: 840, margin: '0 auto',
@@ -408,7 +408,7 @@ useEffect(() => {
 
             {!next && (
               <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#6A7FA8', marginTop: 16, fontWeight: 600, letterSpacing: '1px' }}>
-                âœ¦ You've reached Diamond â€” the highest tier
+                ✦ You've reached Diamond — the highest tier
               </p>
             )}
 
@@ -422,13 +422,13 @@ useEffect(() => {
 
           {/* Tier perks */}
           <div className="mc-fade mc-d2" style={{ marginBottom: 48 }}>
-            <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: '#0A0A0A', marginBottom: 20 }}>
-              Your Perks â€” {tier.name}
+            <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: tier.color, marginBottom: 20 }}>
+              Your Perks — {tier.name}
             </p>
             <div style={{ background: '#fff', border: `1px solid ${tier.border}`, padding: 'clamp(20px,3vw,32px)' }}>
               {tier.perks.map((perk, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 0', borderBottom: i < tier.perks.length - 1 ? '1px solid rgba(0,0,0,0.06)' : 'none' }}>
-                  <span style={{ color: tier.color, fontSize: 14, flexShrink: 0 }}>âœ¦</span>
+                  <span style={{ color: tier.color, fontSize: 14, flexShrink: 0 }}>✦</span>
                   <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 13, color: '#0A0A0A', fontWeight: 700 }}>{perk}</span>
                 </div>
               ))}
@@ -462,7 +462,7 @@ useEffect(() => {
         </section>
       )}
 
-      {/* â”€â”€ LOADING SKELETON â”€â”€ */}
+      {/* ── LOADING SKELETON ── */}
       {user && loading && (
         <section style={{ maxWidth: 840, margin: '0 auto', padding: 'clamp(40px,6vw,80px) clamp(20px,5%,40px)' }}>
           <div className="skel" style={{ height: 220, marginBottom: 24 }} />
@@ -470,7 +470,7 @@ useEffect(() => {
         </section>
       )}
 
-      {/* â”€â”€ TIERS SECTION (always visible) â”€â”€ */}
+      {/* ── TIERS SECTION (always visible) ── */}
       <section style={{
         background: '#fff',
         padding: 'clamp(48px,7vw,96px) clamp(20px,5%,80px)',
@@ -507,12 +507,12 @@ useEffect(() => {
                   />
                 </div>
                 <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#111', margin: '10px 0 20px', letterSpacing: '0.5px' }}>
-                  {t.max === Infinity ? `${t.min.toLocaleString()}+ points` : `${t.min}â€“${t.max.toLocaleString()} points`}
+                  {t.max === Infinity ? `${t.min.toLocaleString()}+ points` : `${t.min}–${t.max.toLocaleString()} points`}
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {t.perks.map((perk, pi) => (
 <div key={pi} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                      <span style={{ color: t.color, fontSize: 11, flexShrink: 0, marginTop: 1 }}>âœ¦</span>
+                      <span style={{ color: t.color, fontSize: 11, flexShrink: 0, marginTop: 1 }}>✦</span>
                       <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 12, color: '#444', lineHeight: 1.5, fontWeight: 400 }}>{perk}</span>
                     </div>
                   ))}
@@ -523,7 +523,7 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* â”€â”€ EARN SECTION â”€â”€ */}
+      {/* ── EARN SECTION ── */}
       <section style={{
         background: '#fff',
         maxWidth: 640, margin: '0 auto',
@@ -548,7 +548,7 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* â”€â”€ CTA FOOTER BAND â”€â”€ */}
+      {/* ── CTA FOOTER BAND ── */}
       {(!user || (user && !isMember && !loading)) && (
         <section style={{
           background: '#0A0A0A', padding: 'clamp(48px,7vw,80px) clamp(20px,5%,80px)',
@@ -566,7 +566,7 @@ useEffect(() => {
             onClick={handleJoin}
             disabled={joining}
           >
-            {joining ? 'Joiningâ€¦' : !user ? 'Create an Account' : 'Join the Club â€” Free'}
+            {joining ? 'Joining…' : !user ? 'Create an Account' : 'Join the Club — Free'}
           </button>
         </section>
       )}
