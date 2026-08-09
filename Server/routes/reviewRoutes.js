@@ -6,6 +6,11 @@ const express = require('express');
 const router  = express.Router();
 const pool    = require('../config/db');
 const auth    = require('../middleware/auth');
+const { addPoints } = require('../controllers/membersController'); // adjust path if your project layout differs
+
+// Points awarded per review — keep in sync with "Write a product review"
+// in EARN_WAYS in src/pages/MembersClub.tsx
+const REVIEW_POINTS = 20;
 
 const notFound = (res, msg = 'Review not found') => res.status(404).json({ error: msg });
 const badReq   = (res, msg)                       => res.status(400).json({ error: msg });
@@ -36,6 +41,22 @@ function extractProductIds(snapshot) {
   }
 
   return ids;
+}
+
+// ── Helper: award members-club points for writing a review ────
+// No-op for non-members; never throws — a points failure shouldn't
+// block a review from being saved.
+async function awardReviewPoints(userId) {
+  try {
+    const { rows: [member] } = await pool.query(
+      'SELECT id, club_joined FROM members WHERE user_id = $1',
+      [userId]
+    );
+    if (!member || !member.club_joined) return;
+    await addPoints(member.id, REVIEW_POINTS, 'Wrote a product review');
+  } catch (err) {
+    console.error('awardReviewPoints error:', err.message);
+  }
 }
 
 // ── GET /api/reviews/homepage ──────────────────────────────────
@@ -242,6 +263,11 @@ router.post('/', auth, async (req, res) => {
        RETURNING id, rating, comment, created_at`,
       [req.user.id, product_id, rating, comment?.trim() || null]
     );
+
+    // Award members-club points now that the review is saved. No-op for
+    // non-members; never throws — a points failure shouldn't block the response.
+    await awardReviewPoints(req.user.id);
+
     res.status(201).json(rows[0]);
 
   } catch (err) {
