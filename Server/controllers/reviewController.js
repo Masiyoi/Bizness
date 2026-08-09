@@ -14,13 +14,16 @@ const REVIEW_POINTS = 20;
 // No-ops for non-members; never throws — a points failure shouldn't block
 // a review from being saved.
 async function awardReviewPoints(pool, userId) {
+  console.log('[awardReviewPoints] called for user', userId);
   try {
     const { rows: [member] } = await pool.query(
       'SELECT id, club_joined FROM members WHERE user_id = $1',
       [userId]
     );
+    console.log('[awardReviewPoints] member lookup:', member);
     if (!member || !member.club_joined) return;
     await addPoints(member.id, REVIEW_POINTS, 'Wrote a product review');
+    console.log('[awardReviewPoints] points awarded successfully');
   } catch (err) {
     console.error('awardReviewPoints error:', err.message);
   }
