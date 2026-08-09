@@ -192,6 +192,9 @@ router.post('/', auth, async (req, res) => {
        RETURNING id, rating, comment, created_at`,
       [req.user.id, product_id, rating, comment?.trim() || null]
     );
+    // Award members-club points now that the review is saved. No-op for
+// non-members; never throws — a points failure shouldn't block the response.
+      await awardReviewPoints(pool, req.user.id);  
     res.status(201).json(rows[0]);
 
   } catch (err) {
