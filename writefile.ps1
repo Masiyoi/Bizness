@@ -1,3 +1,6 @@
+$path = "Server\controllers\membersController.js"
+
+$content = @'
 // src/controllers/membersController.js
 //
 // Assumes a shared pg Pool exported from ../db, e.g.:
@@ -282,3 +285,9 @@ async function getTotalPointsRewarded(req, res) {
   }
 }
 module.exports = { registerMember, joinClub, getProfile, addPoints, awardOrderPoints, awardReferralBonus, getReferralLink, tierFor, TIERS, TIER_BONUS, getTotalPointsRewarded };
+'@
+
+Copy-Item -LiteralPath $path -Destination "$path.bak2" -Force -ErrorAction SilentlyContinue
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+[System.IO.File]::WriteAllText((Join-Path (Get-Location) $path), $content, $utf8NoBom)
+Write-Host "Wrote $path (previous version backed up to $path.bak2)"

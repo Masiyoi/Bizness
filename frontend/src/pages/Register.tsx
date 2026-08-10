@@ -53,7 +53,10 @@ export default function Register() {
   const handleGoogleResponse = useCallback(async (response: { credential: string }) => {
     setGoogleLoading(true); setServerError("");
     try {
-      const res = await axios.post("/api/auth/google", { credential: response.credential }, {
+      const res = await axios.post("/api/auth/google", {
+        credential: response.credential,
+        referral_code: referralCode,
+      }, {
         withCredentials: true,
       });
       localStorage.setItem("user", JSON.stringify(res.data.user));
@@ -61,7 +64,7 @@ export default function Register() {
     } catch (err: any) {
       setServerError(err.response?.data?.msg || "Google sign-in failed.");
     } finally { setGoogleLoading(false); }
-  }, [navigate]);
+  }, [navigate, referralCode]);
   useEffect(() => {
     const t = setTimeout(() => {
       if (window.google) {
@@ -125,7 +128,7 @@ export default function Register() {
     } catch { setResendMsg("Failed to resend. Please try again."); }
     finally { setResendLoading(false); }
   };
-  // ── Check inbox screen ───────────────────────────────────────────────────
+  // â”€â”€ Check inbox screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (registeredEmail) return (
     <div style={s.page}>
       <style>{css}</style>
@@ -136,7 +139,7 @@ export default function Register() {
             <div style={{ width:4, height:4, background:"rgba(0,0,0,0.2)", transform:"rotate(45deg)", flexShrink:0 }} />
             <div style={{ flex:1, height:1, background:"linear-gradient(90deg,rgba(0,0,0,0.15),transparent)" }} />
           </div>
-          <div style={{ fontSize:48, marginBottom:14 }}>📬</div>
+          <div style={{ fontSize:48, marginBottom:14 }}>ðŸ“¬</div>
           <h1 style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:700, fontSize:"clamp(17px,4vw,21px)", color:"#0a0a0a", textAlign:"center", marginBottom:10 }}>Check your inbox!</h1>
           <p style={s.sub}>We sent a verification link to</p>
           <div style={{ background:"rgba(0,0,0,0.03)", border:"1px solid rgba(0,0,0,0.1)", borderRadius:6, padding:"9px 16px", color:"rgba(0,0,0,0.6)", fontSize:13, marginBottom:22, display:"inline-block", fontFamily:"'DM Sans',sans-serif", wordBreak:"break-all" as const }}>
@@ -145,7 +148,7 @@ export default function Register() {
           <p style={{ ...s.sub, marginBottom:22 }}>Click the link to activate your account. Check your <strong style={{ color:"rgba(0,0,0,0.5)" }}>spam folder</strong> too.</p>
           {resendMsg && <div style={s.successBox}>{resendMsg}</div>}
           <button onClick={handleResend} disabled={resendLoading} className="lp-outline-btn" style={{ opacity:resendLoading?0.6:1, cursor:resendLoading?"not-allowed":"pointer", marginBottom:16 }}>
-            {resendLoading ? "Sending…" : "Resend verification email"}
+            {resendLoading ? "Sendingâ€¦" : "Resend verification email"}
           </button>
           <p style={{ color:"rgba(0,0,0,0.35)", fontSize:13, fontFamily:"'DM Sans',sans-serif" }}>
             Already verified? <Link to="/login" style={{ color:"#000", fontWeight:600, textDecoration:"none" }}>Sign in here</Link>
@@ -154,7 +157,7 @@ export default function Register() {
       </div>
     </div>
   );
-  // ── Registration form ────────────────────────────────────────────────────
+  // â”€â”€ Registration form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div style={s.page}>
       <style>{css}</style>
@@ -179,12 +182,12 @@ export default function Register() {
         {referralCode && (
           <div style={{ marginTop: 28, background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.1)", borderRadius: 6, padding: "10px 16px", zIndex: 1, position: "relative", textAlign: "center" }}>
             <span style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "rgba(0,0,0,0.55)" }}>
-              🎁 You were invited by a friend — sign up to connect your accounts
+              ðŸŽ You were invited by a friend â€” sign up to connect your accounts
             </span>
           </div>
         )}
         <div style={{ marginTop:44, display:"flex", flexDirection:"column", gap:14, width:"100%", zIndex:1, position:"relative" }}>
-          {[["👑","Exclusive drops & deals"],["🚚","Fast delivery across Kenya"],["🔒","Secure M-Pesa checkout"],["↩️","30-day hassle-free returns"]].map(([icon,text]) => (
+          {[["ðŸ‘‘","Exclusive drops & deals"],["ðŸšš","Fast delivery across Kenya"],["ðŸ”’","Secure M-Pesa checkout"],["â†©ï¸","30-day hassle-free returns"]].map(([icon,text]) => (
             <div key={text} style={{ display:"flex", alignItems:"center", gap:12 }}>
               <div style={{ width:32, height:32, borderRadius:3, flexShrink:0, background:"rgba(0,0,0,0.04)", border:"1px solid rgba(0,0,0,0.08)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13 }}>{icon}</div>
               <span style={{ fontFamily:"'DM Sans',sans-serif", fontSize:12, color:"rgba(0,0,0,0.45)" }}>{text}</span>
@@ -228,12 +231,12 @@ export default function Register() {
           </div>
           {referralCode && (
             <div style={{ background: "rgba(22,101,52,0.05)", border: "1px solid rgba(22,101,52,0.18)", borderRadius: 6, padding: "10px 16px", marginBottom: 18, fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#166534" }}>
-              🎁 Referral code applied — you're all set to sign up.
+              ðŸŽ Referral code applied â€” you're all set to sign up.
             </div>
           )}
           {serverError && <div style={s.errorBox}>{serverError}</div>}
           <div style={{ marginBottom:18, minHeight:44 }}>
-            {googleLoading ? <div style={s.gLoad}>Signing in with Google…</div> : <div id="google-btn" style={{ width:"100%", minHeight:44 }} />}
+            {googleLoading ? <div style={s.gLoad}>Signing in with Googleâ€¦</div> : <div id="google-btn" style={{ width:"100%", minHeight:44 }} />}
           </div>
           <div style={s.orRow}>
             <span style={s.divLine}/>
@@ -309,7 +312,7 @@ export default function Register() {
                   style={{ paddingRight:50, borderColor: errors.password ? "#ef4444" : "rgba(0,0,0,0.12)" }}
                 />
                 <button type="button" onClick={() => setShowPassword(x => !x)} className="lp-eye">
-                  {showPassword ? "🙈" : "👁️"}
+                  {showPassword ? "ðŸ™ˆ" : "ðŸ‘ï¸"}
                 </button>
               </div>
               {formData.password && (
@@ -340,7 +343,7 @@ export default function Register() {
               {errors.confirm_password && <span style={s.err}>{errors.confirm_password}</span>}
             </div>
             <button type="submit" disabled={loading} className="lp-submit">
-              {loading ? "Creating account…" : "Create Account →"}
+              {loading ? "Creating accountâ€¦" : "Create Account â†’"}
             </button>
           </form>
           </div>
