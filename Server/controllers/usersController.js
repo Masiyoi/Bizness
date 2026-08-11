@@ -1,32 +1,27 @@
 // src/controllers/usersController.js
 //
-// New controller — you don't have one yet. Handles the logged-in user's own
-// profile: read/update contact details + birthday month, and change password
-// while already signed in (separate from the email-link forgotPassword flow
-// in authController.js).
+// Handles logged-in user's own profile: read/update contact details + birthday,
+// and change password while already signed in (separate from the email-link
+// forgotPassword flow in authController.js).
 //
-// Requires these new columns (adjust types/lengths as you like):
+// Requires these new columns:
 //   ALTER TABLE users ADD COLUMN phone TEXT;
 //   ALTER TABLE users ADD COLUMN address TEXT;
 //   ALTER TABLE users ADD COLUMN city TEXT;
 //   ALTER TABLE users ADD COLUMN country TEXT;
-//   ALTER TABLE users ADD COLUMN birthday_month TEXT; -- 'January' … 'December', nullable
+//   ALTER TABLE users ADD COLUMN birthday DATE;
 
 const db     = require('../config/db');
 const bcrypt = require('bcryptjs');
 
 const MAX_NAME_LENGTH = 100;
-const VALID_MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
 
 // GET /api/users/me
 exports.getMe = async (req, res) => {
   const userId = req.user.id;
   try {
     const { rows: [user] } = await db.query(
-      `SELECT full_name, email, phone, address, city, country, birthday_month
+      `SELECT full_name, email, phone, address, city, country, birthday
        FROM users WHERE id = $1`,
       [userId]
     );
@@ -39,23 +34,30 @@ exports.getMe = async (req, res) => {
 };
 
 // PATCH /api/users/me
-// Body: any subset of { full_name, phone, address, city, country, birthday_month }
+// Body: any subset of { full_name, phone, address, city, country, birthday }
 // Email is intentionally NOT editable here — changing it would need its own
 // re-verification flow (token + confirmation email), same as registration.
 exports.updateMe = async (req, res) => {
   const userId = req.user.id;
-  const { full_name, phone, address, city, country, birthday_month } = req.body;
+  const { full_name, phone, address, city, country, birthday } = req.body;
 
   if (full_name !== undefined && (!full_name.trim() || full_name.trim().length > MAX_NAME_LENGTH)) {
     return res.status(400).json({ msg: `Name must be under ${MAX_NAME_LENGTH} characters.` });
   }
-  if (birthday_month !== undefined && birthday_month !== '' && !VALID_MONTHS.includes(birthday_month)) {
-    return res.status(400).json({ msg: 'Invalid month.' });
+  if (birthday !== undefined && birthday !== null && birthday !== '') {
+    // Validate the date is valid and not in the future
+    const bday = new Date(birthday);
+    if (isNaN(bday.getTime())) {
+      return res.status(400).json({ msg: 'Invalid birthday date.' });
+    }
+    if (bday > new Date()) {
+      return res.status(400).json({ msg: 'Birthday cannot be in the future.' });
+    }
   }
 
-  // Build the update dynamically so a partial body (e.g. just birthday_month
+  // Build the update dynamically so a partial body (e.g. just birthday
   // from the Settings page) doesn't null out the other fields.
-  const fields = { full_name, phone, address, city, country, birthday_month };
+  const fields = { full_name, phone, address, city, country, birthday };
   const sets = [];
   const values = [];
   let i = 1;
@@ -71,7 +73,7 @@ exports.updateMe = async (req, res) => {
     const { rows: [updated] } = await db.query(
       `UPDATE users SET ${sets.join(', ')}, updated_at = NOW()
        WHERE id = $${i}
-       RETURNING full_name, email, phone, address, city, country, birthday_month`,
+       RETURNING full_name, email, phone, address, city, country, birthday`,
       values
     );
     return res.json(updated);

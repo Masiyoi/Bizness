@@ -1,124 +1,78 @@
-// src/pages/profile/Affiliate.tsx
-//
-// Uses your real membersController endpoints:
-//   GET /api/members/referral-link  -> { referral_code, referral_url }
-//   GET /api/members/profile        -> { ..., activities: [{ description, points, created_at }] }
-//
-// There's no click-tracking anywhere in your backend, so that stat is
-// dropped rather than faked. "Referrals rewarded" and "points earned from
-// referrals" are derived client-side by filtering the activities feed for
-// the exact description awardReferralBonus() logs: 'Referred a friend - bonus reward'.
-// If you ever rename that string server-side, update REFERRAL_ACTIVITY_LABEL below.
-import { useEffect, useState } from 'react';
-import axios from 'axios';
+// src/pages/company/Careers.tsx
+import PageShell, { Section, Prose, AccentCard, InfoGrid } from '../../components/common/PageShell';
 
-const REFERRAL_ACTIVITY_LABEL = 'Referred a friend - bonus reward';
+// ── Careers-page icon assets ─────────────────────────────────────────
+import startupIcon    from '../../assets/careers/startup.png';
+import discountIcon   from '../../assets/careers/discount.png';
+import growIcon       from '../../assets/careers/grow.png';
+import creativityIcon from '../../assets/careers/creativity.png';
+import remoteIcon     from '../../assets/careers/remote.png';
+import supportIcon    from '../../assets/careers/support.png';
 
-interface Activity { id: number; description: string; points: number; created_at: string; }
-interface MemberProfile { club_joined: boolean; activities: Activity[]; }
+const ROLES = [
+  { title: 'Fashion Buyer / Sourcing Lead', type: 'Full-time · Nairobi', desc: 'Identify and source the freshest drops from local and international suppliers. You live and breathe fashion trends.' },
+  { title: 'Delivery Rider', type: 'Part-time / Contract · Nairobi CBD', desc: 'Reliable rider with a motorbike for same-day deliveries within Nairobi. Good attitude and punctuality essential.' },
+  { title: 'Social Media & Content Creator', type: 'Part-time · Remote', desc: 'Create scroll-stopping content for Instagram and TikTok. If your videos go viral, this job is for you.' },
+  { title: 'Customer Support Agent', type: 'Full-time · Nairobi', desc: 'Handle customer queries via WhatsApp, email, and calls. Fast typist, patient, and fashion-savvy.' },
+];
 
-export default function Affiliate() {
-  const [referralCode, setReferralCode] = useState<string | null>(null);
-  const [referralUrl, setReferralUrl]   = useState<string | null>(null);
-  const [clubJoined, setClubJoined]     = useState<boolean | null>(null);
-  const [referralActivities, setReferralActivities] = useState<Activity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [copied, setCopied]   = useState(false);
-
-  useEffect(() => {
-    axios.get('/api/members/profile')
-      .then(r => {
-        const profile: MemberProfile = r.data;
-        setClubJoined(profile.club_joined);
-        setReferralActivities((profile.activities ?? []).filter(a => a.description === REFERRAL_ACTIVITY_LABEL));
-      })
-      .catch(() => setClubJoined(null));
-
-    axios.get('/api/members/referral-link')
-      .then(r => { setReferralCode(r.data.referral_code); setReferralUrl(r.data.referral_url); })
-      .catch(() => { setReferralCode(null); setReferralUrl(null); })
-      .finally(() => setLoading(false));
-  }, []);
-
-  const copyLink = () => {
-    if (!referralUrl) return;
-    navigator.clipboard.writeText(referralUrl).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
-  };
-
-  const totalEarned = referralActivities.reduce((sum, a) => sum + a.points, 0);
-
+export default function Careers() {
   return (
-    <div>
-      <p className="pf-eyebrow">Earn With Us</p>
-      <h1 className="pf-title">Affiliate <em>Marketing</em></h1>
-      <p className="pf-sub">Share your link. When someone signs up and completes their first order through it, you earn points.</p>
-
-      {loading && <div className="pf-card">Loading…</div>}
-
-      {!loading && !referralCode && (
-        <div className="pf-card">
-          <div className="pf-empty">
-            <p className="pf-empty-title">Couldn't load your referral link</p>
-            <p className="pf-empty-sub">Try refreshing the page in a moment.</p>
+    <PageShell
+      badge="Company"
+      title="Careers at Luku Prime"
+      subtitle="Join a team that's redefining fashion in Kenya. We're growing fast and looking for passionate people."
+    >
+      <Section title="Open Positions">
+        {ROLES.map(role => (
+          <div key={role.title} style={{
+            background: '#fff', border: '1px solid rgba(10,22,40,0.09)',
+            borderRadius: 12, padding: '20px 22px', marginBottom: 14,
+            display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+            flexWrap: 'wrap', gap: 12,
+          }}>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: '#0A1628', marginBottom: 4 }}>{role.title}</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#C8A951', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 8 }}>{role.type}</div>
+              <div style={{ fontSize: 13, color: '#7A6A5A', lineHeight: 1.6 }}>{role.desc}</div>
+            </div>
+            <a
+              href={`mailto:masiyoiisaac@gmail.com?subject=Application: ${role.title}`}
+              style={{
+                background: '#0A1628', color: '#C8A951',
+                border: '1.5px solid #C8A951', borderRadius: 8,
+                padding: '10px 20px', fontSize: 11, fontWeight: 700,
+                letterSpacing: '1.2px', textTransform: 'uppercase',
+                textDecoration: 'none', whiteSpace: 'nowrap', alignSelf: 'flex-start',
+              }}
+            >
+              Apply →
+            </a>
           </div>
+        ))}
+      </Section>
+
+      <Section title="Why Work With Us">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 }}>
+          {[
+            { icon: startupIcon,    perk: 'Fast-growing startup energy' },
+            { icon: discountIcon,   perk: 'Staff discounts on all products' },
+            { icon: growIcon,       perk: 'Room to grow quickly' },
+            { icon: creativityIcon, perk: 'Creative, fashion-forward culture' },
+            { icon: remoteIcon,     perk: 'Flexible remote roles available' },
+            { icon: supportIcon,    perk: 'Tight-knit, supportive team' },
+          ].map(p => (
+            <div key={p.perk} style={{ background: '#fff', border: '1px solid rgba(10,22,40,0.08)', borderRadius: 10, padding: '14px 16px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <img src={p.icon} alt="" style={{ width: 22, height: 22, objectFit: 'contain', flexShrink: 0 }} />
+              <span style={{ fontSize: 13, color: '#0A1628', fontWeight: 600, lineHeight: 1.5 }}>{p.perk}</span>
+            </div>
+          ))}
         </div>
-      )}
+      </Section>
 
-      {!loading && referralCode && (
-        <>
-          <div className="pf-card" style={{ marginBottom: 16 }}>
-            <p className="pf-section-title">Your Referral Link</p>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <input className="pf-input" style={{ flex: 1, minWidth: 220 }} readOnly value={referralUrl ?? ''} onFocus={e => e.target.select()} />
-              <button className="pf-btn-primary" onClick={copyLink}>{copied ? 'Copied ✓' : 'Copy Link'}</button>
-            </div>
-            <p className="pf-row-desc" style={{ marginTop: 10 }}>Your code: <strong style={{ color: 'var(--pf-ink)' }}>{referralCode}</strong></p>
-          </div>
-
-          {clubJoined === false && (
-            <div className="pf-card" style={{ marginBottom: 16 }}>
-              <p className="pf-row-label" style={{ marginBottom: 4 }}>Join the Members Club to actually earn the referral bonus</p>
-              <p className="pf-row-desc">Your link still works for anyone right now, but referral points only pay out once you've joined the club.</p>
-            </div>
-          )}
-
-          <div className="pf-stats-grid">
-            <div className="pf-stat">
-              <div className="pf-stat-value">{referralActivities.length}</div>
-              <div className="pf-stat-label">Referrals Rewarded</div>
-            </div>
-            <div className="pf-stat">
-              <div className="pf-stat-value">{totalEarned}</div>
-              <div className="pf-stat-label">Points Earned</div>
-            </div>
-          </div>
-
-          <div className="pf-card">
-            <p className="pf-section-title">How it works</p>
-            <div className="pf-row">
-              <div>
-                <p className="pf-row-label">1. Share your link</p>
-                <p className="pf-row-desc">Send it to friends, or post it anywhere.</p>
-              </div>
-            </div>
-            <div className="pf-row">
-              <div>
-                <p className="pf-row-label">2. They sign up and order</p>
-                <p className="pf-row-desc">Your code is applied automatically at registration.</p>
-              </div>
-            </div>
-            <div className="pf-row">
-              <div>
-                <p className="pf-row-label">3. You earn on their first order</p>
-                <p className="pf-row-desc">150 points post here the moment their first order is confirmed.</p>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
+      <AccentCard>
+        <strong>Don't see your role?</strong> We're always interested in talented people. Send your CV and a short note about what you'd bring to Luku Prime to <strong>masiyoiisaac@gmail.com</strong> with the subject line "Open Application."
+      </AccentCard>
+    </PageShell>
   );
 }

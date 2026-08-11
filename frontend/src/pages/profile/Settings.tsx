@@ -1,8 +1,12 @@
 // src/pages/profile/Settings.tsx
 //
-// Birthday month uses a new GET/PATCH /api/users/me (see usersController.js
-// below — you don't have a users controller yet, so this needs the new file
-// plus a `birthday_month` column: ALTER TABLE users ADD COLUMN birthday_month TEXT;).
+// Birthday uses a new GET/PATCH /api/users/me (see usersController.js —
+// you don't have a users controller yet, so this needs the new file
+// plus a `birthday` DATE column: ALTER TABLE users ADD COLUMN birthday DATE;
+// — see migration_birthday.sql).
+//
+// On their birthday, users get a one-time 50pt "Birthday bonus" activity —
+// see awardBirthdayBonuses() in membersController.js, run daily via cron.
 //
 // Password change posts to a new POST /api/auth/change-password, also in the
 // usersController.js addition below. Your existing password-reset flow
@@ -18,22 +22,21 @@ import { useProfileTheme } from './ProfileThemeContext';
 
 interface OutletCtx { user: User; }
 
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
-
 function Toast({ message }: { message: string }) {
   return <div className="pf-toast">{message}</div>;
 }
+
+// yyyy-mm-dd, used as the <input type="date"> max so people can't pick a
+// future date as their birthday.
+const todayIso = () => new Date().toISOString().slice(0, 10);
 
 export default function Settings() {
   const { user } = useOutletContext<OutletCtx>();
   const { theme, toggle } = useProfileTheme();
 
-  const [birthdayMonth, setBirthdayMonth] = useState<string>('');
-  const [savingMonth, setSavingMonth]     = useState(false);
-  const [toast, setToast]                 = useState<string | null>(null);
+  const [birthday, setBirthday]     = useState<string>(''); // yyyy-mm-dd
+  const [savingBirthday, setSavingBirthday] = useState(false);
+  const [toast, setToast]           = useState<string | null>(null);
 
   const [currentPw, setCurrentPw] = useState('');
   const [newPw, setNewPw]         = useState('');
@@ -43,19 +46,19 @@ export default function Settings() {
 
   useEffect(() => {
     axios.get('/api/users/me')
-      .then(r => setBirthdayMonth(r.data.birthday_month ?? ''))
+      .then(r => setBirthday(r.data.birthday ? String(r.data.birthday).slice(0, 10) : ''))
       .catch(() => {});
   }, [user.id]);
 
   const flash = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2200); };
 
-  const saveBirthdayMonth = (month: string) => {
-    setBirthdayMonth(month);
-    setSavingMonth(true);
-    axios.patch('/api/users/me', { birthday_month: month })
-      .then(() => flash('Birthday month saved'))
+  const saveBirthday = (value: string) => {
+    setBirthday(value);
+    setSavingBirthday(true);
+    axios.patch('/api/users/me', { birthday: value || null })
+      .then(() => flash('Birthday saved'))
       .catch(() => flash('Could not save — try again'))
-      .finally(() => setSavingMonth(false));
+      .finally(() => setSavingBirthday(false));
   };
 
   const submitPasswordChange = async (e: React.FormEvent) => {
@@ -88,20 +91,20 @@ export default function Settings() {
       <h1 className="pf-title">Account <em>Settings</em></h1>
       <p className="pf-sub">Personalize your account and keep it secure.</p>
 
-      {/* ── Birthday month ── */}
+      {/* ── Birthday ── */}
       <div className="pf-card">
-        <p className="pf-section-title">Birthday Month</p>
-        <p className="pf-row-desc" style={{ marginBottom: 14 }}>We'll send you a little something during your birthday month. No need for the exact date.</p>
-        <select
-          className="pf-select"
-          value={birthdayMonth}
-          disabled={savingMonth}
-          onChange={e => saveBirthdayMonth(e.target.value)}
+        <p className="pf-section-title">Birthday</p>
+        <p className="pf-row-desc" style={{ marginBottom: 14 }}>We will award you 50 points birthday bonus.</p>
+        <input
+          className="pf-input"
+          type="date"
+          value={birthday}
+          disabled={savingBirthday}
+          max={todayIso()}
+          min="1900-01-01"
+          onChange={e => saveBirthday(e.target.value)}
           style={{ maxWidth: 240 }}
-        >
-          <option value="">Not set</option>
-          {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
-        </select>
+        />
       </div>
 
       {/* ── Theme ── */}

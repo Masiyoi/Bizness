@@ -261,7 +261,7 @@ export default function App() {
           <Route path="discounts"       element={<Discounts />} />
           <Route path="affiliate"       element={<Affiliate />} />
           <Route path="settings"        element={<Settings />} />
-          <Route path="account-details" element={<AccountDetails />} />
+          <Route path="account"         element={<AccountDetails />} />
         </Route>
 
         {/* ── Email verification ──────────────────────────────────────────────── */}

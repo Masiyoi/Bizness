@@ -3,6 +3,7 @@ const cors    = require('cors');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
 const helmet = require('helmet');
+const cron   = require('node-cron');
 
 const productRoutes     = require('./routes/productRoutes');
 const authRoutes        = require('./routes/authRoutes');
@@ -20,6 +21,7 @@ const membersRoutes     = require('./routes/membersRoutes');
 const usersRoutes       = require('./routes/usersRoutes');
 const auth      = require('./middleware/auth');
 const adminOnly = require('./middleware/adminOnly');
+const { awardBirthdayBonuses } = require('./controllers/membersController');
 
 const app = express();
 
@@ -75,6 +77,21 @@ app.use('/api/discount',    discountRoutes);
 app.use('/api/members',     membersRoutes);
 app.use('/api/users',       usersRoutes);
 app.use('/api/admin', auth, adminOnly, analyticsRoutes);
+
+// ── Scheduled jobs ─────────────────────────────────────────────────────────────
+// Runs daily at 07:00 Africa/Nairobi — pays the one-time 50pt birthday bonus
+// to any club member whose birthday (month + day) is today. See
+// awardBirthdayBonuses() in membersController.js for the actual logic and
+// the birthday_bonus_year guard against double-paying.
+cron.schedule(
+  '0 7 * * *',
+  () => {
+    awardBirthdayBonuses()
+      .then(({ awarded }) => console.log(`Birthday bonus cron: awarded ${awarded} member(s)`))
+      .catch(err => console.error('Birthday bonus cron error:', err));
+  },
+  { timezone: 'Africa/Nairobi' }
+);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

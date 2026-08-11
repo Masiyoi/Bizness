@@ -207,6 +207,10 @@ const FIRST_ORDER_BONUS = 100;
 // order is confirmed - keep in sync with "Refer a friend" in EARN_WAYS
 // in src/pages/MembersClub.tsx
 const REFERRAL_BONUS = 150;
+// Paid once a year, on the member's birthday - keep in sync with "Birthday
+// month bonus" in EARN_WAYS in src/pages/MembersClub.tsx (also referenced
+// in the Bronze tier perks list as "Birthday bonus (50 points)").
+const BIRTHDAY_BONUS = 50;
 /**
  * Pays the referrer once, the first time their referred friend's order is
  * confirmed. No-ops if there's no referral, it was already rewarded, or
@@ -270,6 +274,51 @@ async function awardOrderPoints(userId, orderTotal) {
     console.error('awardOrderPoints error:', err.message);
   }
 }
+/**
+ * Run daily (see the node-cron wiring added to server.js). Finds every
+ * club member whose birthday (month + day, year ignored) is today and who
+ * hasn't already been paid the bonus this calendar year, and awards the
+ * one-time 50pt "Birthday bonus" to each.
+ *
+ * birthday_bonus_year is the guard against double-paying if the cron runs
+ * more than once on the same day, or is re-triggered manually.
+ *
+ * Non-members (no club_joined row) are silently skipped - same rule as
+ * every other points source in this file, matching MembersClub.tsx's
+ * "Join the club to start earning" framing.
+ */
+async function awardBirthdayBonuses() {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  try {
+    const { rows: dueUsers } = await pool.query(
+      `SELECT u.id AS user_id, m.id AS member_id
+       FROM users u
+       JOIN members m ON m.user_id = u.id
+       WHERE u.birthday IS NOT NULL
+         AND m.club_joined = true
+         AND EXTRACT(MONTH FROM u.birthday) = EXTRACT(MONTH FROM CURRENT_DATE)
+         AND EXTRACT(DAY FROM u.birthday)   = EXTRACT(DAY FROM CURRENT_DATE)
+         AND (u.birthday_bonus_year IS NULL OR u.birthday_bonus_year <> $1)`,
+      [currentYear]
+    );
+
+    for (const { user_id, member_id } of dueUsers) {
+      try {
+        await addPoints(member_id, BIRTHDAY_BONUS, 'Birthday bonus');
+        await pool.query('UPDATE users SET birthday_bonus_year = $1 WHERE id = $2', [currentYear, user_id]);
+      } catch (err) {
+        // One user's failure shouldn't block the rest of the batch.
+        console.error(`awardBirthdayBonuses error for user ${user_id}:`, err.message);
+      }
+    }
+
+    return { awarded: dueUsers.length };
+  } catch (err) {
+    console.error('awardBirthdayBonuses error:', err.message);
+    return { awarded: 0, error: err.message };
+  }
+}
 // GET /api/members/admin/total-points-rewarded
 // Admin-only stat - total points ever paid out across all members.
 async function getTotalPointsRewarded(req, res) {
@@ -283,4 +332,4 @@ async function getTotalPointsRewarded(req, res) {
     res.status(500).json({ error: 'Could not load total points rewarded' });
   }
 }
-module.exports = { registerMember, joinClub, getProfile, addPoints, awardOrderPoints, awardReferralBonus, getReferralLink, tierFor, TIERS, TIER_BONUS, getTotalPointsRewarded };
+module.exports = { registerMember, joinClub, getProfile, addPoints, awardOrderPoints, awardReferralBonus, awardBirthdayBonuses, getReferralLink, tierFor, TIERS, TIER_BONUS, getTotalPointsRewarded };
