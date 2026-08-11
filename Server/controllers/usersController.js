@@ -40,6 +40,12 @@ exports.getMe = async (req, res) => {
 exports.updateMe = async (req, res) => {
   const userId = req.user.id;
   const { full_name, phone, address, city, country, birthday } = req.body;
+  
+  console.log('PATCH /api/users/me - DEBUG:');
+  console.log('  userId:', userId);
+  console.log('  req.user:', req.user);
+  console.log('  req.body:', req.body);
+  console.log('  extracted - full_name:', full_name, 'phone:', phone, 'address:', address, 'city:', city, 'country:', country, 'birthday:', birthday);
 
   if (full_name !== undefined && (!full_name.trim() || full_name.trim().length > MAX_NAME_LENGTH)) {
     return res.status(400).json({ msg: `Name must be under ${MAX_NAME_LENGTH} characters.` });
