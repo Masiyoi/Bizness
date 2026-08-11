@@ -17,6 +17,7 @@ const instagramRoutes   = require('./routes/instagramRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const discountRoutes   = require('./routes/discountRoutes');
 const membersRoutes     = require('./routes/membersRoutes');
+const usersRoutes       = require('./routes/usersRoutes');
 const auth      = require('./middleware/auth');
 const adminOnly = require('./middleware/adminOnly');
 
@@ -72,6 +73,7 @@ app.use('/api/subscribers', subscribersRoutes);
 app.use('/api/instagram',   instagramRoutes);
 app.use('/api/discount',    discountRoutes);
 app.use('/api/members',     membersRoutes);
+app.use('/api/users',       usersRoutes);
 app.use('/api/admin', auth, adminOnly, analyticsRoutes);
 
 const PORT = process.env.PORT || 5000;

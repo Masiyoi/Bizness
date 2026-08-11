@@ -4,6 +4,7 @@ import { useNavigate, useLocation }  from 'react-router-dom';
 import axios            from 'axios';
 import { getInitials, readUser } from '../../constants/theme';
 import type { User } from '../../constants/theme';
+import { performLogout } from '../../pages/profile/ProfileLayout';
 
 interface NavbarProps {
   cartCount?: number;
@@ -178,12 +179,13 @@ export default function Navbar({
     setNavCategories(ALL_CATEGORIES);
   }, [categories.length]);
 
+  // Cookie-based (axios.defaults.withCredentials is set globally in App.tsx) —
+  // no manual Authorization header. A leftover localStorage 'token' read here
+  // would always be null post-cookie-migration, so this used to no-op silently.
   const fetchCounts = useCallback(() => {
-    const token = localStorage.getItem('token');
-    if (!token || !user || user.role === 'admin') return;
-    const h = { headers: { Authorization: `Bearer ${token}` } };
-    axios.get('/api/cart',     h).then(r => setCartCount(r.data.reduce((s: number, i: any) => s + i.quantity, 0))).catch(() => {});
-    axios.get('/api/wishlist', h).then(r => setWishlistCount(r.data.length)).catch(() => {});
+    if (!user || user.role === 'admin') return;
+    axios.get('/api/cart').then(r => setCartCount(r.data.reduce((s: number, i: any) => s + i.quantity, 0))).catch(() => {});
+    axios.get('/api/wishlist').then(r => setWishlistCount(r.data.length)).catch(() => {});
   }, [user?.id]);
 
   useEffect(() => { if (cartCountProp === undefined) fetchCounts(); }, [fetchCounts, cartCountProp]);
@@ -231,9 +233,11 @@ export default function Navbar({
     window.location.reload();
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+  // Cookie-based logout — clears the httpOnly cookie server-side via
+  // performLogout() (POST /api/auth/logout) instead of just clearing
+  // localStorage, which used to leave the user authenticated server-side.
+  const handleLogout = async () => {
+    await performLogout();
     setUser(null); setCartCount(0); setWishlistCount(0);
     setShowMenu(false); setMobileMenuOpen(false);
     onLogout?.();
@@ -571,6 +575,7 @@ export default function Navbar({
                     {/* Regular user account actions only */}
                     {user.role !== 'admin' && (
                       <>
+                        <button className="mitem" onClick={() => go('/profile')}>Profile</button>
                         <button className="mitem" onClick={() => go('/orders')}>My Orders</button>
                         <button className="mitem" onClick={() => go('/wishlist')}>
                           Wishlist

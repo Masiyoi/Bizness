@@ -70,6 +70,25 @@ exports.getDiscountPreview = async (req, res) => {
     return res.status(500).json({ msg: 'Failed to calculate discount' });
   }
 };
+// ── Addition to src/controllers/discountController.js ──────────────────────
+// Add this export alongside the existing getDiscountPreview. It reuses your
+// existing isEligibleForFirstOrderDiscount() helper (already defined at the
+// top of that file) but skips the cart lookup entirely, since the profile
+// page needs to show "do you have this offer" independent of what's
+// currently in the cart.
+
+// GET /api/discount/eligibility — called from the Discounts profile page.
+// Unlike getDiscountPreview, this doesn't depend on cart contents.
+exports.getDiscountEligibility = async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const eligible = await isEligibleForFirstOrderDiscount(userId);
+    return res.json({ eligible });
+  } catch (err) {
+    console.error('getDiscountEligibility error:', err.message);
+    return res.status(500).json({ msg: 'Failed to check discount eligibility' });
+  }
+};
 
 // Exported for internal use by paymentController — the source of truth used
 // when actually charging the customer, never the frontend-displayed value.

@@ -20,6 +20,14 @@ import ResetPassword  from './pages/ResetPassword';
 // ── Admin ──────────────────────────────────────────────────────────────────────
 import AdminDashboard from './pages/admin/AdminDashboard';
 
+// ── Profile ────────────────────────────────────────────────────────────────────
+import ProfileLayout  from './pages/profile/ProfileLayout';
+import Dashboard       from './pages/profile/Dashboard';
+import Discounts       from './pages/profile/Discounts';
+import Affiliate       from './pages/profile/Affiliate';
+import Settings        from './pages/profile/Settings';
+import AccountDetails  from './pages/profile/AccountDetails';
+
 // ── Category Pages ─────────────────────────────────────────────────────────────
 import Tops           from './pages/categories/Tops';
 import Bottoms        from './pages/categories/Bottoms';
@@ -238,6 +246,23 @@ export default function App() {
         <Route path="/orders"   element={<BuyerRoute><Orders /></BuyerRoute>} />
         <Route path="/wishlist" element={<BuyerRoute><Wishlist /></BuyerRoute>} />
         <Route path="/reviews"  element={<BuyerRoute><Reviews /></BuyerRoute>} />
+
+        {/* ── Profile (buyer only) ─────────────────────────────────────────────
+             ProfileLayout is the shared shell (theme context, sidebar nav, the
+             performLogout() helper Navbar.tsx should eventually reuse). It's
+             rendered once by the parent route below and is expected to render
+             its child page via <Outlet />. If ProfileLayout.tsx instead takes
+             its page as a `children` prop, this block needs to change to one
+             `element={<BuyerRoute><ProfileLayout><X /></ProfileLayout></BuyerRoute>}`
+             route per page instead of the nested-Outlet form below. ─────────── */}
+        <Route path="/profile" element={<BuyerRoute><ProfileLayout /></BuyerRoute>}>
+          <Route index                  element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard"       element={<Dashboard />} />
+          <Route path="discounts"       element={<Discounts />} />
+          <Route path="affiliate"       element={<Affiliate />} />
+          <Route path="settings"        element={<Settings />} />
+          <Route path="account-details" element={<AccountDetails />} />
+        </Route>
 
         {/* ── Email verification ──────────────────────────────────────────────── */}
         <Route path="/verify-email/:token" element={<VerifyEmail />} />

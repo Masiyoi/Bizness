@@ -247,6 +247,8 @@ async function awardOrderPoints(userId, orderTotal) {
     );
     const isFirstOrder = Number(count) === 1;
 
+    // Referral bonus fires on the referred user's first order regardless
+    // of whether THEY are a club member.
     if (isFirstOrder) {
       await awardReferralBonus(userId);
     }

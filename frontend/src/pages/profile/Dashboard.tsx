@@ -1,0 +1,101 @@
+// src/pages/profile/Dashboard.tsx
+import { useEffect, useState } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
+import axios from 'axios';
+import type { User } from '../../constants/theme';
+
+interface OutletCtx { user: User; }
+
+interface MemberProfile {
+  points: number;
+  tier: string;
+  club_joined: boolean;
+}
+
+export default function Dashboard() {
+  const { user } = useOutletContext<OutletCtx>();
+  const navigate  = useNavigate();
+
+  const [ordersCount, setOrdersCount]     = useState<number | null>(null);
+  const [wishlistCount, setWishlistCount] = useState<number | null>(null);
+  const [member, setMember]               = useState<MemberProfile | null>(null);
+
+  // Cookie carries auth automatically (axios.defaults.withCredentials = true
+  // in App.tsx) — no manual headers needed.
+  useEffect(() => {
+    axios.get('/api/orders')
+      .then(r => setOrdersCount(Array.isArray(r.data) ? r.data.length : 0))
+      .catch(() => setOrdersCount(0));
+
+    axios.get('/api/wishlist')
+      .then(r => setWishlistCount(Array.isArray(r.data) ? r.data.length : 0))
+      .catch(() => setWishlistCount(0));
+
+    axios.get('/api/members/profile')
+      .then(r => setMember(r.data))
+      .catch(() => setMember(null)); // fine if they haven't joined the Members Club yet
+  }, [user.id]);
+
+  const firstName = user.full_name?.split(' ')[0] ?? 'there';
+
+  const shortcuts = [
+    { label: 'Track Orders',      desc: 'See status and history',        path: '/orders' },
+    { label: 'View Wishlist',     desc: 'Saved items ready to buy',      path: '/wishlist' },
+    { label: 'My Reviews',        desc: 'What you\u2019ve said about past orders', path: '/reviews' },
+    { label: 'Discounts',         desc: 'Offers available on your account', path: '/profile/discounts' },
+    { label: 'Affiliate Program', desc: 'Earn from referrals',           path: '/profile/affiliate' },
+    { label: 'Account Details',   desc: 'Contact info and addresses',    path: '/profile/account' },
+  ];
+
+  return (
+    <div>
+      <p className="pf-eyebrow">Welcome back</p>
+      <h1 className="pf-title">Hi, <em>{firstName}</em></h1>
+      <p className="pf-sub">Here's a quick look at your account.</p>
+
+      <div className="pf-stats-grid">
+        <div className="pf-stat">
+          <div className="pf-stat-value">{ordersCount ?? '—'}</div>
+          <div className="pf-stat-label">Orders</div>
+        </div>
+        <div className="pf-stat">
+          <div className="pf-stat-value">{wishlistCount ?? '—'}</div>
+          <div className="pf-stat-label">Wishlist Items</div>
+        </div>
+        <div className="pf-stat">
+          <div className="pf-stat-value">{member ? member.points : '—'}</div>
+          <div className="pf-stat-label">Reward Points</div>
+        </div>
+        <div className="pf-stat">
+          <div className="pf-stat-value" style={{ fontSize: 20, textTransform: 'capitalize' }}>
+            {member ? member.tier : 'Guest'}
+          </div>
+          <div className="pf-stat-label">Member Tier</div>
+        </div>
+      </div>
+
+      {!member && (
+        <div className="pf-card" style={{ marginBottom: 16 }}>
+          <p className="pf-row-label" style={{ marginBottom: 4 }}>You're not in the Members Club yet</p>
+          <p className="pf-row-desc" style={{ marginBottom: 14 }}>Join free to start earning points on every order.</p>
+          <button className="pf-btn-primary" onClick={() => navigate('/members-club')}>Join Members Club</button>
+        </div>
+      )}
+
+      <p className="pf-section-title">Quick Links</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+        {shortcuts.map(s => (
+          <button
+            key={s.path}
+            className="pf-card"
+            style={{ textAlign: 'left', cursor: 'pointer' }}
+            onClick={() => navigate(s.path)}
+          >
+            <p className="pf-row-label" style={{ marginBottom: 4 }}>{s.label}</p>
+            <p className="pf-row-desc">{s.desc}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,137 @@
+// src/pages/profile/ProfileLayout.tsx
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import type { JSX } from 'react';
+import axios from 'axios';
+
+import Navbar from '../../components/common/Navbar';
+import Footer from '../../components/common/Footer';
+import { getInitials, readUser } from '../../constants/theme';
+import type { User } from '../../constants/theme';
+import { profileCss } from './profileStyles';
+import { ProfileThemeProvider, useProfileTheme } from './ProfileThemeContext';
+
+// Existing standalone pages you already built — the sidebar just links out to
+// these routes rather than re-implementing them inside /profile.
+const NAV_ITEMS = [
+  { label: 'Dashboard',   path: '/profile',           icon: 'grid'    },
+  { label: 'Orders',      path: '/orders',            icon: 'box'     },
+  { label: 'Wishlist',    path: '/wishlist',          icon: 'heart'   },
+  { label: 'Reviews',     path: '/reviews',           icon: 'star'    },
+  { label: 'Discounts',   path: '/profile/discounts', icon: 'tag'     },
+  { label: 'Affiliate',   path: '/profile/affiliate', icon: 'share'   },
+  { label: 'Account',     path: '/profile/account',   icon: 'user'    },
+  { label: 'Settings',    path: '/profile/settings',  icon: 'settings'},
+];
+
+const ICONS: Record<string, JSX.Element> = {
+  grid:     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+  box:      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M21 8 12 3 3 8v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>,
+  heart:    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
+  star:     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  tag:      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M20.59 13.41 12 22l-9-9V4h9l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>,
+  share:    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/></svg>,
+  user:     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  settings: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+};
+
+// Shared so AccountDetails can call the same real logout flow.
+// Clears the httpOnly cookie server-side, then the local user object.
+export async function performLogout() {
+  try {
+    await axios.post('/api/auth/logout', {}, { headers: { 'X-Skip-Auth-Redirect': 'true' } });
+  } catch {
+    // even if the network call fails, still clear local state below
+  }
+  localStorage.removeItem('user');
+}
+
+function LayoutInner() {
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const { theme } = useProfileTheme();
+  const [user, setUser] = useState<User | null>(readUser);
+
+  useEffect(() => { setUser(readUser()); }, [location.pathname]);
+
+  const handleLogout = async () => {
+    await performLogout();
+    navigate('/');
+  };
+
+  if (!user) {
+    // Not logged in — bounce to login, remembering where they wanted to go
+    navigate('/login', { replace: true, state: { from: location.pathname } });
+    return null;
+  }
+
+  const isActive = (path: string) =>
+    path === '/profile' ? location.pathname === '/profile' : location.pathname.startsWith(path);
+
+  return (
+    <div className="pf-root" data-theme={theme}>
+      <style>{profileCss}</style>
+
+      <Navbar cartCount={undefined} wishlistCount={undefined} onLogout={handleLogout} />
+
+      <div className="pf-shell">
+        {/* ── Mobile tab bar ── */}
+        <div className="pf-tabbar">
+          {NAV_ITEMS.map(item => (
+            <button
+              key={item.path}
+              className={`pf-tab ${isActive(item.path) ? 'active' : ''}`}
+              onClick={() => navigate(item.path)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Desktop sidebar ── */}
+        <aside className="pf-sidebar pf-sidebar-desktop">
+          <div className="pf-user-card">
+            <div className="pf-avatar">{getInitials(user.full_name)}</div>
+            <div>
+              <div className="pf-user-name">{user.full_name}</div>
+              <div className="pf-user-tier">{user.role === 'admin' ? 'Admin' : 'Member'}</div>
+            </div>
+          </div>
+
+          <nav className="pf-nav">
+            {NAV_ITEMS.map(item => (
+              <button
+                key={item.path}
+                className={`pf-nav-link ${isActive(item.path) ? 'active' : ''}`}
+                onClick={() => navigate(item.path)}
+              >
+                {ICONS[item.icon]}
+                {item.label}
+              </button>
+            ))}
+            <div className="pf-nav-divider" />
+            <button className="pf-nav-link danger" onClick={handleLogout}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Sign Out
+            </button>
+          </nav>
+        </aside>
+
+        {/* ── Page content ── */}
+        <main className="pf-main">
+          <Outlet context={{ user, setUser }} />
+        </main>
+      </div>
+
+      <Footer />
+    </div>
+  );
+}
+
+export default function ProfileLayout() {
+  return (
+    <ProfileThemeProvider>
+      <LayoutInner />
+    </ProfileThemeProvider>
+  );
+}
