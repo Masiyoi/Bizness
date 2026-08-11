@@ -99,9 +99,9 @@ export const profileCss = `
 
   .pf-main { min-width: 0; }
   .pf-eyebrow { font-family: var(--pf-f-sans); font-size: 10px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--pf-mid); margin-bottom: 6px; }
-  .pf-title { font-family: var(--pf-f-display); font-weight: 300; font-size: clamp(26px, 3.4vw, 40px); letter-spacing: -0.5px; color: var(--pf-ink); margin-bottom: 4px; }
-  .pf-title em { font-style: italic; color: var(--pf-mid); }
-  .pf-sub { font-family: var(--pf-f-inter); font-size: 13px; font-weight: 300; color: var(--pf-mid); margin-bottom: 32px; max-width: 520px; }
+  .pf-title { font-family: var(--pf-f-sans); font-weight: 700; font-size: clamp(26px, 3.4vw, 40px); letter-spacing: -0.5px; color: var(--pf-ink); margin-bottom: 4px; }
+  .pf-title em { font-style: italic; font-weight: 400; color: var(--pf-ink); }
+  .pf-sub { font-family: var(--pf-f-inter); font-size: 13px; font-weight: 400; color: var(--pf-ink); margin-bottom: 32px; max-width: 520px; }
 
   .pf-card {
     background: var(--pf-card); border: 1px solid var(--pf-rule); border-radius: 12px;
@@ -112,8 +112,8 @@ export const profileCss = `
   .pf-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
   @media (max-width: 640px) { .pf-stats-grid { grid-template-columns: repeat(2, 1fr); } }
   .pf-stat { background: var(--pf-card); border: 1px solid var(--pf-rule); border-radius: 12px; padding: 18px 16px; }
-  .pf-stat-value { font-family: var(--pf-f-display); font-weight: 500; font-size: 28px; color: var(--pf-ink); line-height: 1; }
-  .pf-stat-label { font-family: var(--pf-f-inter); font-size: 9.5px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pf-mid); margin-top: 8px; }
+  .pf-stat-value { font-family: var(--pf-f-sans); font-weight: 700; font-size: 28px; color: var(--pf-ink); line-height: 1; }
+  .pf-stat-label { font-family: var(--pf-f-inter); font-size: 9.5px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pf-ink); margin-top: 8px; }
 
   .pf-section-title { font-family: var(--pf-f-sans); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--pf-ink); margin-bottom: 14px; }
 
@@ -132,7 +132,7 @@ export const profileCss = `
   .pf-btn-ghost:hover { border-color: var(--pf-ink); }
 
   .pf-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
-  .pf-label { font-family: var(--pf-f-inter); font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pf-mid); }
+  .pf-label { font-family: var(--pf-f-inter); font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pf-ink); }
   .pf-input, .pf-select {
     font-family: var(--pf-f-inter); font-size: 13px; color: var(--pf-ink);
     background: var(--pf-paper); border: 1px solid var(--pf-rule); border-radius: 6px;
@@ -143,7 +143,7 @@ export const profileCss = `
   .pf-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--pf-rule); }
   .pf-row:last-child { border-bottom: none; }
   .pf-row-label { font-family: var(--pf-f-sans); font-size: 13px; font-weight: 500; color: var(--pf-ink); }
-  .pf-row-desc { font-family: var(--pf-f-inter); font-size: 11.5px; color: var(--pf-mid); margin-top: 2px; }
+  .pf-row-desc { font-family: var(--pf-f-inter); font-size: 11.5px; color: var(--pf-ink); margin-top: 2px; }
 
   .pf-toggle { position: relative; width: 42px; height: 24px; border-radius: 20px; background: var(--pf-rule); border: none; cursor: pointer; flex-shrink: 0; transition: background 0.2s; }
   .pf-toggle.on { background: var(--pf-ink); }
@@ -151,8 +151,8 @@ export const profileCss = `
   .pf-toggle.on .pf-toggle-knob { transform: translateX(18px); }
 
   .pf-empty { text-align: center; padding: 48px 20px; }
-  .pf-empty-title { font-family: var(--pf-f-display); font-weight: 300; font-style: italic; font-size: 22px; color: var(--pf-ink); margin-bottom: 8px; }
-  .pf-empty-sub { font-family: var(--pf-f-inter); font-size: 12.5px; color: var(--pf-mid); }
+  .pf-empty-title { font-family: var(--pf-f-sans); font-weight: 700; font-style: italic; font-size: 22px; color: var(--pf-ink); margin-bottom: 8px; }
+  .pf-empty-sub { font-family: var(--pf-f-inter); font-size: 12.5px; color: var(--pf-ink); }
 
   .pf-toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
