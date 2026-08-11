@@ -62,7 +62,11 @@ export const profileCss = `
     flex-shrink: 0;
   }
   .pf-user-name { font-family: var(--pf-f-sans); font-size: 13px; font-weight: 600; color: var(--pf-ink); }
-  .pf-user-tier { font-family: var(--pf-f-sans); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pf-mid); margin-top: 2px; }
+  .pf-user-tier { font-family: var(--pf-f-sans); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pf-ink); margin-top: 2px; }
+  .pf-user-tier.bronze { color: #A0826D; }
+  .pf-user-tier.silver { color: #9CA3AF; }
+  .pf-user-tier.gold { color: #D4AF37; }
+  .pf-user-tier.platinum { color: #E5E7EB; }
 
   .pf-nav { display: flex; flex-direction: column; gap: 2px; }
   .pf-nav-link {
@@ -98,7 +102,7 @@ export const profileCss = `
   .pf-tab.active { background: var(--pf-ink); color: var(--pf-paper); border-color: var(--pf-ink); }
 
   .pf-main { min-width: 0; }
-  .pf-eyebrow { font-family: var(--pf-f-sans); font-size: 10px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--pf-mid); margin-bottom: 6px; }
+  .pf-eyebrow { font-family: var(--pf-f-inter); font-size: 10px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--pf-ink); margin-bottom: 6px; }
   .pf-title { font-family: var(--pf-f-sans); font-weight: 700; font-size: clamp(26px, 3.4vw, 40px); letter-spacing: -0.5px; color: var(--pf-ink); margin-bottom: 4px; }
   .pf-title em { font-style: italic; font-weight: 400; color: var(--pf-ink); }
   .pf-sub { font-family: var(--pf-f-inter); font-size: 13px; font-weight: 400; color: var(--pf-ink); margin-bottom: 32px; max-width: 520px; }
