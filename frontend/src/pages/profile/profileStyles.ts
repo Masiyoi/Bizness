@@ -5,18 +5,19 @@
 // doesn't feel like a bolted-on module.
 
 export const profileCss = `
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
   .pf-root {
     --pf-ink: #0A0A0A;
-    --pf-paper: #FAFAFA;
+    --pf-paper: #FFFFFF;
     --pf-mid: #888;
-    --pf-rule: rgba(0,0,0,0.10);
+    --pf-rule: rgba(0,0,0,0.08);
     --pf-card: #fff;
     --pf-accent: #0A0A0A;
     --pf-danger: #dc2626;
     --pf-f-display: 'Cormorant Garamond', Georgia, serif;
     --pf-f-sans: 'Jost', 'DM Sans', system-ui, sans-serif;
+    --pf-f-inter: 'Inter', system-ui, sans-serif;
     background: var(--pf-paper);
     color: var(--pf-ink);
     min-height: 100vh;
@@ -25,10 +26,10 @@ export const profileCss = `
 
   .pf-root[data-theme='dark'] {
     --pf-ink: #F2F2F0;
-    --pf-paper: #0E0E0E;
+    --pf-paper: #0A0A0A;
     --pf-mid: #9A9A9A;
-    --pf-rule: rgba(255,255,255,0.12);
-    --pf-card: #171717;
+    --pf-rule: rgba(255,255,255,0.10);
+    --pf-card: #141414;
     --pf-accent: #F2F2F0;
   }
 
@@ -100,7 +101,7 @@ export const profileCss = `
   .pf-eyebrow { font-family: var(--pf-f-sans); font-size: 10px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--pf-mid); margin-bottom: 6px; }
   .pf-title { font-family: var(--pf-f-display); font-weight: 300; font-size: clamp(26px, 3.4vw, 40px); letter-spacing: -0.5px; color: var(--pf-ink); margin-bottom: 4px; }
   .pf-title em { font-style: italic; color: var(--pf-mid); }
-  .pf-sub { font-family: var(--pf-f-sans); font-size: 13px; font-weight: 300; color: var(--pf-mid); margin-bottom: 32px; max-width: 520px; }
+  .pf-sub { font-family: var(--pf-f-inter); font-size: 13px; font-weight: 300; color: var(--pf-mid); margin-bottom: 32px; max-width: 520px; }
 
   .pf-card {
     background: var(--pf-card); border: 1px solid var(--pf-rule); border-radius: 12px;
@@ -112,7 +113,7 @@ export const profileCss = `
   @media (max-width: 640px) { .pf-stats-grid { grid-template-columns: repeat(2, 1fr); } }
   .pf-stat { background: var(--pf-card); border: 1px solid var(--pf-rule); border-radius: 12px; padding: 18px 16px; }
   .pf-stat-value { font-family: var(--pf-f-display); font-weight: 500; font-size: 28px; color: var(--pf-ink); line-height: 1; }
-  .pf-stat-label { font-family: var(--pf-f-sans); font-size: 9.5px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pf-mid); margin-top: 8px; }
+  .pf-stat-label { font-family: var(--pf-f-inter); font-size: 9.5px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pf-mid); margin-top: 8px; }
 
   .pf-section-title { font-family: var(--pf-f-sans); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--pf-ink); margin-bottom: 14px; }
 
@@ -131,9 +132,9 @@ export const profileCss = `
   .pf-btn-ghost:hover { border-color: var(--pf-ink); }
 
   .pf-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
-  .pf-label { font-family: var(--pf-f-sans); font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pf-mid); }
+  .pf-label { font-family: var(--pf-f-inter); font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--pf-mid); }
   .pf-input, .pf-select {
-    font-family: var(--pf-f-sans); font-size: 13px; color: var(--pf-ink);
+    font-family: var(--pf-f-inter); font-size: 13px; color: var(--pf-ink);
     background: var(--pf-paper); border: 1px solid var(--pf-rule); border-radius: 6px;
     padding: 11px 13px; outline: none; transition: border-color 0.15s;
   }
@@ -142,7 +143,7 @@ export const profileCss = `
   .pf-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--pf-rule); }
   .pf-row:last-child { border-bottom: none; }
   .pf-row-label { font-family: var(--pf-f-sans); font-size: 13px; font-weight: 500; color: var(--pf-ink); }
-  .pf-row-desc { font-family: var(--pf-f-sans); font-size: 11.5px; color: var(--pf-mid); margin-top: 2px; }
+  .pf-row-desc { font-family: var(--pf-f-inter); font-size: 11.5px; color: var(--pf-mid); margin-top: 2px; }
 
   .pf-toggle { position: relative; width: 42px; height: 24px; border-radius: 20px; background: var(--pf-rule); border: none; cursor: pointer; flex-shrink: 0; transition: background 0.2s; }
   .pf-toggle.on { background: var(--pf-ink); }
@@ -151,7 +152,7 @@ export const profileCss = `
 
   .pf-empty { text-align: center; padding: 48px 20px; }
   .pf-empty-title { font-family: var(--pf-f-display); font-weight: 300; font-style: italic; font-size: 22px; color: var(--pf-ink); margin-bottom: 8px; }
-  .pf-empty-sub { font-family: var(--pf-f-sans); font-size: 12.5px; color: var(--pf-mid); }
+  .pf-empty-sub { font-family: var(--pf-f-inter); font-size: 12.5px; color: var(--pf-mid); }
 
   .pf-toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
