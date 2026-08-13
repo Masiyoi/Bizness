@@ -9,6 +9,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import axios from 'axios';
 import type { User } from '../../constants/theme';
 import { performLogout } from './ProfileLayout';
+import CountrySelect from '../../components/common/CountrySelect';
 
 interface OutletCtx { user: User; setUser: (u: User) => void; }
 
@@ -91,14 +92,17 @@ export default function AccountDetails() {
             <label className="pf-label">Delivery Address</label>
             <input className="pf-input" placeholder="Street, building, apt" value={form.address} onChange={update('address')} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 14 }}>
             <div className="pf-field">
               <label className="pf-label">City</label>
               <input className="pf-input" value={form.city} onChange={update('city')} />
             </div>
             <div className="pf-field">
               <label className="pf-label">Country</label>
-              <input className="pf-input" value={form.country} onChange={update('country')} />
+              <CountrySelect
+                value={form.country}
+                onChange={name => setForm(f => ({ ...f, country: name }))}
+              />
             </div>
           </div>
           <button className="pf-btn-primary" type="submit" disabled={saving}>
