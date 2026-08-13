@@ -23,9 +23,10 @@ function persistUser(updated: User, onUpdate: (u: User) => void) {
 }
 
 export default function AvatarPicker({ user, size = 64, onUpdate }: AvatarPickerProps) {
-  const [open, setOpen]   = useState(false);
-  const [busy, setBusy]   = useState(false);
-  const [error, setError] = useState('');
+  const [open, setOpen]         = useState(false);
+  const [enlarged, setEnlarged] = useState(false);
+  const [busy, setBusy]         = useState(false);
+  const [error, setError]       = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChosen = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,7 +82,7 @@ export default function AvatarPicker({ user, size = 64, onUpdate }: AvatarPicker
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={() => setEnlarged(true)}
         title="Change profile picture"
         style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', position: 'relative', borderRadius: '50%' }}
       >
@@ -98,57 +99,84 @@ export default function AvatarPicker({ user, size = 64, onUpdate }: AvatarPicker
         </div>
       </button>
 
-      {open && (
+      {enlarged && (
         <>
-          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 199 }} />
-          <div style={{
-            position: 'absolute', top: 'calc(100% + 10px)', left: 0, zIndex: 200,
-            background: '#fff', border: '1px solid rgba(0,0,0,0.09)', borderRadius: 12,
-            padding: 14, minWidth: 220, boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
-          }}>
-            <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#111', marginBottom: 10 }}>
-              Profile Picture
-            </p>
-
-            <button
-              disabled={busy}
-              onClick={() => fileInputRef.current?.click()}
-              style={{ width: '100%', textAlign: 'left', fontFamily: "'Jost', sans-serif", fontSize: 12, fontWeight: 500, color: '#111', background: 'rgba(0,0,0,0.04)', border: 'none', borderRadius: 8, padding: '10px 12px', cursor: busy ? 'not-allowed' : 'pointer', marginBottom: 12 }}
-            >
-              Upload from device…
-            </button>
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChosen} style={{ display: 'none' }} />
-
-            <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 9.5, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.4)', marginBottom: 8 }}>
-              Or pick a color
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 12 }}>
-              {AVATAR_COLORS.map(c => (
-                <button
-                  key={c}
-                  disabled={busy}
-                  onClick={() => handleColorPick(c)}
-                  title={c}
-                  style={{
-                    width: 32, height: 32, borderRadius: '50%', background: c, cursor: busy ? 'not-allowed' : 'pointer',
-                    border: user.avatar_type === 'color' && user.avatar_color === c ? '2px solid #111' : '2px solid transparent',
-                    outline: '1px solid rgba(0,0,0,0.08)', outlineOffset: 1,
-                  }}
-                />
-              ))}
+          <div
+            onClick={() => { setEnlarged(false); setOpen(false); }}
+            style={{ position: 'fixed', inset: 0, zIndex: 299, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(3px)' }}
+          />
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 300, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ position: 'relative' }} onClick={e => e.stopPropagation()}>
+              <AvatarDisplay user={user} size={size * 3} />
+              <button
+                onClick={() => setOpen(o => !o)}
+                title="Edit profile picture"
+                style={{
+                  position: 'absolute', bottom: 6, right: 6,
+                  width: 40, height: 40, borderRadius: '50%',
+                  background: '#0A0A0A', border: '3px solid #fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                </svg>
+              </button>
             </div>
 
-            {user.avatar_type !== 'initials' && (
-              <button
-                disabled={busy}
-                onClick={handleReset}
-                style={{ width: '100%', textAlign: 'left', fontFamily: "'Jost', sans-serif", fontSize: 11.5, fontWeight: 500, color: '#dc2626', background: 'none', border: 'none', padding: '4px 2px', cursor: busy ? 'not-allowed' : 'pointer' }}
-              >
-                Remove & use initials
-              </button>
-            )}
+            {open && (
+              <div
+                onClick={e => e.stopPropagation()}
+                style={{
+                  marginTop: 16, zIndex: 300,
+                  background: '#fff', border: '1px solid rgba(0,0,0,0.09)', borderRadius: 12,
+                  padding: 14, minWidth: 220, boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
+                }}>
+                <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#111', marginBottom: 10 }}>
+                  Profile Picture
+                </p>
 
-            {error && <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 10.5, color: '#dc2626', marginTop: 8 }}>{error}</p>}
+                <button
+                  disabled={busy}
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{ width: '100%', textAlign: 'left', fontFamily: "'Jost', sans-serif", fontSize: 12, fontWeight: 500, color: '#111', background: 'rgba(0,0,0,0.04)', border: 'none', borderRadius: 8, padding: '10px 12px', cursor: busy ? 'not-allowed' : 'pointer', marginBottom: 12 }}
+                >
+                  Upload from device…
+                </button>
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChosen} style={{ display: 'none' }} />
+
+                <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 9.5, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.4)', marginBottom: 8 }}>
+                  Or pick a color
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 12 }}>
+                  {AVATAR_COLORS.map(c => (
+                    <button
+                      key={c}
+                      disabled={busy}
+                      onClick={() => handleColorPick(c)}
+                      title={c}
+                      style={{
+                        width: 32, height: 32, borderRadius: '50%', background: c, cursor: busy ? 'not-allowed' : 'pointer',
+                        border: user.avatar_type === 'color' && user.avatar_color === c ? '2px solid #111' : '2px solid transparent',
+                        outline: '1px solid rgba(0,0,0,0.08)', outlineOffset: 1,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {user.avatar_type !== 'initials' && (
+                  <button
+                    disabled={busy}
+                    onClick={handleReset}
+                    style={{ width: '100%', textAlign: 'left', fontFamily: "'Jost', sans-serif", fontSize: 11.5, fontWeight: 500, color: '#dc2626', background: 'none', border: 'none', padding: '4px 2px', cursor: busy ? 'not-allowed' : 'pointer' }}
+                  >
+                    Remove & use initials
+                  </button>
+                )}
+
+                {error && <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 10.5, color: '#dc2626', marginTop: 8 }}>{error}</p>}
+              </div>
+            )}
           </div>
         </>
       )}
