@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { COUNTRIES } from '../../constants/countries';
 
 interface CountrySelectProps {
-  value: string;
+  value: string | null | undefined;
   onChange: (countryName: string) => void;
   placeholder?: string;
 }
@@ -14,7 +14,8 @@ export default function CountrySelect({ value, onChange, placeholder = 'Select c
   const wrapRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const selected = COUNTRIES.find(c => c.name.toLowerCase() === value.toLowerCase());
+  const safeValue = value ?? '';
+  const selected = COUNTRIES.find(c => c.name.toLowerCase() === safeValue.toLowerCase());
   const filtered = query.trim()
     ? COUNTRIES.filter(c => c.name.toLowerCase().includes(query.trim().toLowerCase()))
     : COUNTRIES;
@@ -97,11 +98,11 @@ export default function CountrySelect({ value, onChange, placeholder = 'Select c
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
                   padding: '9px 14px', border: 'none', cursor: 'pointer',
-                  background: c.name === value ? 'rgba(0,0,0,0.04)' : 'transparent',
+                  background: c.name === safeValue ? 'rgba(0,0,0,0.04)' : 'transparent',
                   fontFamily: "'Jost', sans-serif", fontSize: 13,
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.05)')}
-                onMouseLeave={e => (e.currentTarget.style.background = c.name === value ? 'rgba(0,0,0,0.04)' : 'transparent')}
+                onMouseLeave={e => (e.currentTarget.style.background = c.name === safeValue ? 'rgba(0,0,0,0.04)' : 'transparent')}
               >
                 <img
                   src={`https://flagcdn.com/w20/${c.code.toLowerCase()}.png`}
