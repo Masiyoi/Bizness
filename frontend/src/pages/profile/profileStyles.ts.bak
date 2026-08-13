@@ -71,8 +71,8 @@ export const profileCss = `
   .pf-nav { display: flex; flex-direction: column; gap: 2px; }
   .pf-nav-link {
     display: flex; align-items: center; gap: 10px;
-    font-family: var(--pf-f-sans); font-size: 12px; font-weight: 700; letter-spacing: 1px;
-    color: var(--pf-ink); text-transform: uppercase;
+    font-family: var(--pf-f-sans); font-size: 12px; font-weight: 500; letter-spacing: 1px;
+    color: var(--pf-mid); text-transform: uppercase;
     padding: 11px 12px; border-radius: 8px; cursor: pointer;
     border: none; background: none; text-align: left; width: 100%;
     transition: background 0.15s, color 0.15s;
@@ -94,8 +94,8 @@ export const profileCss = `
   .pf-tabbar::-webkit-scrollbar { display: none; }
   @media (max-width: 860px) { .pf-tabbar { display: flex; } .pf-sidebar-desktop { display: none; } }
   .pf-tab {
-    flex-shrink: 0; font-family: var(--pf-f-sans); font-size: 10.5px; font-weight: 700;
-    letter-spacing: 1.5px; text-transform: uppercase; color: var(--pf-ink);
+    flex-shrink: 0; font-family: var(--pf-f-sans); font-size: 10.5px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase; color: var(--pf-mid);
     padding: 8px 14px; border-radius: 20px; border: 1px solid var(--pf-rule);
     background: none; cursor: pointer; white-space: nowrap;
   }

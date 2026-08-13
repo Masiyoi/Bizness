@@ -124,13 +124,6 @@ export default function Navbar({
     return () => window.removeEventListener('user-updated', onUserUpdated);
   }, []);
 
-  // Same-tab avatar updates (from AvatarPicker) — 'storage' only fires cross-tab
-  useEffect(() => {
-    const onUserUpdated = () => setUser(readUser());
-    window.addEventListener('user-updated', onUserUpdated);
-    return () => window.removeEventListener('user-updated', onUserUpdated);
-  }, []);
-
   useEffect(() => { if (cartCountProp     !== undefined) setCartCount(cartCountProp);         }, [cartCountProp]);
   useEffect(() => { if (wishlistCountProp !== undefined) setWishlistCount(wishlistCountProp); }, [wishlistCountProp]);
 
