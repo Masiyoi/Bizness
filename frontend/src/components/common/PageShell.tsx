@@ -2,17 +2,19 @@
 import { useNavigate } from 'react-router-dom';
 
 interface PageShellProps {
-  badge:    string;
-  title:    string;
-  subtitle: string;
-  children: React.ReactNode;
+  badge?:        string;
+  title:         string;
+  subtitle:      string;
+  showBackButton?: boolean;
+  heroImage?:    string;
+  children:      React.ReactNode;
 }
 
-export default function PageShell({ badge, title, subtitle, children }: PageShellProps) {
+export default function PageShell({ badge, title, subtitle, showBackButton = true, heroImage, children }: PageShellProps) {
   const navigate = useNavigate();
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9f9f9', fontFamily: "'DM Sans',sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'DM Sans',sans-serif" }}>
 
       {/* ── Hero banner ── */}
       <div style={{
@@ -31,64 +33,84 @@ export default function PageShell({ badge, title, subtitle, children }: PageShel
         {/* Subtle orbs */}
         <div style={{ position:'absolute', width:400, height:400, borderRadius:'50%', background:'radial-gradient(circle,rgba(255,255,255,0.04) 0%,transparent 70%)', top:-100, right:-80, pointerEvents:'none' }}/>
 
-        <div style={{ maxWidth: 800, position: 'relative' }}>
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.14)',
-              borderRadius: 20,
-              padding: '5px 14px',
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: '1.5px',
-              color: 'rgba(255,255,255,0.6)',
-              cursor: 'pointer',
-              textTransform: 'uppercase',
-              marginBottom: 24,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              transition: 'all 0.2s',
-            }}
-          >
-            ← Back
-          </button>
+        <div style={{
+          maxWidth: 1100, position: 'relative',
+          display: 'flex', alignItems: 'center', gap: 'clamp(24px,4vw,56px)',
+          flexWrap: 'wrap',
+        }}>
+          <div style={{ flex: '1 1 420px', minWidth: 280 }}>
+            {showBackButton && (
+              <button
+                onClick={() => navigate(-1)}
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.14)',
+                  borderRadius: 20,
+                  padding: '5px 14px',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: '1.5px',
+                  color: 'rgba(255,255,255,0.6)',
+                  cursor: 'pointer',
+                  textTransform: 'uppercase',
+                  marginBottom: 24,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  transition: 'all 0.2s',
+                }}
+              >
+                ← Back
+              </button>
+            )}
 
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: 'rgba(255,255,255,0.07)',
-            border: '1px solid rgba(255,255,255,0.14)',
-            borderRadius: 20, padding: '4px 14px',
-            fontSize: 10, fontWeight: 700, letterSpacing: '2px',
-            color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase',
-            marginBottom: 16, marginLeft: 10,
-          }}>
-            {badge}
+            {badge && (
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.14)',
+                borderRadius: 20, padding: '4px 14px',
+                fontSize: 10, fontWeight: 700, letterSpacing: '2px',
+                color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase',
+                marginBottom: 16, marginLeft: showBackButton ? 10 : 0,
+              }}>
+                {badge}
+              </div>
+            )}
+
+            <h1 style={{
+              fontFamily: "'DM Sans',sans-serif",
+              fontSize: 'clamp(28px,5vw,48px)',
+              fontWeight: 700,
+              color: '#fff',
+              margin: '12px 0 16px',
+              lineHeight: 1.1,
+              letterSpacing: '-0.5px',
+            }}>
+              {title}
+            </h1>
+
+            <p style={{
+              fontSize: 'clamp(13px,1.6vw,15px)',
+              color: 'rgba(255,255,255,0.38)',
+              maxWidth: 520,
+              lineHeight: 1.85,
+              margin: 0,
+              fontWeight: 300,
+            }}>
+              {subtitle}
+            </p>
           </div>
 
-          <h1 style={{
-            fontFamily: "'DM Sans',sans-serif",
-            fontSize: 'clamp(28px,5vw,48px)',
-            fontWeight: 700,
-            color: '#fff',
-            margin: '12px 0 16px',
-            lineHeight: 1.1,
-            letterSpacing: '-0.5px',
-          }}>
-            {title}
-          </h1>
-
-          <p style={{
-            fontSize: 'clamp(13px,1.6vw,15px)',
-            color: 'rgba(255,255,255,0.38)',
-            maxWidth: 520,
-            lineHeight: 1.85,
-            margin: 0,
-            fontWeight: 300,
-          }}>
-            {subtitle}
-          </p>
+          {heroImage && (
+            <div style={{ flex: '1 1 260px', maxWidth: 320, position: 'relative' }}>
+              <img
+                src={heroImage}
+                alt=""
+                style={{ width: '100%', height: 'auto', display: 'block', borderRadius: 12 }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
