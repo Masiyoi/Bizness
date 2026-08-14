@@ -178,7 +178,7 @@ export default function FlashSaleStrip({
             src="/animations/sale_animation.json"
             loop
             autoplay
-            style={{ width: 56, height: 56, flexShrink: 0 }}
+            style={{ width: 76, height: 76, flexShrink: 0 }}
           />
           <div>
             <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: '#C2410C', marginBottom: 2 }}>Limited Time</div>
