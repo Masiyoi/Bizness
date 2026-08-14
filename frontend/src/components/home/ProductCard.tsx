@@ -369,7 +369,6 @@ export default function ProductCard({
   const isDragging   = dragOffset !== 0;
   const isNew        = (product as any).created_at &&
     Date.now() - new Date((product as any).created_at).getTime() < 7 * 24 * 60 * 60 * 1000;
-  const showLowStock = stock > 0 && stock <= 5;
   const hasDiscount  = comparePrice != null && Number(comparePrice) > Number(product.price);
   const rating       = (product as any).rating as number | undefined;
   const reviewCount   = (product as any).review_count as number | undefined;
@@ -417,11 +416,10 @@ export default function ProductCard({
               </div>
             </Link>
 
-            {(isNew || showLowStock || hasDiscount) && (
+            {(isNew || hasDiscount) && (
               <div style={S.badgeStack('left')}>
                 {hasDiscount && <div style={{ ...S.badge, background: '#C2410C' }}>Sale</div>}
                 {isNew && !hasDiscount && <div style={S.badge}>New</div>}
-                {showLowStock && <div style={{ ...S.badge, background: '#C2410C' }}>Only {stock} left</div>}
               </div>
             )}
 
