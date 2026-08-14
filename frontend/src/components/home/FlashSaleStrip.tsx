@@ -72,12 +72,13 @@ function HeaderCountdown({ products }: { products: FlashProduct[] }) {
 
 // ── Sale price badge overlaid on a ProductCard tile ────────────────────────────
 function SaleBadge({ p }: { p: FlashProduct }) {
-  const original = Number(p.price);
-  const sale     = Number(p.sale_price);
-  const pctOff   = Math.round(((original - sale) / original) * 100);
+  const original  = Number(p.price);
+  const sale      = Number(p.sale_price);
+  const pctOff    = Math.round(((original - sale) / original) * 100);
+  const isSoldOut = (p.stock ?? 0) === 0;
   return (
     <div style={{
-      position: 'absolute', top: 10, right: 10, zIndex: 5,
+      position: 'absolute', top: isSoldOut ? 52 : 10, right: 10, zIndex: 5,
       background: '#EF4444', color: '#fff',
       fontFamily: 'Jost,sans-serif', fontWeight: 800, fontSize: 11,
       padding: '4px 9px', borderRadius: 6, letterSpacing: '0.5px',
@@ -365,6 +366,7 @@ export default function FlashSaleStrip({
                     isAdmin={isAdmin}
                     onCartToggle={onCartToggle}
                     onWishlistToggle={onWishlistToggle}
+                    hideSaleBadge
                   />
                 </div>
               );

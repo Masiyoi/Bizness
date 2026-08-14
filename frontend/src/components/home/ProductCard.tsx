@@ -14,6 +14,7 @@ interface ProductCardProps {
   onCartToggle:     (id: number) => void;
   onWishlistToggle: (id: number) => void;
   comparePrice?:    number | string | null;
+  hideSaleBadge?:   boolean;
 }
 
 const isTouchDevice = () =>
@@ -288,7 +289,7 @@ const S = {
 const SWIPE_THRESHOLD = 35;
 
 export default function ProductCard({
-  product, inCart, cartQuantity, inWishlist, isAdmin, onCartToggle, onWishlistToggle, comparePrice,
+  product, inCart, cartQuantity, inWishlist, isAdmin, onCartToggle, onWishlistToggle, comparePrice, hideSaleBadge,
 }: ProductCardProps) {
   const stock  = product.stock ?? 0;
   const images = (product as any).images?.length >= 1
@@ -416,9 +417,9 @@ export default function ProductCard({
               </div>
             </Link>
 
-            {(isNew || hasDiscount) && (
+            {(isNew || (hasDiscount && !hideSaleBadge)) && (
               <div style={S.badgeStack('left')}>
-                {hasDiscount && <div style={{ ...S.badge, background: '#C2410C' }}>Sale</div>}
+                {hasDiscount && !hideSaleBadge && <div style={{ ...S.badge, background: '#C2410C' }}>Sale</div>}
                 {isNew && !hasDiscount && <div style={S.badge}>New</div>}
               </div>
             )}
