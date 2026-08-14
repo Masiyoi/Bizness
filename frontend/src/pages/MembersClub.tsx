@@ -7,7 +7,6 @@ import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import { readUser } from '../constants/theme';
 import type { User } from '../constants/theme';
-
 // Icon imports — must be imported (not string paths) so Vite bundles/hashes them for production
 import signupIcon from '../assets/signup.png';
 import walletIcon from '../assets/wallet.png';
@@ -18,7 +17,6 @@ import satisfactionIcon from '../assets/satisfaction.png';
 import referIcon from '../assets/refer.png';
 import igColouredIcon from '../assets/IGcoloured.png';
 import fireworksIcon from '../assets/fireworks-.png';
-
 // ── Types ────────────────────────────────────────────────────────────────────
 interface MemberProfile {
   points:        number;
@@ -28,14 +26,16 @@ interface MemberProfile {
   joined_at:     string;
   total_points_earned: number;
 }
-
 interface Activity {
   id:          number;
   description: string;
   points:      number;
   created_at:  string;
 }
-
+interface ReferralLink {
+  referral_code: string;
+  referral_url:  string;
+}
 // ── Tier config ──────────────────────────────────────────────────────────────
 const TIERS = [
   {
@@ -69,27 +69,23 @@ const TIERS = [
     perks:    ['All Gold perks', 'Free shipping on every order', 'Exclusive early drops','Get 10% off after 10 orders', 'Personal stylist access', 'VIP event invites'],
   },
 ];
-
 const EARN_WAYS = [
   { label: 'Join the Club',           points: 20,  icon: signupIcon },
   { label: 'First order ever',        points: 100, icon: shoppingBagIcon },
   { label: 'Every KSh 100 spent',     points: 1,   icon: paymentIcon },
   { label: 'Write a product review',  points: 20,  icon: satisfactionIcon },
   { label: 'Refer a friend',          points: 150, icon: referIcon },
-  { label: 'Follow us on Instagram',  points: 30,  icon: igColouredIcon, link: 'https://www.instagram.com/lukuprimeshoesbagsthrift?igsh=MWxmazlvM2JseWNzeQ==' },
+  { label: 'Follow us on Instagram',  points: 30,  icon: igColouredIcon },
   { label: 'Birthday month bonus',    points: 50,  icon: fireworksIcon },
 ];
-
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function getTier(points: number) {
   return TIERS.find(t => points >= t.min && points <= t.max) ?? TIERS[0];
 }
-
 function nextTier(points: number) {
   const idx = TIERS.findIndex(t => points >= t.min && points <= t.max);
   return idx < TIERS.length - 1 ? TIERS[idx + 1] : null;
 }
-
 function TierBadge({ tier, size = 'md' }: { tier: typeof TIERS[0]; size?: 'sm' | 'md' | 'lg' }) {
   const sz = size === 'lg' ? 13 : size === 'sm' ? 9 : 10;
   const px = size === 'lg' ? '10px 20px' : size === 'sm' ? '4px 10px' : '6px 14px';
@@ -121,14 +117,12 @@ const css = `
   @keyframes shimmer  { from { background-position: -200% center } to { background-position: 200% center } }
   @keyframes barGrow  { from { width: 0 } to { width: var(--bar-w) } }
   @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
   .mc-fade { animation: fadeUp 0.5s cubic-bezier(.22,.68,0,1.2) both }
   .mc-d1   { animation-delay: 0.05s }
   .mc-d2   { animation-delay: 0.12s }
   .mc-d3   { animation-delay: 0.20s }
   .mc-d4   { animation-delay: 0.28s }
   .mc-d5   { animation-delay: 0.36s }
-
   .mc-btn-primary {
     font-family: 'Jost', sans-serif; font-size: 10px; font-weight: 700;
     letter-spacing: 3px; text-transform: uppercase;
@@ -138,7 +132,6 @@ const css = `
   }
   .mc-btn-primary:hover:not(:disabled) { opacity: 0.82; transform: translateY(-1px); }
   .mc-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-
   .mc-btn-ghost {
     font-family: 'Jost', sans-serif; font-size: 10px; font-weight: 600;
     letter-spacing: 3px; text-transform: uppercase;
@@ -147,7 +140,6 @@ const css = `
     transition: border-color 0.2s, background 0.2s;
   }
   .mc-btn-ghost:hover { border-color: #111; background: rgba(0,0,0,0.03); }
-
   .tier-card {
     padding: clamp(24px,3vw,40px);
     position: relative; overflow: hidden;
@@ -155,28 +147,46 @@ const css = `
     cursor: default;
   }
   .tier-card:hover { transform: translateY(-2px); }
-
   .earn-row {
     display: flex; align-items: center; gap: 16px;
     padding: 14px 0;
   }
-
+  .earn-row.clickable { cursor: pointer; transition: opacity 0.15s; }
+  .earn-row.clickable:hover { opacity: 0.65; }
   .activity-row {
     display: flex; align-items: center; justify-content: space-between;
     padding: 12px 0;
     border-bottom: 1px solid var(--rule);
   }
   .activity-row:last-child { border-bottom: none; }
-
   .skel { background: linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);
     background-size: 200% 100%; animation: pulse 1.4s ease infinite; }
-
+  .referral-box {
+    display: flex; align-items: center; gap: 10px;
+    background: #FAFAFA; border: 1px solid rgba(0,0,0,0.1);
+    padding: 12px 16px; margin-top: 14px;
+  }
+  .referral-link-text {
+    flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; font-family: 'Jost', sans-serif; font-size: 12px;
+    color: #333;
+  }
+  .referral-copy-btn, .referral-share-btn {
+    font-family: 'Jost', sans-serif; font-size: 10px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    background: #111; color: #fff; border: none;
+    padding: 9px 14px; cursor: pointer; white-space: nowrap;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+  }
+  .referral-copy-btn:hover, .referral-share-btn:hover { opacity: 0.82; }
   @media(max-width:640px) {
     .mc-tiers-grid  { grid-template-columns: 1fr !important; gap: 8px !important; }
     .mc-hero-points { font-size: clamp(56px,18vw,96px) !important; }
+    .referral-box   { flex-wrap: wrap; }
+    .referral-link-text { flex-basis: 100%; }
   }
 `;
-
 // ── Main ─────────────────────────────────────────────────────────────────────
 export default function MembersClub() {
   const navigate = useNavigate();
@@ -188,11 +198,11 @@ export default function MembersClub() {
   const [cartCount, setCartCount]     = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [toast, setToast] = useState('');
-
+  const [referral, setReferral] = useState<ReferralLink | null>(null);
+  const [referralLoading, setReferralLoading] = useState(false);
   const showToast = (msg: string) => {
     setToast(msg); setTimeout(() => setToast(''), 3000);
   };
-
   const fetchProfile = useCallback(async () => {
     if (!user) { setLoading(false); return; }
     try {
@@ -205,14 +215,23 @@ export default function MembersClub() {
       setLoading(false);
     }
   }, [user]);
-
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 useEffect(() => {
     if (!user) return;
     axios.get('/api/cart').then(r => setCartCount(r.data.reduce((s: number, i: any) => s + i.quantity, 0))).catch(() => {});
     axios.get('/api/wishlist').then(r => setWishlistCount(r.data.length)).catch(() => {});
   }, [user]);
-
+  // Fetch the referral link once the user is a confirmed club member —
+  // referral bonuses only pay out to joined members, so there's no point
+  // generating/showing a link before then.
+  useEffect(() => {
+    if (!user || !isMember) return;
+    setReferralLoading(true);
+    axios.get('/api/members/referral-link')
+      .then(r => setReferral(r.data))
+      .catch(() => {})
+      .finally(() => setReferralLoading(false));
+  }, [user, isMember]);
   const handleJoin = async () => {
     if (!user) { navigate('/login?redirect=/members-club'); return; }
     setJoining(true);
@@ -226,20 +245,45 @@ useEffect(() => {
       setJoining(false);
     }
   };
-
+  const handleCopyReferral = async () => {
+    if (!referral) return;
+    try {
+      await navigator.clipboard.writeText(referral.referral_url);
+      showToast('✓ Referral link copied!');
+    } catch {
+      showToast('Could not copy — please copy it manually.');
+    }
+  };
+  const handleShareReferral = async () => {
+    if (!referral) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Join Luku Prime',
+          text: 'Shop with me on Luku Prime and we both earn points!',
+          url: referral.referral_url,
+        });
+      } catch {
+        /* user cancelled share — no-op */
+      }
+    } else {
+      handleCopyReferral();
+    }
+  };
+  const scrollToReferral = () => {
+    const el = document.getElementById('refer-a-friend');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
   const tier    = profile ? getTier(profile.points) : TIERS[0];
   const next    = profile ? nextTier(profile.points) : TIERS[1];
   const barPct  = profile && next
     ? Math.min(100, ((profile.points - tier.min) / (next.min - tier.min)) * 100)
     : 100;
-
   const fmtDate = (iso: string) =>
     new Date(iso).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
-
   return (
     <div style={{ background: '#FAFAFA', minHeight: '100vh', color: '#0A0A0A', overflowX: 'hidden' }}>
       <style>{css}</style>
-
       {toast && (
         <div style={{
           position: 'fixed', top: 18, left: '50%', transform: 'translateX(-50%)',
@@ -251,13 +295,11 @@ useEffect(() => {
           {toast}
         </div>
       )}
-
       <Navbar
         cartCount={cartCount}
         wishlistCount={wishlistCount}
         onLogout={() => { setUser(null); setCartCount(0); setWishlistCount(0); }}
       />
-
       {/* ── HERO — full-bleed image banner ── */}
       <section style={{
         position: 'relative',
@@ -285,7 +327,6 @@ useEffect(() => {
           }}>
             Join Luku Prime Members Club and get rewarded while you shop.
           </p>
-
           {!user && (
             <div className="mc-fade mc-d3" style={{ display: 'flex', gap: 0, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
@@ -306,7 +347,6 @@ useEffect(() => {
               </button>
             </div>
           )}
-
           {user && !loading && !isMember && (
             <div className="mc-fade mc-d3">
               <button
@@ -317,7 +357,6 @@ useEffect(() => {
               </button>
             </div>
           )}
-
           {user && isMember && profile && (
             <div className="mc-fade mc-d3" style={{ display: 'inline-block' }}>
               <TierBadge tier={tier} size="lg" />
@@ -325,7 +364,6 @@ useEffect(() => {
           )}
         </div>
       </section>
-
       {/* ── HOW IT WORKS — Step 1 to 3 ── */}
       <section style={{
         background: '#fff',
@@ -337,7 +375,6 @@ useEffect(() => {
         }}>
           How It Works
         </h2>
-
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(36px,5vw,52px)', maxWidth: 420, margin: '0 auto' }}>
           {[
             { step: 'Step 1', title: 'Sign Up', desc: 'Create an account and get 150 points',
@@ -362,7 +399,6 @@ useEffect(() => {
           ))}
         </div>
       </section>
-
       {/* ── MEMBER DASHBOARD (logged in + member) ── */}
       {user && isMember && profile && !loading && (
         <section style={{
@@ -387,7 +423,6 @@ useEffect(() => {
               {profile.points.toLocaleString()}
             </div>
             <TierBadge tier={tier} size="md" />
-
             {next && (
               <div style={{ marginTop: 28, maxWidth: 360, margin: '28px auto 0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -405,13 +440,11 @@ useEffect(() => {
                 </div>
               </div>
             )}
-
             {!next && (
               <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#6A7FA8', marginTop: 16, fontWeight: 600, letterSpacing: '1px' }}>
                 ✦ You've reached Diamond — the highest tier
               </p>
             )}
-
             <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#0A0A0A', fontWeight: 700, marginTop: 20, letterSpacing: '1px' }}>
               Member since {fmtDate(profile.joined_at)}
             </p>
@@ -419,7 +452,32 @@ useEffect(() => {
               {(profile.total_points_earned ?? profile.points).toLocaleString()} points earned all-time
             </p>
           </div>
-
+          {/* Refer a friend */}
+          <div id="refer-a-friend" className="mc-fade mc-d2" style={{ marginBottom: 48 }}>
+            <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: '#0A0A0A', marginBottom: 20 }}>
+              Refer a Friend — Earn 150 Points
+            </p>
+            <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.08)', padding: 'clamp(20px,3vw,32px)' }}>
+              <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 13, color: '#333', lineHeight: 1.7, marginBottom: 4 }}>
+                Share your link. When a friend signs up and completes their first order, you get <strong>150 points</strong>.
+              </p>
+              {referralLoading && (
+                <div className="skel" style={{ height: 44, marginTop: 14 }} />
+              )}
+              {!referralLoading && referral && (
+                <div className="referral-box">
+                  <span className="referral-link-text">{referral.referral_url}</span>
+                  <button className="referral-copy-btn" onClick={handleCopyReferral}>Copy Link</button>
+                  <button className="referral-share-btn" onClick={handleShareReferral}>Share</button>
+                </div>
+              )}
+              {!referralLoading && !referral && (
+                <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 12, color: '#888', marginTop: 14 }}>
+                  Could not load your referral link — please refresh the page.
+                </p>
+              )}
+            </div>
+          </div>
           {/* Tier perks */}
           <div className="mc-fade mc-d2" style={{ marginBottom: 48 }}>
             <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: tier.color, marginBottom: 20 }}>
@@ -434,7 +492,6 @@ useEffect(() => {
               ))}
             </div>
           </div>
-
           {/* Activity log */}
           {profile.activities?.length > 0 && (
             <div className="mc-fade mc-d3">
@@ -461,7 +518,6 @@ useEffect(() => {
           )}
         </section>
       )}
-
       {/* ── LOADING SKELETON ── */}
       {user && loading && (
         <section style={{ maxWidth: 840, margin: '0 auto', padding: 'clamp(40px,6vw,80px) clamp(20px,5%,40px)' }}>
@@ -469,7 +525,6 @@ useEffect(() => {
           <div className="skel" style={{ height: 140 }} />
         </section>
       )}
-
       {/* ── TIERS SECTION (always visible) ── */}
       <section style={{
         background: '#fff',
@@ -482,7 +537,6 @@ useEffect(() => {
           <h2 className="mc-fade mc-d2" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 300, fontStyle: 'italic', fontSize: 'clamp(28px,4vw,48px)', color: '#0A0A0A', textAlign: 'center', marginBottom: 'clamp(36px,5vw,60px)', letterSpacing: '-0.5px' }}>
             The higher you climb,<br/>the better it gets
           </h2>
-
           <div className="mc-tiers-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 'clamp(12px,2vw,24px)' }}>
             {TIERS.map((t, i) => (
               <div key={t.name} className={`tier-card mc-fade mc-d${i + 2}`}
@@ -522,7 +576,6 @@ useEffect(() => {
           </div>
         </div>
       </section>
-
       {/* ── EARN SECTION ── */}
       <section style={{
         background: '#fff',
@@ -536,26 +589,25 @@ useEffect(() => {
           Every action earns.<br/>Points never expire.
         </h2>
         <div className="mc-fade mc-d3" style={{ background: 'transparent', padding: '0 clamp(16px,3vw,32px)' }}>
-          {EARN_WAYS.map((way, i) => (
-  <div
-    key={i}
-    className="earn-row"
-    onClick={way.link ? () => window.open(way.link, '_blank', 'noopener,noreferrer') : undefined}
-    style={way.link ? { cursor: 'pointer' } : undefined}
-  >
-    <img src={way.icon} alt={way.label} style={{ width: 28, height: 28, objectFit: 'contain', flexShrink: 0 }} />
-    <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 13, color: '#222', flex: 1, fontWeight: 400 }}>{way.label}</span>
-    <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 700, color: '#111', flexShrink: 0 }}>
-      +{way.points} <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 700, color: '#111' }}>pts</span>
-    </span>
-    {way.link && (
-      <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#999', flexShrink: 0, marginLeft: 6 }}>↗</span>
-    )}
-  </div>
-))}
+          {EARN_WAYS.map((way, i) => {
+            const isReferral = way.label === 'Refer a friend';
+            return (
+              <div
+                key={i}
+                className={`earn-row ${isReferral ? 'clickable' : ''}`}
+                onClick={isReferral ? scrollToReferral : undefined}
+                role={isReferral ? 'button' : undefined}
+              >
+                <img src={way.icon} alt={way.label} style={{ width: 28, height: 28, objectFit: 'contain', flexShrink: 0 }} />
+                <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 13, color: '#222', flex: 1, fontWeight: 400 }}>{way.label}</span>
+                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 700, color: '#111', flexShrink: 0 }}>
+                  +{way.points} <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 700, color: '#111' }}>pts</span>
+                </span>
+              </div>
+            );
+          })}
         </div>
       </section>
-
       {/* ── CTA FOOTER BAND ── */}
       {(!user || (user && !isMember && !loading)) && (
         <section style={{
@@ -578,7 +630,6 @@ useEffect(() => {
           </button>
         </section>
       )}
-
       <Footer />
     </div>
   );
