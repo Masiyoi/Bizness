@@ -75,7 +75,7 @@ const EARN_WAYS = [
   { label: 'Every KSh 100 spent',     points: 1,   icon: paymentIcon },
   { label: 'Write a product review',  points: 20,  icon: satisfactionIcon },
   { label: 'Refer a friend',          points: 150, icon: referIcon },
-  { label: 'Follow us on Instagram',  points: 30,  icon: igColouredIcon },
+  { label: 'Follow us on Instagram',  points: 30,  icon: igColouredIcon, link: 'https://www.instagram.com/lukuprime?igsh=MWxmazlvM2JseWNzeQ==' },
   { label: 'Birthday month bonus',    points: 50,  icon: fireworksIcon },
 ];
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -591,18 +591,27 @@ useEffect(() => {
         <div className="mc-fade mc-d3" style={{ background: 'transparent', padding: '0 clamp(16px,3vw,32px)' }}>
           {EARN_WAYS.map((way, i) => {
             const isReferral = way.label === 'Refer a friend';
+            const isClickable = isReferral || !!way.link;
+            const handleClick = isReferral
+              ? scrollToReferral
+              : way.link
+                ? () => window.open(way.link, '_blank', 'noopener,noreferrer')
+                : undefined;
             return (
               <div
                 key={i}
-                className={`earn-row ${isReferral ? 'clickable' : ''}`}
-                onClick={isReferral ? scrollToReferral : undefined}
-                role={isReferral ? 'button' : undefined}
+                className={`earn-row ${isClickable ? 'clickable' : ''}`}
+                onClick={handleClick}
+                role={isClickable ? 'button' : undefined}
               >
                 <img src={way.icon} alt={way.label} style={{ width: 28, height: 28, objectFit: 'contain', flexShrink: 0 }} />
                 <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 13, color: '#222', flex: 1, fontWeight: 400 }}>{way.label}</span>
                 <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 700, color: '#111', flexShrink: 0 }}>
                   +{way.points} <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 700, color: '#111' }}>pts</span>
                 </span>
+                {way.link && (
+                  <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#999', flexShrink: 0, marginLeft: 6 }}>up-right arrow</span>
+                )}
               </div>
             );
           })}

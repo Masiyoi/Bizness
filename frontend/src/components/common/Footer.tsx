@@ -67,7 +67,7 @@ const COLUMNS = [
 // ── Social icons (used in both desktop nav and mobile) ───────────────────────
 const SOCIAL_ICONS = (
   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
-    <a href="https://www.instagram.com/lukuprimeshoesbagsthrift?igsh=MWxmazlvM2JseWNzeQ==" target="_blank" rel="noopener noreferrer"
+    <a href="https://www.instagram.com/lukuprime?igsh=MWxmazlvM2JseWNzeQ==" target="_blank" rel="noopener noreferrer"
       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'transform 0.2s, opacity 0.2s' }}
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.opacity = '0.6'; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.opacity = '1'; }}

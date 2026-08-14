@@ -90,6 +90,35 @@ exports.getDiscountEligibility = async (req, res) => {
   }
 };
 
+// GET /api/discount/history — called from the Discounts profile page.
+// Returns every past order where a discount was actually applied, so the
+// page can show "discounts you've used". Reads generically off
+// discount_type/discount_amount so it keeps working if more discount
+// types get added later (currently only the first-order 10% exists).
+exports.getDiscountHistory = async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const result = await db.query(
+      `SELECT order_number, created_at, discount_type, discount_amount
+       FROM orders
+       WHERE user_id = $1
+         AND discount_amount IS NOT NULL
+         AND discount_amount > 0
+       ORDER BY created_at DESC`,
+      [userId]
+    );
+    const discounts = result.rows.map(row => ({
+      order_number:    row.order_number,
+      applied_at:      row.created_at,
+      discount_type:   row.discount_type,
+      discount_amount: Number(row.discount_amount),
+    }));
+    return res.json({ discounts });
+  } catch (err) {
+    console.error('getDiscountHistory error:', err.message);
+    return res.status(500).json({ msg: 'Failed to load discount history' });
+  }
+};
 // Exported for internal use by paymentController — the source of truth used
 // when actually charging the customer, never the frontend-displayed value.
 exports.calculateFirstOrderDiscount     = calculateFirstOrderDiscount;
