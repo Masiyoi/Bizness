@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import axios from 'axios';
 import ProductCard from './ProductCard';
 import type { Product } from '../../constants/theme';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 interface FlashProduct {
   id:           number;
@@ -173,7 +174,12 @@ export default function FlashSaleStrip({
         flexWrap: 'wrap', gap: 12,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 22 }}>🔥</span>
+          <DotLottieReact
+            src="/animations/sale_animation.json"
+            loop
+            autoplay
+            style={{ width: 32, height: 32, flexShrink: 0 }}
+          />
           <div>
             <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: '#C2410C', marginBottom: 2 }}>Limited Time</div>
             <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 'clamp(20px,3vw,30px)', color: '#0A0A0A', lineHeight: 1 }}>Flash Sales</h2>
