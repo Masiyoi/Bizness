@@ -424,9 +424,8 @@ export default function ProductCard({
               </div>
             )}
 
-            {(stock === 0 || isBestseller || (product as any).video_url) && (
+            {(isBestseller || (product as any).video_url) && (
               <div style={S.badgeStack('right')}>
-                {stock === 0 && <div style={S.badge}>Sold Out</div>}
                 {isBestseller && <div style={{ ...S.badge, background: '#2563EB' }}>Bestseller</div>}
                 {(product as any).video_url && (
                   <div style={{ ...S.badge, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -485,6 +484,9 @@ export default function ProductCard({
             ) : colorCount != null && colorCount > 1 ? (
               <div style={S.colorsText}>Available in {colorCount} colors</div>
             ) : null}
+            {stock === 0 && (
+              <div style={{ ...S.colorsText, color: '#C2410C', fontWeight: 600 }}>Out of Stock</div>
+            )}
             <div style={S.priceWrap}>
               {hasDiscount && (
                 <span style={S.compareAt}>KSh {Number(comparePrice).toLocaleString()}</span>
