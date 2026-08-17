@@ -427,8 +427,14 @@ export default function ReviewPage() {
                   <span className="jost" style={{ fontSize:11, fontWeight:700, letterSpacing:'2px', color:T.text, textTransform:'uppercase', marginRight:4 }}>Filter:</span>
                   {(['all', 5, 4, 3, 2, 1] as (number|'all')[]).map(f => (
                     <button key={f} onClick={() => setFilter(f)} className="jost"
-                      style={{ background:filter===f ? '#000000' : 'transparent', color:filter===f ? '#FFFFFF' : '#000000', border:`1.5px solid ${filter===f ? '#000000' : '#E0E0E0'}`, borderRadius:50, padding:'5px 14px', fontSize:11, fontWeight:700, cursor:'pointer', transition:'all 0.18s' }}>
-                      {f === 'all' ? 'All' : `${'★'.repeat(f)} ${f}`}
+                      style={{ background:filter===f ? '#000000' : 'transparent', color:filter===f ? '#FFFFFF' : '#000000', border:`1.5px solid ${filter===f ? '#000000' : '#E0E0E0'}`, borderRadius:50, padding:'5px 14px', fontSize:11, fontWeight:700, cursor:'pointer', transition:'all 0.18s', display:'inline-flex', alignItems:'center', gap:4 }}>
+                      {f === 'all'
+                        ? 'All'
+                        : <>
+                            <span style={{ color:T.gold }}>{'★'.repeat(f)}</span>
+                            <span>{f}</span>
+                          </>
+                      }
                     </button>
                   ))}
                   <span className="jost" style={{ fontSize:11, color:T.text, fontWeight:700, marginLeft:'auto' }}>{filtered.length} review{filtered.length!==1?'s':''}</span>
