@@ -268,12 +268,12 @@ export default function Orders() {
         .order-header{padding:clamp(14px,4vw,20px) clamp(14px,4vw,24px);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:background 0.15s;min-height:72px}
         .order-header:hover{background:rgba(0,0,0,0.02)}
         .order-header:active{background:rgba(0,0,0,0.05)}
-        .order-tile-row{display:flex;align-items:flex-start;gap:22px;flex-wrap:wrap;width:100%}
+        .order-tile-row{display:flex;align-items:flex-start;gap:14px;flex-wrap:nowrap;width:100%}
         .tile-cell{display:flex;flex-direction:column;gap:3px;min-width:0}
         .tile-label{font-family:'Jost',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000000}
         .tile-value{font-family:'Jost',sans-serif;font-size:13px;font-weight:700;color:#000000}
-        .tile-right-stack{display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-left:auto}
-        .tile-left-col{display:flex;flex-direction:column;align-items:flex-start;gap:10px;flex:0 0 auto}
+        .tile-right-stack{display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-left:auto;flex:1 1 auto;min-width:0}
+        .tile-left-col{display:flex;flex-direction:column;align-items:flex-start;gap:10px;flex:0 0 auto;min-width:0}
         .item-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid ${T.creamDeep}}
         .item-row:last-child{border-bottom:none}
         .cta-gold{font-family:'Jost',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;border:none;border-radius:8px;padding:clamp(12px,3vw,14px) clamp(16px,4vw,28px);cursor:pointer;transition:all 0.25s;background:#000000;color:#FFFFFF;min-height:44px;flex:1}
@@ -294,7 +294,7 @@ export default function Orders() {
         @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
         @media(max-width:600px){.track-label{display:none!important}.track-circle{width:24px!important;height:24px!important}}
         @media(max-width:560px){.summary-grid{grid-template-columns:1fr}}
-        @media(max-width:480px){.order-header{flex-direction:column;align-items:stretch}.order-tile-row{gap:14px}.tile-right-stack{align-items:flex-end;width:100%}}
+        @media(max-width:480px){.order-tile-row{gap:10px}.tile-left-col img,.tile-left-col>div:first-child{max-width:84px!important}.tile-right-stack{white-space:normal}.tile-value{white-space:normal}}
       `}</style>
 
       {/* Toast */}
