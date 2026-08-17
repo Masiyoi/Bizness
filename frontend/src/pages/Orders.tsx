@@ -38,10 +38,17 @@ const T = {
   white:'#FFFFFF', text:'#000000', muted:'#888888',
 };
 
-const STATUS_CONFIG: Record<Order['status'], { label: string; color: string; bg: string; border: string; icon: string; step: number }> = {
-  confirmed:   { label:'Payment Confirmed',    color:'#000000', bg:'rgba(0,0,0,0.06)', border:'rgba(0,0,0,0.2)',  icon:'✅', step:0 },
+// The fixed navbar (32px announcement strip + 64px nav) needs a spacer so
+// page content isn't hidden underneath it.
+const NAV_SPACER = 96;
+
+// Custom order-status icons from /public — used for both the compact status
+// badge and the progress-tracker steps. "Delivery In Progress" has no custom
+// asset yet, so it keeps its emoji.
+const STATUS_CONFIG: Record<Order['status'], { label: string; color: string; bg: string; border: string; icon: string; iconImg?: string; step: number }> = {
+  confirmed:   { label:'Payment Confirmed',    color:'#000000', bg:'rgba(0,0,0,0.06)', border:'rgba(0,0,0,0.2)',  icon:'✅', iconImg:'/paymentconfirmed.png', step:0 },
   in_progress: { label:'Delivery In Progress', color:'#111111', bg:'rgba(0,0,0,0.07)', border:'rgba(0,0,0,0.2)',  icon:'🚚', step:1 },
-  delivered:   { label:'Delivered',            color:'#000000', bg:'rgba(0,0,0,0.06)', border:'rgba(0,0,0,0.18)', icon:'🎉', step:2 },
+  delivered:   { label:'Delivered',            color:'#000000', bg:'rgba(0,0,0,0.06)', border:'rgba(0,0,0,0.18)', icon:'🎉', iconImg:'/delivered.png', step:2 },
   cancelled:   { label:'Cancelled',            color:'#555555', bg:'#F5F5F5',          border:'#CCCCCC',          icon:'✕',  step:-1 },
 };
 
@@ -55,6 +62,14 @@ const formatTime = (iso: string) =>
   new Date(iso).toLocaleTimeString('en-KE', { hour:'2-digit', minute:'2-digit' });
 
 type ReviewMap = Record<number, boolean>;
+
+// Renders a tracking-step icon — an <img> for steps with a custom asset,
+// otherwise falls back to the emoji.
+function StepIcon({ step, size = 16 }: { step: { icon: string; label: string; isImage?: boolean }; size?: number }) {
+  return step.isImage
+    ? <img src={step.icon} alt={step.label} style={{ width:size, height:size, objectFit:'contain' }} />
+    : <span style={{ fontSize:size }}>{step.icon}</span>;
+}
 
 // ── Review Modal ───────────────────────────────────────────────────────────────
 function ReviewModal({
@@ -96,7 +111,7 @@ function ReviewModal({
             style={{ width:52, height:52, objectFit:'cover', borderRadius:8, border:'2px solid #E0E0E0', flexShrink:0 }}
           />
           <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:14, color:'#000000', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.name}</div>
+            <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:700, fontSize:14, color:'#000000', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.name}</div>
             {item.category && (
               <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'#888888', letterSpacing:'1.5px', textTransform:'uppercase', marginTop:3 }}>{item.category}</div>
             )}
@@ -221,23 +236,23 @@ export default function Orders() {
   const toggleExpand = (orderId: number) =>
     setExpandedOrder(prev => prev === orderId ? null : orderId);
 
-  const TRACKING_STEPS = [
-    { icon:'💳', label:'Payment Confirmed'    },
-    { icon:'🚚', label:'Delivery In Progress' },
-    { icon:'🎉', label:'Delivered'            },
+  const TRACKING_STEPS: { icon: string; label: string; isImage?: boolean }[] = [
+    { icon:'/paymentconfirmed.png', label:'Payment Confirmed', isImage:true },
+    { icon:'🚚',                     label:'Delivery In Progress' },
+    { icon:'/delivered.png',        label:'Delivered', isImage:true },
   ];
 
   if (loading) return (
     <div style={{ background:T.cream, minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:16 }}>
-      <div style={{ fontSize:40 }}>📦</div>
+      <img src="/ordersloading.png" alt="Loading your orders" style={{ width:64, height:64, objectFit:'contain' }} />
       <p style={{ fontFamily:"'Jost',sans-serif", color:T.muted, letterSpacing:'1px', fontSize:13 }}>Loading your orders…</p>
     </div>
   );
 
   return (
-    <div style={{ fontFamily:"'Playfair Display','Georgia',serif", background:T.cream, minHeight:'100vh', color:T.text, overflowX:'hidden' }}>
+    <div style={{ fontFamily:"'Jost','Georgia',sans-serif", background:T.cream, minHeight:'100vh', color:T.text, overflowX:'hidden' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Jost:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700;800;900&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
         body{background:#FFFFFF}
         a{text-decoration:none;color:inherit}
@@ -248,9 +263,9 @@ export default function Orders() {
         .ornament{display:flex;align-items:center;gap:14px;margin-bottom:8px}
         .ornament-line{flex:0 0 32px;height:1px;background:#CCCCCC}
         .ornament-diamond{width:5px;height:5px;background:#CCCCCC;transform:rotate(45deg);flex-shrink:0}
-        .order-card{background:#FFFFFF;border:1px solid #E0E0E0;border-radius:18px;overflow:hidden;transition:all 0.25s;margin-bottom:16px}
-        .order-card:hover{border-color:#000000;box-shadow:0 12px 36px rgba(0,0,0,0.08)}
-        .order-header{padding:clamp(14px,4vw,20px) clamp(14px,4vw,24px);cursor:pointer;display:flex;align-items:center;gap:12px;transition:background 0.15s;min-height:72px}
+        .order-card{background:#FFFFFF;border:none;border-radius:18px;overflow:hidden;transition:all 0.25s;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.05)}
+        .order-card:hover{box-shadow:0 12px 36px rgba(0,0,0,0.09)}
+        .order-header{padding:clamp(14px,4vw,20px) clamp(14px,4vw,24px);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:background 0.15s;min-height:72px}
         .order-header:hover{background:rgba(0,0,0,0.02)}
         .order-header:active{background:rgba(0,0,0,0.05)}
         .item-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid ${T.creamDeep}}
@@ -271,9 +286,9 @@ export default function Orders() {
         .reviewed-badge{font-family:'Jost',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;padding:5px 12px;border-radius:6px;background:#F0F0F0;color:#333333;border:1px solid #E0E0E0;white-space:nowrap}
         @keyframes modalIn{from{opacity:0;transform:scale(0.94) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
         @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-        @media(max-width:380px){.order-thumbnails{display:none!important}}
         @media(max-width:600px){.track-label{display:none!important}.track-circle{width:24px!important;height:24px!important}}
         @media(max-width:560px){.summary-grid{grid-template-columns:1fr}}
+        @media(max-width:480px){.order-header{flex-direction:column;align-items:stretch}.order-header .order-right{text-align:left!important}.order-title-row{justify-content:flex-start!important}}
       `}</style>
 
       {/* Toast */}
@@ -292,7 +307,10 @@ export default function Orders() {
         />
       )}
 
-    <Navbar />
+      <Navbar />
+
+      {/* Spacer so content clears the fixed navbar (32px strip + 64px nav) */}
+      <div style={{ height: NAV_SPACER }} />
 
       {/* Body */}
       <div style={{ padding:`clamp(24px,5vw,40px) clamp(14px,5%,5%) clamp(60px,10vw,80px)`, maxWidth:860, margin:'0 auto' }}>
@@ -307,7 +325,7 @@ export default function Orders() {
             <span style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:900, letterSpacing:'3px', color:'#000000', textTransform:'uppercase' }}>History</span>
             <div className="ornament-diamond"/><div className="ornament-line"/>
           </div>
-          <h1 style={{ fontFamily:"'Playfair Display',serif", fontWeight:800, fontSize:'clamp(22px,5vw,30px)', color:'#000000' }}>Your Orders</h1>
+          <h1 style={{ fontFamily:"'Jost',sans-serif", fontWeight:800, fontSize:'clamp(22px,5vw,30px)', color:'#000000' }}>Your Orders</h1>
           {orders.length > 0 && (
             <p style={{ fontFamily:"'Jost',sans-serif", fontSize:13, color:T.muted, marginTop:6, fontWeight:300 }}>
               {orders.length} order{orders.length !== 1 ? 's' : ''} · tap any order to see details
@@ -319,7 +337,7 @@ export default function Orders() {
         {orders.length === 0 && !loading && (
           <div className="fade-in" style={{ textAlign:'center', padding:'60px 0' }}>
             <div style={{ width:90, height:90, borderRadius:'50%', background:T.creamMid, display:'flex', alignItems:'center', justifyContent:'center', fontSize:40, margin:'0 auto 24px', border:`1px solid ${T.creamDeep}` }}>📦</div>
-            <h2 style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:24, color:T.navy, marginBottom:10 }}>No orders yet</h2>
+            <h2 style={{ fontFamily:"'Jost',sans-serif", fontWeight:700, fontSize:24, color:T.navy, marginBottom:10 }}>No orders yet</h2>
             <p style={{ fontFamily:"'Jost',sans-serif", fontSize:14, color:T.muted, marginBottom:32, lineHeight:1.7, fontWeight:300 }}>
               You haven't placed any orders yet.<br/>Explore our premium collection.
             </p>
@@ -336,6 +354,7 @@ export default function Orders() {
           const subtotal    = Number(order.total_amount) - Number(order.delivery_fee ?? '0');
           const zoneLabel   = DELIVERY_ZONE_LABELS[order.delivery_zone ?? ''] ?? order.delivery_zone ?? '—';
           const totalQty    = order.items.reduce((s, i) => s + i.quantity, 0);
+          const heroItem    = order.items[0];
 
           const trackingIdx     = TRACKING_STEPS.findIndex(s => s.label === order.tracking_status);
           const currentTrackIdx = trackingIdx !== -1 ? trackingIdx :
@@ -350,44 +369,43 @@ export default function Orders() {
               style={{ animationDelay:`${idx * 0.06}s` }}
             >
 
-              {/* ── Order header ── */}
+              {/* ── Order header — product image + price on the left, order info on the right ── */}
               <div className="order-header" onClick={() => toggleExpand(order.id)}>  {/* ← uses order.id */}
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div className="order-title-row">
-                    {/* Display uses the globally-unique order_number from the DB */}
-                    <span style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:'clamp(14px,3.5vw,16px)', color:T.navy }}>
+
+                {/* Left: image + price */}
+                <div style={{ display:'flex', alignItems:'center', gap:14, flexShrink:0 }}>
+                  <div style={{ position:'relative', width:'clamp(56px,15vw,72px)', height:'clamp(56px,15vw,72px)', borderRadius:14, overflow:'hidden', background:T.creamMid, border:`1px solid ${T.creamDeep}`, flexShrink:0 }}>
+                    {heroItem && (
+                      <img src={heroItem.image_url} alt={heroItem.name} style={{ width:'100%', height:'100%', objectFit:'cover' }}
+                        onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/72x72/F5F5F5/000000?text=LP`; }}/>
+                    )}
+                    {order.items.length > 1 && (
+                      <div style={{ position:'absolute', bottom:0, right:0, background:'rgba(0,0,0,0.75)', color:'#FFFFFF', fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700, padding:'2px 5px 2px 6px', borderTopLeftRadius:6 }}>
+                        +{order.items.length - 1}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:800, fontSize:'clamp(15px,3.5vw,18px)', color:T.navy }}>KSh {Number(order.total_amount).toLocaleString()}</div>
+                    <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:T.muted, marginTop:2 }}>{totalQty} item{totalQty !== 1 ? 's' : ''}</div>
+                  </div>
+                </div>
+
+                {/* Right: order number, status, date */}
+                <div className="order-right" style={{ flex:1, minWidth:0, textAlign:'right' }}>
+                  <div className="order-title-row" style={{ justifyContent:'flex-end' }}>
+                    <span style={{ fontFamily:"'Jost',sans-serif", fontWeight:700, fontSize:'clamp(14px,3.5vw,16px)', color:T.navy }}>
                       Order #{order.order_number}
                     </span>
-                    <span style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:'1px', padding:'3px 10px', borderRadius:20, background:status.bg, color:status.color, border:`1px solid ${status.border}`, textTransform:'uppercase', whiteSpace:'nowrap' }}>
-                      {status.icon} {status.label}
+                    <span style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:'1px', padding:'3px 10px', borderRadius:20, background:status.bg, color:status.color, border:`1px solid ${status.border}`, textTransform:'uppercase', whiteSpace:'nowrap', display:'inline-flex', alignItems:'center', gap:5 }}>
+                      {status.iconImg ? <img src={status.iconImg} alt="" style={{ width:11, height:11, objectFit:'contain' }}/> : status.icon} {status.label}
                     </span>
                   </div>
                   <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:T.muted }}>{formatDate(order.created_at)} · {formatTime(order.created_at)}</div>
                   {order.tracking_status && (
                     <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:'#555555', fontWeight:600, marginTop:3 }}>🚦 {order.tracking_status}</div>
                   )}
-                </div>
-
-                {/* Thumbnails */}
-                <div className="order-thumbnails" style={{ display:'flex', gap:5, flexShrink:0 }}>
-                  {order.items.slice(0, 3).map((item, i) => (
-                    <div key={i} style={{ width:40, height:40, borderRadius:8, overflow:'hidden', background:T.creamMid, border:`1px solid ${T.creamDeep}`, flexShrink:0 }}>
-                      <img src={item.image_url} alt={item.name} style={{ width:'100%', height:'100%', objectFit:'cover' }}
-                        onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/40x40/F5F5F5/000000?text=LP`; }}/>
-                    </div>
-                  ))}
-                  {order.items.length > 3 && (
-                    <div style={{ width:40, height:40, borderRadius:8, background:T.creamMid, border:`1px solid ${T.creamDeep}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                      <span style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, color:T.navy }}>+{order.items.length - 3}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Total + expand arrow */}
-                <div style={{ textAlign:'right', flexShrink:0, minWidth:72 }}>
-                  <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:800, fontSize:'clamp(14px,3.5vw,17px)', color:T.navy }}>KSh {Number(order.total_amount).toLocaleString()}</div>
-                  <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:T.muted, marginTop:3 }}>{totalQty} item{totalQty !== 1 ? 's' : ''}</div>
-                  <div className={`expand-arrow ${isOpen ? 'open' : ''}`} style={{ marginTop:4 }}>▼</div>
+                  <div className={`expand-arrow ${isOpen ? 'open' : ''}`} style={{ marginTop:6 }}>▼</div>
                 </div>
               </div>
 
@@ -398,8 +416,8 @@ export default function Orders() {
                   {/* Progress tracker */}
                   {!isCancelled && (
                     <div style={{ padding:'clamp(16px,4vw,20px) clamp(14px,4vw,24px)', borderBottom:`1px solid ${T.creamDeep}` }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:18, background:'#FAFAFA', borderRadius:10, padding:'10px 14px', border:'1px solid #E0E0E0' }}>
-                        <span style={{ fontSize:18 }}>{TRACKING_STEPS[currentTrackIdx]?.icon}</span>
+                      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:18, background:'#FFFFFF', borderRadius:10, padding:'10px 14px', border:'1px solid #E0E0E0' }}>
+                        <StepIcon step={TRACKING_STEPS[currentTrackIdx]} size={20} />
                         <div style={{ flex:1, minWidth:0 }}>
                           <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:900, color:'#000000', letterSpacing:'1.5px', textTransform:'uppercase', marginBottom:2 }}>Current Status</div>
                           <div style={{ fontFamily:"'Jost',sans-serif", fontSize:13, fontWeight:700, color:T.navy }}>{order.tracking_status || TRACKING_STEPS[currentTrackIdx]?.label}</div>
@@ -424,7 +442,7 @@ export default function Orders() {
                                 {isPast
                                   ? <span style={{ color:'#FFFFFF' }}>✓</span>
                                   : isCurrent
-                                  ? <span style={{ color:'#FFFFFF' }}>{s.icon}</span>
+                                  ? <StepIcon step={s} size={14} />
                                   : <span style={{ color:'#AAAAAA', fontFamily:"'Jost',sans-serif", fontWeight:700 }}>{i + 1}</span>
                                 }
                               </div>
@@ -468,7 +486,7 @@ export default function Orders() {
                               {item.category && (
                                 <div style={{ display:'inline-block', background:'#000000', color:'#FFFFFF', borderRadius:3, padding:'1px 7px', fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', marginBottom:4 }}>{item.category}</div>
                               )}
-                              <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:600, fontSize:'clamp(12px,3vw,14px)', color:T.navy, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.name}</div>
+                              <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:600, fontSize:'clamp(12px,3vw,14px)', color:T.navy, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{item.name}</div>
                               <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:T.muted, marginTop:2 }}>Qty: {item.quantity} · KSh {Number(item.price).toLocaleString()} each</div>
                             </div>
                             <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:6, flexShrink:0 }}>
