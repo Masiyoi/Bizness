@@ -273,6 +273,7 @@ export default function Orders() {
         .tile-label{font-family:'Jost',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000000}
         .tile-value{font-family:'Jost',sans-serif;font-size:13px;font-weight:700;color:#000000}
         .tile-right-stack{display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-left:auto}
+        .tile-left-col{display:flex;flex-direction:column;align-items:flex-start;gap:10px;flex:0 0 auto}
         .item-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid ${T.creamDeep}}
         .item-row:last-child{border-bottom:none}
         .cta-gold{font-family:'Jost',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;border:none;border-radius:8px;padding:clamp(12px,3vw,14px) clamp(16px,4vw,28px);cursor:pointer;transition:all 0.25s;background:#000000;color:#FFFFFF;min-height:44px;flex:1}
@@ -377,18 +378,20 @@ export default function Orders() {
                             {/* -- Order header -- product image + amount on the left, status stack + arrow on the right -- */}
               <div className="order-header" onClick={() => toggleExpand(order.id)}>  {/* uses order.id */}
                 <div className="order-tile-row">
-                  <div style={{ position:'relative', width:'clamp(56px,15vw,72px)', height:'clamp(56px,15vw,72px)', borderRadius:14, overflow:'hidden', background:T.creamMid, border:`1px solid ${T.creamDeep}`, flexShrink:0 }}>
-                    {heroItem && (
-                      <img src={heroItem.image_url} alt={heroItem.name} style={{ width:'100%', height:'100%', objectFit:'cover' }}
-                        onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/72x72/F5F5F5/000000?text=LP`; }}/>
-                    )}
-                    {order.items.length > 1 && (
-                      <div style={{ position:'absolute', bottom:0, right:0, background:'rgba(0,0,0,0.75)', color:'#FFFFFF', fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700, padding:'2px 5px 2px 6px', borderTopLeftRadius:6 }}>
-                        +{order.items.length - 1}
-                      </div>
-                    )}
+                  <div className="tile-left-col">
+                    <div style={{ position:'relative', width:'100%', aspectRatio:'1/1', maxWidth:'clamp(96px,26vw,160px)', borderRadius:16, overflow:'hidden', background:T.creamMid, border:`1px solid ${T.creamDeep}`, flexShrink:0 }}>
+                      {heroItem && (
+                        <img src={heroItem.image_url} alt={heroItem.name} style={{ width:'100%', height:'100%', objectFit:'cover' }}
+                          onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/160x160/F5F5F5/000000?text=LP`; }}/>
+                      )}
+                      {order.items.length > 1 && (
+                        <div style={{ position:'absolute', bottom:0, right:0, background:'rgba(0,0,0,0.75)', color:'#FFFFFF', fontFamily:"'Jost',sans-serif", fontSize:9, fontWeight:700, padding:'2px 5px 2px 6px', borderTopLeftRadius:6 }}>
+                          +{order.items.length - 1}
+                        </div>
+                      )}
+                    </div>
+                    <div className="tile-value" style={{ fontWeight:800, fontSize:'clamp(20px,5vw,26px)' }}>KSh {Number(order.total_amount).toLocaleString()}</div>
                   </div>
-                  <div className="tile-value" style={{ fontWeight:800, fontSize:'clamp(20px,5vw,26px)' }}>KSh {Number(order.total_amount).toLocaleString()}</div>
                   <div className="tile-right-stack">
                     <div className="tile-cell" style={{ alignItems:'flex-end' }}>
                       <div className="tile-label">Order Number</div>
