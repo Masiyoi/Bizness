@@ -272,6 +272,7 @@ export default function Orders() {
         .tile-cell{display:flex;flex-direction:column;gap:3px;min-width:0}
         .tile-label{font-family:'Jost',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000000}
         .tile-value{font-family:'Jost',sans-serif;font-size:13px;font-weight:700;color:#000000}
+        .tile-right-stack{display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-left:auto}
         .item-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid ${T.creamDeep}}
         .item-row:last-child{border-bottom:none}
         .cta-gold{font-family:'Jost',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;border:none;border-radius:8px;padding:clamp(12px,3vw,14px) clamp(16px,4vw,28px);cursor:pointer;transition:all 0.25s;background:#000000;color:#FFFFFF;min-height:44px;flex:1}
@@ -292,7 +293,7 @@ export default function Orders() {
         @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
         @media(max-width:600px){.track-label{display:none!important}.track-circle{width:24px!important;height:24px!important}}
         @media(max-width:560px){.summary-grid{grid-template-columns:1fr}}
-        @media(max-width:480px){.order-header{flex-direction:column;align-items:stretch}.order-tile-row{gap:14px}}
+        @media(max-width:480px){.order-header{flex-direction:column;align-items:stretch}.order-tile-row{gap:14px}.tile-right-stack{align-items:flex-end;width:100%}}
       `}</style>
 
       {/* Toast */}
@@ -373,10 +374,9 @@ export default function Orders() {
               style={{ animationDelay:`${idx * 0.06}s` }}
             >
 
-              {/* ── Order header — product image + price on the left, order info on the right ── */}
-              <div className="order-header" onClick={() => toggleExpand(order.id)}>  {/* ← uses order.id */}
-
-                                <div className="order-tile-row">
+                            {/* -- Order header -- product image + amount on the left, status stack + arrow on the right -- */}
+              <div className="order-header" onClick={() => toggleExpand(order.id)}>  {/* uses order.id */}
+                <div className="order-tile-row">
                   <div style={{ position:'relative', width:'clamp(56px,15vw,72px)', height:'clamp(56px,15vw,72px)', borderRadius:14, overflow:'hidden', background:T.creamMid, border:`1px solid ${T.creamDeep}`, flexShrink:0 }}>
                     {heroItem && (
                       <img src={heroItem.image_url} alt={heroItem.name} style={{ width:'100%', height:'100%', objectFit:'cover' }}
@@ -388,34 +388,24 @@ export default function Orders() {
                       </div>
                     )}
                   </div>
-                  <div className="tile-cell">
-                    <div className="tile-label">Order Number</div>
-                    <div className="tile-value">#{order.order_number}</div>
-                  </div>
-                  <div className="tile-cell">
-                    <div className="tile-label">Status</div>
+                  <div className="tile-value" style={{ fontWeight:800, fontSize:'clamp(20px,5vw,26px)' }}>KSh {Number(order.total_amount).toLocaleString()}</div>
+                  <div className="tile-right-stack">
+                    <div className="tile-cell" style={{ alignItems:'flex-end' }}>
+                      <div className="tile-label">Order Number</div>
+                      <div className="tile-value">#{order.order_number}</div>
+                    </div>
                     <span style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:'1px', padding:'3px 10px', borderRadius:20, background:status.bg, color:status.color, border:`1px solid ${status.border}`, textTransform:'uppercase', whiteSpace:'nowrap', display:'inline-flex', alignItems:'center', gap:5, width:'fit-content' }}>
                       {status.iconImg ? <img src={status.iconImg} alt="" style={{ width:11, height:11, objectFit:'contain' }}/> : status.icon} {status.label}
                     </span>
-                  </div>
-                  <div className="tile-cell">
-                    <div className="tile-label">Date &amp; Time</div>
-                    <div className="tile-value">{formatDate(order.created_at)} · {formatTime(order.created_at)}</div>
-                  </div>
-                  {order.tracking_status && (
-                    <div className="tile-cell">
-                      <div className="tile-label">Order Explanation</div>
-                      <div className="tile-value" style={{ display:'flex', alignItems:'center', gap:6 }}>
-                        <img src="/orderstatusexpalnation.png" alt="" style={{ width:14, height:14, objectFit:'contain', flexShrink:0 }}/>
+                    <div className="tile-value" style={{ textAlign:'right' }}>{formatDate(order.created_at)} · {formatTime(order.created_at)}</div>
+                    {order.tracking_status && (
+                      <div className="tile-value" style={{ display:'flex', alignItems:'center', justifyContent:'flex-end', gap:6 }}>
                         {order.tracking_status}
+                        <img src="/orderstatusexpalnation.png" alt="" style={{ width:14, height:14, objectFit:'contain', flexShrink:0 }}/>
                       </div>
-                    </div>
-                  )}
-                  <div className="tile-cell" style={{ marginLeft:'auto', alignItems:'flex-end' }}>
-                    <div className="tile-label">Price</div>
-                    <div className="tile-value" style={{ fontWeight:800, fontSize:'clamp(15px,3.5vw,18px)' }}>KSh {Number(order.total_amount).toLocaleString()}</div>
+                    )}
+                    <div className={`expand-arrow ${isOpen ? 'open' : ''}`}>▼</div>
                   </div>
-                  <div className={`expand-arrow ${isOpen ? 'open' : ''}`}>▼</div>
                 </div>
               </div>
 
