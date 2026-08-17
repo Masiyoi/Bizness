@@ -20,7 +20,7 @@ const T = {
   navy:'#000000', navyMid:'#111111', navyLight:'#222222',
   gold:'#000000', goldLight:'#333333', goldPale:'#555555',
   cream:'#FFFFFF', creamMid:'#F5F5F5', creamDeep:'#E0E0E0',
-  white:'#FFFFFF', text:'#000000', muted:'#888888',
+  white:'#FFFFFF', text:'#000000', muted:'#000000',
 };
 
 const readUser = (): User | null => {
@@ -118,7 +118,7 @@ const fetchCart = useCallback(async () => {
   const totalValue = items.reduce((s, i) => s + Number(i.price), 0);
 
   return (
-    <div style={{ fontFamily:"'Playfair Display','Georgia',serif", background:T.cream, minHeight:'100vh', color:T.text, overflowX:'hidden' }}>
+    <div style={{ fontFamily:"'Jost','Georgia',sans-serif", background:T.cream, minHeight:'100vh', color:T.text, overflowX:'hidden' }}>
       <style>{css}</style>
 
       {/* ── NAVBAR ── */}
@@ -140,13 +140,13 @@ const fetchCart = useCallback(async () => {
           <div>
             <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
               <div style={{ width:28, height:1, background:'rgba(0,0,0,0.15)' }} />
-              <span className="jost" style={{ fontSize:9, fontWeight:700, letterSpacing:'3.5px', color:'rgba(0,0,0,0.35)', textTransform:'uppercase' }}>Your Collection</span>
+              <span className="jost" style={{ fontSize:9, fontWeight:700, letterSpacing:'3.5px', color:'#000000', textTransform:'uppercase' }}>Your Collection</span>
               <div style={{ width:28, height:1, background:'rgba(0,0,0,0.15)' }} />
             </div>
-            <h1 style={{ fontFamily:"'Playfair Display',serif", fontWeight:800, fontSize:'clamp(28px,5vw,52px)', color:'#000000', lineHeight:1.05, marginBottom:12 }}>
-              Saved Pieces <span style={{ display:'inline-block', marginLeft:12, fontSize:'clamp(22px,3vw,36px)', verticalAlign:'middle' }}>🤍</span>
+            <h1 style={{ fontFamily:"'Jost',sans-serif", fontWeight:800, fontSize:'clamp(28px,5vw,52px)', color:'#000000', lineHeight:1.05, marginBottom:12 }}>
+              Saved Pieces <img src="/favourite.png" alt="" style={{ display:'inline-block', marginLeft:12, width:'clamp(22px,3vw,36px)', height:'clamp(22px,3vw,36px)', verticalAlign:'middle', objectFit:'contain' }}/>
             </h1>
-            <p className="jost" style={{ fontSize:'clamp(12px,1.8vw,14px)', color:'rgba(0,0,0,0.45)', fontWeight:300, lineHeight:1.75, maxWidth:480 }}>
+            <p className="jost" style={{ fontSize:'clamp(12px,1.8vw,14px)', color:'#000000', fontWeight:600, lineHeight:1.75, maxWidth:480 }}>
               Everything you've fallen in love with — synced to your account across every device.
             </p>
           </div>
@@ -155,13 +155,13 @@ const fetchCart = useCallback(async () => {
             <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:10 }}>
               <div style={{ display:'flex', alignItems:'center', gap:16 }}>
                 <div style={{ textAlign:'center' }}>
-                  <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:800, fontSize:'clamp(28px,4vw,40px)', color:'#000000', lineHeight:1 }}>{items.length}</div>
-                  <div className="jost" style={{ fontSize:10, color:'rgba(0,0,0,0.35)', letterSpacing:'2px', textTransform:'uppercase', marginTop:4 }}>{items.length === 1 ? 'Item' : 'Items'} Saved</div>
+                  <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:800, fontSize:'clamp(28px,4vw,40px)', color:'#000000', lineHeight:1 }}>{items.length}</div>
+                  <div className="jost" style={{ fontSize:10, color:'#000000', letterSpacing:'2px', textTransform:'uppercase', marginTop:4 }}>{items.length === 1 ? 'Item' : 'Items'} Saved</div>
                 </div>
                 <div style={{ width:1, height:44, background:'rgba(0,0,0,0.12)' }} />
                 <div style={{ textAlign:'center' }}>
-                  <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:800, fontSize:'clamp(20px,3vw,32px)', color:'#1a1a1a', lineHeight:1 }}>KSh {totalValue.toLocaleString()}</div>
-                  <div className="jost" style={{ fontSize:10, color:'rgba(0,0,0,0.35)', letterSpacing:'2px', textTransform:'uppercase', marginTop:4 }}>Total Value</div>
+                  <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:800, fontSize:'clamp(20px,3vw,32px)', color:'#000000', lineHeight:1 }}>KSh {totalValue.toLocaleString()}</div>
+                  <div className="jost" style={{ fontSize:10, color:'#000000', letterSpacing:'2px', textTransform:'uppercase', marginTop:4 }}>Total Value</div>
                 </div>
               </div>
               <button className="jost clear-btn" onClick={clearAll}>Clear All</button>
@@ -179,7 +179,7 @@ const fetchCart = useCallback(async () => {
         {!user && !loading && (
           <div className="empty-state">
             <div style={{ fontSize:52, marginBottom:16 }}>🔐</div>
-            <h2 style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:'clamp(20px,4vw,30px)', color:'#1a1a1a', marginBottom:12 }}>Sign in to see your wishlist</h2>
+            <h2 style={{ fontFamily:"'Jost',sans-serif", fontWeight:700, fontSize:'clamp(20px,4vw,30px)', color:'#000000', marginBottom:12 }}>Sign in to see your wishlist</h2>
             <p className="jost" style={{ fontSize:14, color:T.muted, marginBottom:28, lineHeight:1.8, textAlign:'center', maxWidth:380 }}>Your saved items are tied to your account and sync instantly across every device you use.</p>
             <button className="jost" onClick={() => navigate('/login')}
               style={{ background:'#1a1a1a', color:'#FFFFFF', border:'none', borderRadius:8, padding:'13px 36px', fontSize:11, fontWeight:800, letterSpacing:'2.5px', textTransform:'uppercase', cursor:'pointer' }}>
@@ -208,12 +208,12 @@ const fetchCart = useCallback(async () => {
         {!loading && user && items.length === 0 && (
           <div className="empty-state">
             <div className="empty-heart">
-              <div style={{ fontSize:56, lineHeight:1 }}>🤍</div>
+              <img src="/favourite.png" alt="" style={{ width:56, height:56, objectFit:'contain' }}/>
               <div className="empty-pulse" />
             </div>
-            <h2 style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:'clamp(22px,4vw,32px)', color:'#1a1a1a', marginBottom:12, marginTop:24 }}>Your wishlist is empty</h2>
+            <h2 style={{ fontFamily:"'Jost',sans-serif", fontWeight:700, fontSize:'clamp(22px,4vw,32px)', color:'#000000', marginBottom:12, marginTop:24 }}>Your wishlist is empty</h2>
             <p className="jost" style={{ fontSize:14, color:T.muted, marginBottom:32, lineHeight:1.8, maxWidth:400, textAlign:'center' }}>
-              Tap the 🤍 on any product to save it here. Your picks sync instantly across all your devices.
+              Tap the <img src="/favourite.png" alt="" style={{ width:14, height:14, objectFit:'contain', verticalAlign:'-2px', display:'inline-block' }}/> on any product to save it here. Your picks sync instantly across all your devices.
             </p>
             <button className="jost" onClick={() => navigate('/')}
               style={{ background:'#1a1a1a', color:'#FFFFFF', border:'none', borderRadius:8, padding:'13px 36px', fontSize:11, fontWeight:800, letterSpacing:'2.5px', textTransform:'uppercase', cursor:'pointer', transition:'all 0.2s' }}
@@ -249,16 +249,16 @@ const fetchCart = useCallback(async () => {
                 <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:6 }}>
                   <div style={{ width:24, height:1, background:'#CCCCCC' }} />
                   <div style={{ width:4, height:4, background:'#CCCCCC', transform:'rotate(45deg)' }} />
-                  <span className="jost" style={{ fontSize:9, fontWeight:700, letterSpacing:'3px', color:'#999999', textTransform:'uppercase' }}>Your Saved Pieces</span>
+                  <span className="jost" style={{ fontSize:9, fontWeight:700, letterSpacing:'3px', color:'#000000', textTransform:'uppercase' }}>Your Saved Pieces</span>
                   <div style={{ width:4, height:4, background:'#CCCCCC', transform:'rotate(45deg)' }} />
                   <div style={{ width:24, height:1, background:'#CCCCCC' }} />
                 </div>
-                <h2 style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:'clamp(18px,3vw,26px)', color:'#1a1a1a' }}>
+                <h2 style={{ fontFamily:"'Jost',sans-serif", fontWeight:700, fontSize:'clamp(18px,3vw,26px)', color:'#000000' }}>
                   {items.length} {items.length === 1 ? 'Item' : 'Items'} in Your Wishlist
                 </h2>
               </div>
               <button className="jost" onClick={() => navigate('/')}
-                style={{ background:'transparent', color:'#555555', border:'1px solid rgba(0,0,0,0.18)', borderRadius:6, padding:'9px 20px', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer', transition:'all 0.2s' }}
+                style={{ background:'transparent', color:'#000000', border:'1px solid rgba(0,0,0,0.18)', borderRadius:6, padding:'9px 20px', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer', transition:'all 0.2s' }}
                 onMouseEnter={e => (e.currentTarget.style.background='rgba(0,0,0,0.05)')}
                 onMouseLeave={e => (e.currentTarget.style.background='transparent')}>
                 + Add More
@@ -283,7 +283,7 @@ const fetchCart = useCallback(async () => {
                       {item.category && !isNew && (
                         <div className="jost" style={{ position:'absolute', top:10, left:10, background:T.navy, color:T.gold, borderRadius:3, padding:'3px 8px', fontSize:8, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase' }}>{item.category}</div>
                       )}
-                      <button className="wl-remove-btn" onClick={() => removeFromWishlist(item.product_id)} title="Remove from wishlist">❤️</button>
+                      <button className="wl-remove-btn" onClick={() => removeFromWishlist(item.product_id)} title="Remove from wishlist"><img src="/favourite.png" alt="" style={{ width:16, height:16, objectFit:'contain' }}/></button>
                       {stock === 0 && (
                         <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center' }}>
                           <span className="jost" style={{ background:'rgba(255,255,255,0.95)', color:'#1a1a1a', fontWeight:700, fontSize:9, padding:'5px 14px', borderRadius:3, letterSpacing:'2px', textTransform:'uppercase' }}>Sold Out</span>
@@ -293,7 +293,7 @@ const fetchCart = useCallback(async () => {
 
                     <div style={{ padding:'14px 16px 16px', flex:1, display:'flex', flexDirection:'column' }}>
                       <Link to={`/product/${item.product_id}`}>
-                        <div style={{ fontFamily:"'Playfair Display',serif", fontWeight:600, fontSize:15, color:'#1a1a1a', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:8 }}>{item.name}</div>
+                        <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:700, fontSize:15, color:'#000000', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:8 }}>{item.name}</div>
                       </Link>
                       <div style={{ marginBottom:10 }}>
                         {stock === 0
@@ -324,17 +324,17 @@ const fetchCart = useCallback(async () => {
               <div>
                 <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
                   <div style={{ width:20, height:1, background:'#CCCCCC' }} />
-                  <span className="jost" style={{ fontSize:9, fontWeight:700, letterSpacing:'3px', color:'#999999', textTransform:'uppercase' }}>Ready to Checkout?</span>
+                  <span className="jost" style={{ fontSize:9, fontWeight:700, letterSpacing:'3px', color:'#000000', textTransform:'uppercase' }}>Ready to Checkout?</span>
                   <div style={{ width:20, height:1, background:'#CCCCCC' }} />
                 </div>
-                <h3 style={{ fontFamily:"'Playfair Display',serif", fontWeight:700, fontSize:'clamp(16px,2.5vw,22px)', color:'#1a1a1a', marginBottom:6 }}>Move Your Favourites to Cart</h3>
+                <h3 style={{ fontFamily:"'Jost',sans-serif", fontWeight:700, fontSize:'clamp(16px,2.5vw,22px)', color:'#000000', marginBottom:6 }}>Move Your Favourites to Cart</h3>
                 <p className="jost" style={{ fontSize:12, color:T.muted, lineHeight:1.7 }}>Items in your wishlist aren't reserved — add them to cart before they sell out.</p>
               </div>
               <button className="jost" onClick={() => navigate('/cart')}
-                style={{ background:'#1a1a1a', color:'#FFFFFF', border:'none', borderRadius:8, padding:'13px 32px', fontSize:11, fontWeight:700, letterSpacing:'2px', textTransform:'uppercase', cursor:'pointer', whiteSpace:'nowrap', transition:'all 0.2s' }}
+                style={{ background:'#1a1a1a', color:'#FFFFFF', border:'none', borderRadius:8, padding:'13px 32px', fontSize:11, fontWeight:700, letterSpacing:'2px', textTransform:'uppercase', cursor:'pointer', whiteSpace:'nowrap', transition:'all 0.2s', display:'inline-flex', alignItems:'center', justifyContent:'center', gap:8 }}
                 onMouseEnter={e => { e.currentTarget.style.background='#333333'; e.currentTarget.style.transform='translateY(-2px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background='#1a1a1a'; e.currentTarget.style.transform='translateY(0)'; }}>
-                Go to Cart 🛒
+                Go to Cart <img src="/add-to-cart.png" alt="" style={{ width:16, height:16, objectFit:'contain', filter:'brightness(0) invert(1)' }}/>
               </button>
             </div>
           </>
@@ -353,7 +353,7 @@ const fetchCart = useCallback(async () => {
 }
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Jost:wght@300;400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Jost:wght@300;400;500;600;700;800;900&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   body{background:#FFFFFF}
   .jost{font-family:'Jost',sans-serif}
@@ -392,7 +392,7 @@ const css = `
 
   .new-badge{position:absolute;top:10px;left:10px;background:#1a1a1a;color:#FFFFFF;font-family:'Jost',sans-serif;font-size:8px;font-weight:800;letter-spacing:2px;padding:3px 8px;border-radius:3px;text-transform:uppercase;z-index:2}
 
-  .clear-btn{background:transparent;border:1px solid rgba(0,0,0,0.15);border-radius:6px;padding:7px 16px;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(0,0,0,0.35);cursor:pointer;transition:all 0.2s}
+  .clear-btn{background:transparent;border:1px solid rgba(0,0,0,0.15);border-radius:6px;padding:7px 16px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#000000;cursor:pointer;transition:all 0.2s}
   .clear-btn:hover{color:rgba(255,100,100,0.8);border-color:rgba(255,100,100,0.3);background:rgba(255,100,100,0.06)}
 
   .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(40px,8vw,100px) 20px;text-align:center}
