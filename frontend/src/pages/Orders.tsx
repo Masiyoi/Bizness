@@ -46,10 +46,10 @@ const NAV_SPACER = 96;
 // badge and the progress-tracker steps. "Delivery In Progress" has no custom
 // asset yet, so it keeps its emoji.
 const STATUS_CONFIG: Record<Order['status'], { label: string; color: string; bg: string; border: string; icon: string; iconImg?: string; step: number }> = {
-  confirmed:   { label:'Payment Confirmed',    color:'#000000', bg:'transparent', border:'rgba(0,0,0,0.2)',  icon:'✅', iconImg:'/paymentconfirmed.png', step:0 },
-  in_progress: { label:'Delivery In Progress', color:'#000000', bg:'transparent', border:'rgba(0,0,0,0.2)',  icon:'🚚', iconImg:'/deliveryinprogress.png', step:1 },
-  delivered:   { label:'Delivered',            color:'#000000', bg:'transparent', border:'rgba(0,0,0,0.18)', icon:'🎉', iconImg:'/delivered.png', step:2 },
-  cancelled:   { label:'Cancelled',            color:'#000000', bg:'transparent', border:'#CCCCCC',          icon:'✕',  step:-1 },
+  confirmed:   { label:'Payment Confirmed',    color:'#1F8A3D', bg:'rgba(31,138,61,0.12)',  border:'rgba(31,138,61,0.35)',  icon:'✅', iconImg:'/paymentconfirmed.png', step:0 },
+  in_progress: { label:'Delivery In Progress', color:'#C56A00', bg:'rgba(197,106,0,0.12)',  border:'rgba(197,106,0,0.35)',  icon:'🚚', iconImg:'/deliveryinprogress.png', step:1 },
+  delivered:   { label:'Delivered',            color:'#2E86C1', bg:'rgba(46,134,193,0.12)', border:'rgba(46,134,193,0.35)', icon:'🎉', iconImg:'/delivered.png', step:2 },
+  cancelled:   { label:'Cancelled',            color:'#C0392B', bg:'rgba(192,57,43,0.12)',  border:'rgba(192,57,43,0.35)',  icon:'✕',  step:-1 },
 };
 
 const DELIVERY_ZONE_LABELS: Record<string, string> = {
@@ -268,7 +268,7 @@ export default function Orders() {
         .order-header{padding:clamp(14px,4vw,20px) clamp(14px,4vw,24px);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:background 0.15s;min-height:72px}
         .order-header:hover{background:rgba(0,0,0,0.02)}
         .order-header:active{background:rgba(0,0,0,0.05)}
-        .order-tile-row{display:flex;align-items:center;gap:22px;flex-wrap:wrap;width:100%}
+        .order-tile-row{display:flex;align-items:flex-start;gap:22px;flex-wrap:wrap;width:100%}
         .tile-cell{display:flex;flex-direction:column;gap:3px;min-width:0}
         .tile-label{font-family:'Jost',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000000}
         .tile-value{font-family:'Jost',sans-serif;font-size:13px;font-weight:700;color:#000000}
@@ -402,7 +402,7 @@ export default function Orders() {
                     </span>
                     <div className="tile-value" style={{ textAlign:'right' }}>{formatDate(order.created_at)} · {formatTime(order.created_at)}</div>
                     {order.tracking_status && (
-                      <div className="tile-value" style={{ display:'flex', alignItems:'center', justifyContent:'flex-end', gap:6 }}>
+                      <div className="tile-value" style={{ display:'flex', alignItems:'center', justifyContent:'flex-end', gap:6, color:status.color }}>
                         {order.tracking_status}
                         <img src="/orderstatusexpalnation.png" alt="" style={{ width:14, height:14, objectFit:'contain', flexShrink:0 }}/>
                       </div>
