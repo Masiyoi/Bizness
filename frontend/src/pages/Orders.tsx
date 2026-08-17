@@ -35,7 +35,7 @@ const T = {
   navy:'#000000', navyMid:'#111111', navyLight:'#222222',
   gold:'#000000', goldLight:'#333333', goldPale:'#555555',
   cream:'#FFFFFF', creamMid:'#F5F5F5', creamDeep:'#E0E0E0',
-  white:'#FFFFFF', text:'#000000', muted:'#888888',
+  white:'#FFFFFF', text:'#000000', muted:'#000000',
 };
 
 // The fixed navbar (32px announcement strip + 64px nav) needs a spacer so
@@ -46,10 +46,10 @@ const NAV_SPACER = 96;
 // badge and the progress-tracker steps. "Delivery In Progress" has no custom
 // asset yet, so it keeps its emoji.
 const STATUS_CONFIG: Record<Order['status'], { label: string; color: string; bg: string; border: string; icon: string; iconImg?: string; step: number }> = {
-  confirmed:   { label:'Payment Confirmed',    color:'#000000', bg:'rgba(0,0,0,0.06)', border:'rgba(0,0,0,0.2)',  icon:'✅', iconImg:'/paymentconfirmed.png', step:0 },
-  in_progress: { label:'Delivery In Progress', color:'#111111', bg:'rgba(0,0,0,0.07)', border:'rgba(0,0,0,0.2)',  icon:'🚚', step:1 },
-  delivered:   { label:'Delivered',            color:'#000000', bg:'rgba(0,0,0,0.06)', border:'rgba(0,0,0,0.18)', icon:'🎉', iconImg:'/delivered.png', step:2 },
-  cancelled:   { label:'Cancelled',            color:'#555555', bg:'#F5F5F5',          border:'#CCCCCC',          icon:'✕',  step:-1 },
+  confirmed:   { label:'Payment Confirmed',    color:'#000000', bg:'transparent', border:'rgba(0,0,0,0.2)',  icon:'✅', iconImg:'/paymentconfirmed.png', step:0 },
+  in_progress: { label:'Delivery In Progress', color:'#000000', bg:'transparent', border:'rgba(0,0,0,0.2)',  icon:'🚚', iconImg:'/deliveryinprogress.png', step:1 },
+  delivered:   { label:'Delivered',            color:'#000000', bg:'transparent', border:'rgba(0,0,0,0.18)', icon:'🎉', iconImg:'/delivered.png', step:2 },
+  cancelled:   { label:'Cancelled',            color:'#000000', bg:'transparent', border:'#CCCCCC',          icon:'✕',  step:-1 },
 };
 
 const DELIVERY_ZONE_LABELS: Record<string, string> = {
@@ -118,7 +118,7 @@ function ReviewModal({
           </div>
           <button
             onClick={onClose}
-            style={{ background:'#F5F5F5', border:'none', color:'#555555', width:28, height:28, borderRadius:7, cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}
+            style={{ background:'#F5F5F5', border:'none', color:'#000000', width:28, height:28, borderRadius:7, cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}
           >✕</button>
         </div>
 
@@ -237,9 +237,9 @@ export default function Orders() {
     setExpandedOrder(prev => prev === orderId ? null : orderId);
 
   const TRACKING_STEPS: { icon: string; label: string; isImage?: boolean }[] = [
-    { icon:'/paymentconfirmed.png', label:'Payment Confirmed', isImage:true },
-    { icon:'🚚',                     label:'Delivery In Progress' },
-    { icon:'/delivered.png',        label:'Delivered', isImage:true },
+    { icon:'/paymentconfirmed.png',   label:'Payment Confirmed', isImage:true },
+    { icon:'/deliveryinprogress.png', label:'Delivery In Progress', isImage:true },
+    { icon:'/delivered.png',          label:'Delivered', isImage:true },
   ];
 
   if (loading) return (
@@ -268,6 +268,10 @@ export default function Orders() {
         .order-header{padding:clamp(14px,4vw,20px) clamp(14px,4vw,24px);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:background 0.15s;min-height:72px}
         .order-header:hover{background:rgba(0,0,0,0.02)}
         .order-header:active{background:rgba(0,0,0,0.05)}
+        .order-tile-row{display:flex;align-items:center;gap:22px;flex-wrap:wrap;width:100%}
+        .tile-cell{display:flex;flex-direction:column;gap:3px;min-width:0}
+        .tile-label{font-family:'Jost',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000000}
+        .tile-value{font-family:'Jost',sans-serif;font-size:13px;font-weight:700;color:#000000}
         .item-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid ${T.creamDeep}}
         .item-row:last-child{border-bottom:none}
         .cta-gold{font-family:'Jost',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;text-transform:uppercase;border:none;border-radius:8px;padding:clamp(12px,3vw,14px) clamp(16px,4vw,28px);cursor:pointer;transition:all 0.25s;background:#000000;color:#FFFFFF;min-height:44px;flex:1}
@@ -288,7 +292,7 @@ export default function Orders() {
         @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
         @media(max-width:600px){.track-label{display:none!important}.track-circle{width:24px!important;height:24px!important}}
         @media(max-width:560px){.summary-grid{grid-template-columns:1fr}}
-        @media(max-width:480px){.order-header{flex-direction:column;align-items:stretch}.order-header .order-right{text-align:left!important}.order-title-row{justify-content:flex-start!important}}
+        @media(max-width:480px){.order-header{flex-direction:column;align-items:stretch}.order-tile-row{gap:14px}}
       `}</style>
 
       {/* Toast */}
@@ -327,7 +331,7 @@ export default function Orders() {
           </div>
           <h1 style={{ fontFamily:"'Jost',sans-serif", fontWeight:800, fontSize:'clamp(22px,5vw,30px)', color:'#000000' }}>Your Orders</h1>
           {orders.length > 0 && (
-            <p style={{ fontFamily:"'Jost',sans-serif", fontSize:13, color:T.muted, marginTop:6, fontWeight:300 }}>
+            <p style={{ fontFamily:"'Jost',sans-serif", fontSize:13, color:T.muted, marginTop:6, fontWeight:700 }}>
               {orders.length} order{orders.length !== 1 ? 's' : ''} · tap any order to see details
             </p>
           )}
@@ -338,7 +342,7 @@ export default function Orders() {
           <div className="fade-in" style={{ textAlign:'center', padding:'60px 0' }}>
             <div style={{ width:90, height:90, borderRadius:'50%', background:T.creamMid, display:'flex', alignItems:'center', justifyContent:'center', fontSize:40, margin:'0 auto 24px', border:`1px solid ${T.creamDeep}` }}>📦</div>
             <h2 style={{ fontFamily:"'Jost',sans-serif", fontWeight:700, fontSize:24, color:T.navy, marginBottom:10 }}>No orders yet</h2>
-            <p style={{ fontFamily:"'Jost',sans-serif", fontSize:14, color:T.muted, marginBottom:32, lineHeight:1.7, fontWeight:300 }}>
+            <p style={{ fontFamily:"'Jost',sans-serif", fontSize:14, color:T.muted, marginBottom:32, lineHeight:1.7, fontWeight:700 }}>
               You haven't placed any orders yet.<br/>Explore our premium collection.
             </p>
             <button className="cta-gold" style={{ flex:'none', width:'auto' }} onClick={() => navigate('/')}>Shop Now →</button>
@@ -372,8 +376,7 @@ export default function Orders() {
               {/* ── Order header — product image + price on the left, order info on the right ── */}
               <div className="order-header" onClick={() => toggleExpand(order.id)}>  {/* ← uses order.id */}
 
-                {/* Left: image + price */}
-                <div style={{ display:'flex', alignItems:'center', gap:14, flexShrink:0 }}>
+                                <div className="order-tile-row">
                   <div style={{ position:'relative', width:'clamp(56px,15vw,72px)', height:'clamp(56px,15vw,72px)', borderRadius:14, overflow:'hidden', background:T.creamMid, border:`1px solid ${T.creamDeep}`, flexShrink:0 }}>
                     {heroItem && (
                       <img src={heroItem.image_url} alt={heroItem.name} style={{ width:'100%', height:'100%', objectFit:'cover' }}
@@ -385,27 +388,34 @@ export default function Orders() {
                       </div>
                     )}
                   </div>
-                  <div>
-                    <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:800, fontSize:'clamp(15px,3.5vw,18px)', color:T.navy }}>KSh {Number(order.total_amount).toLocaleString()}</div>
-                    <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:T.muted, marginTop:2 }}>{totalQty} item{totalQty !== 1 ? 's' : ''}</div>
+                  <div className="tile-cell">
+                    <div className="tile-label">Order Number</div>
+                    <div className="tile-value">#{order.order_number}</div>
                   </div>
-                </div>
-
-                {/* Right: order number, status, date */}
-                <div className="order-right" style={{ flex:1, minWidth:0, textAlign:'right' }}>
-                  <div className="order-title-row" style={{ justifyContent:'flex-end' }}>
-                    <span style={{ fontFamily:"'Jost',sans-serif", fontWeight:700, fontSize:'clamp(14px,3.5vw,16px)', color:T.navy }}>
-                      Order #{order.order_number}
-                    </span>
-                    <span style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:'1px', padding:'3px 10px', borderRadius:20, background:status.bg, color:status.color, border:`1px solid ${status.border}`, textTransform:'uppercase', whiteSpace:'nowrap', display:'inline-flex', alignItems:'center', gap:5 }}>
+                  <div className="tile-cell">
+                    <div className="tile-label">Status</div>
+                    <span style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:'1px', padding:'3px 10px', borderRadius:20, background:status.bg, color:status.color, border:`1px solid ${status.border}`, textTransform:'uppercase', whiteSpace:'nowrap', display:'inline-flex', alignItems:'center', gap:5, width:'fit-content' }}>
                       {status.iconImg ? <img src={status.iconImg} alt="" style={{ width:11, height:11, objectFit:'contain' }}/> : status.icon} {status.label}
                     </span>
                   </div>
-                  <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:T.muted }}>{formatDate(order.created_at)} · {formatTime(order.created_at)}</div>
+                  <div className="tile-cell">
+                    <div className="tile-label">Date &amp; Time</div>
+                    <div className="tile-value">{formatDate(order.created_at)} · {formatTime(order.created_at)}</div>
+                  </div>
                   {order.tracking_status && (
-                    <div style={{ fontFamily:"'Jost',sans-serif", fontSize:11, color:'#555555', fontWeight:600, marginTop:3 }}>🚦 {order.tracking_status}</div>
+                    <div className="tile-cell">
+                      <div className="tile-label">Order Explanation</div>
+                      <div className="tile-value" style={{ display:'flex', alignItems:'center', gap:6 }}>
+                        <img src="/orderstatusexpalnation.png" alt="" style={{ width:14, height:14, objectFit:'contain', flexShrink:0 }}/>
+                        {order.tracking_status}
+                      </div>
+                    </div>
                   )}
-                  <div className={`expand-arrow ${isOpen ? 'open' : ''}`} style={{ marginTop:6 }}>▼</div>
+                  <div className="tile-cell" style={{ marginLeft:'auto', alignItems:'flex-end' }}>
+                    <div className="tile-label">Price</div>
+                    <div className="tile-value" style={{ fontWeight:800, fontSize:'clamp(15px,3.5vw,18px)' }}>KSh {Number(order.total_amount).toLocaleString()}</div>
+                  </div>
+                  <div className={`expand-arrow ${isOpen ? 'open' : ''}`}>▼</div>
                 </div>
               </div>
 
@@ -460,7 +470,7 @@ export default function Orders() {
                   {/* Cancelled banner */}
                   {isCancelled && (
                     <div style={{ padding:'14px clamp(14px,4vw,24px)', background:'#F5F5F5', borderBottom:'1px solid #E0E0E0' }}>
-                      <p style={{ fontFamily:"'Jost',sans-serif", fontSize:13, color:'#555555', fontWeight:600 }}>✕ This order was cancelled.</p>
+                      <p style={{ fontFamily:"'Jost',sans-serif", fontSize:13, color:'#000000', fontWeight:600 }}>✕ This order was cancelled.</p>
                     </div>
                   )}
 
@@ -469,7 +479,7 @@ export default function Orders() {
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12, flexWrap:'wrap', gap:8 }}>
                       <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:900, letterSpacing:'2px', textTransform:'uppercase', color:'#000000' }}>Items Ordered</div>
                       {eligible && (
-                        <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'#555555', fontWeight:600 }}>★ Tap a product to leave a review</div>
+                        <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'#000000', fontWeight:600 }}>★ Tap a product to leave a review</div>
                       )}
                     </div>
                     <div>
@@ -515,7 +525,7 @@ export default function Orders() {
                           <span style={{ fontFamily:"'Jost',sans-serif", fontSize:12, fontWeight:600, color:T.navy }}>KSh {subtotal.toLocaleString()}</span>
                         </div>
                         <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8, gap:8 }}>
-                          <span style={{ fontFamily:"'Jost',sans-serif", fontSize:12, color:T.muted }}>Delivery · <span style={{ color:'#555555' }}>{zoneLabel}</span></span>
+                          <span style={{ fontFamily:"'Jost',sans-serif", fontSize:12, color:T.muted }}>Delivery · <span style={{ color:'#000000' }}>{zoneLabel}</span></span>
                           <span style={{ fontFamily:"'Jost',sans-serif", fontSize:12, fontWeight:600, color:Number(order.delivery_fee??'0')===0?'#000000':T.navy, flexShrink:0 }}>
                             {Number(order.delivery_fee??'0')===0 ? 'FREE' : `KSh ${Number(order.delivery_fee).toLocaleString()}`}
                           </span>
@@ -528,21 +538,21 @@ export default function Orders() {
                       </div>
 
                       <div style={{ background:'#FFFFFF', border:'1px solid #E0E0E0', borderRadius:14, padding:'clamp(12px,3vw,16px) clamp(12px,3vw,18px)' }}>
-                        <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:'2px', textTransform:'uppercase', color:'#888888', marginBottom:12 }}>Payment & Delivery</div>
+                        <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, fontWeight:700, letterSpacing:'2px', textTransform:'uppercase', color:'#000000', marginBottom:12 }}>Payment & Delivery</div>
                         {order.mpesa_receipt && (
                           <div style={{ marginBottom:10 }}>
-                            <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'#AAAAAA', letterSpacing:'1px', textTransform:'uppercase', marginBottom:3 }}>M-Pesa Receipt</div>
+                            <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'#000000', letterSpacing:'1px', textTransform:'uppercase', marginBottom:3 }}>M-Pesa Receipt</div>
                             <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:800, fontSize:'clamp(12px,3.5vw,15px)', color:'#000000', letterSpacing:'2px' }}>{order.mpesa_receipt}</div>
                           </div>
                         )}
                         {order.phone && (
                           <div style={{ marginBottom:10 }}>
-                            <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'#AAAAAA', letterSpacing:'1px', textTransform:'uppercase', marginBottom:3 }}>Phone</div>
+                            <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'#000000', letterSpacing:'1px', textTransform:'uppercase', marginBottom:3 }}>Phone</div>
                             <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:600, fontSize:13, color:'#000000' }}>{order.phone}</div>
                           </div>
                         )}
                         <div>
-                          <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'#AAAAAA', letterSpacing:'1px', textTransform:'uppercase', marginBottom:3 }}>Delivery</div>
+                          <div style={{ fontFamily:"'Jost',sans-serif", fontSize:10, color:'#000000', letterSpacing:'1px', textTransform:'uppercase', marginBottom:3 }}>Delivery</div>
                           <div style={{ fontFamily:"'Jost',sans-serif", fontWeight:600, fontSize:13, color:'#000000' }}>{zoneLabel}</div>
                         </div>
                       </div>
