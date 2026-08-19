@@ -4,9 +4,12 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+    },
     proxy: {
       '/api': {
-        target: 'https://stunning-space-umbrella-pjgqwxrx5q9vcr77w-5000.app.github.dev',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
       }

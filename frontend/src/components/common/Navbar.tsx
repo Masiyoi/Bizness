@@ -381,7 +381,7 @@ export default function Navbar({
                 </span>
                 {showSaleMenu && (
                   <div style={{ position: 'absolute', top: 'calc(100% + 16px)', left: '50%', transform: 'translateX(-50%)', background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, padding: 14, minWidth: 260, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 200, animation: 'fadeInDown 0.15s ease' }}>
-                    <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#EF4444', marginBottom: 10 }}>🔥 Flash Sale</div>
+                    <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#EF4444', marginBottom: 10 }}><img src="/sale.png" alt="Sale" style={{ width: 14, height: 14, objectFit: 'contain', verticalAlign: 'middle', marginRight: 6 }} />Flash Sale</div>
                     {flashProducts.length === 0 ? (
                       <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#999', padding: '4px 2px 8px' }}>No active sales right now</div>
                     ) : (
@@ -670,7 +670,7 @@ export default function Navbar({
               style={{ padding: 0, marginBottom: flashProducts.length > 0 ? 10 : 0, color: '#EF4444', fontWeight: 700 }}
               onClick={() => go('/sale')}
             >
-              🔥 Sale
+              <img src="/sale.png" alt="Sale" style={{ width: 16, height: 16, objectFit: 'contain', verticalAlign: 'middle', marginRight: 6 }} />Sale
             </button>
             {flashProducts.length > 0 && (
               <div style={{ display: 'flex', gap: 8 }}>
