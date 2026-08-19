@@ -70,8 +70,21 @@ export default function Dashboard() {
           <div className="pf-stat-value">{member ? member.points : '—'}</div>
           <div className="pf-stat-label">Reward Points</div>
         </div>
-        <div className="pf-stat">
-          <div className="pf-stat-value" style={{ fontSize: 20, textTransform: 'capitalize' }}>
+        <div
+          className="pf-stat"
+          style={member ? {
+            background: TIER_COLORS[member.tier]?.bg,
+            border: '1px solid ' + TIER_COLORS[member.tier]?.border,
+          } : undefined}
+        >
+          <div
+            className="pf-stat-value"
+            style={{
+              fontSize: 20,
+              textTransform: 'capitalize',
+              color: member ? TIER_COLORS[member.tier]?.color : undefined,
+            }}
+          >
             {member ? member.tier : 'Guest'}
           </div>
           <div className="pf-stat-label">Member Tier</div>
