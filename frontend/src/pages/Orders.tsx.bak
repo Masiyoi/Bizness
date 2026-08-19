@@ -362,7 +362,7 @@ export default function Orders() {
           const totalQty    = order.items.reduce((s, i) => s + i.quantity, 0);
           const heroItem    = order.items[0];
 
-          const trackingIdx     = TRACKING_STEPS.findIndex(s => s.label.trim().toLowerCase() === (order.tracking_status || '').trim().toLowerCase());
+          const trackingIdx     = TRACKING_STEPS.findIndex(s => s.label === order.tracking_status);
           const currentTrackIdx = trackingIdx !== -1 ? trackingIdx :
             order.status === 'confirmed'   ? 0 :
             order.status === 'in_progress' ? 1 :
@@ -390,7 +390,7 @@ export default function Orders() {
                         </div>
                       )}
                     </div>
-                    <div className="tile-value" style={{ fontWeight:600, fontSize:'clamp(13px,3vw,15px)', color:T.muted, letterSpacing:'0.3px' }}>KSh {Number(order.total_amount).toLocaleString()}</div>
+                    <div className="tile-value" style={{ fontWeight:800, fontSize:'clamp(20px,5vw,26px)' }}>KSh {Number(order.total_amount).toLocaleString()}</div>
                   </div>
                   <div className="tile-right-stack">
                     <div className="tile-cell" style={{ alignItems:'flex-end' }}>
