@@ -77,7 +77,7 @@ export default function Discounts() {
                   <p className="pf-row-label">{discountLabel(entry.discount_type)}</p>
                   <p className="pf-row-desc">Order {entry.order_number} · {fmtDate(entry.applied_at)}</p>
                 </div>
-                <span style={{ fontWeight: 700, color: '#1F8A3D' }}>-KSh {entry.discount_amount.toLocaleString()}</span>
+                <span style={{ fontWeight: 700 }}>-KSh {entry.discount_amount.toLocaleString()}</span>
               </div>
             ))}
           </div>

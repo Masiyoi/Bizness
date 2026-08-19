@@ -1185,7 +1185,7 @@ export default function ProductDetail() {
     } else {
       // Optimistic update — change immediately
       setInWishlist(true);
-      showToast('❤️ Added to wishlist!');
+      showToast('Added to wishlist!', '/favourite.png');
       // Then sync with server
       try { await axios.post('/api/wishlist', { product_id: product!.id }); }
       catch { setInWishlist(false); showToast('Failed to add. Try again.'); }

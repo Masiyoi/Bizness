@@ -46,12 +46,7 @@ router.get('/product/:productId', async (req, res) => {
            r.comment,
            r.created_at,
            u.full_name,
-           u.id AS user_id,
-           COALESCE(
-             (SELECT jsonb_agg(jsonb_build_object('id', rm.id, 'url', rm.url, 'media_type', rm.media_type) ORDER BY rm.created_at)
-              FROM review_media rm WHERE rm.review_id = r.id),
-             '[]'::jsonb
-           ) AS media
+           u.id AS user_id
          FROM reviews r
          JOIN users u ON u.id = r.user_id
          WHERE r.product_id = $1
@@ -132,12 +127,7 @@ router.get('/my', auth, async (req, res) => {
          p.name       AS product_name,
          p.image_url  AS product_image,
          p.price      AS product_price,
-         p.category   AS product_category,
-         COALESCE(
-           (SELECT jsonb_agg(jsonb_build_object('id', rm.id, 'url', rm.url, 'media_type', rm.media_type) ORDER BY rm.created_at)
-            FROM review_media rm WHERE rm.review_id = r.id),
-           '[]'::jsonb
-         ) AS media
+         p.category   AS product_category
        FROM reviews r
        JOIN products p ON p.id = r.product_id
        WHERE r.user_id = $1
@@ -173,7 +163,7 @@ router.get('/check/:productId', auth, async (req, res) => {
 // Auth required. Create a new review (one per user per product).
 // Requires a confirmed (non-cancelled) order for that product.
 router.post('/', auth, async (req, res) => {
-  const { product_id, rating, comment, media } = req.body;
+  const { product_id, rating, comment } = req.body;
 
   if (!product_id)                         return badReq(res, 'product_id is required');
   if (!rating || rating < 1 || rating > 5) return badReq(res, 'rating must be 1–5');
@@ -205,20 +195,10 @@ router.post('/', auth, async (req, res) => {
        RETURNING id, rating, comment, created_at`,
       [req.user.id, product_id, rating, comment?.trim() || null]
     );
-    // ── Insert media (optional) ─────────────────────────────────
-    const mediaItems = Array.isArray(media) ? media.slice(0, 5) : [];
-    for (const m of mediaItems) {
-      if (!m?.url || !['image', 'video'].includes(m?.media_type)) continue;
-      await pool.query(
-        `INSERT INTO review_media (review_id, url, public_id, media_type)
-         VALUES ($1, $2, $3, $4)`,
-        [rows[0].id, m.url, m.public_id || null, m.media_type]
-      );
-    }
     // Award members-club points now that the review is saved. No-op for
 // non-members; never throws — a points failure shouldn't block the response.
       await awardReviewPoints(pool, req.user.id);  
-    res.status(201).json({ ...rows[0], media: mediaItems });
+    res.status(201).json(rows[0]);
 
   } catch (err) {
     if (err.code === '23505') {            // unique constraint — already reviewed

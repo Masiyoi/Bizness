@@ -6,11 +6,6 @@ import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import InstagramStrip from '../components/common/InstagramStrip';
 
-interface ReviewMedia {
-  id?: string;
-  url: string;
-  media_type: 'image' | 'video';
-}
 interface Review {
   id: number;
   product_id: number;
@@ -22,7 +17,6 @@ interface Review {
   comment: string | null;
   created_at: string;
   updated_at: string;
-  media?: ReviewMedia[];
 }
 
 interface PurchasedProduct {
@@ -80,124 +74,29 @@ function Stars({ rating, size = 16, interactive = false, onRate }: {
 }
 
 // ── Shared modal for writing AND editing reviews ───────────────
-const MAX_ITEMS = 5;
-const MAX_SIZE_MB = 25;
-
-interface NewFile {
-  type: 'image' | 'video';
-  file: File;
-  previewUrl: string;
-}
-
 function ReviewModal({
   productId, productName, productImage, productCategory,
-  existingRating, existingComment, existingId, existingMedia,
+  existingRating, existingComment, existingId,
   onClose, onSave,
 }: {
   productId: number; productName: string; productImage: string; productCategory?: string;
   existingRating?: number; existingComment?: string | null; existingId?: number;
-  existingMedia?: ReviewMedia[];
   onClose: () => void;
-  onSave: (productId: number, rating: number, comment: string, media: ReviewMedia[], existingId?: number) => Promise<void>;
+  onSave: (productId: number, rating: number, comment: string, existingId?: number) => Promise<void>;
 }) {
   const [rating,  setRating]  = useState(existingRating  || 0);
   const [comment, setComment] = useState(existingComment || '');
   const [saving,  setSaving]  = useState(false);
   const [error,   setError]   = useState('');
-  const [media,   setMedia]   = useState<ReviewMedia[]>(existingMedia || []);
-  const [newFiles, setNewFiles] = useState<NewFile[]>([]);
-  const [uploading, setUploading] = useState(false);
-
-  const totalItems = (media?.length || 0) + newFiles.length;
-
-  const handleFilesPicked = useCallback(async (files: FileList | null) => {
-    if (!files) return;
-    setError('');
-    const newPicked: NewFile[] = [];
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const isImage = file.type.startsWith('image/');
-      const isVideo = file.type.startsWith('video/');
-
-      if (!isImage && !isVideo) {
-        setError('Only images and videos allowed');
-        continue;
-      }
-
-      if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-        setError(`File too large — max ${MAX_SIZE_MB}MB`);
-        continue;
-      }
-
-      if (totalItems + newPicked.length >= MAX_ITEMS) {
-        setError(`Max ${MAX_ITEMS} files`);
-        break;
-      }
-
-      const previewUrl = URL.createObjectURL(file);
-      newPicked.push({
-        type: isImage ? 'image' : 'video',
-        file,
-        previewUrl,
-      });
-    }
-
-    setNewFiles(prev => [...prev, ...newPicked]);
-  }, [totalItems]);
-
-  const removeExistingMedia = (index: number) => {
-    setMedia(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const removeNewFile = (index: number) => {
-    setNewFiles(prev => {
-      const updated = [...prev];
-      URL.revokeObjectURL(updated[index].previewUrl);
-      updated.splice(index, 1);
-      return updated;
-    });
-  };
-
-  const uploadNewFiles = async (): Promise<ReviewMedia[]> => {
-    if (newFiles.length === 0) return [];
-    setUploading(true);
-    const uploaded: ReviewMedia[] = [];
-
-    try {
-      for (const nf of newFiles) {
-        const formData = new FormData();
-        formData.append('file', nf.file);
-
-        const { data } = await axios.post('/api/reviews/media/upload-media', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-
-        uploaded.push({
-          url: data.url,
-          media_type: data.media_type,
-        });
-      }
-    } catch (e) {
-      console.error('Upload error:', e);
-      throw e;
-    } finally {
-      setUploading(false);
-    }
-
-    return uploaded;
-  };
 
   const handleSave = async () => {
     if (!rating) { setError('Please select a star rating.'); return; }
     setSaving(true);
     try {
-      const uploadedMedia = await uploadNewFiles();
-      const finalMedia = [...media, ...uploadedMedia];
-      await onSave(productId, rating, comment, finalMedia, existingId);
+      await onSave(productId, rating, comment, existingId);
       onClose();
     } catch (e: any) {
-      setError(e?.response?.data?.msg || e?.message || 'Could not save review. Try again.');
+      setError(e?.response?.data?.error || 'Could not save review. Try again.');
     } finally { setSaving(false); }
   };
 
@@ -236,47 +135,12 @@ function ReviewModal({
               onBlur={e  => e.currentTarget.style.borderColor = '#E0E0E0'}/>
             <div className="jost" style={{ fontSize:10, color:T.muted, textAlign:'right', marginTop:4 }}>{comment.length}/1000</div>
           </div>
-          <div style={{ marginBottom:20 }}>
-            <div className="jost" style={{ fontSize:11, fontWeight:700, letterSpacing:'2px', textTransform:'uppercase', color:T.text, marginBottom:8 }}>
-              Photos / Video <span style={{ fontWeight:400 }}>(optional)</span>
-            </div>
-            <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-              {media.map((m, i) => (
-                <div key={`existing-${i}`} style={{ position:'relative', width:64, height:64, borderRadius:8, overflow:'hidden', border:'1.5px solid #E0E0E0' }}>
-                  {m.media_type === 'video'
-                    ? <video src={m.url} style={{ width:'100%', height:'100%', objectFit:'cover' }} muted/>
-                    : <img src={m.url} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>}
-                  <button type="button" onClick={() => removeExistingMedia(i)}
-                    style={{ position:'absolute', top:2, right:2, background:'rgba(0,0,0,0.65)', color:'#fff', border:'none', borderRadius:'50%', width:18, height:18, fontSize:10, cursor:'pointer', lineHeight:'18px' }}>✕</button>
-                </div>
-              ))}
-              {newFiles.map((f, i) => (
-                <div key={`new-${i}`} style={{ position:'relative', width:64, height:64, borderRadius:8, overflow:'hidden', border:'1.5px solid #E0E0E0' }}>
-                  {f.type === 'video'
-                    ? <video src={f.previewUrl} style={{ width:'100%', height:'100%', objectFit:'cover' }} muted/>
-                    : <img src={f.previewUrl} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>}
-                  <button type="button" onClick={() => removeNewFile(i)}
-                    style={{ position:'absolute', top:2, right:2, background:'rgba(0,0,0,0.65)', color:'#fff', border:'none', borderRadius:'50%', width:18, height:18, fontSize:10, cursor:'pointer', lineHeight:'18px' }}>✕</button>
-                </div>
-              ))}
-              {totalItems < MAX_ITEMS && (
-                <label style={{ width:64, height:64, borderRadius:8, border:'1.5px dashed #CCCCCC', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'#888888', fontSize:22, flexShrink:0 }}>
-                  +
-                  <input type="file" accept="image/*,video/*" multiple hidden
-                    onChange={e => { handleFilesPicked(e.target.files); e.target.value=''; }}/>
-                </label>
-              )}
-            </div>
-            <div className="jost" style={{ fontSize:10, color:T.muted, marginTop:6 }}>
-              Up to {MAX_ITEMS} files, {MAX_SIZE_MB}MB each. JPG, PNG, MP4, MOV.
-            </div>
-          </div>
           {error && <div className="jost" style={{ fontSize:12, color:'#555555', background:'#F5F5F5', border:'1px solid #E0E0E0', borderRadius:8, padding:'9px 13px', marginBottom:16 }}>{error}</div>}
           <div style={{ display:'flex', gap:10 }}>
             <button onClick={onClose} className="jost" style={{ flex:1, background:'#F0F0F0', color:'#000000', border:'none', borderRadius:10, padding:'11px 0', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:'pointer' }}>Cancel</button>
-            <button onClick={handleSave} disabled={saving || uploading} className="jost"
-              style={{ flex:2, background:(saving||uploading)?'#E0E0E0':'#000000', color:(saving||uploading)?'#888888':'#FFFFFF', border:'none', borderRadius:10, padding:'11px 0', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:(saving||uploading)?'not-allowed':'pointer', transition:'background 0.2s' }}>
-              {uploading ? 'Uploading…' : saving ? 'Saving…' : existingId ? '★ Update Review' : '★ Submit Review'}
+            <button onClick={handleSave} disabled={saving} className="jost"
+              style={{ flex:2, background:saving?'#E0E0E0':'#000000', color:saving?'#888888':'#FFFFFF', border:'none', borderRadius:10, padding:'11px 0', fontSize:11, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', cursor:saving?'not-allowed':'pointer', transition:'background 0.2s' }}>
+              {saving ? 'Saving…' : existingId ? '★ Update Review' : '★ Submit Review'}
             </button>
           </div>
         </div>
@@ -326,15 +190,15 @@ export default function ReviewPage() {
     setTimeout(() => setToast(''), 3200);
   };
 
-  const handleSave = async (productId: number, rating: number, comment: string, media: ReviewMedia[], existingId?: number) => {
+  const handleSave = async (productId: number, rating: number, comment: string, existingId?: number) => {
     if (existingId) {
-      const { data } = await axios.patch(`/api/reviews/${existingId}`, { rating, comment, media });
+      const { data } = await axios.patch(`/api/reviews/${existingId}`, { rating, comment });
       setReviews(prev => prev.map(r =>
-        r.id === existingId ? { ...r, rating: data.rating, comment: data.comment, updated_at: data.updated_at, media: data.media ?? media } : r
+        r.id === existingId ? { ...r, rating: data.rating, comment: data.comment, updated_at: data.updated_at } : r
       ));
       showToast('✓ Review updated');
     } else {
-      await axios.post('/api/reviews', { product_id: productId, rating, comment, media });
+      await axios.post('/api/reviews', { product_id: productId, rating, comment });
       await fetchAll();
       showToast('✓ Review submitted — thank you!');
     }
@@ -381,7 +245,6 @@ export default function ReviewPage() {
           existingRating={activeModal.review?.rating}
           existingComment={activeModal.review?.comment}
           existingId={activeModal.review?.id}
-          existingMedia={activeModal.review?.media}
           onClose={() => setActiveModal(null)}
           onSave={handleSave}
         />
@@ -619,15 +482,6 @@ export default function ReviewPage() {
                             ? <p className="jost" style={{ fontSize:13, color:'#222222', lineHeight:1.7, margin:0 }}>{review.comment}</p>
                             : <p className="jost" style={{ fontSize:12, color:T.muted, fontStyle:'italic', margin:0 }}>No comment left.</p>
                           }
-                          {review.media && review.media.length > 0 && (
-                            <div style={{ display:'flex', gap:8, marginTop:10, flexWrap:'wrap' }}>
-                              {review.media.map((m, i) => (
-                                m.media_type === 'video'
-                                  ? <video key={i} src={m.url} controls style={{ width:64, height:64, objectFit:'cover', borderRadius:8, border:'1.5px solid #E0E0E0' }}/>
-                                  : <img key={i} src={m.url} alt="" style={{ width:64, height:64, objectFit:'cover', borderRadius:8, border:'1.5px solid #E0E0E0' }}/>
-                              ))}
-                            </div>
-                          )}
                         </div>
                       </div>
                     ))}
