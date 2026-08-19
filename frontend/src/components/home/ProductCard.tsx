@@ -139,7 +139,7 @@ const S = {
 
   star: (filled: boolean): React.CSSProperties => ({
     fontSize:   12,
-    color:      filled ? '#F5A524' : '#E0E0E0',
+    color:      filled ? '#B8960C' : '#E0E0E0',
     lineHeight: 1,
   }),
 

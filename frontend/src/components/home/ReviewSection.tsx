@@ -30,7 +30,7 @@ export default function ReviewSection({ reviews, loading, isAdmin }: ReviewSecti
             <div className="flex items-center justify-center gap-2 mt-2">
               <div className="flex gap-0.5">
                 {[1,2,3,4,5].map(s => (
-                  <span key={s} style={{ fontSize: 13, color: '#0A0A0A' }}>★</span>
+                  <span key={s} style={{ fontSize: 13, color: '#B8960C' }}>★</span>
                 ))}
               </div>
               <span className="font-sans text-[11px] text-muted font-semibold">
@@ -142,7 +142,7 @@ export default function ReviewSection({ reviews, loading, isAdmin }: ReviewSecti
                                       key={s}
                                       style={{
                                         fontSize: 11,
-                                        color: s <= review.rating ? '#0A0A0A' : '#D1D5DB',
+                                        color: s <= review.rating ? '#B8960C' : '#D1D5DB',
                                       }}
                                     >
                                       ★
