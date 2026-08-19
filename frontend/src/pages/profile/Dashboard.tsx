@@ -12,6 +12,12 @@ interface MemberProfile {
   tier: string;
   club_joined: boolean;
 }
+// Same tier colours used on the Members Club page
+const TIER_COLORS: Record<string, { color: string; bg: string; border: string }> = {
+  Bronze:  { color: '#CD7F32', bg: 'rgba(205,127,50,0.08)', border: 'rgba(205,127,50,0.25)' },
+  Gold:    { color: '#B8960C', bg: 'rgba(184,150,12,0.08)', border: 'rgba(184,150,12,0.28)' },
+  Diamond: { color: '#6A7FA8', bg: 'rgba(106,127,168,0.08)', border: 'rgba(106,127,168,0.28)' },
+};
 
 export default function Dashboard() {
   const { user, setUser } = useOutletContext<OutletCtx>();
