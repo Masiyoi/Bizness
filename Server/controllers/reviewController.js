@@ -121,7 +121,7 @@ router.get('/homepage', async (req, res) => {
 // Auth required. Returns all reviews written by the logged-in user.
 router.get('/my', auth, async (req, res) => {
   try {
-    const { rows } = await pool.query(   // <-- was `db`, fixed to `pool`
+    const { rows } = await pool.query(
       `SELECT
          r.id,
          r.rating,
@@ -156,7 +156,7 @@ router.get('/my', auth, async (req, res) => {
 // (or null). Useful to pre-fill the review form.
 router.get('/check/:productId', auth, async (req, res) => {
   try {
-    const { rows } = await pool.query(   // <-- was `db`, fixed to `pool`
+    const { rows } = await pool.query(
       `SELECT id, rating, comment, created_at, updated_at
        FROM reviews
        WHERE user_id = $1 AND product_id = $2`,
@@ -182,7 +182,7 @@ router.post('/', auth, async (req, res) => {
   try {
     // ── Purchase verification ──────────────────────────────────
     // Only users who have a confirmed order for this product may review it.
-    const orderCheck = await pool.query(   // <-- was `db` inside a .catch(), now properly throws
+    const orderCheck = await pool.query(
       `SELECT 1 FROM order_items oi
        JOIN orders o ON o.id = oi.order_id
        WHERE o.user_id    = $1
@@ -216,8 +216,8 @@ router.post('/', auth, async (req, res) => {
       );
     }
     // Award members-club points now that the review is saved. No-op for
-// non-members; never throws — a points failure shouldn't block the response.
-      await awardReviewPoints(pool, req.user.id);  
+    // non-members; never throws — a points failure shouldn't block the response.
+    await awardReviewPoints(pool, req.user.id);  
     res.status(201).json({ ...rows[0], media: mediaItems });
 
   } catch (err) {
@@ -232,9 +232,9 @@ router.post('/', auth, async (req, res) => {
 });
 
 // ── PATCH /api/reviews/:id ─────────────────────────────────────
-// Auth required. Update own review's rating and/or comment.
+// Auth required. Update own review's rating, comment, and/or media.
 router.patch('/:id', auth, async (req, res) => {
-  const { rating, comment } = req.body;
+  const { rating, comment, media } = req.body;
   const reviewId = req.params.id;
 
   if (rating !== undefined && (rating < 1 || rating > 5))
@@ -243,6 +243,14 @@ router.patch('/:id', auth, async (req, res) => {
     return badReq(res, 'comment too long (max 1000 chars)');
 
   try {
+    // ── Verify ownership ────────────────────────────────────────
+    const ownerCheck = await pool.query(
+      'SELECT id FROM reviews WHERE id = $1 AND user_id = $2',
+      [reviewId, req.user.id]
+    );
+    if (!ownerCheck.rows.length) return notFound(res);
+
+    // ── Update review ──────────────────────────────────────────
     const { rows } = await pool.query(
       `UPDATE reviews
        SET
@@ -252,8 +260,45 @@ router.patch('/:id', auth, async (req, res) => {
        RETURNING id, rating, comment, updated_at`,
       [rating || null, comment?.trim() || null, reviewId, req.user.id]
     );
-    if (!rows.length) return notFound(res);
-    res.json(rows[0]);
+
+    // ── Handle media (if provided) ──────────────────────────────
+    if (Array.isArray(media)) {
+      // Delete old media
+      await pool.query(
+        'DELETE FROM review_media WHERE review_id = $1',
+        [reviewId]
+      );
+      
+      // Insert new media
+      const mediaItems = media.slice(0, 5);
+      for (const m of mediaItems) {
+        if (!m?.url || !['image', 'video'].includes(m?.media_type)) continue;
+        await pool.query(
+          `INSERT INTO review_media (review_id, url, public_id, media_type)
+           VALUES ($1, $2, $3, $4)`,
+          [reviewId, m.url, m.public_id || null, m.media_type]
+        );
+      }
+    }
+
+    // ── Fetch full review with media ────────────────────────────
+    const fullReview = await pool.query(
+      `SELECT
+         r.id,
+         r.rating,
+         r.comment,
+         r.updated_at,
+         COALESCE(
+           (SELECT jsonb_agg(jsonb_build_object('id', rm.id, 'url', rm.url, 'media_type', rm.media_type) ORDER BY rm.created_at)
+            FROM review_media rm WHERE rm.review_id = r.id),
+           '[]'::jsonb
+         ) AS media
+       FROM reviews r
+       WHERE r.id = $1`,
+      [reviewId]
+    );
+
+    res.json(fullReview.rows[0]);
   } catch (err) {
     console.error('PATCH /reviews/:id', err);
     res.status(500).json({ error: 'Server error' });
@@ -292,7 +337,7 @@ router.get('/admin/all', auth, async (req, res) => {
   const offset = (page - 1) * limit;
 
   try {
-    const { rows } = await pool.query(   // <-- was `db`, fixed to `pool`
+    const { rows } = await pool.query(
       `SELECT
          r.id, r.rating, r.comment, r.created_at,
          u.full_name, u.email,

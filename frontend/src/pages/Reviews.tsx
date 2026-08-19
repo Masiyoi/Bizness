@@ -620,12 +620,34 @@ export default function ReviewPage() {
                             : <p className="jost" style={{ fontSize:12, color:T.muted, fontStyle:'italic', margin:0 }}>No comment left.</p>
                           }
                           {review.media && review.media.length > 0 && (
-                            <div style={{ display:'flex', gap:8, marginTop:10, flexWrap:'wrap' }}>
-                              {review.media.map((m, i) => (
-                                m.media_type === 'video'
-                                  ? <video key={i} src={m.url} controls style={{ width:64, height:64, objectFit:'cover', borderRadius:8, border:'1.5px solid #E0E0E0' }}/>
-                                  : <img key={i} src={m.url} alt="" style={{ width:64, height:64, objectFit:'cover', borderRadius:8, border:'1.5px solid #E0E0E0' }}/>
-                              ))}
+                            <div style={{ marginTop:12, display:'flex', alignItems:'center', gap:10 }}>
+                              <div style={{ position:'relative', display:'inline-block' }}>
+                                {review.media[0].media_type === 'video'
+                                  ? <video src={review.media[0].url} style={{ width:48, height:48, objectFit:'cover', borderRadius:6, border:'1.5px solid #E0E0E0' }} muted/>
+                                  : <img src={review.media[0].url} alt="" style={{ width:48, height:48, objectFit:'cover', borderRadius:6, border:'1.5px solid #E0E0E0' }}/>
+                                }
+                                {review.media[0].media_type === 'video' && (
+                                  <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', color:'#FFFFFF', fontSize:18, pointerEvents:'none' }}>▶</div>
+                                )}
+                                {review.media.length > 1 && (
+                                  <div style={{ position:'absolute', top:-4, right:-4, background:T.gold, color:'#FFFFFF', width:20, height:20, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:700, border:'2px solid #FFFFFF' }}>
+                                    {review.media.length}
+                                  </div>
+                                )}
+                              </div>
+                              <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                                {review.media.slice(1, 4).map((m, i) => (
+                                  <div key={i} style={{ position:'relative', width:40, height:40, borderRadius:4, overflow:'hidden', border:'1px solid #E0E0E0', background:'#F5F5F5' }}>
+                                    {m.media_type === 'video'
+                                      ? <video src={m.url} style={{ width:'100%', height:'100%', objectFit:'cover' }} muted/>
+                                      : <img src={m.url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                                    }
+                                    {m.media_type === 'video' && (
+                                      <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', color:'#FFFFFF', fontSize:10, pointerEvents:'none', background:'rgba(0,0,0,0.3)' }}>▶</div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           )}
                         </div>
