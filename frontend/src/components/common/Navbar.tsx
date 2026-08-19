@@ -479,7 +479,7 @@ export default function Navbar({
           <div style={{ justifySelf: 'center', cursor: 'pointer', userSelect: 'none' }}
             onClick={() => navigate('/')}>
             <span className="brand-logo" style={{ color: ink }}>
-              Luku Prime
+              Axiom Dept
             </span>
           </div>
 
