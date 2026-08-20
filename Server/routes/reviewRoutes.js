@@ -1,4 +1,4 @@
-// ─────────────────────────────────────────────────────────────
+﻿// ─────────────────────────────────────────────────────────────
 //  routes/reviewRoutes.js  ·  Luku Prime
 // ─────────────────────────────────────────────────────────────
 
@@ -97,7 +97,12 @@ router.get('/my', auth, async (req, res) => {
          p.name       AS product_name,
          p.image_url  AS product_image,
          p.price      AS product_price,
-         p.category   AS product_category
+         p.category   AS product_category,
+         COALESCE(
+           (SELECT jsonb_agg(jsonb_build_object('id', rm.id, 'url', rm.url, 'media_type', rm.media_type) ORDER BY rm.created_at)
+            FROM review_media rm WHERE rm.review_id = r.id),
+           '[]'::jsonb
+         ) AS media
        FROM reviews r
        JOIN products p ON p.id = r.product_id
        WHERE r.user_id = $1
@@ -179,7 +184,12 @@ router.get('/product/:productId', async (req, res) => {
   try {
     const [reviewsResult, statsResult] = await Promise.all([
       pool.query(
-        `SELECT r.id, r.rating, r.comment, r.created_at, u.full_name, u.id AS user_id
+        `SELECT r.id, r.rating, r.comment, r.created_at, u.full_name, u.id AS user_id,
+           COALESCE(
+             (SELECT jsonb_agg(jsonb_build_object('id', rm.id, 'url', rm.url, 'media_type', rm.media_type) ORDER BY rm.created_at)
+              FROM review_media rm WHERE rm.review_id = r.id),
+             '[]'::jsonb
+           ) AS media
          FROM reviews r
          JOIN users u ON u.id = r.user_id
          WHERE r.product_id = $1
@@ -232,7 +242,7 @@ router.get('/admin/all', auth, async (req, res) => {
 
 // ── POST /api/reviews ──────────────────────────────────────────
 router.post('/', auth, async (req, res) => {
-  const { product_id, rating, comment } = req.body;
+  const { product_id, rating, comment, media } = req.body;
 
   if (!product_id)                         return badReq(res, 'product_id is required');
   if (!rating || rating < 1 || rating > 5) return badReq(res, 'rating must be 1–5');
@@ -283,7 +293,7 @@ router.post('/', auth, async (req, res) => {
 
 // ── PATCH /api/reviews/:id ─────────────────────────────────────
 router.patch('/:id', auth, async (req, res) => {
-  const { rating, comment } = req.body;
+  const { rating, comment, media } = req.body;
   if (rating !== undefined && (rating < 1 || rating > 5)) return badReq(res, 'rating must be 1–5');
   if (comment && comment.length > 1000)                   return badReq(res, 'comment too long (max 1000 chars)');
   try {
@@ -296,7 +306,34 @@ router.patch('/:id', auth, async (req, res) => {
       [rating || null, comment?.trim() || null, req.params.id, req.user.id]
     );
     if (!rows.length) return notFound(res);
-    res.json(rows[0]);
+    console.log('[reviews:PATCH] media received:', JSON.stringify(media));
+    if (Array.isArray(media)) {
+      await pool.query('DELETE FROM review_media WHERE review_id = $1', [req.params.id]);
+      const mediaItems = media.slice(0, 5);
+      for (const m of mediaItems) {
+        if (!m?.url || !['image', 'video'].includes(m?.media_type)) {
+          console.log('[reviews:PATCH] SKIPPING media item:', JSON.stringify(m));
+          continue;
+        }
+        const mediaResult = await pool.query(
+          `INSERT INTO review_media (review_id, url, public_id, media_type)
+           VALUES ($1, $2, $3, $4) RETURNING id`,
+          [req.params.id, m.url, m.public_id || null, m.media_type]
+        );
+        console.log('[reviews:PATCH] inserted review_media id:', mediaResult.rows[0].id);
+      }
+    }
+    const fullReview = await pool.query(
+      `SELECT r.id, r.rating, r.comment, r.updated_at,
+         COALESCE(
+           (SELECT jsonb_agg(jsonb_build_object('id', rm.id, 'url', rm.url, 'media_type', rm.media_type) ORDER BY rm.created_at)
+            FROM review_media rm WHERE rm.review_id = r.id),
+           '[]'::jsonb
+         ) AS media
+       FROM reviews r WHERE r.id = $1`,
+      [req.params.id]
+    );
+    res.json(fullReview.rows[0]);
   } catch (err) {
     console.error('PATCH /reviews/:id', err);
     res.status(500).json({ error: 'Server error' });
