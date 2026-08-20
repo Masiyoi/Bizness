@@ -1,4 +1,4 @@
-﻿// src/components/common/Footer.tsx
+// src/components/common/Footer.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -275,7 +275,7 @@ export default function Footer() {
         <div className="ft-bottom-strip">
 
           {/* Giant wordmark */}
-          <div className="ft-wordmark">𝓐𝔁𝓲𝓸𝓶 𝓓𝓮𝓹𝓽</div>
+          <div className="ft-wordmark">LUKU PRIME</div>
 
           {/* Socials */}
           <div style={{ marginBottom: 24 }}>{SOCIAL_ICONS}</div>
@@ -431,14 +431,14 @@ const css = `
   }
 
   .ft-wordmark {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: clamp(44px, 8vw, 100px);
-    font-weight: 400;
-    letter-spacing: 0;
-    line-height: 1.1;
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: clamp(52px, 10vw, 120px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.92;
     color: #111;
     margin-bottom: 24px;
-    text-transform: none;
+    text-transform: uppercase;
   }
 
   .ft-tagline {
