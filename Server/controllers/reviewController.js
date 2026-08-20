@@ -1,4 +1,4 @@
-// ─────────────────────────────────────────────────────────────
+﻿// ─────────────────────────────────────────────────────────────
 //  reviewController.js  ·  Luku Prime Reviews API
 //  Mount in your router:  app.use('/api/reviews', reviewRouter)
 // ─────────────────────────────────────────────────────────────
@@ -207,13 +207,19 @@ router.post('/', auth, async (req, res) => {
     );
     // ── Insert media (optional) ─────────────────────────────────
     const mediaItems = Array.isArray(media) ? media.slice(0, 5) : [];
+    console.log('[reviews:POST] media received:', JSON.stringify(media));
+    console.log('[reviews:POST] mediaItems after filter:', JSON.stringify(mediaItems));
     for (const m of mediaItems) {
-      if (!m?.url || !['image', 'video'].includes(m?.media_type)) continue;
-      await pool.query(
+      if (!m?.url || !['image', 'video'].includes(m?.media_type)) {
+        console.log('[reviews:POST] SKIPPING media item:', JSON.stringify(m));
+        continue;
+      }
+      const mediaResult = await pool.query(
         `INSERT INTO review_media (review_id, url, public_id, media_type)
-         VALUES ($1, $2, $3, $4)`,
+         VALUES ($1, $2, $3, $4) RETURNING id`,
         [rows[0].id, m.url, m.public_id || null, m.media_type]
       );
+      console.log('[reviews:POST] inserted review_media id:', mediaResult.rows[0].id);
     }
     // Award members-club points now that the review is saved. No-op for
     // non-members; never throws — a points failure shouldn't block the response.
@@ -271,13 +277,19 @@ router.patch('/:id', auth, async (req, res) => {
       
       // Insert new media
       const mediaItems = media.slice(0, 5);
+      console.log('[reviews:PATCH] media received:', JSON.stringify(media));
+      console.log('[reviews:PATCH] mediaItems after filter:', JSON.stringify(mediaItems));
       for (const m of mediaItems) {
-        if (!m?.url || !['image', 'video'].includes(m?.media_type)) continue;
-        await pool.query(
+        if (!m?.url || !['image', 'video'].includes(m?.media_type)) {
+          console.log('[reviews:PATCH] SKIPPING media item:', JSON.stringify(m));
+          continue;
+        }
+        const mediaResult = await pool.query(
           `INSERT INTO review_media (review_id, url, public_id, media_type)
-           VALUES ($1, $2, $3, $4)`,
+           VALUES ($1, $2, $3, $4) RETURNING id`,
           [reviewId, m.url, m.public_id || null, m.media_type]
         );
+        console.log('[reviews:PATCH] inserted review_media id:', mediaResult.rows[0].id);
       }
     }
 
