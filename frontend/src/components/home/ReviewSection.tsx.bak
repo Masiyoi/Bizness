@@ -1,4 +1,4 @@
-﻿// src/components/home/ReviewSection.tsx
+// src/components/home/ReviewSection.tsx
 import { useNavigate } from 'react-router-dom';
 import { AVATAR_COLORS, getInitials } from '../../constants/theme';
 import type { HomepageReview } from '../../constants/theme';

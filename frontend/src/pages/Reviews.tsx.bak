@@ -312,8 +312,8 @@ function MediaCarousel({ media }: { media: ReviewMedia[] }) {
         {media.map((m, i) => (
           <div key={i} style={{ flex:'0 0 100%', scrollSnapAlign:'start', width:'100%', display:'flex', alignItems:'center', justifyContent:'center', background:'#F5F5F5' }}>
             {m.media_type === 'video'
-              ? <video src={m.url} style={{ display:'block', width:'auto', height:'auto', maxWidth:'100%', maxHeight:420, objectFit:'contain' }} muted controls playsInline/>
-              : <img src={m.url} alt="" style={{ display:'block', width:'auto', height:'auto', maxWidth:'100%', maxHeight:420, objectFit:'contain' }}/>
+              ? <video src={m.url} style={{ display:'block', maxWidth:'100%', maxHeight:420 }} muted controls playsInline/>
+              : <img src={m.url} alt="" style={{ display:'block', maxWidth:'100%', maxHeight:420 }}/>
             }
           </div>
         ))}
@@ -728,7 +728,7 @@ const css = `
   .mc-arrow:disabled{opacity:0!important;pointer-events:none}
   @media(max-width:600px){
     .mc-arrow{display:none}
-    .media-carousel{max-width:340px!important;margin-left:auto;margin-right:auto}
+    .media-carousel{max-width:100%!important}
     .rcard{flex-direction:column}
     .rcard img{width:100%!important;height:160px!important}
     .stats-row{gap:20px!important}
