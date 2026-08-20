@@ -120,15 +120,39 @@ export default function ReviewSection({ reviews, loading, isAdmin }: ReviewSecti
                             >
                               {/* Product image — large, centered, top */}
                               <div className="relative w-full h-[140px] bg-[#F5F5F5] overflow-hidden">
-                                <img
-                                  src={review.product_image ?? `https://placehold.co/400x400/0A0A0A/ffffff?text=LP`}
-                                  alt={review.product_name}
-                                  onError={e => {
-                                    (e.target as HTMLImageElement).src =
-                                      `https://placehold.co/400x400/0A0A0A/ffffff?text=LP`;
-                                  }}
-                                  className="w-full h-full object-cover"
-                                />
+                                {review.media && review.media.length > 0 ? (
+                                  review.media[0].media_type === 'video' ? (
+                                    <video
+                                      src={review.media[0].url}
+                                      className="w-full h-full object-cover"
+                                      muted
+                                      loop
+                                      autoPlay
+                                      playsInline
+                                    />
+                                  ) : (
+                                    <img
+                                      src={review.media[0].url}
+                                      alt={review.product_name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  )
+                                ) : (
+                                  <img
+                                    src={review.product_image ?? `https://placehold.co/400x400/0A0A0A/ffffff?text=LP`}
+                                    alt={review.product_name}
+                                    onError={e => {
+                                      (e.target as HTMLImageElement).src =
+                                        `https://placehold.co/400x400/0A0A0A/ffffff?text=LP`;
+                                    }}
+                                    className="w-full h-full object-cover"
+                                  />
+                                )}
+                                {review.media && review.media.length > 1 && (
+                                  <span className="absolute bottom-2.5 left-2.5 bg-black/70 backdrop-blur-sm text-[9px] font-bold text-white rounded-full px-2 py-0.5">
+                                    +{review.media.length - 1}
+                                  </span>
+                                )}
                                 <span className="absolute top-2.5 right-2.5 bg-white/90 backdrop-blur-sm text-[9px] font-bold text-[#0A0A0A] rounded-full px-2.5 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                   View →
                                 </span>
