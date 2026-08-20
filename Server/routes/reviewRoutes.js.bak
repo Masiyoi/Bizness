@@ -69,12 +69,7 @@ router.get('/homepage', async (req, res) => {
          u.full_name,
          p.name       AS product_name,
          p.image_url  AS product_image,
-         p.id         AS product_id,
-         COALESCE(
-           (SELECT jsonb_agg(jsonb_build_object('id', rm.id, 'url', rm.url, 'media_type', rm.media_type) ORDER BY rm.created_at)
-            FROM review_media rm WHERE rm.review_id = r.id),
-           '[]'::jsonb
-         ) AS media
+         p.id         AS product_id
        FROM reviews r
        JOIN users    u ON u.id = r.user_id
        JOIN products p ON p.id = r.product_id
@@ -278,18 +273,6 @@ router.post('/', auth, async (req, res) => {
        RETURNING id, rating, comment, created_at`,
       [req.user.id, product_id, rating, comment?.trim() || null]
     );
-    const newReviewId = rows[0].id;
-    if (Array.isArray(media)) {
-      const mediaItems = media.slice(0, 5);
-      for (const m of mediaItems) {
-        if (!m?.url || !['image', 'video'].includes(m?.media_type)) continue;
-        await pool.query(
-          `INSERT INTO review_media (review_id, url, public_id, media_type)
-           VALUES ($1, $2, $3, $4)`,
-          [newReviewId, m.url, m.public_id || null, m.media_type]
-        );
-      }
-    }
 
     // Award members-club points now that the review is saved. No-op for
     // non-members; never throws — a points failure shouldn't block the response.
