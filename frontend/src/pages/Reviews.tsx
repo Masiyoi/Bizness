@@ -310,11 +310,13 @@ function MediaCarousel({ media }: { media: ReviewMedia[] }) {
       <div ref={trackRef} onScroll={handleScroll} className="media-carousel-track"
         style={{ display:'flex', overflowX:'auto', scrollSnapType:'x mandatory', borderRadius:10, border:'1.5px solid #E0E0E0', background:'#F5F5F5' }}>
         {media.map((m, i) => (
-          <div key={i} style={{ flex:'0 0 100%', scrollSnapAlign:'start', position:'relative', aspectRatio:'4 / 3', width:'100%' }}>
-            {m.media_type === 'video'
-              ? <video src={m.url} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} muted controls playsInline/>
-              : <img src={m.url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}/>
-            }
+          <div key={i} style={{ flex:'0 0 100%', scrollSnapAlign:'start', width:'100%' }}>
+            <div style={{ position:'relative', width:'100%', paddingTop:'125%', background:'#F5F5F5' }}>
+              {m.media_type === 'video'
+                ? <video src={m.url} style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'contain', display:'block' }} muted controls playsInline/>
+                : <img src={m.url} alt="" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'contain', display:'block' }}/>
+              }
+            </div>
           </div>
         ))}
       </div>
