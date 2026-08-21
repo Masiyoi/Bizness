@@ -38,6 +38,11 @@ const createTransporter = () =>
   nodemailer.createTransport({
     service: 'gmail',
     auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    // Force IPv4 directly on the connection — Render has no outbound IPv6
+    // route, and dns.setDefaultResultOrder alone isn't always honored by
+    // the underlying smtp-connection socket. family:4 is passed straight
+    // to net.connect/tls.connect and can't be bypassed.
+    family: 4,
   });
 const sendPasswordResetEmail = async (email, fullName, token) => {
   const transporter = createTransporter();   // reuse your existing createTransporter()
