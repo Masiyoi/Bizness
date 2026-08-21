@@ -7,11 +7,6 @@ const nodemailer = require('nodemailer');
 const crypto     = require('crypto');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const { registerMember } = require('./membersController');
-const dns = require('dns');
-// Render's outbound network can't reach Gmail over IPv6 (ENETUNREACH),
-// so force IPv4-first DNS resolution for all outbound connections
-// (Nodemailer/SMTP included).
-dns.setDefaultResultOrder('ipv4first');
 // Generates a unique 8-char referral code for a new user. Retries on the
 // rare collision (unique constraint on users.referral_code).
 const generateReferralCode = async () => {
