@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 declare global {
@@ -24,6 +24,21 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [sent,    setSent]    = useState(false);
   const [error,   setError]   = useState("");
+  // Load the reCAPTCHA script on mount — this page can be landed on directly
+  // (not just navigated to from Login), so we can't assume window.grecaptcha
+  // already exists. Without this, .ready() never fires and the submit button
+  // hangs forever with no visible error.
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://www.google.com/recaptcha/api.js?render=6LdlHMQsAAAAAJ5Ft84oddhVF0cUKkU7u65Xlb2o";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+      const badge = document.querySelector(".grecaptcha-badge");
+      if (badge) badge.remove();
+    };
+  }, []);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) { setError("Please enter your email address."); return; }
