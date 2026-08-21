@@ -3,15 +3,13 @@ const bcrypt     = require('bcryptjs');
 const jwt        = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const { OAuth2Client } = require('google-auth-library');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const crypto     = require('crypto');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const { registerMember } = require('./membersController');
-const dns = require('dns');
-// Render's outbound network can't reach Gmail over IPv6 (ENETUNREACH),
-// so force IPv4-first DNS resolution for all outbound connections
-// (Nodemailer/SMTP included).
-dns.setDefaultResultOrder('ipv4first');
+// Render's free tier permanently blocks outbound SMTP ports (25/465/587),
+// so we send email over Resend's HTTPS API instead of Nodemailer/SMTP.
+const resend = new Resend(process.env.RESEND_API_KEY);
 // Generates a unique 8-char referral code for a new user. Retries on the
 // rare collision (unique constraint on users.referral_code).
 const generateReferralCode = async () => {
@@ -22,7 +20,7 @@ const generateReferralCode = async () => {
   }
   throw new Error('Could not generate a unique referral code');
 };
-// â”€â”€ Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Constants ────────────────────────────────────────────────────────────
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_MINUTES     = 30;
 const MAX_EMAIL_LENGTH    = 254;   // RFC 5321
@@ -31,24 +29,13 @@ const MIN_PASSWORD_LENGTH = 8;
 const MAX_NAME_LENGTH     = 100;
 const RECAPTCHA_MIN_SCORE = 0.5;
 const RESET_TOKEN_EXPIRY_MINUTES = 30
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Helpers ──────────────────────────────────────────────────────────────
 const generateToken = (userId, role) =>
   jwt.sign({ id: userId, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
-const createTransporter = () =>
-  nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    // Force IPv4 directly on the connection � Render has no outbound IPv6
-    // route, and dns.setDefaultResultOrder alone isn't always honored by
-    // the underlying smtp-connection socket. family:4 is passed straight
-    // to net.connect/tls.connect and can't be bypassed.
-    family: 4,
-  });
 const sendPasswordResetEmail = async (email, fullName, token) => {
-  const transporter = createTransporter();   // reuse your existing createTransporter()
-  const resetUrl    = `${process.env.CLIENT_URL}/#/reset-password/${token}`;
-  await transporter.sendMail({
-    from:    `"Luku Prime" <${process.env.EMAIL_USER}>`,
+  const resetUrl = `${process.env.CLIENT_URL}/#/reset-password/${token}`;
+  await resend.emails.send({
+    from:    `Luku Prime <${process.env.EMAIL_FROM}>`,
     to:      email,
     subject: 'Reset your Luku Prime password',
     html: `
@@ -57,7 +44,7 @@ const sendPasswordResetEmail = async (email, fullName, token) => {
           <h1 style="color:#C8A951;margin:0;font-size:24px;font-family:'Georgia',serif;">Luku Prime</h1>
         </div>
         <div style="padding:32px 36px;background:#fff;">
-          <h2 style="color:#0D1B3E;margin:0 0 12px;font-size:20px;">Hi ${fullName} ðŸ‘‹</h2>
+          <h2 style="color:#0D1B3E;margin:0 0 12px;font-size:20px;">Hi ${fullName} 👋</h2>
           <p style="color:#333;font-size:15px;line-height:1.6;margin:0 0 10px;">
             We received a request to reset your password. Click the button below to choose a new one.
           </p>
@@ -68,7 +55,7 @@ const sendPasswordResetEmail = async (email, fullName, token) => {
             <a href="${resetUrl}"
                style="display:inline-block;background:#C8A951;color:#0D1B3E;text-decoration:none;
                       padding:14px 36px;border-radius:40px;font-weight:700;font-size:15px;">
-              Reset My Password â†’
+              Reset My Password →
             </a>
           </div>
           <p style="color:#999;font-size:12px;text-align:center;line-height:1.6;">
@@ -77,7 +64,7 @@ const sendPasswordResetEmail = async (email, fullName, token) => {
           </p>
         </div>
         <div style="background:#152348;padding:16px 36px;text-align:center;">
-          <p style="color:rgba(255,255,255,0.35);font-size:11px;margin:0;">Â© 2025 Luku Prime Â· Kenya's Premium Store</p>
+          <p style="color:rgba(255,255,255,0.35);font-size:11px;margin:0;">© 2025 Luku Prime · Kenya's Premium Store</p>
         </div>
       </div>
     `,
@@ -93,7 +80,7 @@ const safeCompare = (a, b) => {
   }
   return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 };
-// â”€â”€ reCAPTCHA v3 verification â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── reCAPTCHA v3 verification ───────────────────────────────────────────
 const verifyRecaptcha = async (token) => {
   if (!token) return false;
   try {
@@ -106,13 +93,13 @@ const verifyRecaptcha = async (token) => {
       body:   params,
     });
     const data = await res.json();
-    // data.score is 0.0â€“1.0; 1.0 = very likely human
+    // data.score is 0.0–1.0; 1.0 = very likely human
     return data.success && data.score >= RECAPTCHA_MIN_SCORE;
   } catch {
     return false;
   }
 };
-// â”€â”€ Account lockout helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Account lockout helpers ─────────────────────────────────────────────
 const recordFailedLogin = async (userId) => {
   await db.query(
     `UPDATE users
@@ -141,12 +128,11 @@ const isAccountLocked = (user) => {
   if (!user.locked_until) return false;
   return new Date(user.locked_until) > new Date();
 };
-// â”€â”€ Verification email â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Verification email ──────────────────────────────────────────────────
 const sendVerificationEmail = async (email, fullName, token) => {
-  const transporter = createTransporter();
-  const verifyUrl   = `${process.env.CLIENT_URL}/#/verify-email/${token}`;
-  await transporter.sendMail({
-    from:    `"Luku Prime" <${process.env.EMAIL_USER}>`,
+  const verifyUrl = `${process.env.CLIENT_URL}/#/verify-email/${token}`;
+  await resend.emails.send({
+    from:    `Luku Prime <${process.env.EMAIL_FROM}>`,
     to:      email,
     subject: 'Verify your Luku Prime account',
     html: `
@@ -155,7 +141,7 @@ const sendVerificationEmail = async (email, fullName, token) => {
           <h1 style="color:#C8A951;margin:0;font-size:24px;">Luku Prime</h1>
         </div>
         <div style="padding:32px 36px;background:#fff;">
-          <h2 style="color:#0D1B3E;margin:0 0 12px;">Hi ${fullName} ðŸ‘‹</h2>
+          <h2 style="color:#0D1B3E;margin:0 0 12px;">Hi ${fullName} 👋</h2>
           <p style="color:#333;font-size:15px;line-height:1.6;margin:0 0 28px;">
             Click below to verify your email and activate your account.
           </p>
@@ -163,7 +149,7 @@ const sendVerificationEmail = async (email, fullName, token) => {
             <a href="${verifyUrl}"
                style="display:inline-block;background:#C8A951;color:#0D1B3E;text-decoration:none;
                       padding:14px 36px;border-radius:40px;font-weight:700;font-size:15px;">
-              Verify My Email â†’
+              Verify My Email →
             </a>
           </div>
           <p style="color:#999;font-size:12px;text-align:center;">
@@ -174,21 +160,21 @@ const sendVerificationEmail = async (email, fullName, token) => {
     `,
   });
 };
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ────────────────────────────────────────────────────────────────────────
 // REGISTER
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ────────────────────────────────────────────────────────────────────────
 exports.registerBuyer = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
   const { full_name, email, password, recaptchaToken, referral_code } = req.body;
-  // â”€â”€ Character limits â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Character limits ────────────────────────────────────────────────
   if (!full_name || full_name.trim().length > MAX_NAME_LENGTH)
     return res.status(400).json({ msg: `Name must be under ${MAX_NAME_LENGTH} characters.` });
   if (!email || email.length > MAX_EMAIL_LENGTH)
     return res.status(400).json({ msg: 'Invalid email address.' });
   if (!password || password.length < MIN_PASSWORD_LENGTH || password.length > MAX_PASSWORD_LENGTH)
-    return res.status(400).json({ msg: `Password must be ${MIN_PASSWORD_LENGTH}â€“${MAX_PASSWORD_LENGTH} characters.` });
-  // â”€â”€ reCAPTCHA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    return res.status(400).json({ msg: `Password must be ${MIN_PASSWORD_LENGTH}–${MAX_PASSWORD_LENGTH} characters.` });
+  // ── reCAPTCHA ────────────────────────────────────────────────────────
   const captchaOk = await verifyRecaptcha(recaptchaToken);
   if (!captchaOk)
     return res.status(400).json({ msg: 'reCAPTCHA verification failed. Please try again.' });
@@ -197,7 +183,7 @@ exports.registerBuyer = async (req, res) => {
     if (existing.rows.length > 0)
       return res.status(400).json({ msg: 'An account with this email already exists.' });
     // Resolve referrer (if a referral code was provided) before creating the
-    // account. Invalid/unknown codes are silently ignored â€” referral isn't
+    // account. Invalid/unknown codes are silently ignored — referral isn't
     // required for signup, and we never reveal whether a code was valid.
     let referredBy = null;
     if (referral_code && typeof referral_code === 'string') {
@@ -231,32 +217,32 @@ exports.registerBuyer = async (req, res) => {
     return res.status(500).json({ msg: 'Server error. Please try again.' });
   }
 };
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ────────────────────────────────────────────────────────────────────────
 // LOGIN
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ────────────────────────────────────────────────────────────────────────
 exports.loginUser = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
   const { email, password, recaptchaToken } = req.body;
-  // â”€â”€ Character limits â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Character limits ────────────────────────────────────────────────
   if (!email || email.length > MAX_EMAIL_LENGTH)
     return res.status(400).json({ msg: 'Invalid email address.' });
   if (!password || password.length > MAX_PASSWORD_LENGTH)
     return res.status(400).json({ msg: 'Invalid credentials.' });
-  // â”€â”€ reCAPTCHA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── reCAPTCHA ────────────────────────────────────────────────────────
   const captchaOk = await verifyRecaptcha(recaptchaToken);
   if (!captchaOk)
     return res.status(400).json({ msg: 'reCAPTCHA verification failed. Please try again.' });
   try {
     const result = await db.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
-    // Generic message â€” don't reveal whether email exists
+    // Generic message — don't reveal whether email exists
     if (result.rows.length === 0) {
       // Still run a fake bcrypt to prevent timing attacks
       await bcrypt.compare(password, '$2b$12$invalidhashpadding000000000000000000000000000000000000');
       return res.status(400).json({ msg: 'Invalid email or password.' });
     }
     const user = result.rows[0];
-    // â”€â”€ Lockout check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Lockout check ─────────────────────────────────────────────────
     if (isAccountLocked(user)) {
       const lockedUntil = new Date(user.locked_until);
       const minutesLeft = Math.ceil((lockedUntil - new Date()) / 60000);
@@ -283,7 +269,7 @@ exports.loginUser = async (req, res) => {
         msg: 'Please verify your email before logging in.',
         unverified: true,
       });
-    // â”€â”€ Success â€” clear failed attempts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Success — clear failed attempts ────────────────────────────────
     await clearFailedLogins(user.id);
     const token = generateToken(user.id, user.role);
     res.cookie('token', token, {
@@ -291,7 +277,7 @@ exports.loginUser = async (req, res) => {
       secure:   true,
       sameSite: 'none',
       // Once frontend and API share the lukuprime.shop domain family, this
-      // makes the cookie first-party everywhere under it â€” sidesteps
+      // makes the cookie first-party everywhere under it — sidesteps
       // Brave/Safari third-party-cookie blocking entirely, rather than
       // relying on SameSite=None (which those browsers can still block).
       domain:   '.lukuprime.shop',
@@ -313,9 +299,9 @@ exports.loginUser = async (req, res) => {
     return res.status(500).json({ msg: 'Server error. Please try again.' });
   }
 };
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// GOOGLE AUTH  (unchanged â€” Google handles its own bot protection)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ────────────────────────────────────────────────────────────────────────
+// GOOGLE AUTH  (unchanged — Google handles its own bot protection)
+// ────────────────────────────────────────────────────────────────────────
 exports.googleAuth = async (req, res) => {
   const { credential, referral_code } = req.body;
   if (!credential) return res.status(400).json({ msg: 'Google credential is required.' });
@@ -369,9 +355,9 @@ exports.googleAuth = async (req, res) => {
     return res.status(401).json({ msg: 'Google authentication failed.' });
   }
 };
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ────────────────────────────────────────────────────────────────────────
 // VERIFY EMAIL / RESEND  (unchanged)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ────────────────────────────────────────────────────────────────────────
 exports.verifyEmail = async (req, res) => {
   const { token } = req.params;
   try {
@@ -404,7 +390,7 @@ exports.resendVerification = async (req, res) => {
   if (!email || email.length > MAX_EMAIL_LENGTH) return res.status(400).json({ msg: 'Valid email required.' });
   try {
     const result = await db.query('SELECT * FROM users WHERE email = $1 AND is_verified = FALSE', [email.toLowerCase()]);
-    // Always return the same message â€” don't reveal if email is registered
+    // Always return the same message — don't reveal if email is registered
     if (!result.rows.length)
       return res.json({ msg: 'If that email is registered and unverified, we sent a new link.' });
     const user     = result.rows[0];
@@ -432,7 +418,7 @@ exports.resendVerification = async (req, res) => {
       'SELECT id, full_name, email FROM users WHERE email = $1 AND is_verified = TRUE',
       [email.toLowerCase()]
     );
-    // Always return success â€” never reveal whether email is registered
+    // Always return success — never reveal whether email is registered
     if (!result.rows.length) {
       return res.json({ msg: 'If that email is registered, a reset link is on its way.' });
     }
@@ -450,7 +436,7 @@ exports.resendVerification = async (req, res) => {
     return res.status(500).json({ msg: 'Server error. Please try again.' });
   }
 };
-// â”€â”€â”€ VALIDATE RESET TOKEN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── VALIDATE RESET TOKEN ─────────────────────────────────────────────────
 // GET /api/auth/reset-password/:token
 // Called by the frontend on mount to check if the token is still valid before
 // showing the new-password form.
@@ -472,7 +458,7 @@ exports.validateResetToken = async (req, res) => {
     return res.status(500).json({ msg: 'Server error. Please try again.' });
   }
 };
-// â”€â”€â”€ RESET PASSWORD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── RESET PASSWORD ──────────────────────────────────────────────────────
 // POST /api/auth/reset-password/:token
 // Body: { password }
 exports.resetPassword = async (req, res) => {
@@ -480,7 +466,7 @@ exports.resetPassword = async (req, res) => {
   const { password } = req.body;
   // Length + complexity checks
   if (!password || password.length < 8 || password.length > 128)
-    return res.status(400).json({ msg: 'Password must be 8â€“128 characters.' });
+    return res.status(400).json({ msg: 'Password must be 8–128 characters.' });
   if (!/[A-Z]/.test(password))
     return res.status(400).json({ msg: 'Password must contain at least one uppercase letter.' });
   if (!/[0-9]/.test(password))
