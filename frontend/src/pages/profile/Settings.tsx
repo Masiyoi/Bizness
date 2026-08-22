@@ -15,7 +15,7 @@
 // endpoint that bcrypt-verifies the current password first — same pattern
 // authController.loginUser already uses.
 import { useEffect, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import type { User } from '../../constants/theme';
 import { useProfileTheme } from './ProfileThemeContext';
@@ -33,6 +33,7 @@ const todayIso = () => new Date().toISOString().slice(0, 10);
 export default function Settings() {
   const { user } = useOutletContext<OutletCtx>();
   const { theme, toggle } = useProfileTheme();
+  const navigate = useNavigate();
 
   const [birthday, setBirthday]     = useState<string>(''); // yyyy-mm-dd
   const [savingBirthday, setSavingBirthday] = useState(false);
@@ -140,6 +141,15 @@ export default function Settings() {
           <button className="pf-btn-primary" type="submit" disabled={pwSaving}>
             {pwSaving ? 'Updating…' : 'Update Password'}
           </button>
+          <p style={{ marginTop: 12 }}>
+            <span
+              className="pf-link"
+              style={{ cursor: 'pointer', fontFamily: "'Jost', sans-serif", fontSize: 12, opacity: 0.7 }}
+              onClick={() => navigate('/forgot-password')}
+            >
+              Forgot your password?
+            </span>
+          </p>
         </form>
       </div>
 

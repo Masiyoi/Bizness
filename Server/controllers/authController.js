@@ -513,3 +513,35 @@ exports.logoutUser = (req, res) => {
   });
   res.json({ msg: 'Logged out.' });
 };
+// ── CHANGE PASSWORD (in-session, requires auth middleware) ─────────────────
+// POST /api/auth/change-password
+// Body: { current_password, new_password }
+exports.changePassword = async (req, res) => {
+  const { current_password, new_password } = req.body;
+  if (!current_password || !new_password)
+    return res.status(400).json({ msg: 'Current and new password are required.' });
+  if (new_password.length < MIN_PASSWORD_LENGTH || new_password.length > MAX_PASSWORD_LENGTH)
+    return res.status(400).json({ msg: `Password must be ${MIN_PASSWORD_LENGTH}-${MAX_PASSWORD_LENGTH} characters.` });
+  if (!/[A-Z]/.test(new_password))
+    return res.status(400).json({ msg: 'Password must contain at least one uppercase letter.' });
+  if (!/[0-9]/.test(new_password))
+    return res.status(400).json({ msg: 'Password must contain at least one number.' });
+  try {
+    const result = await db.query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+    if (!result.rows.length) return res.status(404).json({ msg: 'User not found.' });
+    const { password_hash } = result.rows[0];
+    if (!password_hash)
+      return res.status(400).json({ msg: 'This account uses Google Sign-In and has no password to change.' });
+    const isMatch = await bcrypt.compare(current_password, password_hash);
+    if (!isMatch) return res.status(400).json({ msg: 'Current password is incorrect.' });
+    if (await bcrypt.compare(new_password, password_hash))
+      return res.status(400).json({ msg: 'New password must be different from your current password.' });
+    const salt   = await bcrypt.genSalt(12);
+    const newHash = await bcrypt.hash(new_password, salt);
+    await db.query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [newHash, req.user.id]);
+    return res.json({ msg: 'Password updated successfully.' });
+  } catch (err) {
+    console.error('changePassword error:', err.message);
+    return res.status(500).json({ msg: 'Server error. Please try again.' });
+  }
+};

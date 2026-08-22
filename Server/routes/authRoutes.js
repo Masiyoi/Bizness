@@ -3,6 +3,7 @@ const router       = express.Router();
 const rateLimit    = require('express-rate-limit');
 const { body }     = require('express-validator');
 const authCtrl     = require('../controllers/authController');
+const auth          = require('../middleware/authMiddleware');
 
 // ── Rate limiters ─────────────────────────────────────────────────────────────
 const loginLimiter = rateLimit({
@@ -62,5 +63,6 @@ router.post('/forgot-password',          forgotPasswordLimiter, authCtrl.forgotP
 router.get('/reset-password/:token',                            authCtrl.validateResetToken);
 router.post('/reset-password/:token',    resetPasswordLimiter,  authCtrl.resetPassword);
 router.post('/logout', authCtrl.logoutUser);
+router.post('/change-password', auth, authCtrl.changePassword);
 
 module.exports = router;
