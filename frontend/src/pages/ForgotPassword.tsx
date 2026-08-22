@@ -24,7 +24,7 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [sent,    setSent]    = useState(false);
   const [error,   setError]   = useState("");
-  // Load the reCAPTCHA script on mount — this page can be landed on directly
+  // Load the reCAPTCHA script on mount ï¿½ this page can be landed on directly
   // (not just navigated to from Login), so we can't assume window.grecaptcha
   // already exists. Without this, .ready() never fires and the submit button
   // hangs forever with no visible error.
@@ -155,7 +155,7 @@ export default function ForgotPassword() {
               />
             </div>
             <button type="submit" disabled={loading} className="lp-submit">
-              {loading ? "Sending Reset Link…" : "Send Reset Link ?"}
+              {loading ? "Sending Reset Linkï¿½" : "Send Reset Link ?"}
             </button>
           </form>
           <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent)", margin: "24px 0" }} />
@@ -204,10 +204,13 @@ const s: Record<string, React.CSSProperties> = {
   dots: { position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, backgroundImage: "radial-gradient(rgba(255,255,255,0.03) 1px,transparent 1px)", backgroundSize: "28px 28px" },
   centerWrap: { width: "100%", maxWidth: 460, position: "relative", zIndex: 1 },
   card: {
-    width: "100%", background: "rgba(255,255,255,0.03)",
+    width: "100%",
+    backgroundImage: "linear-gradient(180deg, rgba(0,0,0,0.75), rgba(0,0,0,0.55)), url('/forgotpassword.jpg')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
     border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20,
     padding: "clamp(28px,5vw,48px) clamp(20px,5vw,42px)",
-    backdropFilter: "blur(8px)", position: "relative", zIndex: 1,
+    position: "relative", zIndex: 1,
   },
   tag: { fontFamily: "'DM Sans',sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "3px", color: "#ffffff", textTransform: "uppercase" as const, marginBottom: 10 },
   heading: { fontFamily: "'DM Sans',sans-serif", fontWeight: 700, fontSize: "clamp(20px,4vw,26px)" as any, color: "#fff", marginBottom: 0 },
