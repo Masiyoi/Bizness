@@ -1,14 +1,12 @@
 // src/components/common/AuthPopup.tsx
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
 declare global {
   interface Window {
     grecaptcha: any;
   }
 }
-
 const getRecaptchaToken = (action: string): Promise<string> => {
   return new Promise((resolve) => {
     window.grecaptcha.ready(async () => {
@@ -20,19 +18,15 @@ const getRecaptchaToken = (action: string): Promise<string> => {
     });
   });
 };
-
 const redirectByRole = (user: any, navigate: (p: string) => void) =>
   navigate(user?.role === 'admin' ? '/admin' : '/');
-
 /* ─── Inline CSS ─────────────────────────────────────────────────────────── */
 const css = `
   /* Hide reCAPTCHA badge — disclosed in Privacy Policy & Terms */
   .grecaptcha-badge { visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }
-
   @keyframes apFadeIn   { from { opacity:0 } to { opacity:1 } }
   @keyframes apRiseIn   { from { opacity:0; transform:translateY(24px) scale(0.98) } to { opacity:1; transform:translateY(0) scale(1) } }
   @keyframes apTileIn   { from { opacity:0; transform:translateX(-100%) } to { opacity:1; transform:translateX(0) } }
-
   .ap-overlay {
     position: fixed; inset: 0; z-index: 9998;
     background: rgba(10,10,10,0.55);
@@ -41,7 +35,6 @@ const css = `
     padding: 20px;
     animation: apFadeIn 0.25s ease both;
   }
-
   .ap-modal {
     width: 100%; max-width: 880px;
     background: #FAFAFA;
@@ -52,13 +45,12 @@ const css = `
     max-height: 92vh; overflow: hidden;
   }
   @media(max-width:760px) { .ap-modal { grid-template-columns: 1fr; max-height: 94vh; overflow-y: auto } }
-
   .ap-modal-img {
     position: relative; background: #0A0A0A; overflow: hidden; min-height: 420px;
   }
-  .ap-modal-img img {
+  .ap-modal-img img, .ap-modal-img video {
     width: 100%; height: 100%; object-fit: cover;
-    filter: grayscale(100%) contrast(1.1); opacity: 0.85;
+    opacity: 0.95;
   }
   @media(max-width:760px) {
     .ap-overlay { align-items: center; padding: 24px; }
@@ -81,7 +73,7 @@ const css = `
       padding: 24px 20px 32px;
       border-radius: 16px;
     }
-    .ap-modal-img img {
+    .ap-modal-img img, .ap-modal-img video {
       position: absolute; inset: 0;
       width: 100%; height: 100%;
       object-fit: cover; object-position: top;
@@ -150,9 +142,7 @@ const css = `
       width: 100%;
     }
   }
-
   .ap-modal-body { padding: clamp(28px,4vw,52px); display: flex; flex-direction: column; overflow-y: auto; }
-
   .ap-close {
     position: absolute; top: 18px; right: 18px;
     width: 32px; height: 32px; border: 1px solid rgba(0,0,0,0.15);
@@ -161,26 +151,22 @@ const css = `
     transition: all 0.18s; z-index: 2;
   }
   .ap-close:hover { background: #0A0A0A; color: #fff; border-color: #0A0A0A; }
-
   .ap-eyebrow {
     font-family: 'DM Sans', system-ui, sans-serif; font-size: 10px; font-weight: 500;
     letter-spacing: 3.5px; text-transform: uppercase; color: #888; margin-bottom: 14px;
     display: flex; align-items: center; gap: 10px;
   }
   .ap-eyebrow::before { content: ''; width: 26px; height: 1px; background: #888; }
-
   .ap-title {
     font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 300;
     font-size: clamp(28px,4vw,40px); letter-spacing: -1px; color: #0A0A0A;
     line-height: 1.05; margin-bottom: 10px;
   }
   .ap-title em { font-style: italic; color: #888; }
-
   .ap-sub {
     font-family: 'DM Sans', system-ui, sans-serif; font-size: 13px; font-weight: 300;
     color: #888; line-height: 1.65; margin-bottom: 24px; max-width: 360px;
   }
-
   .ap-tabs { display: flex; border-bottom: 1px solid rgba(0,0,0,0.1); margin-bottom: 22px; }
   .ap-tab {
     font-family: 'DM Sans', system-ui, sans-serif; font-size: 11px; font-weight: 500;
@@ -196,7 +182,6 @@ const css = `
   .ap-tab.active { color: #0A0A0A; }
   .ap-tab.active::after { transform: scaleX(1); }
   .ap-tab:disabled { cursor: not-allowed; opacity: 0.5; }
-
   .ap-field { margin-bottom: 14px; }
   .ap-label {
     display: block; font-family: 'DM Sans', system-ui, sans-serif; font-size: 10px;
@@ -217,13 +202,11 @@ const css = `
     padding: 0; transition: color 0.18s;
   }
   .ap-eye:hover { color: #0A0A0A; }
-
   .ap-forgot {
     font-family: 'DM Sans', system-ui, sans-serif; font-size: 11px; color: #888;
     cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
   }
   .ap-forgot:hover { color: #0A0A0A; }
-
   .ap-error {
     font-family: 'DM Sans', system-ui, sans-serif; font-size: 12px; color: #0A0A0A;
     background: rgba(0,0,0,0.05); border-left: 2px solid #0A0A0A;
@@ -234,7 +217,6 @@ const css = `
     background: rgba(22,163,74,0.07); border-left: 2px solid #166534;
     padding: 10px 12px; margin-bottom: 16px; line-height: 1.5;
   }
-
   .ap-submit {
     font-family: 'DM Sans', system-ui, sans-serif; font-size: 11px; font-weight: 500;
     letter-spacing: 3px; text-transform: uppercase; background: #0A0A0A; color: #fff;
@@ -243,7 +225,6 @@ const css = `
   }
   .ap-submit:hover:not(:disabled) { background: #222; }
   .ap-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-
   .ap-outline-btn {
     font-family: 'DM Sans', system-ui, sans-serif; font-size: 11px; font-weight: 500;
     letter-spacing: 2px; text-transform: uppercase; background: transparent; color: #555;
@@ -252,7 +233,6 @@ const css = `
   }
   .ap-outline-btn:hover:not(:disabled) { border-color: #0A0A0A; color: #0A0A0A; }
   .ap-outline-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
   .ap-later {
     margin-top: 16px; text-align: center;
     font-family: 'DM Sans', system-ui, sans-serif; font-size: 11px; font-weight: 500;
@@ -261,20 +241,17 @@ const css = `
     text-underline-offset: 3px; transition: color 0.18s;
   }
   .ap-later:hover { color: #0A0A0A; }
-
   .ap-divider { display: flex; align-items: center; gap: 10px; margin: 18px 0; }
   .ap-divider-line { flex: 1; height: 1px; background: rgba(0,0,0,0.1); }
   .ap-divider-text {
     font-family: 'DM Sans', system-ui, sans-serif; font-size: 10px; color: #aaa;
     letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap;
   }
-
   .ap-switch {
     font-family: 'DM Sans', system-ui, sans-serif; font-size: 12px; color: #888;
     text-align: center; margin-top: 18px;
   }
   .ap-switch span { color: #0A0A0A; font-weight: 500; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
-
   /* ── Floating minimized tile ── */
   .ap-tile {
     position: fixed; left: 0; top: 50%; transform: translateY(-50%);
@@ -295,16 +272,12 @@ const css = `
   .ap-tile-icon { font-size: 16px; line-height: 1; }
   @media(max-width:480px) { .ap-tile { padding: 14px 10px } .ap-tile-text { font-size: 9px } }
 `;
-
 type Mode = 'signin' | 'signup';
-
 interface AuthPopupProps {
   onAuthSuccess?: (user: any) => void;
 }
-
 export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
   const navigate = useNavigate();
-
   const handleGoogleResponse = async (response: { credential: string }) => {
     setGoogleLoading(true); setError('');
     try {
@@ -316,11 +289,9 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
       setError(err.response?.data?.msg || 'Google sign-in failed.');
     } finally { setGoogleLoading(false); }
   };
-
   const [visible, setVisible]     = useState(false);
   const [minimized, setMin]       = useState(false);
   const [mode, setMode]           = useState<Mode>('signin');
-
   // shared
   const [email, setEmail]               = useState('');
   const [password, setPassword]         = useState('');
@@ -328,25 +299,23 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
   const [loading, setLoading]           = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError]               = useState('');
-
   // signup-only
   const [fullName, setFullName]   = useState('');
   const [confirmPw, setConfirmPw] = useState('');
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [resendLoading, setResendLoading]     = useState(false);
   const [resendMsg, setResendMsg]             = useState('');
-
   // login-only
   const [unverified, setUnverified] = useState(false);
   const [locked, setLocked]         = useState(false);
   const [lockedUntil, setLockedUntil] = useState<Date | null>(null);
-
+  const googleBtnRef = useRef<HTMLDivElement>(null);
+  const googleBtnMobileRef = useRef<HTMLDivElement>(null);
   // Show on every visit while logged out.
   useEffect(() => {
     const raw = localStorage.getItem('user');
     if (!raw) setVisible(true);
   }, []);
-
   // Load reCAPTCHA v3 script once.
   useEffect(() => {
     if (document.querySelector('script[data-ap-recaptcha]')) return;
@@ -356,7 +325,6 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
     script.setAttribute('data-ap-recaptcha', 'true');
     document.body.appendChild(script);
   }, []);
-
   useEffect(() => {
     if (!visible) return;
     const init = () => {
@@ -365,15 +333,20 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         callback: handleGoogleResponse,
       });
-      const el = document.getElementById('ap-google-btn');
-      if (el) window.google.accounts.id.renderButton(el, { theme: 'outline', size: 'large', width: '100%', text: 'signin_with', shape: 'rectangular' });
-      const elMobile = document.getElementById('ap-google-btn-mobile');
-      if (elMobile) window.google.accounts.id.renderButton(elMobile, { theme: 'outline', size: 'large', width: '100%', text: 'signin_with', shape: 'rectangular' });
+      // GSI rejects percentage widths ("Provided button width is invalid: 100%").
+      // Measure each container's real pixel width and pass that number instead.
+      if (googleBtnRef.current) {
+        const pxWidth = googleBtnRef.current.offsetWidth || 320;
+        window.google.accounts.id.renderButton(googleBtnRef.current, { theme: 'outline', size: 'large', width: pxWidth, text: 'signin_with', shape: 'rectangular' });
+      }
+      if (googleBtnMobileRef.current) {
+        const pxWidthMobile = googleBtnMobileRef.current.offsetWidth || 320;
+        window.google.accounts.id.renderButton(googleBtnMobileRef.current, { theme: 'outline', size: 'large', width: pxWidthMobile, text: 'signin_with', shape: 'rectangular' });
+      }
     };
     const t = setTimeout(init, 200);
     return () => clearTimeout(t);
   }, [visible]);
-
   useEffect(() => {
     if (document.querySelector('script[data-ap-google]')) return;
     const script = document.createElement('script');
@@ -382,18 +355,14 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
     script.setAttribute('data-ap-google', 'true');
     document.body.appendChild(script);
   }, []);
-
   const close = () => { setVisible(false); setMin(true); };
   const reopen = () => { setMin(false); setVisible(true); };
-
   const resetMessages = () => { setError(''); setUnverified(false); setLocked(false); };
-
   const switchMode = (m: Mode) => {
     setMode(m);
     resetMessages();
     setPassword(''); setConfirmPw(''); setFullName(''); setRegisteredEmail(''); setResendMsg('');
   };
-
   const handleLogin = useCallback(async () => {
     if (!email || !password) { setError('Please enter your email and password.'); return; }
     setLoading(true); resetMessages();
@@ -412,7 +381,6 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
       }
     } finally { setLoading(false); }
   }, [email, password, navigate]);
-
   const handleRegister = useCallback(async () => {
     if (!fullName || !email || !password || !confirmPw) { setError('Please fill in all fields.'); return; }
     if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
@@ -426,7 +394,6 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
       setError(err.response?.data?.msg || err.response?.data?.errors?.[0]?.msg || 'Registration failed.');
     } finally { setLoading(false); }
   }, [fullName, email, password, confirmPw]);
-
   const handleResend = async () => {
     setResendLoading(true); setResendMsg('');
     try {
@@ -435,37 +402,34 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
     } catch { setResendMsg('Failed to resend. Please try again.'); }
     finally { setResendLoading(false); }
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     mode === 'signin' ? handleLogin() : handleRegister();
   };
-
   if (!visible && !minimized) return null;
-
   return (
     <>
       <style>{css}</style>
-
       {minimized && !visible && (
         <div className="ap-tile" onClick={reopen} role="button" aria-label="Sign in or sign up">
           <span className="ap-tile-icon">＋</span>
           <span className="ap-tile-text">Sign In</span>
         </div>
       )}
-
       {visible && (
         <div className="ap-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) close(); }}>
           <div className="ap-modal">
             <button className="ap-close" onClick={close} aria-label="Minimize">✕</button>
-
             <div className="ap-modal-img">
-              <img
-                src="https://res.cloudinary.com/dfiy43f01/image/upload/v1782201742/Lara_Bubmann_outfit__knns7x.jpg"
-                alt="Luku Prime"
+              <video
+                src="/authpopup.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                aria-label="Luku Prime"
               />
               <div className="ap-modal-img-label">Luku ni Prime<br/>Siku Zote</div>
-
               {/* Mobile-only promo overlay */}
               <div className="ap-mobile-promo">
                 <div className="ap-mobile-promo-badge">Limited Offer</div>
@@ -473,25 +437,21 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
                   Get <strong>10% Off</strong>
                 </div>
                 <div className="ap-mobile-promo-sub">On your first order · No code needed</div>
-
                 <button
                   className="ap-mobile-signin-btn"
                   onClick={() => { close(); navigate('/login'); }}
                 >
                   Sign In to Claim →
                 </button>
-
                 <div className="ap-mobile-google-wrap">
                   {googleLoading
                     ? <div style={{ background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.2)', padding:'12px', color:'rgba(255,255,255,0.5)', fontFamily:"'DM Sans',sans-serif", fontSize:12, textAlign:'center' as const }}>Signing in…</div>
-                    : <div id="ap-google-btn-mobile" style={{ width:'100%', minHeight:44 }} />
+                    : <div ref={googleBtnMobileRef} id="ap-google-btn-mobile" style={{ width:'100%', minHeight:44 }} />
                   }
                 </div>
               </div>
             </div>
-
             <div className="ap-modal-body">
-
               {/* ── Registered: check inbox state ── */}
               {registeredEmail ? (
                 <>
@@ -520,31 +480,26 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
                       ? 'Access your orders, wishlist, and saved details.'
                       : 'Join Luku Prime for faster checkout and exclusive drops.'}
                   </p>
-
                   <div className="ap-tabs">
                     <button className={`ap-tab ${mode === 'signin' ? 'active' : ''}`} onClick={() => switchMode('signin')} disabled={loading}>Sign In</button>
                     <button className={`ap-tab ${mode === 'signup' ? 'active' : ''}`} onClick={() => switchMode('signup')} disabled={loading}>Sign Up</button>
                   </div>
-
                   <div style={{ marginBottom: 16, minHeight: 44 }}>
                     {googleLoading
                       ? <div style={{ background:'rgba(0,0,0,0.03)', border:'1px solid rgba(0,0,0,0.08)', padding:'12px', color:'rgba(0,0,0,0.3)', fontFamily:"'DM Sans',sans-serif", fontSize:13, textAlign:'center' as const }}>Signing in with Google…</div>
-                      : <div id="ap-google-btn" style={{ width:'100%', minHeight:44 }} />
+                      : <div ref={googleBtnRef} id="ap-google-btn" style={{ width:'100%', minHeight:44 }} />
                     }
                   </div>
-
                   <div className="ap-divider" style={{ marginBottom: 16 }}>
                     <div className="ap-divider-line"/>
                     <span className="ap-divider-text">or with email</span>
                     <div className="ap-divider-line"/>
                   </div>
-
                   {locked && lockedUntil && (
                     <div className="ap-error">
                       Account locked until {lockedUntil.toLocaleTimeString('en-KE')}. Too many failed attempts.
                     </div>
                   )}
-
                   {error && !locked && (
                     <div className="ap-error">
                       {error}
@@ -558,7 +513,6 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
                       )}
                     </div>
                   )}
-
                   <form onSubmit={handleSubmit}>
                     {mode === 'signup' && (
                       <div className="ap-field">
@@ -589,7 +543,7 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
                           style={{ paddingRight: 40 }}
                         />
                         <button type="button" className="ap-eye" onClick={() => setShowPassword(x => !x)}>
-                          {showPassword ? '🙈' : '👁️'}
+                          {showPassword ? '\u{1F648}' : '\u{1F441}\uFE0F'}
                         </button>
                       </div>
                     </div>
@@ -599,7 +553,6 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
                         <input className="ap-input" type={showPassword ? 'text' : 'password'} value={confirmPw} onChange={e => setConfirmPw(e.target.value)} placeholder="Repeat your password" maxLength={128} autoComplete="new-password" />
                       </div>
                     )}
-
                     <button className="ap-submit" type="submit" disabled={loading || locked}>
                       {loading
                         ? (mode === 'signin' ? 'Signing in…' : 'Creating account…')
@@ -608,7 +561,6 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
                           : (mode === 'signin' ? 'Sign In →' : 'Create Account →')}
                     </button>
                   </form>
-
                   <button className="ap-later" onClick={close}>Maybe later</button>
                 </>
               )}
