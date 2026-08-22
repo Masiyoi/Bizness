@@ -130,14 +130,14 @@ const css = `
       letter-spacing: 1px; margin-bottom: 24px;
     }
     .ap-mobile-signin-btn {
-      width: 100%; background: #fff; color: #0a0a0a;
-      border: none; padding: 14px;
+      width: 100%; background: rgba(255,255,255,0.08); color: #fff;
+      border: 1px solid rgba(255,255,255,0.7); padding: 14px;
       font-family: 'DM Sans', system-ui, sans-serif;
       font-size: 11px; font-weight: 700; letter-spacing: 3px;
       text-transform: uppercase; cursor: pointer;
-      transition: background 0.18s; margin-bottom: 10px;
+      transition: background 0.18s, border-color 0.18s; margin-bottom: 10px;
     }
-    .ap-mobile-signin-btn:hover { background: #f0f0f0; }
+    .ap-mobile-signin-btn:hover { background: rgba(255,255,255,0.18); border-color: #fff; }
     .ap-mobile-google-wrap {
       width: 100%;
     }
