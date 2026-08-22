@@ -4,10 +4,6 @@ import axios from "axios";
 declare global {
   interface Window { grecaptcha: any; }
 }
-const T = {
-  navy: "#000000", navyMid: "#111111", navyLight: "#1a1a1a",
-  gold: "#ffffff", goldLight: "#e0e0e0",
-};
 const getRecaptchaToken = (action: string): Promise<string> =>
   new Promise((resolve) => {
     window.grecaptcha.ready(async () => {
@@ -24,7 +20,7 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [sent,    setSent]    = useState(false);
   const [error,   setError]   = useState("");
-  // Load the reCAPTCHA script on mount � this page can be landed on directly
+  // Load the reCAPTCHA script on mount — this page can be landed on directly
   // (not just navigated to from Login), so we can't assume window.grecaptcha
   // already exists. Without this, .ready() never fires and the submit button
   // hangs forever with no visible error.
@@ -63,7 +59,7 @@ export default function ForgotPassword() {
         <div style={s.ornRow}>
           <div style={s.ornLine} /><div style={s.ornDiamond} /><div style={s.ornLine} />
         </div>
-        <div style={{ fontSize: 52, marginBottom: 18 }}>??</div>
+        <div style={{ fontSize: 52, marginBottom: 18 }}>📨</div>
         <div style={s.tag}>Reset Requested</div>
         <h1 style={{ ...s.heading, textAlign: "center", fontSize: "clamp(18px,4vw,22px)", marginBottom: 10 }}>
           Check your inbox
@@ -119,17 +115,8 @@ export default function ForgotPassword() {
             onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
             onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}
           >
-            ? Back to Sign In
+            ← Back to Sign In
           </button>
-          {/* Icon */}
-          <div style={{
-            width: 64, height: 64, borderRadius: 16, marginBottom: 24,
-            background: "linear-gradient(135deg,rgba(255,255,255,0.15),rgba(255,255,255,0.05))",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 8px 28px rgba(255,255,255,0.25)", fontSize: 26,
-          }}>
-            ??
-          </div>
           <div style={{ marginBottom: 28 }}>
             <div style={s.tag}>Account Recovery</div>
             <h1 style={s.heading}>Forgot Password?</h1>
@@ -155,7 +142,7 @@ export default function ForgotPassword() {
               />
             </div>
             <button type="submit" disabled={loading} className="lp-submit">
-              {loading ? "Sending Reset Link�" : "Send Reset Link ?"}
+              {loading ? "Sending Reset Link…" : "Send Reset Link →"}
             </button>
           </form>
           <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent)", margin: "24px 0" }} />
@@ -196,7 +183,7 @@ const css = `
 const s: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-    fontFamily: "'DM Sans',sans-serif", background: "#000000", overflow: "hidden",
+    fontFamily: "'DM Sans',sans-serif", background: "#ffffff", overflow: "hidden",
     padding: "clamp(20px,4vw,40px) clamp(16px,4vw,24px)", position: "relative",
   },
   orb1: { position: "fixed", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle,rgba(255,255,255,0.05) 0%,transparent 70%)", top: -120, left: -120, pointerEvents: "none" },
