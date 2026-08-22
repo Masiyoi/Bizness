@@ -237,8 +237,8 @@ export default function App() {
         {/* ── Auth (guests only) ──────────────────────────────────────────────── */}
         <Route path="/register"              element={<GuestRoute><Register /></GuestRoute>} />
         <Route path="/login"                 element={<GuestRoute><Login /></GuestRoute>} />
-        <Route path="/forgot-password"       element={<GuestRoute><ForgotPassword /></GuestRoute>} />
-        <Route path="/reset-password/:token" element={<GuestRoute><ResetPassword /></GuestRoute>} />
+        <Route path="/forgot-password"       element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* ── Buyer only ──────────────────────────────────────────────────────── */}
         <Route path="/cart"     element={<BuyerRoute><Cart /></BuyerRoute>} />
