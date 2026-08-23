@@ -690,7 +690,7 @@ export default function Homepage() {
         <VideoCarousel tiles={bottomVideo} />
       </div>
 
-      <Gallery/>
+      <div style={{ marginTop: 32 }}><Gallery/></div>
 
       <InstagramStrip handle="@lukuprime" profileUrl="https://instagram.com/lukuprime" limit={12} />
       <ReviewSection reviews={reviews} loading={reviewsLoading} isAdmin={user?.role === 'admin'} />

@@ -1,10 +1,11 @@
-﻿// src/components/common/Navbar.tsx
+// src/components/common/Navbar.tsx
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation }  from 'react-router-dom';
 import axios            from 'axios';
 import { getInitials, readUser } from '../../constants/theme';
 import type { User } from '../../constants/theme';
 import { performLogout } from '../../pages/profile/ProfileLayout';
+import Gallery from './Gallery';
 
 interface NavbarProps {
   cartCount?: number;
@@ -711,32 +712,8 @@ export default function Navbar({
             ))}
           </div>
 
-          {/* ── Visual category scroller — circular tiles, auto-scrolls ── */}
-          {(() => {
-            const CAT_IMAGES: Record<string, { img: string; label: string }> = {
-              'Tops':                 { img: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=300&q=80', label: 'Tops' },
-              'Bottoms':              { img: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=300&q=80', label: 'Bottoms' },
-              'Outwear':              { img: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&q=80', label: 'Outwear' },
-              'Heels':                { img: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=300&q=80', label: 'Heels' },
-              'Accessories':          { img: 'https://images.unsplash.com/photo-1611085583191-a3b181a88401?w=300&q=80', label: 'Accessories' },
-              'Bags':                 { img: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=300&q=80', label: 'Bags' },
-              'Footwear':             { img: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=300&q=80', label: 'Footwear' },
-              'Sets':                 { img: 'https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?w=300&q=80', label: 'Sets' },
-              'Headgear':             { img: 'https://images.unsplash.com/photo-1521369909029-2afed882baee?w=300&q=80', label: 'Headgear' },
-              'Hoodies and jackets':  { img: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=300&q=80', label: 'Hoodies' },
-              'New Arrivals':         { img: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=300&q=80', label: 'New In' },
-              'Best Sellers':         { img: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=300&q=80', label: 'Best Sellers' },
-            };
-            const tiles = [
-              { slug: 'All', img: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=300&q=80', label: 'All' },
-              ...navCategories.map(cat => ({
-                slug: cat,
-                img: CAT_IMAGES[cat]?.img ?? 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=300&q=80',
-                label: CAT_IMAGES[cat]?.label ?? cat,
-              })),
-            ];
-            return <CircularCategoryScroller tiles={tiles} activeCategory={activeCategory} goCategory={goCategory} />;
-          })()}
+          {/* ── Gallery — styled looks ── */}
+          <Gallery/>
 
           {/* Sign in / join for guests */}
           {!user && (
