@@ -561,6 +561,45 @@ function VariantStockBadge({ variant, hasVariants, selectionComplete, productSto
 // ── Product Carousel Section ──────────────────────────────────────────────────
 function ProductCarouselSection({ title, products, currentId }: { title: string; products: Product[]; currentId: number }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const navigate  = useNavigate();
+  const [cartIds, setCartIds]         = useState<number[]>([]);
+  const [wishlistIds, setWishlistIds] = useState<number[]>([]);
+  useEffect(() => {
+    axios.get('/api/cart')
+      .then(res => setCartIds(res.data.map((i: any) => i.product_id)))
+      .catch(() => {});
+    axios.get('/api/wishlist')
+      .then(res => setWishlistIds(res.data.map((i: any) => i.product_id)))
+      .catch(() => {});
+  }, []);
+  const toggleCart = async (productId: number) => {
+    try {
+      if (cartIds.includes(productId)) {
+        await axios.delete(`/api/cart/${productId}`);
+        setCartIds(prev => prev.filter(id => id !== productId));
+      } else {
+        await axios.post('/api/cart', { product_id: productId, quantity: 1 });
+        setCartIds(prev => [...prev, productId]);
+      }
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    } catch (e: any) {
+      if (e.response?.status === 401) navigate('/login');
+    }
+  };
+  const toggleWishlist = async (productId: number) => {
+    try {
+      if (wishlistIds.includes(productId)) {
+        await axios.delete(`/api/wishlist/${productId}`);
+        setWishlistIds(prev => prev.filter(id => id !== productId));
+      } else {
+        await axios.post('/api/wishlist', { product_id: productId });
+        setWishlistIds(prev => [...prev, productId]);
+      }
+    } catch (e: any) {
+      if (e.response?.status === 401) navigate('/login');
+    }
+  };
+
 
   if (products.length === 0) return null;
 
@@ -618,11 +657,11 @@ function ProductCarouselSection({ title, products, currentId }: { title: string;
               >
                 <ProductCard
                   product={p}
-                  inCart={false}
-                  inWishlist={false}
+                  inCart={cartIds.includes(p.id)}
+                  inWishlist={wishlistIds.includes(p.id)}
                   isAdmin={false}
-                  onCartToggle={() => {}}
-                  onWishlistToggle={() => {}}
+                  onCartToggle={toggleCart}
+                  onWishlistToggle={toggleWishlist}
                 />
               </div>
             ))}
@@ -909,6 +948,44 @@ function CompleteTheLookGrid({ ids, currentId }: { ids: number[]; currentId: num
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading,  setLoading]  = useState(true);
+  const [cartIds, setCartIds]         = useState<number[]>([]);
+  const [wishlistIds, setWishlistIds] = useState<number[]>([]);
+  useEffect(() => {
+    axios.get('/api/cart')
+      .then(res => setCartIds(res.data.map((i: any) => i.product_id)))
+      .catch(() => {});
+    axios.get('/api/wishlist')
+      .then(res => setWishlistIds(res.data.map((i: any) => i.product_id)))
+      .catch(() => {});
+  }, []);
+  const toggleCart = async (productId: number) => {
+    try {
+      if (cartIds.includes(productId)) {
+        await axios.delete(`/api/cart/${productId}`);
+        setCartIds(prev => prev.filter(id => id !== productId));
+      } else {
+        await axios.post('/api/cart', { product_id: productId, quantity: 1 });
+        setCartIds(prev => [...prev, productId]);
+      }
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    } catch (e: any) {
+      if (e.response?.status === 401) navigate('/login');
+    }
+  };
+  const toggleWishlist = async (productId: number) => {
+    try {
+      if (wishlistIds.includes(productId)) {
+        await axios.delete(`/api/wishlist/${productId}`);
+        setWishlistIds(prev => prev.filter(id => id !== productId));
+      } else {
+        await axios.post('/api/wishlist', { product_id: productId });
+        setWishlistIds(prev => [...prev, productId]);
+      }
+    } catch (e: any) {
+      if (e.response?.status === 401) navigate('/login');
+    }
+  };
+
 
   useEffect(() => {
     if (!ids || ids.length === 0) { setLoading(false); return; }
@@ -945,11 +1022,11 @@ function CompleteTheLookGrid({ ids, currentId }: { ids: number[]; currentId: num
         <div key={p.id} style={{ position:'relative', overflow:'hidden' }}>
           <ProductCard
             product={p}
-            inCart={false}
-            inWishlist={false}
+            inCart={cartIds.includes(p.id)}
+            inWishlist={wishlistIds.includes(p.id)}
             isAdmin={false}
-            onCartToggle={() => { navigate(`/product/${p.id}`); window.scrollTo({ top:0, behavior:'smooth' }); }}
-            onWishlistToggle={() => {}}
+            onCartToggle={toggleCart}
+            onWishlistToggle={toggleWishlist}
           />
         </div>
       ))}
