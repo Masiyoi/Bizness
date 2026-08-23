@@ -25,8 +25,10 @@ const C = {
   muted:    '#8C8C8C',
   backdrop:  'rgba(8,8,8,0.62)',
   accent:    '#C2410C', // sale / urgency only — matches ProductCard
-  wishlist:     '#5DADE2', // Add to Wishlist — light blue
-  wishlistDark: '#3B97D3',
+  cart:      '#DC2626', // Add to Cart
+  cartDark:  '#B91C1C',
+  wishlist:  '#16A34A', // Add to Wishlist
+  wishlistDark: '#15803D',
 };
 const BODY = "'DM Sans', sans-serif";
 const MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
@@ -442,12 +444,12 @@ function CTAs({ isAdmin, stock, inCart, inWishlist, productId, onCartToggle, onW
         onClick={() => { if (stock > 0) onCartToggle(productId); }}
         style={{
           width: '100%', padding: '13px 0',
-          border: stock === 0 ? 'none' : inCart ? 'none' : `1px solid ${C.ink}`,
+          border: inCart ? `1px solid ${C.cart}` : 'none',
           borderRadius: 10, cursor: stock === 0 ? 'not-allowed' : 'pointer',
           fontFamily: MONO, fontSize: 10, fontWeight: 600,
           letterSpacing: '1.5px', textTransform: 'uppercase',
-          background: stock === 0 ? '#EDEDED' : inCart ? C.ink : C.paper,
-          color:      stock === 0 ? '#AAAAAA' : inCart ? C.paper : C.ink,
+          background: stock === 0 ? '#EDEDED' : inCart ? C.paper : C.cart,
+          color:      stock === 0 ? '#AAAAAA' : inCart ? C.cart : C.paper,
         }}
       >
         {stock === 0 ? 'Sold Out' : inCart ? '✕ Remove from Cart' : 'Add to Cart'}
@@ -458,24 +460,15 @@ function CTAs({ isAdmin, stock, inCart, inWishlist, productId, onCartToggle, onW
         onClick={() => onWishlistToggle(productId)}
         style={{
           width: '100%', padding: '11px 0',
-          background: inWishlist ? C.wishlist : C.paper,
+          background: inWishlist ? C.wishlist : 'transparent',
           border: `1px solid ${C.wishlist}`,
           borderRadius: 10, cursor: 'pointer',
           fontFamily: MONO, fontSize: 10, fontWeight: 600,
           letterSpacing: '1.5px', textTransform: 'uppercase',
           color: inWishlist ? C.paper : C.wishlist,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         }}
       >
-        <img
-          src="/favourite.png"
-          alt=""
-          style={{
-            width: 14, height: 14, objectFit: 'contain',
-            filter: inWishlist ? 'brightness(0) invert(1)' : 'none',
-          }}
-        />
-        {inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+        {inWishlist ? '♥ Remove from Wishlist' : '♡ Add to Wishlist'}
       </button>
 
       <Link
