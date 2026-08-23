@@ -424,14 +424,9 @@ export default function ProductCard({
               </div>
             )}
 
-            {(isBestseller || (product as any).video_url) && (
+            {isBestseller && (
               <div style={S.badgeStack('right')}>
-                {isBestseller && <div style={{ ...S.badge, background: '#2563EB' }}>Bestseller</div>}
-                {(product as any).video_url && (
-                  <div style={{ ...S.badge, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span style={{ fontSize: 8 }}>▶</span> Video
-                  </div>
-                )}
+                <div style={{ ...S.badge, background: '#2563EB' }}>Bestseller</div>
               </div>
             )}
 
