@@ -1051,16 +1051,15 @@ function normalizeProduct(raw: any): Product {
 }
 
 // ── Size Guide Modal ──────────────────────────────────────────────────────
+// ── Size Guide Modal ──────────────────────────────────────────────────────
 function SizeGuideModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [activeTab, setActiveTab] = useState<'tops' | 'shoes'>('tops');
-
-  const WOMEN_TOPS = [
-    { size:'XS', bust:'76–80',   waist:'60–64', hips:'84–88'  },
-    { size:'S',  bust:'81–85',   waist:'65–69', hips:'89–93'  },
-    { size:'M',  bust:'86–90',   waist:'70–74', hips:'94–98'  },
-    { size:'L',  bust:'91–97',   waist:'75–80', hips:'99–105' },
-    { size:'XL', bust:'98–104',  waist:'81–87', hips:'106–112'},
-    { size:'XXL',bust:'105–112', waist:'88–95', hips:'113–120'},
+  const TOPS_CHEST = [
+    { size:'XS', cm:'88.5',  inches:'34.8' },
+    { size:'S',  cm:'92.5',  inches:'36.4' },
+    { size:'M',  cm:'96.5',  inches:'38'   },
+    { size:'L',  cm:'101.5', inches:'40'   },
+    { size:'XL', cm:'106.5', inches:'41.9' },
+    { size:'XXL',cm:'111.5', inches:'43.9' },
   ];
 
   const SHOE_SIZES = [
@@ -1072,6 +1071,29 @@ function SizeGuideModal({ open, onClose }: { open: boolean; onClose: () => void 
     { eu:'41',uk:'8',us:'10.5',cm:'26.5'},
     { eu:'42',uk:'9',us:'11.5',cm:'27' },
   ];
+
+  const WOMEN_TOPS = [
+    { size:'XS', bust:'76–80',   waist:'60–64', hips:'84–88'  },
+    { size:'S',  bust:'81–85',   waist:'65–69', hips:'89–93'  },
+    { size:'M',  bust:'86–90',   waist:'70–74', hips:'94–98'  },
+    { size:'L',  bust:'91–97',   waist:'75–80', hips:'99–105' },
+    { size:'XL', bust:'98–104',  waist:'81–87', hips:'106–112'},
+    { size:'XXL',bust:'105–112', waist:'88–95', hips:'113–120'},
+  ];
+
+  const sectionTitle: React.CSSProperties = {
+    fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:800,
+    letterSpacing:'2.5px', color:'#000', textTransform:'uppercase',
+    marginBottom:16,
+  };
+
+  const th: React.CSSProperties = {
+    padding:'12px 10px', textAlign:'left', color:'#fff',
+    fontWeight:700, fontSize:10, letterSpacing:'1px',
+  };
+
+  const td: React.CSSProperties = { padding:'10px', color:'#000' };
+  const tdBold: React.CSSProperties = { ...td, fontWeight:700 };
 
   return (
     <>
@@ -1105,104 +1127,87 @@ function SizeGuideModal({ open, onClose }: { open: boolean; onClose: () => void 
           </button>
         </div>
 
-        <div style={{
-          borderBottom:'1px solid #E8E8E8', padding:'12px 16px',
-          display:'flex', gap:8, background:'#f9f9f9', position:'sticky',
-          top:60, zIndex:1,
-        }}>
-          {(['tops', 'shoes'] as const).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} style={{
-              background: activeTab === tab ? '#000' : 'transparent',
-              color: activeTab === tab ? '#fff' : '#888',
-              border:'1px solid ' + (activeTab === tab ? '#000' : '#ddd'),
-              borderRadius:0, padding:'8px 16px',
-              fontFamily:"'Jost',sans-serif", fontWeight:700, fontSize:11,
-              letterSpacing:'1px', textTransform:'uppercase', cursor:'pointer',
-              transition:'all 0.15s',
-            }}>
-              {tab === 'tops' ? 'Tops' : 'Shoes'}
-            </button>
-          ))}
-        </div>
+        <div style={{ padding:'24px', display:'flex', flexDirection:'column', gap:36 }}>
 
-        <div style={{ padding:'24px' }}>
-          {activeTab === 'tops' && (
-            <div>
-              <div style={{
-                fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:800,
-                letterSpacing:'2.5px', color:'#000', textTransform:'uppercase',
-                marginBottom:16,
-              }}>
-                Women's Clothing (cm)
-              </div>
-              <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
-                <thead>
-                  <tr style={{ background:'#000' }}>
-                    {['Size','Bust','Waist','Hips'].map(h => (
-                      <th key={h} style={{
-                        padding:'12px 10px', textAlign:'left', color:'#fff',
-                        fontWeight:700, fontSize:10, letterSpacing:'1px',
-                      }}>
-                        {h}
-                      </th>
-                    ))}
+          {/* ── 1. Tops Size Guide ── */}
+          <div>
+            <div style={sectionTitle}>Tops Size Guide</div>
+            <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
+              <thead>
+                <tr style={{ background:'#000' }}>
+                  <th style={th}>Size</th>
+                  <th style={th}>Chest (cm)</th>
+                  <th style={th}>Chest (inches)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {TOPS_CHEST.map((row, i) => (
+                  <tr key={i} style={{ background:'#fff', borderBottom:'1px solid rgba(0,0,0,0.1)' }}>
+                    <td style={tdBold}>{row.size}</td>
+                    <td style={td}>{row.cm}</td>
+                    <td style={td}>{row.inches}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {WOMEN_TOPS.map((row, i) => (
-                    <tr key={i} style={{ background:'#fff', borderBottom:'1px solid rgba(0,0,0,0.1)' }}>
-                      <td style={{ padding:'10px', fontWeight:700, color:'#000' }}>{row.size}</td>
-                      <td style={{ padding:'10px', color:'#000' }}>{row.bust}</td>
-                      <td style={{ padding:'10px', color:'#000' }}>{row.waist}</td>
-                      <td style={{ padding:'10px', color:'#000' }}>{row.hips}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div style={{ fontSize:12, color:'#666', marginTop:16, lineHeight:1.6 }}>
-                All measurements are in centimetres. If between sizes, choose the larger one for a comfortable fit.
-              </div>
-            </div>
-          )}
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-          {activeTab === 'shoes' && (
-            <div>
-              <div style={{
-                fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:800,
-                letterSpacing:'2.5px', color:'#000', textTransform:'uppercase',
-                marginBottom:16,
-              }}>
-                Shoe Sizes
-              </div>
-              <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
-                <thead>
-                  <tr style={{ background:'#000' }}>
-                    {['EU','UK','US','Length (cm)'].map(h => (
-                      <th key={h} style={{
-                        padding:'12px 10px', textAlign:'left', color:'#fff',
-                        fontWeight:700, fontSize:10, letterSpacing:'1px',
-                      }}>
-                        {h}
-                      </th>
-                    ))}
+          {/* ── 2. Shoe Sizes ── */}
+          <div>
+            <div style={sectionTitle}>Shoe Sizes</div>
+            <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
+              <thead>
+                <tr style={{ background:'#000' }}>
+                  <th style={th}>EU</th>
+                  <th style={th}>UK</th>
+                  <th style={th}>US</th>
+                  <th style={th}>Length (cm)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {SHOE_SIZES.map((row, i) => (
+                  <tr key={i} style={{ background:'#fff', borderBottom:'1px solid rgba(0,0,0,0.1)' }}>
+                    <td style={tdBold}>{row.eu}</td>
+                    <td style={td}>{row.uk}</td>
+                    <td style={td}>{row.us}</td>
+                    <td style={td}>{row.cm}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {SHOE_SIZES.map((row, i) => (
-                    <tr key={i} style={{ background:'#fff', borderBottom:'1px solid rgba(0,0,0,0.1)' }}>
-                      <td style={{ padding:'10px', fontWeight:700, color:'#000' }}>{row.eu}</td>
-                      <td style={{ padding:'10px', color:'#000' }}>{row.uk}</td>
-                      <td style={{ padding:'10px', color:'#000' }}>{row.us}</td>
-                      <td style={{ padding:'10px', color:'#000' }}>{row.cm}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div style={{ fontSize:12, color:'#666', marginTop:16, lineHeight:1.6 }}>
-                Unsure about your shoe size? Measure your foot from heel to toe in centimetres and refer to the chart above.
-              </div>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ fontSize:12, color:'#666', marginTop:16, lineHeight:1.6 }}>
+              Unsure about your shoe size? Measure your foot from heel to toe in centimetres and refer to the chart above.
             </div>
-          )}
+          </div>
+
+          {/* ── 3. Women's Clothing ── */}
+          <div>
+            <div style={sectionTitle}>Women's Clothing (cm)</div>
+            <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
+              <thead>
+                <tr style={{ background:'#000' }}>
+                  <th style={th}>Size</th>
+                  <th style={th}>Bust</th>
+                  <th style={th}>Waist</th>
+                  <th style={th}>Hips</th>
+                </tr>
+              </thead>
+              <tbody>
+                {WOMEN_TOPS.map((row, i) => (
+                  <tr key={i} style={{ background:'#fff', borderBottom:'1px solid rgba(0,0,0,0.1)' }}>
+                    <td style={tdBold}>{row.size}</td>
+                    <td style={td}>{row.bust}</td>
+                    <td style={td}>{row.waist}</td>
+                    <td style={td}>{row.hips}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ fontSize:12, color:'#666', marginTop:16, lineHeight:1.6 }}>
+              All measurements are in centimetres. If between sizes, choose the larger one for a comfortable fit.
+            </div>
+          </div>
+
         </div>
       </div>
     </>
@@ -1940,6 +1945,10 @@ export default function ProductDetail() {
             {/* ── ACCORDION DROPDOWNS ── */}
             {[
               {
+                key: 'size-guide',
+                label: 'Size Guide',
+              },
+              {
                 key: 'description',
                 label: 'Description',
                 content: product.description || 'Premium quality product. Carefully sourced and curated by Luku Prime.',
@@ -1949,27 +1958,26 @@ export default function ProductDetail() {
                 label: 'Product Care Guide',
                 content: 'Dry clean or gentle hand wash recommended. Avoid harsh chemicals. Store in cool, dry place away from direct sunlight.',
               },
-            ].map(({ key, label, content: body }) => (
-              <AccordionRow key={key} label={label} body={body} />
-            ))}
-            {/* ── SIZE GUIDE — opens the side panel instantly, no expand/collapse ── */}
-            <button
-              onClick={() => setSizeGuideOpen(true)}
-              style={{
-                width:'100%', background:'transparent', border:'none',
-                padding:'16px 0', display:'flex', alignItems:'center',
-                justifyContent:'space-between', cursor:'pointer',
-                borderTop:'1px solid #E8E8E8', textAlign:'left',
-              }}
-            >
-              <span style={{
-                fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:700,
-                letterSpacing:'2.5px', textTransform:'uppercase', color:'#111',
-              }}>
-                Size Guide
-              </span>
-              <span style={{ fontSize:16, color:'#888', lineHeight:1 }}>→</span>
-            </button>
+                       ].map(({ key, label, content: body }) => {
+              if (key === 'size-guide') {
+                return (
+                  <AccordionRow key={key} label={label}>
+                    <div style={{ fontSize: 13, color: '#555', lineHeight: 1.8, fontFamily: "'Jost',sans-serif" }}>
+                      <p>Check our detailed size guides to find your perfect fit. View measurements for tops, shoes, and more.</p>
+                      <button onClick={() => setSizeGuideOpen(true)} style={{
+                        background: '#000', color: '#fff', border: 'none', borderRadius: 0,
+                        padding: '10px 20px', fontFamily: "'Jost',sans-serif", fontSize: 11,
+                        fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase',
+                        cursor: 'pointer', marginTop: 12, transition: 'all 0.2s',
+                      }}>
+                        View Size Chart →
+                      </button>
+                    </div>
+                  </AccordionRow>
+                );
+              }
+              return <AccordionRow key={key} label={label} body={body} />;
+            })}
 
             {product.complete_the_look && product.complete_the_look.length > 0 && (
               <AccordionRow label="Complete the Look">
