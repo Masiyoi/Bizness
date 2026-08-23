@@ -1050,6 +1050,164 @@ function normalizeProduct(raw: any): Product {
   return p;
 }
 
+// ── Size Guide Modal ──────────────────────────────────────────────────────
+function SizeGuideModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [activeTab, setActiveTab] = useState<'tops' | 'shoes'>('tops');
+
+  const WOMEN_TOPS = [
+    { size:'XS', bust:'76–80',   waist:'60–64', hips:'84–88'  },
+    { size:'S',  bust:'81–85',   waist:'65–69', hips:'89–93'  },
+    { size:'M',  bust:'86–90',   waist:'70–74', hips:'94–98'  },
+    { size:'L',  bust:'91–97',   waist:'75–80', hips:'99–105' },
+    { size:'XL', bust:'98–104',  waist:'81–87', hips:'106–112'},
+    { size:'XXL',bust:'105–112', waist:'88–95', hips:'113–120'},
+  ];
+
+  const SHOE_SIZES = [
+    { eu:'36',uk:'3',us:'5.5',cm:'22.5'},
+    { eu:'37',uk:'4',us:'6.5',cm:'23.5'},
+    { eu:'38',uk:'5',us:'7.5',cm:'24'  },
+    { eu:'39',uk:'6',us:'8.5',cm:'25'  },
+    { eu:'40',uk:'7',us:'9.5',cm:'25.5'},
+    { eu:'41',uk:'8',us:'10.5',cm:'26.5'},
+    { eu:'42',uk:'9',us:'11.5',cm:'27' },
+  ];
+
+  return (
+    <>
+      {open && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:9998 }} onClick={onClose}/>
+      )}
+      <div style={{
+        position:'fixed', right:0, top:0, bottom:0, width:'min(100vw, 520px)',
+        background:'#fff', zIndex:9999,
+        transform: open ? 'translateX(0)' : 'translateX(100%)',
+        transition:'transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94)',
+        overflow:'auto', boxShadow: open ? '0 10px 40px rgba(0,0,0,0.2)' : 'none',
+      }}>
+        <div style={{
+          borderBottom:'1px solid #E8E8E8', padding:'20px 24px',
+          display:'flex', alignItems:'center', justifyContent:'space-between',
+          position:'sticky', top:0, background:'#fff', zIndex:1,
+        }}>
+          <h2 style={{
+            fontFamily:"'Jost',sans-serif", fontWeight:800, fontSize:14,
+            letterSpacing:'2px', textTransform:'uppercase', color:'#000', margin:0,
+          }}>
+            Size Guide
+          </h2>
+          <button onClick={onClose} style={{
+            background:'none', border:'none', cursor:'pointer', fontSize:20,
+            color:'#888', padding:0, width:32, height:32,
+            display:'flex', alignItems:'center', justifyContent:'center',
+          }}>
+            ✕
+          </button>
+        </div>
+
+        <div style={{
+          borderBottom:'1px solid #E8E8E8', padding:'12px 16px',
+          display:'flex', gap:8, background:'#f9f9f9', position:'sticky',
+          top:60, zIndex:1,
+        }}>
+          {(['tops', 'shoes'] as const).map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)} style={{
+              background: activeTab === tab ? '#000' : 'transparent',
+              color: activeTab === tab ? '#fff' : '#888',
+              border:'1px solid ' + (activeTab === tab ? '#000' : '#ddd'),
+              borderRadius:0, padding:'8px 16px',
+              fontFamily:"'Jost',sans-serif", fontWeight:700, fontSize:11,
+              letterSpacing:'1px', textTransform:'uppercase', cursor:'pointer',
+              transition:'all 0.15s',
+            }}>
+              {tab === 'tops' ? 'Tops' : 'Shoes'}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ padding:'24px' }}>
+          {activeTab === 'tops' && (
+            <div>
+              <div style={{
+                fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:800,
+                letterSpacing:'2.5px', color:'#000', textTransform:'uppercase',
+                marginBottom:16,
+              }}>
+                Women's Clothing (cm)
+              </div>
+              <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
+                <thead>
+                  <tr style={{ background:'#000' }}>
+                    {['Size','Bust','Waist','Hips'].map(h => (
+                      <th key={h} style={{
+                        padding:'12px 10px', textAlign:'left', color:'#fff',
+                        fontWeight:700, fontSize:10, letterSpacing:'1px',
+                      }}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {WOMEN_TOPS.map((row, i) => (
+                    <tr key={i} style={{ background:'#fff', borderBottom:'1px solid rgba(0,0,0,0.1)' }}>
+                      <td style={{ padding:'10px', fontWeight:700, color:'#000' }}>{row.size}</td>
+                      <td style={{ padding:'10px', color:'#000' }}>{row.bust}</td>
+                      <td style={{ padding:'10px', color:'#000' }}>{row.waist}</td>
+                      <td style={{ padding:'10px', color:'#000' }}>{row.hips}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div style={{ fontSize:12, color:'#666', marginTop:16, lineHeight:1.6 }}>
+                All measurements are in centimetres. If between sizes, choose the larger one for a comfortable fit.
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'shoes' && (
+            <div>
+              <div style={{
+                fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:800,
+                letterSpacing:'2.5px', color:'#000', textTransform:'uppercase',
+                marginBottom:16,
+              }}>
+                Shoe Sizes
+              </div>
+              <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
+                <thead>
+                  <tr style={{ background:'#000' }}>
+                    {['EU','UK','US','Length (cm)'].map(h => (
+                      <th key={h} style={{
+                        padding:'12px 10px', textAlign:'left', color:'#fff',
+                        fontWeight:700, fontSize:10, letterSpacing:'1px',
+                      }}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {SHOE_SIZES.map((row, i) => (
+                    <tr key={i} style={{ background:'#fff', borderBottom:'1px solid rgba(0,0,0,0.1)' }}>
+                      <td style={{ padding:'10px', fontWeight:700, color:'#000' }}>{row.eu}</td>
+                      <td style={{ padding:'10px', color:'#000' }}>{row.uk}</td>
+                      <td style={{ padding:'10px', color:'#000' }}>{row.us}</td>
+                      <td style={{ padding:'10px', color:'#000' }}>{row.cm}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div style={{ fontSize:12, color:'#666', marginTop:16, lineHeight:1.6 }}>
+                Unsure about your shoe size? Measure your foot from heel to toe in centimetres and refer to the chart above.
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function ProductDetail() {
   const { id }   = useParams();
@@ -1092,6 +1250,7 @@ export default function ProductDetail() {
   const [inWishlist,    setInWishlist]    = useState(false);
   const [salePrice,     setSalePrice]     = useState<number | null>(null);
   const [ratingStats,   setRatingStats]   = useState<ReviewStats | null>(null);
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
 
   // ── Derived variant state ──────────────────────────────────────────────────
   const hasVariants  = variants.length > 0;
@@ -1402,6 +1561,9 @@ export default function ProductDetail() {
   return (
     <div className="font-serif bg-cream min-h-screen text-navy overflow-x-hidden">
       <style>{css}</style>
+
+      {/* Size Guide Modal */}
+      <SizeGuideModal open={sizeGuideOpen} onClose={() => setSizeGuideOpen(false)} />
 
       {toast && (
         <div className="lp-toast" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
@@ -1778,6 +1940,10 @@ export default function ProductDetail() {
             {/* ── ACCORDION DROPDOWNS ── */}
             {[
               {
+                key: 'size-guide',
+                label: 'Size Guide',
+              },
+              {
                 key: 'description',
                 label: 'Description',
                 content: product.description || 'Premium quality product. Carefully sourced and curated by Luku Prime.',
@@ -1787,9 +1953,26 @@ export default function ProductDetail() {
                 label: 'Product Care Guide',
                 content: 'Dry clean or gentle hand wash recommended. Avoid harsh chemicals. Store in cool, dry place away from direct sunlight.',
               },
-            ].map(({ key, label, content: body }) => (
-              <AccordionRow key={key} label={label} body={body} />
-            ))}
+                       ].map(({ key, label, content: body }) => {
+              if (key === 'size-guide') {
+                return (
+                  <AccordionRow key={key} label={label}>
+                    <div style={{ fontSize: 13, color: '#555', lineHeight: 1.8, fontFamily: "'Jost',sans-serif" }}>
+                      <p>Check our detailed size guides to find your perfect fit. View measurements for tops, shoes, and more.</p>
+                      <button onClick={() => setSizeGuideOpen(true)} style={{
+                        background: '#000', color: '#fff', border: 'none', borderRadius: 0,
+                        padding: '10px 20px', fontFamily: "'Jost',sans-serif", fontSize: 11,
+                        fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase',
+                        cursor: 'pointer', marginTop: 12, transition: 'all 0.2s',
+                      }}>
+                        View Size Chart →
+                      </button>
+                    </div>
+                  </AccordionRow>
+                );
+              }
+              return <AccordionRow key={key} label={label} body={body} />;
+            })}
 
             {product.complete_the_look && product.complete_the_look.length > 0 && (
               <AccordionRow label="Complete the Look">

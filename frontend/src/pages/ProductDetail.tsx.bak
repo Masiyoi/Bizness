@@ -14,6 +14,7 @@ import deliveryIcon from '../assets/adstrip/delivery (2).png';
 import Navbar         from '../components/common/Navbar';
 import Footer         from '../components/common/Footer';
 import InstagramStrip from '../components/common/InstagramStrip';
+import Gallery        from '../components/common/Gallery';
 import bookmarkIcon from '../assets/bookmark.png';
 import addedIcon from '../assets/added.png';
 import bookmarkedIcon from '../assets/bookmarked.png';
@@ -1806,6 +1807,7 @@ export default function ProductDetail() {
         </div>
       </div>
 
+      <Gallery/>
       <InstagramStrip handle="@lukuprime" profileUrl="https://instagram.com/lukuprime" limit={12}/>
       <Footer/>
     </div>
