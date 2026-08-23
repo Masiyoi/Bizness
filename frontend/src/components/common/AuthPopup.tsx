@@ -1,6 +1,6 @@
 // src/components/common/AuthPopup.tsx
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 declare global {
   interface Window {
@@ -278,6 +278,12 @@ interface AuthPopupProps {
 }
 export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+  // Login/Register already render their own Google button + their own
+  // initialize() call. Skip this popup entirely there so we never get two
+  // competing google.accounts.id.initialize() calls on the same page.
+  const suppressedRoutes = ['/login', '/register'];
+  const isSuppressedRoute = suppressedRoutes.includes(location.pathname);
   const handleGoogleResponse = async (response: { credential: string }) => {
     setGoogleLoading(true); setError('');
     try {
@@ -311,11 +317,13 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
   const [lockedUntil, setLockedUntil] = useState<Date | null>(null);
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const googleBtnMobileRef = useRef<HTMLDivElement>(null);
-  // Show on every visit while logged out.
+  // Show on every visit while logged out — but never on /login or /register,
+  // which already have their own full sign-in/sign-up forms and Google button.
   useEffect(() => {
+    if (isSuppressedRoute) return;
     const raw = localStorage.getItem('user');
     if (!raw) setVisible(true);
-  }, []);
+  }, [isSuppressedRoute]);
   // Load reCAPTCHA v3 script once.
   useEffect(() => {
     if (document.querySelector('script[data-ap-recaptcha]')) return;
@@ -347,14 +355,12 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
     const t = setTimeout(init, 200);
     return () => clearTimeout(t);
   }, [visible]);
-  useEffect(() => {
-    if (document.querySelector('script[data-ap-google]')) return;
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.setAttribute('data-ap-google', 'true');
-    document.body.appendChild(script);
-  }, []);
+  // No script-injection effect needed here — the GSI client script is already
+  // loaded once, globally, from index.html. Loading it a second time caused
+  // google.accounts.id.initialize() to fire twice on pages where this popup
+  // and a page-level Google button (Login/Register) both mount, which is
+  // what was throwing the "initialize() is called multiple times" warning
+  // and made origin/FedCM validation flaky.
   const close = () => { setVisible(false); setMin(true); };
   const reopen = () => { setMin(false); setVisible(true); };
   const resetMessages = () => { setError(''); setUnverified(false); setLocked(false); };
@@ -406,6 +412,7 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
     e.preventDefault();
     mode === 'signin' ? handleLogin() : handleRegister();
   };
+  if (isSuppressedRoute) return null;
   if (!visible && !minimized) return null;
   return (
     <>

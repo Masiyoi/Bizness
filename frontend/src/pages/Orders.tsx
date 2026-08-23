@@ -342,7 +342,9 @@ export default function Orders() {
         {/* Empty state */}
         {orders.length === 0 && !loading && (
           <div className="fade-in" style={{ textAlign:'center', padding:'60px 0' }}>
-            <div style={{ width:90, height:90, borderRadius:'50%', background:T.creamMid, display:'flex', alignItems:'center', justifyContent:'center', fontSize:40, margin:'0 auto 24px', border:`1px solid ${T.creamDeep}` }}>📦</div>
+            <div style={{ width:90, height:90, borderRadius:'50%', background:T.creamMid, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 24px', border:`1px solid ${T.creamDeep}`, overflow:'hidden' }}>
+  <img src="/noorders.png" alt="No orders" style={{ width:'56%', height:'56%', objectFit:'contain' }} />
+</div>
             <h2 style={{ fontFamily:"'Jost',sans-serif", fontWeight:700, fontSize:24, color:T.navy, marginBottom:10 }}>No orders yet</h2>
             <p style={{ fontFamily:"'Jost',sans-serif", fontSize:14, color:T.muted, marginBottom:32, lineHeight:1.7, fontWeight:700 }}>
               You haven't placed any orders yet.<br/>Explore our premium collection.
