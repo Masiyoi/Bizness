@@ -292,6 +292,8 @@ exports.loginUser = async (req, res) => {
         is_verified:     user.is_verified,
         role:            user.role,
         profile_picture: user.profile_picture,
+        avatar_type:     user.avatar_type,
+        avatar_color:    user.avatar_color,
       },
     });
   } catch (err) {
@@ -337,7 +339,7 @@ exports.googleAuth = async (req, res) => {
       const ownReferralCode = await generateReferralCode();
       const newUser = await db.query(
         `INSERT INTO users (full_name, email, google_id, is_verified, profile_picture, referral_code, referred_by)
-         VALUES ($1, $2, $3, TRUE, $4, $5, $6) RETURNING id, full_name, email, is_verified, role, profile_picture`,
+         VALUES ($1, $2, $3, TRUE, $4, $5, $6) RETURNING id, full_name, email, is_verified, role, profile_picture, avatar_type, avatar_color`,
         [full_name, email.toLowerCase(), google_id, picture, ownReferralCode, referredBy]
       );
       user = newUser.rows[0];
@@ -349,7 +351,7 @@ exports.googleAuth = async (req, res) => {
     }
     const token = generateToken(user.id, user.role);
     res.cookie('token', token, { httpOnly:true, secure:true, sameSite:'none', domain:'.lukuprime.shop', maxAge:7*24*60*60*1000 });
-    return res.json({ token, user: { id:user.id, full_name:user.full_name, email:user.email, is_verified:user.is_verified, role:user.role, profile_picture:user.profile_picture } });
+    return res.json({ token, user: { id:user.id, full_name:user.full_name, email:user.email, is_verified:user.is_verified, role:user.role, profile_picture:user.profile_picture, avatar_type:user.avatar_type, avatar_color:user.avatar_color } });
   } catch (err) {
     console.error('Google auth error:', err.message);
     return res.status(401).json({ msg: 'Google authentication failed.' });
