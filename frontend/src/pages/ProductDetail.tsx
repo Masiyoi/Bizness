@@ -1943,11 +1943,7 @@ export default function ProductDetail() {
             </div>
 
             {/* ── ACCORDION DROPDOWNS ── */}
-            {[
-              {
-                key: 'size-guide',
-                label: 'Size Guide',
-              },
+                       {[
               {
                 key: 'description',
                 label: 'Description',
@@ -1958,26 +1954,28 @@ export default function ProductDetail() {
                 label: 'Product Care Guide',
                 content: 'Dry clean or gentle hand wash recommended. Avoid harsh chemicals. Store in cool, dry place away from direct sunlight.',
               },
-                       ].map(({ key, label, content: body }) => {
-              if (key === 'size-guide') {
-                return (
-                  <AccordionRow key={key} label={label}>
-                    <div style={{ fontSize: 13, color: '#555', lineHeight: 1.8, fontFamily: "'Jost',sans-serif" }}>
-                      <p>Check our detailed size guides to find your perfect fit. View measurements for tops, shoes, and more.</p>
-                      <button onClick={() => setSizeGuideOpen(true)} style={{
-                        background: '#000', color: '#fff', border: 'none', borderRadius: 0,
-                        padding: '10px 20px', fontFamily: "'Jost',sans-serif", fontSize: 11,
-                        fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase',
-                        cursor: 'pointer', marginTop: 12, transition: 'all 0.2s',
-                      }}>
-                        View Size Chart →
-                      </button>
-                    </div>
-                  </AccordionRow>
-                );
-              }
-              return <AccordionRow key={key} label={label} body={body} />;
-            })}
+            ].map(({ key, label, content: body }) => (
+              <AccordionRow key={key} label={label} body={body} />
+            ))}
+
+            {/* ── SIZE GUIDE — opens the side panel instantly, no accordion ── */}
+            <button
+              onClick={() => setSizeGuideOpen(true)}
+              style={{
+                width:'100%', background:'transparent', border:'none',
+                padding:'16px 0', display:'flex', alignItems:'center',
+                justifyContent:'space-between', cursor:'pointer',
+                borderTop:'1px solid #E8E8E8', textAlign:'left',
+              }}
+            >
+              <span style={{
+                fontFamily:"'Jost',sans-serif", fontSize:11, fontWeight:700,
+                letterSpacing:'2.5px', textTransform:'uppercase', color:'#111',
+              }}>
+                Size Guide
+              </span>
+              <span style={{ fontSize:16, color:'#888', lineHeight:1 }}>→</span>
+            </button>
 
             {product.complete_the_look && product.complete_the_look.length > 0 && (
               <AccordionRow label="Complete the Look">
