@@ -137,7 +137,9 @@ export default function QuickViewModal({
         .qv-cart-btn:hover:not(:disabled) { opacity: 0.88; }
 
         .qv-wishlist-btn { transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease; }
-        .qv-wishlist-btn:hover { background: ${C.wishlist} !important; color: ${C.paper} !important; border-color: ${C.wishlist} !important; }
+        @media (hover: hover) {
+          .qv-wishlist-btn:hover { background: ${C.wishlist} !important; color: ${C.paper} !important; border-color: ${C.wishlist} !important; }
+        }
 
         .qv-bracket { transition: opacity 0.25s ease, inset 0.25s ease; }
         .qv-image-pane:hover .qv-bracket { opacity: 1 !important; }
