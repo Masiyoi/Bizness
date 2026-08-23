@@ -6,6 +6,7 @@ import axios                                  from 'axios';
 import Navbar          from '../components/common/Navbar';
 import Footer          from '../components/common/Footer';
 import InstagramStrip  from '../components/common/InstagramStrip';
+import Gallery         from '../components/common/Gallery';
 import AuthPopup from '../components/common/AuthPopup';
 import ProductCard     from '../components/home/ProductCard';
 import ReviewSection   from '../components/home/ReviewSection';
@@ -688,6 +689,8 @@ export default function Homepage() {
       <div className="lp-video-wrap">
         <VideoCarousel tiles={bottomVideo} />
       </div>
+
+      <Gallery/>
 
       <InstagramStrip handle="@lukuprime" profileUrl="https://instagram.com/lukuprime" limit={12} />
       <ReviewSection reviews={reviews} loading={reviewsLoading} isAdmin={user?.role === 'admin'} />

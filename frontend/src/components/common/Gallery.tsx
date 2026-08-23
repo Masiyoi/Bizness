@@ -12,7 +12,7 @@ const GALLERY_IMAGES = [
 ];
 export default function Gallery() {
   return (
-    <div style={{ marginTop: 56, marginBottom: 24 }}>
+    <div style={{ marginTop: 8, marginBottom: 24 }}>
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
         <h2 style={{
           fontFamily: "'Playfair Display',serif", fontWeight: 800,
