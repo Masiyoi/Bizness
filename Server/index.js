@@ -37,10 +37,10 @@ const allowedOrigins = [
   'https://bizness.onrender.com',
 ];
 
-// Webhook paths are called server-to-server by Safaricom/Pesapal —
+// Webhook paths are called server-to-server by Safaricom/Pesapal/PayHero —
 // there's no browser involved, so CORS (a browser-only mechanism) doesn't apply.
 // These must skip origin-checking entirely or the providers' callbacks get blocked.
-const webhookPaths = ['/api/payments/callback', '/api/payments/pesapal/ipn'];
+const webhookPaths = ['/api/payments/callback', '/api/payments/pesapal/ipn', '/api/payments/payhero/callback'];
 
 app.use((req, res, next) => {
   if (webhookPaths.includes(req.path)) return next(); // skip CORS for webhooks

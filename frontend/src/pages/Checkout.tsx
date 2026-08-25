@@ -31,7 +31,7 @@ interface CartItem {
 
 type CheckoutStep = 'summary' | 'waiting' | 'success' | 'failed' | 'pesapal-redirect';
 type DeliveryZone = 'pickup' | 'cbd' | 'environs' | 'county';
-type PaymentMethod = 'mpesa' | 'pesapal';
+type PaymentMethod = 'mpesa' | 'pesapal' | 'payhero';
 
 // ─── Luku Prime Design Tokens ──────────────────────────────────────────────
 const T = {
@@ -77,11 +77,16 @@ export default function Checkout() {
   const [step, setStep]                         = useState<CheckoutStep>('summary');
   const [paymentMethod, setPaymentMethod]       = useState<PaymentMethod | null>('pesapal');
 
-  // M-Pesa state
+  // M-Pesa (Daraja) state
   const [pushing, setPushing]                   = useState(false);
   const [, setCheckoutRequestId]                = useState('');
   const [receipt, setReceipt]                   = useState('');
   const [elapsed, setElapsed]                   = useState(0);
+
+  // PayHero (M-Pesa STK via PayHero) state
+  const [payHeroPhone, setPayHeroPhone]         = useState('');
+  const [payHeroPushing, setPayHeroPushing]     = useState(false);
+  const [, setPayHeroCheckoutRequestId]         = useState('');
 
   // Pesapal state
   const [pesapalLoading, setPesapalLoading]     = useState(false);
@@ -169,6 +174,11 @@ export default function Checkout() {
       .catch(() => {}); // fine to fail silently — preview is display-only
   }, []);
 
+  // Prefill the PayHero phone field from shipping details once they're known
+  useEffect(() => {
+    if (passedShipping?.phone && !payHeroPhone) setPayHeroPhone(passedShipping.phone);
+  }, [passedShipping?.phone]);
+
   // Returns the active price for an item — sale price if flash-sale, else regular price
   const getEffectivePrice = (item: CartItem): number =>
     flashSaleMap[item.product_id] ?? Number(item.price);
@@ -246,7 +256,7 @@ export default function Checkout() {
     return '';
   };
 
-  // ── M-Pesa payment ─────────────────────────────────────────────────────────
+  // ── M-Pesa payment (direct Daraja) ─────────────────────────────────────────
   const handleMpesaPay = async () => {
     const shippingPhone = passedShipping?.phone || '';
     if (!shippingPhone) {
@@ -317,6 +327,67 @@ export default function Checkout() {
       } catch {
         setFailMsg('Payment timed out. Check your M-Pesa messages.'); setStep('failed');
       }
+    }, 90000);
+  };
+
+  // ── PayHero payment (M-Pesa STK push via PayHero) ──────────────────────────
+  const handlePayHeroPay = async () => {
+    if (!payHeroPhone) {
+      setServerError('Enter the phone number to receive the STK push on.');
+      return;
+    }
+    const err = validatePhone(payHeroPhone);
+    if (err) { setServerError(err); return; }
+    setPayHeroPushing(true);
+    setServerError('');
+    try {
+      const passedColors   = (location.state as any)?.selectedColors ?? {};
+      const passedSizes    = (location.state as any)?.selectedSizes ?? {};
+
+      // amount is intentionally omitted — the server recomputes the total
+      // from the cart + first-order discount eligibility, never trusting the client.
+      const res = await axios.post('/api/payments/payhero/stk-push', {
+        phone: payHeroPhone,
+        delivery_zone:  deliveryZone,
+        delivery_fee:   deliveryFee,
+        shipping:       passedShipping ?? {},
+        selectedColors: passedColors,
+        selectedSizes:  passedSizes,
+        reserved_order_number: reservedOrderNumber,
+      });
+
+      setPayHeroCheckoutRequestId(res.data.checkoutRequestId);
+      setPaymentMethod('payhero');
+      setStep('waiting');
+      startPayHeroPolling(res.data.checkoutRequestId);
+    } catch (err: any) {
+      setServerError(err.response?.data?.msg || 'Failed to send STK push. Try again.');
+    } finally {
+      setPayHeroPushing(false);
+    }
+  };
+
+  const startPayHeroPolling = (reqId: string) => {
+    resolvedRef.current = false;
+    setElapsed(0);
+    let seconds = 0;
+    tickRef.current = setInterval(() => { seconds++; setElapsed(seconds); }, 1000);
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await axios.get(`/api/payments/payhero/status/${reqId}`);
+        if (resolvedRef.current) return; // a faster, later response already resolved this — ignore the stale one
+        const { status, confirmation_code, order_number } = res.data;
+        if (status === 'completed') {
+          clearAll(); setReceipt(confirmation_code || ''); if (order_number) setOrderNumber(order_number); setStep('success');
+          axios.delete('/api/cart').catch(() => {});
+        } else if (status === 'failed') {
+          clearAll(); setFailMsg(res.data.result_desc || 'Payment was not completed.'); setStep('failed');
+        }
+      } catch { /* keep polling */ }
+    }, 3000);
+    timeoutRef.current = setTimeout(() => {
+      clearAll();
+      setFailMsg('Payment timed out. If charged, contact support.'); setStep('failed');
     }, 90000);
   };
 
@@ -465,10 +536,10 @@ export default function Checkout() {
 
         /* Payment method selector cards */
         .pay-method-list{border-radius:8px;overflow:hidden;margin-bottom:8px}
-        .pay-method-card{border-radius:8px;padding:14px 16px;cursor:pointer;transition:background 0.15s ease;display:flex;align-items:center;gap:12px;width:100%;background:#fff;margin-bottom:6px;border:none}
+        .pay-method-card{border-radius:8px;padding:14px 16px;cursor:pointer;transition:background 0.15s ease;display:flex;align-items:center;gap:12px;width:100%;background:#fff;margin-bottom:6px;border:1px solid #E0E0E0}
         
         .pay-method-card:hover{background:#FAFAFA}
-        .pay-method-card.selected{background:#F5F5F5}
+        .pay-method-card.selected{background:#F5F5F5;border-color:#000}
 
         .phone-input{background:#F5F5F5;border:none;border-radius:8px;padding:14px 18px;color:#000;font-size:16px;font-family:'DM Sans',sans-serif;width:100%;outline:none;transition:box-shadow 0.2s;letter-spacing:1.5px}
         .phone-input:focus{box-shadow:0 0 0 2px #16a34a;background:#fff}
@@ -653,23 +724,56 @@ export default function Checkout() {
               Choose how you'd like to pay
             </p>
 
-            {/* Payment method — Pesapal only, static display */}
+            {/* Payment method — Pesapal or PayHero (M-Pesa STK push) */}
             <div className="pay-method-list">
-            <div className="pay-method-card" style={{ cursor: 'default' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                <img src={pesapalLogo} alt="Pesapal" style={{ height: 22, objectFit: 'contain' }} />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span className="jost" style={{ fontWeight: 600, fontSize: 14, color: T.navy }}>Pay with Pesapal</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-                  <img src={mpesaLogo} alt="M-Pesa" style={{ height: 14, objectFit: 'contain' }} />
-                  <img src={airtelLogo} alt="Airtel Money" style={{ height: 14, objectFit: 'contain' }} />
-                  <img src={mastercardLogo} alt="Mastercard" style={{ height: 16, objectFit: 'contain' }} />
-                  <img src={visaLogo} alt="Visa" style={{ height: 12, objectFit: 'contain' }} />
+              <button
+                type="button"
+                className={`pay-method-card${paymentMethod === 'pesapal' ? ' selected' : ''}`}
+                onClick={() => { setPaymentMethod('pesapal'); setServerError(''); }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                  <img src={pesapalLogo} alt="Pesapal" style={{ height: 22, objectFit: 'contain' }} />
                 </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span className="jost" style={{ fontWeight: 600, fontSize: 14, color: T.navy }}>Pay with Pesapal</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                    <img src={mpesaLogo} alt="M-Pesa" style={{ height: 14, objectFit: 'contain' }} />
+                    <img src={airtelLogo} alt="Airtel Money" style={{ height: 14, objectFit: 'contain' }} />
+                    <img src={mastercardLogo} alt="Mastercard" style={{ height: 16, objectFit: 'contain' }} />
+                    <img src={visaLogo} alt="Visa" style={{ height: 12, objectFit: 'contain' }} />
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                className={`pay-method-card${paymentMethod === 'payhero' ? ' selected' : ''}`}
+                onClick={() => { setPaymentMethod('payhero'); setServerError(''); }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                  <img src={mpesaLogo} alt="M-Pesa" style={{ height: 22, objectFit: 'contain' }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span className="jost" style={{ fontWeight: 600, fontSize: 14, color: T.navy }}>Pay with M-Pesa</span>
+                  <span className="jost" style={{ fontSize: 11, color: T.muted, marginTop: 3 }}>Instant STK push · Powered by PayHero</span>
+                </div>
+              </button>
+            </div>
+
+            {paymentMethod === 'payhero' && (
+              <div style={{ marginBottom: 16 }}>
+                <label className="jost" style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: T.muted, marginBottom: 8 }}>
+                  M-Pesa Phone Number
+                </label>
+                <input
+                  type="tel"
+                  className="phone-input"
+                  placeholder="07XX XXX XXX"
+                  value={payHeroPhone}
+                  onChange={e => setPayHeroPhone(e.target.value)}
+                />
               </div>
-            </div>
-            </div>
+            )}
 
             {serverError && (
               <div className="jost" style={{ background: '#FDF0EE', border: '1px solid #F5C6C0', borderRadius: 10, padding: '12px 16px', color: '#C0392B', fontSize: 12, marginBottom: 16 }}>
@@ -677,12 +781,21 @@ export default function Checkout() {
               </div>
             )}
 
-            <button className="cta-gold" onClick={handlePesapalPay} disabled={pesapalLoading} style={{ marginTop: 4, background: '#16a34a' }}>
-              {pesapalLoading
-                ? <><span style={{ display: 'inline-block', animation: 'pulse 0.8s ease infinite' }}>⏳</span> Redirecting to Pesapal…</>
-                : <>Continue with Pesapal →</>
-              }
-            </button>
+            {paymentMethod === 'payhero' ? (
+              <button className="cta-gold" onClick={handlePayHeroPay} disabled={payHeroPushing} style={{ marginTop: 4, background: '#16a34a' }}>
+                {payHeroPushing
+                  ? <><span style={{ display: 'inline-block', animation: 'pulse 0.8s ease infinite' }}>⏳</span> Sending STK push…</>
+                  : <>Pay KSh {total.toLocaleString()} with M-Pesa →</>
+                }
+              </button>
+            ) : (
+              <button className="cta-gold" onClick={handlePesapalPay} disabled={pesapalLoading} style={{ marginTop: 4, background: '#16a34a' }}>
+                {pesapalLoading
+                  ? <><span style={{ display: 'inline-block', animation: 'pulse 0.8s ease infinite' }}>⏳</span> Redirecting to Pesapal…</>
+                  : <>Continue with Pesapal →</>
+                }
+              </button>
+            )}
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16 }}>
               <img src={secureBadge} alt="Secure payment" style={{ height: 16, objectFit: 'contain' }} />
@@ -710,7 +823,7 @@ export default function Checkout() {
             <p className="jost" style={{ color: T.muted, fontSize: 13, maxWidth: 300, margin: '0 auto 28px', lineHeight: 1.75, fontWeight: 300 }}>
               {paymentMethod === 'pesapal'
                 ? <>We're confirming your card payment of <strong style={{ color: T.gold, fontWeight: 700 }}>KSh {total.toLocaleString()}</strong>. This usually takes a few seconds.</>
-                : <>A prompt was sent to <strong style={{ color: T.navy, fontWeight: 600 }}>{passedShipping?.phone}</strong>. Enter your M-Pesa PIN to pay <strong style={{ color: T.gold, fontWeight: 700 }}>KSh {total.toLocaleString()}</strong>.</>
+                : <>A prompt was sent to <strong style={{ color: T.navy, fontWeight: 600 }}>{paymentMethod === 'payhero' ? payHeroPhone : passedShipping?.phone}</strong>. Enter your M-Pesa PIN to pay <strong style={{ color: T.gold, fontWeight: 700 }}>KSh {total.toLocaleString()}</strong>.</>
               }
             </p>
 
@@ -762,7 +875,7 @@ export default function Checkout() {
               ))}
             </div>
 
-            {paymentMethod === 'mpesa' && (
+            {(paymentMethod === 'mpesa' || paymentMethod === 'payhero') && (
               <button className="cta-outline" onClick={() => { clearAll(); setStep('summary'); }}>
                 Cancel — Back to Summary
               </button>
@@ -905,6 +1018,8 @@ export default function Checkout() {
                 <span className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                   {paymentMethod === 'pesapal'
                     ? <><img src={cardIcon} alt="" style={{ width: 16, height: 16, objectFit: 'contain' }} /> Card (Pesapal)</>
+                    : paymentMethod === 'payhero'
+                    ? <>📱 M-Pesa (PayHero) · {payHeroPhone}</>
                     : <>📱 M-Pesa · {passedShipping?.phone}</>}
                 </span>
               </div>
