@@ -815,9 +815,14 @@ export default function Checkout() {
         {/* ── STEP: WAITING ── */}
         {step === 'waiting' && (
           <div className="lp-card fade-in" style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 64, marginBottom: 20, display: 'inline-block' }} className="pulse-anim">
-              {paymentMethod === 'pesapal' ? '💳' : '📱'}
-            </div>
+            <video
+              src="/gear-clock.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              style={{ width: 96, height: 96, marginBottom: 20, display: 'inline-block', objectFit: 'contain' }}
+            />
 
             <div className="ornament" style={{ justifyContent: 'center' }}>
               <div className="ornament-line" /><div className="ornament-diamond" />
