@@ -16,7 +16,7 @@ const {
   stkPush: payHeroStkPush,
   payHeroCallback,
   getPayHeroStatus,
-} = require('../controllers/payHeroController');
+} = require('../controllers/payheroController');
 
 // Protected — user must be logged in
 router.post('/stk-push',          auth, stkPush);
