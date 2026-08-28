@@ -51,7 +51,7 @@ export default function Affiliate() {
 
                <div style={{
           position: 'relative', zIndex: 2, maxWidth: 560,
-          background: 'rgba(0,0,0,0.45)',
+          background: 'rgba(0,0,0,0.25)',
           backdropFilter: 'blur(6px)',
           WebkitBackdropFilter: 'blur(6px)',
           borderRadius: 14,
