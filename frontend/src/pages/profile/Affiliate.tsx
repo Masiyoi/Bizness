@@ -70,7 +70,7 @@ export default function Affiliate() {
             Share your coupon code. When customers shop through your code, you earn 10% commission.
           </p>
 
-          
+          <a
             href={applyMailto}
             style={{
               display: 'inline-flex', flexDirection: 'column', gap: 2,
