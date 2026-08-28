@@ -42,11 +42,6 @@ export default function Affiliate() {
         >
           <source src="https://res.cloudinary.com/dfiy43f01/video/upload/v1787948711/document_5805545609406456259_dzmwrh.mp4" type="video/mp4" />
         </video>
-
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
-          background: 'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.75) 55%, rgba(0,0,0,0.92) 100%)',
-        }}/>
         <div style={{
           position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
           backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px,transparent 1px)',
@@ -71,7 +66,8 @@ export default function Affiliate() {
           </p>
 
           
-          <a
+          
+<a
             href={applyMailto}
             style={{
               display: 'inline-flex', flexDirection: 'column', gap: 2,
