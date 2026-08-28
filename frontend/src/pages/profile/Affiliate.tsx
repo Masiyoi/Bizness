@@ -49,7 +49,14 @@ export default function Affiliate() {
         }}/>
         <div style={{ position: 'absolute', zIndex: 1, width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle,rgba(200,169,81,0.14) 0%,transparent 70%)', top: -80, right: -60, pointerEvents: 'none' }}/>
 
-        <div style={{ position: 'relative', zIndex: 2, maxWidth: 560 }}>
+               <div style={{
+          position: 'relative', zIndex: 2, maxWidth: 560,
+          background: 'rgba(0,0,0,0.45)',
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
+          borderRadius: 14,
+          padding: '28px 32px',
+        }}>
           <div style={{
             fontSize: 10, fontWeight: 700,
             letterSpacing: '2px', color: '#E8CD7A', textTransform: 'uppercase', marginBottom: 16,
