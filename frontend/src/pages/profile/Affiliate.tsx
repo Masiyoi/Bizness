@@ -48,15 +48,13 @@ export default function Affiliate() {
           backgroundSize: '26px 26px',
         }}/>
         <div style={{ position: 'absolute', zIndex: 1, width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle,rgba(200,169,81,0.14) 0%,transparent 70%)', top: -80, right: -60, pointerEvents: 'none' }}/>
+        <div style={{
+          position: 'absolute', zIndex: 1, inset: 0,
+          background: 'linear-gradient(90deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 45%, transparent 75%)',
+          pointerEvents: 'none',
+        }}/>
 
-               <div style={{
-          position: 'relative', zIndex: 2, maxWidth: 560,
-          background: 'rgba(0,0,0,0.25)',
-          backdropFilter: 'blur(6px)',
-          WebkitBackdropFilter: 'blur(6px)',
-          borderRadius: 14,
-          padding: '28px 32px',
-        }}>
+        <div style={{ position: 'relative', zIndex: 2, maxWidth: 560 }}>
           <div style={{
             fontSize: 10, fontWeight: 700,
             letterSpacing: '2px', color: '#E8CD7A', textTransform: 'uppercase', marginBottom: 16,
@@ -73,8 +71,6 @@ export default function Affiliate() {
           </p>
 
           
-          
-<a
             href={applyMailto}
             style={{
               display: 'inline-flex', flexDirection: 'column', gap: 2,
