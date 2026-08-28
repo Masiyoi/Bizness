@@ -100,6 +100,7 @@ export default function Cart() {
   const [error,          setError]          = useState('');
   const [deliveryZone,   setDeliveryZone]   = useState<DeliveryZone>('cbd');
   const [shipping,       setShipping]       = useState<ShippingInfo>(EMPTY_SHIPPING);
+  const [couponCode,     setCouponCode]     = useState('');
   const [formErrors,     setFormErrors]     = useState<Partial<ShippingInfo>>({});
   const [formTouched,    setFormTouched]    = useState<Partial<Record<keyof ShippingInfo, boolean>>>({});
   const [selectedColors, setSelectedColors] = useState<Record<number, string>>({});
@@ -119,6 +120,8 @@ export default function Cart() {
       if (saved) setShipping(JSON.parse(saved));
       const savedZone = sessionStorage.getItem('luku_zone') as DeliveryZone | null;
       if (savedZone) setDeliveryZone(savedZone);
+      const savedCoupon = sessionStorage.getItem('luku_coupon');
+      if (savedCoupon) setCouponCode(savedCoupon);
     } catch {}
 
     axios.get('/api/products/flash-sales?limit=100')
@@ -779,6 +782,34 @@ export default function Cart() {
                       {DELIVERY_OPTIONS.find(o => o.value === deliveryZone)?.sub}
                     </span>
                   </div>
+                </div>
+
+                <div className="form-field">
+                  <label className="field-label">Coupon Code <span style={{ color: T.muted, fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 11 }}>(optional)</span></label>
+                  <input
+                    type="text"
+                    placeholder="Enter coupon code"
+                    value={couponCode}
+                    onChange={e => {
+                      const upper = e.target.value.toUpperCase();
+                      setCouponCode(upper);
+                      sessionStorage.setItem('luku_coupon', upper);
+                    }}
+                    style={{
+                      width: '100%',
+                      fontFamily: "'DM Sans',sans-serif",
+                      fontSize: 14,
+                      color: T.navy,
+                      background: '#fff',
+                      border: `1.5px solid ${T.creamDeep}`,
+                      borderRadius: 10,
+                      padding: '12px 14px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  />
                 </div>
 
                 {deliveryZone === 'pickup' ? (
