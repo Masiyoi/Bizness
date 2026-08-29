@@ -37,6 +37,7 @@ export default function Login() {
   const [lockedUntil,   setLockedUntil]   = useState<Date | null>(null);
   const [showEmailForm, setShowEmailForm] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
+  const didInit = useRef(false);
   useEffect(() => {
     if (location.search.includes("verified=true"))
       setVerifiedMsg("Email verified! You can now sign in.");
@@ -57,7 +58,8 @@ export default function Login() {
     const t = setTimeout(() => {
       // GSI rejects percentage widths ("Provided button width is invalid: 100%").
       // Measure the container's real pixel width and pass that number instead.
-      if (window.google && googleBtnRef.current) {
+      if (window.google && googleBtnRef.current && !didInit.current) {
+        didInit.current = true;
         const pxWidth = googleBtnRef.current.offsetWidth || 320;
         window.google.accounts.id.initialize({ client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID, callback: handleGoogleResponse });
         window.google.accounts.id.renderButton(googleBtnRef.current, { theme: "filled_white", size: "large", width: pxWidth, text: "signin_with", shape: "rectangular" });

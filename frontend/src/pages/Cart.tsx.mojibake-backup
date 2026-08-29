@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -56,7 +56,7 @@ interface ShippingInfo {
 }
 
 const DELIVERY_OPTIONS: { value: DeliveryZone; label: string; sub: string; fee: number; icon: string }[] = [
-  { value: 'pickup',   label: 'Pick Up from Shop',  sub: 'Collect at our shop — no charge',    fee: 0,   icon: '' },
+  { value: 'pickup',   label: 'Pick Up from Shop',  sub: 'Collect at our shop â€” no charge',    fee: 0,   icon: '' },
   { value: 'cbd',      label: 'Nairobi CBD',         sub: 'Delivery within the CBD area',       fee: 100, icon: '' },
   { value: 'environs', label: 'Nairobi Environs',    sub: 'Outside CBD, within Nairobi county', fee: 350, icon: '' },
   { value: 'county',   label: 'Other Counties',      sub: 'Mombasa, Kisumu, Nakuru & more',     fee: 400, icon: '' },
@@ -72,7 +72,7 @@ const KENYA_COUNTIES = [
   'Turkana','Uasin Gishu','Vihiga','Wajir','West Pokot',
 ];
 
-const PICKUP_LOCATION_FIXED = 'Luku Prime — Nairobi CBD (Moi Avenue)';
+const PICKUP_LOCATION_FIXED = 'Luku Prime â€” Nairobi CBD (Moi Avenue)';
 
 const EMPTY_SHIPPING: ShippingInfo = {
   firstName: '', phone: '',
@@ -108,7 +108,7 @@ export default function Cart() {
   const [flashSaleMap,   setFlashSaleMap]   = useState<Record<number, number>>({});
   const [openDropdown,   setOpenDropdown]   = useState<string | null>(null);
 
-  // First-order discount (server is the source of truth — this is display only)
+  // First-order discount (server is the source of truth â€” this is display only)
   const [discount, setDiscount] = useState<{ eligible: boolean; discountAmount: number; discountLabel: string | null }>({
     eligible: false, discountAmount: 0, discountLabel: null,
   });
@@ -140,21 +140,21 @@ export default function Cart() {
         discountAmount: Number(r.data.discountAmount) || 0,
         discountLabel: r.data.discountLabel,
       }))
-      .catch(() => {}); // fine to fail silently — preview is display-only
+      .catch(() => {}); // fine to fail silently â€” preview is display-only
   }, []);
 
-  // Returns the active price for an item — sale price if flash-sale, else regular price
+  // Returns the active price for an item â€” sale price if flash-sale, else regular price
   const getEffectivePrice = (item: CartItem): number =>
     flashSaleMap[item.product_id] ?? Number(item.price);
 
-  // ✅ Listen for cartUpdated events fired by ProductDetail when color/size changes there
+  // âœ… Listen for cartUpdated events fired by ProductDetail when color/size changes there
   useEffect(() => {
     const handler = () => fetchCart();
     window.addEventListener('cartUpdated', handler);
     return () => window.removeEventListener('cartUpdated', handler);
   }, []);
 
-  // ✅ Pickup is a single fixed branch — auto-fill it, no user selection needed
+  // âœ… Pickup is a single fixed branch â€” auto-fill it, no user selection needed
   useEffect(() => {
     if (deliveryZone === 'pickup' && shipping.pickupLocation !== PICKUP_LOCATION_FIXED) {
       const updated = { ...shipping, pickupLocation: PICKUP_LOCATION_FIXED };
@@ -175,7 +175,7 @@ export default function Cart() {
       }));
       setItems(normalised);
 
-      // ✅ Always trust DB values as the source of truth — DB is updated by ProductDetail
+      // âœ… Always trust DB values as the source of truth â€” DB is updated by ProductDetail
       const dbColors: Record<number, string> = {};
       const dbSizes:  Record<number, string> = {};
       normalised.forEach(item => {
@@ -187,7 +187,7 @@ export default function Cart() {
       try {
         const sc = sessionStorage.getItem('luku_colors');
         const ss = sessionStorage.getItem('luku_sizes');
-        // DB values take precedence — spread them last so they override session
+        // DB values take precedence â€” spread them last so they override session
         const mergedColors = { ...(sc ? JSON.parse(sc) : {}), ...dbColors };
         const mergedSizes  = { ...(ss ? JSON.parse(ss) : {}), ...dbSizes  };
         setSelectedColors(mergedColors);
@@ -211,7 +211,7 @@ export default function Cart() {
     if (qty < 1) return removeItem(itemId);
     setUpdating(itemId);
     try {
-      // ✅ Always include selected_color and selected_size alongside quantity
+      // âœ… Always include selected_color and selected_size alongside quantity
       const item = items.find(i => i.id === itemId);
       await axios.patch(`/api/cart/${itemId}`, {
         quantity:       qty,
@@ -256,7 +256,7 @@ export default function Cart() {
     } catch { setError('Failed to clear cart.'); }
   };
 
-  // ✅ handleColorChange — passes quantity so backend PATCH validation passes
+  // âœ… handleColorChange â€” passes quantity so backend PATCH validation passes
   const handleColorChange = async (itemId: number, color: string) => {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
@@ -268,7 +268,7 @@ export default function Cart() {
       return next;
     });
 
-    // ✅ Must include quantity — backend requires it
+    // âœ… Must include quantity â€” backend requires it
     try {
       const res = await axios.patch(`/api/cart/${itemId}`, {
         quantity:       item.quantity,
@@ -284,7 +284,7 @@ export default function Cart() {
     } catch { setError('Failed to update colour.'); }
   };
 
-  // ✅ handleSizeChange — passes quantity so backend PATCH validation passes
+  // âœ… handleSizeChange â€” passes quantity so backend PATCH validation passes
   const handleSizeChange = async (itemId: number, size: string) => {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
@@ -396,7 +396,7 @@ export default function Cart() {
         paddingTop: 96,
       }}>
         <img src={trolleyIcon} alt="" style={{ width: 48, height: 48, objectFit: 'contain', opacity: 0.85 }} />
-        <p style={{ fontFamily: "'DM Sans',sans-serif", color: T.muted, letterSpacing: '1px', fontSize: 13 }}>Loading your cart…</p>
+        <p style={{ fontFamily: "'DM Sans',sans-serif", color: T.muted, letterSpacing: '1px', fontSize: 13 }}>Loading your cartâ€¦</p>
       </div>
     </>
   );
@@ -491,9 +491,9 @@ export default function Cart() {
           max-height: 260px; overflow-y: auto;
         }
         /* On mobile, the popup pushes content below it down instead of
-           floating over the next field — but keeps the same card styling
+           floating over the next field â€” but keeps the same card styling
            (border, shadow, rounded corners) as the delivery-method dropdown.
-           position: relative (not static) so its z-index actually applies —
+           position: relative (not static) so its z-index actually applies â€”
            otherwise the fixed outside-click overlay (z-index:998) paints on
            top and blocks taps/scrolling inside the list. */
         @media (max-width: 768px) {
@@ -524,10 +524,10 @@ export default function Cart() {
         .lk-dd-wrap { position: relative; }
       `}</style>
 
-      {/* ── NAVBAR ── */}
+      {/* â”€â”€ NAVBAR â”€â”€ */}
      <Navbar />
 
-      {/* ── PAGE BODY ── */}
+      {/* â”€â”€ PAGE BODY â”€â”€ */}
       <div className="cart-body-pad" style={{ padding: 'clamp(20px,4vw,40px) clamp(16px,4%,5%) 24px', paddingTop: 'calc(96px + clamp(20px,4vw,40px))', maxWidth: 1160, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
 
         {error && (
@@ -551,13 +551,13 @@ export default function Cart() {
               Looks like you haven't added anything yet.<br />Discover our premium collection.
             </p>
             <button className="cta-primary" style={{ width: 'auto', padding: '14px 44px' }} onClick={() => navigate('/')}>
-              Explore Products →
+              Explore Products â†’
             </button>
           </div>
         ) : (
           <div className="cart-layout">
 
-            {/* ── LEFT: items + shipping form ── */}
+            {/* â”€â”€ LEFT: items + shipping form â”€â”€ */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 18, flexWrap: 'wrap', gap: 10 }}>
                 <div>
@@ -574,7 +574,7 @@ export default function Cart() {
                 </div>
               </div>
 
-              {/* ── ITEMS LIST ── */}
+              {/* â”€â”€ ITEMS LIST â”€â”€ */}
               <div id="items-section" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {items.map(item => {
                   const isBusy     = updating === item.id;
@@ -592,7 +592,7 @@ export default function Cart() {
                           src={item.image_url}
                           alt={item.name}
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/88x88/F0EAD8/0D1B3E?text=📦'; }}
+                          onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/88x88/F0EAD8/0D1B3E?text=ðŸ“¦'; }}
                         />
                       </div>
 
@@ -608,7 +608,7 @@ export default function Cart() {
                           {item.name}
                         </div>
 
-                        {/* ── COLOUR SELECTOR ── */}
+                        {/* â”€â”€ COLOUR SELECTOR â”€â”€ */}
                         {hasColors && (
                           <div className="lk-dd-wrap" style={{ margin: '4px 0 8px' }}>
                             {openDropdown === `color-${item.id}` && (
@@ -633,16 +633,16 @@ export default function Cart() {
                                   <button key={c} className={`lk-dd-row${chosen === c ? ' active' : ''}`}
                                     onClick={() => { handleColorChange(item.id, c); setOpenDropdown(null); }}>
                                     <span>{c}</span>
-                                    {chosen === c && <span style={{ fontSize:9, color:'#C2410C', fontWeight:700 }}>✓</span>}
+                                    {chosen === c && <span style={{ fontSize:9, color:'#C2410C', fontWeight:700 }}>âœ“</span>}
                                   </button>
                                 ))}
                               </div>
                             )}
-                            {!chosen && <span className="color-nudge" style={{ display:'block', marginTop:3 }}>⚠ Pick a colour</span>}
+                            {!chosen && <span className="color-nudge" style={{ display:'block', marginTop:3 }}>âš  Pick a colour</span>}
                           </div>
                         )}
 
-                        {/* ── SIZE SELECTOR ── */}
+                        {/* â”€â”€ SIZE SELECTOR â”€â”€ */}
                         {hasSizes && (
                           <div style={{ margin: '4px 0 8px' }}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -672,7 +672,7 @@ export default function Cart() {
                               })}
                             </div>
                             {!chosenSize && (
-                              <span className="size-nudge">⚠ Pick a size</span>
+                              <span className="size-nudge">âš  Pick a size</span>
                             )}
                           </div>
                         )}
@@ -691,7 +691,7 @@ export default function Cart() {
                                   <span style={{ textDecoration: 'line-through' }}>KSh {Number(item.price).toLocaleString()}</span>
                                 )}
                                 <span>KSh {effectivePrice.toLocaleString()} each</span>
-                                {onSale && <span style={{ color: '#EF4444', fontWeight: 700 }}>🔥 Sale</span>}
+                                {onSale && <span style={{ color: '#EF4444', fontWeight: 700 }}>ðŸ”¥ Sale</span>}
                               </div>
                             </>
                           );
@@ -701,7 +701,7 @@ export default function Cart() {
                       {/* qty + remove */}
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <button className="qty-btn" onClick={() => updateQty(item.id, item.quantity - 1)} disabled={isBusy}>−</button>
+                          <button className="qty-btn" onClick={() => updateQty(item.id, item.quantity - 1)} disabled={isBusy}>âˆ’</button>
                           <span className="jost" style={{ fontWeight: 700, fontSize: 14, minWidth: 22, textAlign: 'center', color: T.navy }}>{item.quantity}</span>
                           <button className="qty-btn" onClick={() => updateQty(item.id, item.quantity + 1)} disabled={isBusy}>+</button>
                         </div>
@@ -715,7 +715,7 @@ export default function Cart() {
                 })}
               </div>
 
-              {/* ── SHIPPING FORM ── */}
+              {/* â”€â”€ SHIPPING FORM â”€â”€ */}
               <div id="shipping-form" className="shipping-card fade-in">
                 <div className="ornament">
                   <div className="ornament-line" /><div className="ornament-diamond" />
@@ -737,7 +737,7 @@ export default function Cart() {
                 <div className="form-field">
                   <label className="field-label">Phone Number *</label>
                   <div style={{ position: 'relative' }}>
-                    <span className="jost" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: T.muted, pointerEvents: 'none' }}>🇰🇪</span>
+                    <span className="jost" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: T.muted, pointerEvents: 'none' }}>ðŸ‡°ðŸ‡ª</span>
                     <input type="tel" placeholder="0712 345 678" value={shipping.phone}
                       onChange={e => setField('phone', e.target.value)} onBlur={() => touch('phone')} style={{ ...inputStyle('phone'), paddingLeft: 36 }} />
                   </div>
@@ -818,14 +818,14 @@ export default function Cart() {
                     <div style={{ background: T.cream, border: '1px solid rgba(0,0,0,0.1)', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
                       <img src={locationIcon} alt="" style={{ width: 20, height: 20, objectFit: 'contain', flexShrink: 0 }} />
                       <div>
-                        <div className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy }}>Luku Prime — Nairobi CBD</div>
+                        <div className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy }}>Luku Prime â€” Nairobi CBD</div>
                         <div className="jost" style={{ fontSize: 11, color: T.muted }}>Moi Avenue</div>
                       </div>
                     </div>
                     <div style={{ background: 'rgba(74,122,74,0.08)', border: '1px solid rgba(74,122,74,0.25)', borderRadius: 10, padding: '10px 14px', marginTop: 10 }}>
                       <p className="jost" style={{ fontSize: 12, color: '#4A7A4A', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
                         <img src={locationIcon} alt="" style={{ width: 15, height: 15, objectFit: 'contain', flexShrink: 0 }} />
-                        You'll collect your order at this branch — no delivery fee!
+                        You'll collect your order at this branch â€” no delivery fee!
                       </p>
                     </div>
                   </div>
@@ -857,7 +857,7 @@ export default function Cart() {
                               <button key={c} className={`lk-dd-row${shipping.county === c ? ' active' : ''}`}
                                 onClick={() => { setField('county', c); setOpenDropdown(null); }}>
                                 <span>{c}</span>
-                                {shipping.county === c && <span style={{ fontSize:9, color:'#C2410C', fontWeight:700 }}>✓</span>}
+                                {shipping.county === c && <span style={{ fontSize:9, color:'#C2410C', fontWeight:700 }}>âœ“</span>}
                               </button>
                             ))}
                           </div>
@@ -870,14 +870,14 @@ export default function Cart() {
 
                 <div className="form-field" style={{ marginBottom: 0 }}>
                   <label className="field-label">Delivery Notes <span style={{ color: T.muted, fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 11 }}>(optional)</span></label>
-                  <textarea rows={3} placeholder="Landmark, building name, gate colour, best time to deliver…"
+                  <textarea rows={3} placeholder="Landmark, building name, gate colour, best time to deliverâ€¦"
                     value={shipping.additionalInfo} onChange={e => setField('additionalInfo', e.target.value)}
                     style={{ ...inputStyle('additionalInfo'), resize: 'none', lineHeight: 1.6 }} />
                 </div>
               </div>
             </div>
 
-            {/* ── RIGHT: order summary sidebar ── */}
+            {/* â”€â”€ RIGHT: order summary sidebar â”€â”€ */}
             <div className="sidebar-sticky">
               <div className="summary-card">
                 <div className="ornament">
@@ -907,7 +907,7 @@ export default function Cart() {
                   </div>
                 )}
 
-                {/* ── unified per-item colour + size recap ── */}
+                {/* â”€â”€ unified per-item colour + size recap â”€â”€ */}
                 {items.some(i => i.colors.length > 0 || i.sizes.length > 0) && (
                   <div style={{ background: T.cream, border: 'none', borderRadius: 12, padding: '12px 14px', marginBottom: 18 }}>
                     <div className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.muted, marginBottom: 10 }}>Item Selections</div>
@@ -946,7 +946,7 @@ export default function Cart() {
                                     <span className="jost" style={{ fontSize: 11, fontWeight: 700, color: T.navy }}>{color}</span>
                                   </div>
                                 ) : (
-                                  <span className="jost" style={{ fontSize: 10, color: '#555', fontWeight: 600 }}>⚠ Not chosen</span>
+                                  <span className="jost" style={{ fontSize: 10, color: '#555', fontWeight: 600 }}>âš  Not chosen</span>
                                 )}
                               </div>
                             )}
@@ -956,7 +956,7 @@ export default function Cart() {
                                 {size ? (
                                   <span className="jost" style={{ fontSize: 11, fontWeight: 700, color: T.navy }}>{size}</span>
                                 ) : (
-                                  <span className="jost" style={{ fontSize: 10, color: '#555', fontWeight: 600 }}>⚠ Not chosen</span>
+                                  <span className="jost" style={{ fontSize: 10, color: '#555', fontWeight: 600 }}>âš  Not chosen</span>
                                 )}
                               </div>
                             )}
@@ -975,7 +975,7 @@ export default function Cart() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                     <span className="jost" style={{ fontSize: 13, color: '#2D6A2D' }}>{discount.discountLabel}</span>
                     <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: '#2D6A2D' }}>
-                      − KSh {discount.discountAmount.toLocaleString()}
+                      âˆ’ KSh {discount.discountAmount.toLocaleString()}
                     </span>
                   </div>
                 )}
@@ -1005,7 +1005,7 @@ export default function Cart() {
                   </div>
                 </div>
 
-                <button className="cta-primary" style={{ marginBottom: 10, background: '#16a34a' }} onClick={handleCheckout}>Proceed to Checkout →</button>
+                <button className="cta-primary" style={{ marginBottom: 10, background: '#16a34a' }} onClick={handleCheckout}>Proceed to Checkout â†’</button>
                 <button className="cta-secondary" style={{ marginBottom: 18 }} onClick={() => navigate('/')}>Continue Shopping</button>
 
               </div>
@@ -1016,7 +1016,7 @@ export default function Cart() {
 
 
 
-      {/* ── FOOTER ── */}
+      {/* â”€â”€ FOOTER â”€â”€ */}
       <Footer />
     </div>
   );

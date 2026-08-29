@@ -1,9 +1,9 @@
-import { useEffect, useState, useRef } from 'react';
+﻿import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Footer from '../components/common/Footer';
 
-// ── Payment logos ────────────────────────────────────────────────
+// â”€â”€ Payment logos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 import mpesaLogo from '../assets/M-PESA_LOGO-01.svg';
 import pesapalLogo from '../assets/pesapal1.png';
 import secureBadge from '../assets/securepayment.png';
@@ -33,7 +33,7 @@ type CheckoutStep = 'summary' | 'waiting' | 'success' | 'failed' | 'pesapal-redi
 type DeliveryZone = 'pickup' | 'cbd' | 'environs' | 'county';
 type PaymentMethod = 'mpesa' | 'pesapal' | 'payhero';
 
-// ─── Luku Prime Design Tokens ──────────────────────────────────────────────
+// â”€â”€â”€ Luku Prime Design Tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const T = {
   navy:     '#000000',
   navyMid:  '#111111',
@@ -64,7 +64,7 @@ export default function Checkout() {
   const tickRef     = useRef<ReturnType<typeof setInterval> | null>(null);
   // True once this confirmation attempt has been resolved (success, failure,
   // or manual cancel). Guards against a slow, already-in-flight poll request
-  // resolving AFTER a faster later request already resolved things — without
+  // resolving AFTER a faster later request already resolved things â€” without
   // this, a stale response (e.g. a late 401) can overwrite a success screen
   // that's already showing, even though the payment genuinely succeeded.
   const resolvedRef = useRef(false);
@@ -92,7 +92,7 @@ export default function Checkout() {
   const [pesapalLoading, setPesapalLoading]     = useState(false);
   const [pesapalTrackingId, setPesapalTrackingId] = useState('');
 
-  // Authoritative order data from the server — the Pesapal redirect is a full
+  // Authoritative order data from the server â€” the Pesapal redirect is a full
   // page reload, which wipes the cart items, delivery zone, and shipping info
   // this page would otherwise use from router state. These override that
   // stale/empty local state once the server tells us what was actually charged.
@@ -108,7 +108,7 @@ export default function Checkout() {
   const [orderNumber, setOrderNumber]           = useState('');
   const [orderDate, setOrderDate]               = useState('');
 
-  // First-order discount (server is the source of truth — this is display only)
+  // First-order discount (server is the source of truth â€” this is display only)
   const [discount, setDiscount] = useState<{ eligible: boolean; discountAmount: number; discountLabel: string | null }>({
     eligible: false, discountAmount: 0, discountLabel: null,
   });
@@ -121,7 +121,7 @@ export default function Checkout() {
     { firstName?: string; phone?: string; county?: string; pickupLocation?: string; additionalInfo?: string } | undefined;
   // Falls back to the server-recorded shipping info once the Pesapal
   // redirect has wiped passedShipping (router state doesn't survive a full
-  // page reload) — normal M-Pesa flow never leaves the page, so
+  // page reload) â€” normal M-Pesa flow never leaves the page, so
   // passedShipping is always present there and this fallback is a no-op.
   const effectiveShipping = passedShipping ?? resolvedShipping ?? undefined;
   const passedColors = (location.state as any)?.selectedColors as Record<number, string> | undefined;
@@ -173,7 +173,7 @@ export default function Checkout() {
         discountAmount: Number(r.data.discountAmount) || 0,
         discountLabel: r.data.discountLabel,
       }))
-      .catch(() => {}); // fine to fail silently — preview is display-only
+      .catch(() => {}); // fine to fail silently â€” preview is display-only
   }, []);
 
   // Prefill the PayHero phone field from shipping details once they're known
@@ -181,7 +181,7 @@ export default function Checkout() {
     if (passedShipping?.phone && !payHeroPhone) setPayHeroPhone(passedShipping.phone);
   }, [passedShipping?.phone]);
 
-  // Returns the active price for an item — sale price if flash-sale, else regular price
+  // Returns the active price for an item â€” sale price if flash-sale, else regular price
   const getEffectivePrice = (item: CartItem): number =>
     flashSaleMap[item.product_id] ?? Number(item.price);
 
@@ -190,7 +190,7 @@ export default function Checkout() {
   // its redirect handling:
   //   1) mysite.com/#/checkout?OrderTrackingId=xxx   (query inside the hash)
   //   2) mysite.com/?OrderTrackingId=xxx#/checkout   (query before the hash,
-  //      per strict URL spec — some libraries normalize it this way even
+  //      per strict URL spec â€” some libraries normalize it this way even
   //      though we gave them a hash-based callback_url)
   // Check both so this works regardless of which one actually happens.
   useEffect(() => {
@@ -258,7 +258,7 @@ export default function Checkout() {
     return '';
   };
 
-  // ── M-Pesa payment (direct Daraja) ─────────────────────────────────────────
+  // â”€â”€ M-Pesa payment (direct Daraja) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleMpesaPay = async () => {
     const shippingPhone = passedShipping?.phone || '';
     if (!shippingPhone) {
@@ -273,7 +273,7 @@ export default function Checkout() {
       const passedColors   = (location.state as any)?.selectedColors ?? {};
       const passedSizes    = (location.state as any)?.selectedSizes ?? {};
 
-      // amount is intentionally omitted — the server recomputes the total
+      // amount is intentionally omitted â€” the server recomputes the total
       // from the cart + first-order discount eligibility, never trusting the client.
       const res = await axios.post('/api/payments/stk-push', {
         phone: shippingPhone,
@@ -304,7 +304,7 @@ export default function Checkout() {
     pollRef.current = setInterval(async () => {
       try {
         const res = await axios.get(`/api/payments/status/${reqId}`);
-        if (resolvedRef.current) return; // a faster, later response already resolved this — ignore the stale one
+        if (resolvedRef.current) return; // a faster, later response already resolved this â€” ignore the stale one
         const { status, mpesa_receipt, order_number } = res.data;
         if (status === 'completed') {
           clearAll(); setReceipt(mpesa_receipt || ''); if (order_number) setOrderNumber(order_number); setStep('success');
@@ -333,7 +333,7 @@ export default function Checkout() {
     }, 90000);
   };
 
-  // ── PayHero payment (M-Pesa STK push via PayHero) ──────────────────────────
+  // â”€â”€ PayHero payment (M-Pesa STK push via PayHero) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handlePayHeroPay = async () => {
     if (!payHeroPhone) {
       setServerError('Enter the phone number to receive the STK push on.');
@@ -347,7 +347,7 @@ export default function Checkout() {
       const passedColors   = (location.state as any)?.selectedColors ?? {};
       const passedSizes    = (location.state as any)?.selectedSizes ?? {};
 
-      // amount is intentionally omitted — the server recomputes the total
+      // amount is intentionally omitted â€” the server recomputes the total
       // from the cart + first-order discount eligibility, never trusting the client.
       const res = await axios.post('/api/payments/payhero/stk-push', {
         phone: payHeroPhone,
@@ -379,7 +379,7 @@ export default function Checkout() {
     pollRef.current = setInterval(async () => {
       try {
         const res = await axios.get(`/api/payments/payhero/status/${reqId}`);
-        if (resolvedRef.current) return; // a faster, later response already resolved this — ignore the stale one
+        if (resolvedRef.current) return; // a faster, later response already resolved this â€” ignore the stale one
         const { status, confirmation_code, order_number } = res.data;
         if (status === 'completed') {
           clearAll(); setReceipt(confirmation_code || ''); if (order_number) setOrderNumber(order_number); setStep('success');
@@ -395,7 +395,7 @@ export default function Checkout() {
     }, 90000);
   };
 
-  // ── Pesapal payment ────────────────────────────────────────────────────────
+  // â”€â”€ Pesapal payment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handlePesapalPay = async () => {
     setPesapalLoading(true);
     setServerError('');
@@ -404,7 +404,7 @@ export default function Checkout() {
       const passedColors   = (location.state as any)?.selectedColors ?? {};
       const passedSizes    = (location.state as any)?.selectedSizes ?? {};
 
-      // NOTE: your pesapalController presumably still reads `amount` from req.body —
+      // NOTE: your pesapalController presumably still reads `amount` from req.body â€”
       // that's a separate file I haven't seen. If it trusts this client-sent amount,
       // it has the same spoofing hole stk-push had; apply the same
       // calculateFirstOrderDiscount()-based recomputation there before going live.
@@ -442,7 +442,7 @@ export default function Checkout() {
         const res = await axios.get(`/api/payments/pesapal/status/${trackingId}`, {
           headers: { 'X-Skip-Auth-Redirect': 'true' },
         });
-        if (resolvedRef.current) return; // a faster, later response already resolved this — ignore the stale one
+        if (resolvedRef.current) return; // a faster, later response already resolved this â€” ignore the stale one
 
         if (res.data.amount != null) setServerAmount(Number(res.data.amount));
         if (res.data.items_snapshot?.items) setItems(res.data.items_snapshot.items);
@@ -453,7 +453,7 @@ export default function Checkout() {
           setDiscount({
             eligible: true,
             discountAmount: Number(res.data.discount_amount) || 0,
-            discountLabel: 'First-Order Discount', // cosmetic — adjust to match your discountController's exact wording if it differs
+            discountLabel: 'First-Order Discount', // cosmetic â€” adjust to match your discountController's exact wording if it differs
           });
         }
 
@@ -464,11 +464,11 @@ export default function Checkout() {
           clearAll(); setFailMsg('Payment was not completed.'); setStep('failed');
         }
       } catch (err: any) {
-        if (resolvedRef.current) return; // payment already confirmed one way or another — a late error from an older request must not override that
+        if (resolvedRef.current) return; // payment already confirmed one way or another â€” a late error from an older request must not override that
         if (err?.response?.status === 401) {
           // Session expired while we were confirming payment. The order
           // itself is safe (Pesapal's IPN creates it server-side, not tied
-          // to this tab) — stop polling and send them to log back in
+          // to this tab) â€” stop polling and send them to log back in
           // instead of silently wiping them out mid-confirmation.
           clearAll();
           setFailMsg('Your session expired while confirming payment. If you were charged, please log in and check your Orders page.');
@@ -485,7 +485,7 @@ export default function Checkout() {
 
   const clearAll = () => {
     // Stopping the interval/timeout here can't cancel a request that's
-    // already been sent — this flag is what stops that request's eventual
+    // already been sent â€” this flag is what stops that request's eventual
     // response from being acted on once we've already resolved.
     resolvedRef.current = true;
     if (pollRef.current)    clearInterval(pollRef.current);
@@ -503,7 +503,7 @@ export default function Checkout() {
         playsInline
         style={{ width: 96, height: 96, objectFit: 'contain' }}
       />
-      <p style={{ fontFamily: "'DM Sans',sans-serif", color: '#888', letterSpacing: '1px', fontSize: 13 }}>Loading your order…</p>
+      <p style={{ fontFamily: "'DM Sans',sans-serif", color: '#888', letterSpacing: '1px', fontSize: 13 }}>Loading your orderâ€¦</p>
     </div>
   );
 
@@ -578,18 +578,18 @@ export default function Checkout() {
         .pulse-anim{animation:pulse 1.6s ease-in-out infinite}
       `}</style>
 
-      {/* ── STICKY HEADER: Topbar + Navbar ── */}
+      {/* â”€â”€ STICKY HEADER: Topbar + Navbar â”€â”€ */}
       <div style={{ position: 'sticky', top: 0, zIndex: 101, background: '#000' }}>
         {/* Topbar */}
         <div style={{ height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <span className="jost" style={{ fontSize: 10, fontWeight: 600, letterSpacing: '2px', color: 'rgba(255,255,255,0.7)' }}>
-            ✦ GET 10% OFF ON YOUR FIRST ORDER
+            âœ¦ GET 10% OFF ON YOUR FIRST ORDER
           </span>
         </div>
         {/* Navbar */}
         <nav style={{ background: '#000', padding: '0 5%', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 2px 16px rgba(0,0,0,0.15)' }}>
           <button className="jost" onClick={() => navigate('/cart')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 11, fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8 }}>
-            ← Cart
+            â† Cart
           </button>
           <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', textAlign: 'center' }}>
             <div className="jost" style={{ fontSize: 9, fontWeight: 700, letterSpacing: '3px', color: '#888', textTransform: 'uppercase', marginBottom: 3 }}>Secure</div>
@@ -605,7 +605,7 @@ export default function Checkout() {
 
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '16px 16px 80px', minHeight: 'calc(100vh - 114px)' }}>
 
-        {/* ── STEP: SUMMARY ── */}
+        {/* â”€â”€ STEP: SUMMARY â”€â”€ */}
         {step === 'summary' && (
           <div className="lp-checkout-full fade-in">
           <div className="lp-checkout-col">
@@ -629,7 +629,7 @@ export default function Checkout() {
                 <div key={item.id} className="item-card">
                   <div style={{ width: 58, height: 58, borderRadius: 0, overflow: 'hidden', flexShrink: 0, background: '#F5F5F5' }}>
                     <img src={item.image_url} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/58x58/${T.creamMid.replace('#','')}/${T.navy.replace('#','')}?text=📦`; }} />
+                      onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/58x58/${T.creamMid.replace('#','')}/${T.navy.replace('#','')}?text=ðŸ“¦`; }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 14, color: T.navy, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
@@ -637,7 +637,7 @@ export default function Checkout() {
                       <span>Qty: {item.quantity}</span>
                       {passedColors?.[item.id] && (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 700, color: T.navy }}>
-                          <span style={{ color: T.creamDeep, fontWeight: 400 }}>·</span>
+                          <span style={{ color: T.creamDeep, fontWeight: 400 }}>Â·</span>
                           <span style={{ width: 9, height: 9, borderRadius: '50%', background: passedColors[item.id], border: '1px solid rgba(0,0,0,0.15)', display: 'inline-block' }} />
                           {passedColors[item.id]}
                         </span>
@@ -700,12 +700,12 @@ export default function Checkout() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                   <span className="jost" style={{ fontSize: 13, color: '#5A8A5A' }}>{discount.discountLabel}</span>
                   <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: '#5A8A5A' }}>
-                    − KSh {discount.discountAmount.toLocaleString()}
+                    âˆ’ KSh {discount.discountAmount.toLocaleString()}
                   </span>
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span className="jost" style={{ fontSize: 13, color: T.muted }}>Delivery · <span style={{ color: '#000' }}>{deliveryLabel}</span></span>
+                <span className="jost" style={{ fontSize: 13, color: T.muted }}>Delivery Â· <span style={{ color: '#000' }}>{deliveryLabel}</span></span>
                 <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: deliveryFee === 0 ? '#5A8A5A' : T.navy }}>
                   {deliveryFee === 0
                     ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>FREE <img src={freeIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /></span>
@@ -736,7 +736,7 @@ export default function Checkout() {
               Choose how you'd like to pay
             </p>
 
-            {/* Payment method — Pesapal or PayHero (M-Pesa STK push) */}
+            {/* Payment method â€” Pesapal or PayHero (M-Pesa STK push) */}
             <div className="pay-method-list">
               <button
                 type="button"
@@ -767,7 +767,7 @@ export default function Checkout() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <span className="jost" style={{ fontWeight: 600, fontSize: 14, color: T.navy }}>Pay with M-Pesa</span>
-                  <span className="jost" style={{ fontSize: 11, color: T.muted, marginTop: 3 }}>Instant STK push · Powered by PayHero</span>
+                  <span className="jost" style={{ fontSize: 11, color: T.muted, marginTop: 3 }}>Instant STK push Â· Powered by PayHero</span>
                 </div>
               </button>
             </div>
@@ -796,15 +796,15 @@ export default function Checkout() {
             {paymentMethod === 'payhero' ? (
               <button className="cta-gold" onClick={handlePayHeroPay} disabled={payHeroPushing} style={{ marginTop: 4, background: '#16a34a' }}>
                 {payHeroPushing
-                  ? <><span style={{ display: 'inline-block', animation: 'pulse 0.8s ease infinite' }}>⏳</span> Sending STK push…</>
-                  : <>Pay KSh {total.toLocaleString()} with M-Pesa →</>
+                  ? <><span style={{ display: 'inline-block', animation: 'pulse 0.8s ease infinite' }}>â³</span> Sending STK pushâ€¦</>
+                  : <>Pay KSh {total.toLocaleString()} with M-Pesa â†’</>
                 }
               </button>
             ) : (
               <button className="cta-gold" onClick={handlePesapalPay} disabled={pesapalLoading} style={{ marginTop: 4, background: '#16a34a' }}>
                 {pesapalLoading
-                  ? <><span style={{ display: 'inline-block', animation: 'pulse 0.8s ease infinite' }}>⏳</span> Redirecting to Pesapal…</>
-                  : <>Continue with Pesapal →</>
+                  ? <><span style={{ display: 'inline-block', animation: 'pulse 0.8s ease infinite' }}>â³</span> Redirecting to Pesapalâ€¦</>
+                  : <>Continue with Pesapal â†’</>
                 }
               </button>
             )}
@@ -817,7 +817,7 @@ export default function Checkout() {
           </div>
         )}
 
-        {/* ── STEP: WAITING ── */}
+        {/* â”€â”€ STEP: WAITING â”€â”€ */}
         {step === 'waiting' && (
           <div className="lp-card fade-in" style={{ textAlign: 'center' }}>
             <video
@@ -835,7 +835,7 @@ export default function Checkout() {
               <div className="ornament-diamond" /><div className="ornament-line" />
             </div>
             <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 24, color: T.navy, marginBottom: 10 }}>
-              {paymentMethod === 'pesapal' ? 'Confirming Payment…' : 'Check Your Phone'}
+              {paymentMethod === 'pesapal' ? 'Confirming Paymentâ€¦' : 'Check Your Phone'}
             </h2>
             <p className="jost" style={{ color: T.muted, fontSize: 13, maxWidth: 300, margin: '0 auto 28px', lineHeight: 1.75, fontWeight: 300 }}>
               {paymentMethod === 'pesapal'
@@ -846,9 +846,9 @@ export default function Checkout() {
 
             <div className="progress-box">
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span className="jost" style={{ fontSize: 12, color: T.muted }}>Waiting for confirmation…</span>
+                <span className="jost" style={{ fontSize: 12, color: T.muted }}>Waiting for confirmationâ€¦</span>
                 <span className="jost" style={{ fontSize: 12, color: T.gold, fontWeight: 700 }}>
-                  {elapsed < 60 ? `${60 - elapsed}s` : 'Checking…'}
+                  {elapsed < 60 ? `${60 - elapsed}s` : 'Checkingâ€¦'}
                 </span>
               </div>
               <div style={{ background: '#E0E0E0', borderRadius: 0, height: 4, overflow: 'hidden' }}>
@@ -883,7 +883,7 @@ export default function Checkout() {
                     fontSize: 11, color: item.done ? '#fff' : '#888',
                     fontFamily: "'DM Sans',sans-serif", fontWeight: 700,
                   }}>
-                    {item.done ? '✓' : i + 1}
+                    {item.done ? 'âœ“' : i + 1}
                   </div>
                   <span className="jost" style={{ fontSize: 13, color: item.done ? '#000' : item.active ? '#000' : '#888', fontWeight: item.active ? 600 : 400 }}>
                     {item.text}
@@ -894,13 +894,13 @@ export default function Checkout() {
 
             {(paymentMethod === 'mpesa' || paymentMethod === 'payhero') && (
               <button className="cta-outline" onClick={() => { clearAll(); setStep('summary'); }}>
-                Cancel — Back to Summary
+                Cancel â€” Back to Summary
               </button>
             )}
           </div>
         )}
 
-        {/* ── STEP: SUCCESS ── */}
+        {/* â”€â”€ STEP: SUCCESS â”€â”€ */}
         {step === 'success' && (
           <div className="lp-card fade-in" style={{ textAlign: 'center' }}>
             <div
@@ -932,7 +932,7 @@ export default function Checkout() {
                           src={item.image_url}
                           alt={item.name}
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/48x48/${T.creamMid.replace('#','')}/${T.navy.replace('#','')}?text=📦`; }}
+                          onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/48x48/${T.creamMid.replace('#','')}/${T.navy.replace('#','')}?text=ðŸ“¦`; }}
                         />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -941,14 +941,14 @@ export default function Checkout() {
                           <span style={{ fontWeight: 700 }}>Qty: {item.quantity}</span>
                           {color && (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontWeight: 700, color: T.navy }}>
-                              <span style={{ color: T.creamDeep, fontWeight: 400 }}>·</span>
+                              <span style={{ color: T.creamDeep, fontWeight: 400 }}>Â·</span>
                               <span style={{ width: 9, height: 9, borderRadius: '50%', background: color, border: '1px solid rgba(0,0,0,0.15)', display: 'inline-block' }} />
                               {color}
                             </span>
                           )}
                           {size && (
                             <span style={{ fontWeight: 700, color: T.navy }}>
-                              <span style={{ color: T.creamDeep, fontWeight: 400 }}>·</span> Size: {size}
+                              <span style={{ color: T.creamDeep, fontWeight: 400 }}>Â·</span> Size: {size}
                             </span>
                           )}
                         </div>
@@ -1013,12 +1013,12 @@ export default function Checkout() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                   <span className="jost" style={{ fontSize: 13, fontWeight: 700, color: '#5A8A5A' }}>{discount.discountLabel}</span>
                   <span className="jost" style={{ fontSize: 13, fontWeight: 700, color: '#5A8A5A' }}>
-                    − KSh {discount.discountAmount.toLocaleString()}
+                    âˆ’ KSh {discount.discountAmount.toLocaleString()}
                   </span>
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy }}>Delivery · <span style={{ color: '#000' }}>{deliveryLabel}</span></span>
+                <span className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy }}>Delivery Â· <span style={{ color: '#000' }}>{deliveryLabel}</span></span>
                 <span className="jost" style={{ fontSize: 13, fontWeight: 700, color: deliveryFee === 0 ? '#5A8A5A' : T.navy }}>
                   {deliveryFee === 0
                   ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>FREE <img src={freeIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /></span>
@@ -1036,14 +1036,14 @@ export default function Checkout() {
                   {paymentMethod === 'pesapal'
                     ? <><img src={cardIcon} alt="" style={{ width: 16, height: 16, objectFit: 'contain' }} /> Card (Pesapal)</>
                     : paymentMethod === 'payhero'
-                    ? <>📱 M-Pesa (PayHero) · {payHeroPhone}</>
-                    : <>📱 M-Pesa · {passedShipping?.phone}</>}
+                    ? <>ðŸ“± M-Pesa (PayHero) Â· {payHeroPhone}</>
+                    : <>ðŸ“± M-Pesa Â· {passedShipping?.phone}</>}
                 </span>
               </div>
             </div>
 
             <button className="cta-gold" onClick={() => navigate('/')} style={{ background: '#fff', color: '#000', border: '1px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-              <img src={shoppingBagsIcon} alt="" style={{ width: 16, height: 16, objectFit: 'contain' }} /> Continue Shopping →
+              <img src={shoppingBagsIcon} alt="" style={{ width: 16, height: 16, objectFit: 'contain' }} /> Continue Shopping â†’
             </button>
             <button className="cta-navy" onClick={() => navigate('/orders')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
               <img src={bookingIcon} alt="" style={{ width: 16, height: 16, objectFit: 'contain' }} /> View My Orders
@@ -1051,10 +1051,10 @@ export default function Checkout() {
           </div>
         )}
 
-        {/* ── STEP: FAILED ── */}
+        {/* â”€â”€ STEP: FAILED â”€â”€ */}
         {step === 'failed' && (
           <div className="lp-card fade-in" style={{ textAlign: 'center' }}>
-            <div className="status-circle check-pop" style={{ background: '#FDF0EE', border: '3px solid #C0392B' }}>❌</div>
+            <div className="status-circle check-pop" style={{ background: '#FDF0EE', border: '3px solid #C0392B' }}>âŒ</div>
 
             <div className="ornament" style={{ justifyContent: 'center' }}>
               <div className="ornament-line" /><div className="ornament-diamond" />
@@ -1067,15 +1067,15 @@ export default function Checkout() {
             </p>
 
             <button className="cta-gold" onClick={() => { setStep('summary'); setServerError(''); setFailMsg(''); }}>
-              🔄 Try Again
+              ðŸ”„ Try Again
             </button>
-            <button className="cta-outline" onClick={() => navigate('/cart')}>← Back to Cart</button>
+            <button className="cta-outline" onClick={() => navigate('/cart')}>â† Back to Cart</button>
           </div>
         )}
 
       </div>
 
-      {/* ── FOOTER ── */}
+      {/* â”€â”€ FOOTER â”€â”€ */}
       <Footer />
     </div>
   );

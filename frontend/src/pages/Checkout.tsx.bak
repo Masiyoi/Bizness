@@ -114,8 +114,6 @@ export default function Checkout() {
   });
   
   const passedZone = (location.state as { deliveryZone?: DeliveryZone } | null)?.deliveryZone;
-  const passedCoupon = (location.state as any)?.couponCode as string | undefined;
-  const affiliateCode = (passedCoupon || sessionStorage.getItem('luku_coupon') || '').trim().toUpperCase() || undefined;
   const deliveryZone: DeliveryZone = resolvedZone ?? passedZone ?? 'cbd';
   const passedShipping = (location.state as any)?.shipping as
     { firstName?: string; phone?: string; county?: string; pickupLocation?: string; additionalInfo?: string } | undefined;
@@ -283,7 +281,6 @@ export default function Checkout() {
         selectedColors: passedColors,
         selectedSizes:  passedSizes,
         reserved_order_number: reservedOrderNumber,
-        affiliate_code: affiliateCode,
       });
 
       setCheckoutRequestId(res.data.checkoutRequestId);
@@ -357,7 +354,6 @@ export default function Checkout() {
         selectedColors: passedColors,
         selectedSizes:  passedSizes,
         reserved_order_number: reservedOrderNumber,
-        affiliate_code: affiliateCode,
       });
 
       setPayHeroCheckoutRequestId(res.data.checkoutRequestId);
@@ -416,7 +412,6 @@ export default function Checkout() {
         selectedColors: passedColors,
         selectedSizes:  passedSizes,
         reserved_order_number: reservedOrderNumber,
-        affiliate_code: affiliateCode,
       });
 
       // Save tracking ID in case user comes back via callback URL

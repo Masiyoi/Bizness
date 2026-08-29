@@ -20,6 +20,7 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const discountRoutes   = require('./routes/discountRoutes');
 const membersRoutes     = require('./routes/membersRoutes');
 const usersRoutes       = require('./routes/usersRoutes');
+const affiliateRoutes   = require('./routes/affiliateRoutes');
 const auth      = require('./middleware/auth');
 const adminOnly = require('./middleware/adminOnly');
 const { awardBirthdayBonuses } = require('./controllers/membersController');
@@ -78,6 +79,7 @@ app.use('/api/instagram',   instagramRoutes);
 app.use('/api/discount',    discountRoutes);
 app.use('/api/members',     membersRoutes);
 app.use('/api/users',       usersRoutes);
+app.use('/api/affiliate',   affiliateRoutes);
 app.use('/api/admin', auth, adminOnly, analyticsRoutes);
 
 // ── Scheduled jobs ─────────────────────────────────────────────────────────────

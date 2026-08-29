@@ -1,8 +1,8 @@
-const axios = require('axios');
+﻿const axios = require('axios');
 const db    = require('../config/db');
 const { calculateFirstOrderDiscount } = require('./discountController');
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const getTimestamp = () => {
   const now = new Date();
@@ -42,7 +42,7 @@ const getAccessToken = async () => {
   return res.data.access_token;
 };
 
-// ── POST /api/payments/stk-push ───────────────────────────────────────────────
+// â”€â”€ POST /api/payments/stk-push â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 exports.stkPush = async (req, res) => {
   const {
     phone,
@@ -81,8 +81,8 @@ exports.stkPush = async (req, res) => {
     return res.status(400).json({ msg: err.message });
   }
 
-  // ── Compute the authoritative order total server-side ──────────────────────
-  // Never trust a client-supplied amount — recompute the subtotal from the DB
+  // â”€â”€ Compute the authoritative order total server-side â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Never trust a client-supplied amount â€” recompute the subtotal from the DB
   // cart and apply the first-order discount (if eligible) here.
   let roundedAmount, discountInfo;
   try {
@@ -151,7 +151,7 @@ exports.stkPush = async (req, res) => {
       return res.status(400).json({ msg: CustomerMessage || 'STK push failed' });
     }
 
-    // Single atomic INSERT — shipping_meta is $8, no separate UPDATE needed
+    // Single atomic INSERT â€” shipping_meta is $8, no separate UPDATE needed
     await db.query(
       `INSERT INTO payments
          (user_id, checkout_request_id, merchant_request_id, amount, phone,
@@ -188,7 +188,7 @@ exports.stkPush = async (req, res) => {
   }
 };
 
-// ── POST /api/payments/callback  (called by Safaricom) ───────────────────────
+// â”€â”€ POST /api/payments/callback  (called by Safaricom) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 exports.mpesaCallback = async (req, res) => {
   try {
     const body = req.body?.Body?.stkCallback;
@@ -197,7 +197,7 @@ exports.mpesaCallback = async (req, res) => {
     const { CheckoutRequestID, ResultCode, ResultDesc, CallbackMetadata } = body;
 
     if (ResultCode === 0) {
-      // ── Successful payment ───────────────────────────────────────────────
+      // â”€â”€ Successful payment â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const items   = CallbackMetadata?.Item || [];
       const get     = (name) => items.find(i => i.Name === name)?.Value;
       const receipt = get('MpesaReceiptNumber');
@@ -254,7 +254,7 @@ exports.mpesaCallback = async (req, res) => {
         [payment.user_id]
       );
 
-      // Build items array — DB color/size wins, frontend selections are fallback
+      // Build items array â€” DB color/size wins, frontend selections are fallback
       const itemsArray = cartRes.rows.map(item => ({
         id:             item.id,
         product_id:     item.product_id,
@@ -331,10 +331,10 @@ exports.mpesaCallback = async (req, res) => {
         [payment.user_id]
       );
 
-      console.log(`✅ Order created for user ${payment.user_id} — receipt ${receipt} — KSh ${amount}`);
+      console.log(`âœ… Order created for user ${payment.user_id} â€” receipt ${receipt} â€” KSh ${amount}`);
 
     } else {
-      // ── Failed / cancelled ───────────────────────────────────────────────
+      // â”€â”€ Failed / cancelled â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       await db.query(
         `UPDATE payments
          SET status = 'failed', result_desc = $1, updated_at = NOW()
@@ -342,7 +342,7 @@ exports.mpesaCallback = async (req, res) => {
         [ResultDesc, CheckoutRequestID]
       );
 
-      console.log(`❌ Payment failed: ${ResultDesc}`);
+      console.log(`âŒ Payment failed: ${ResultDesc}`);
 
       // Create a 'cancelled' order so the customer sees the failed attempt.
       // Cart is intentionally left intact so they can retry checkout.
@@ -413,7 +413,7 @@ exports.mpesaCallback = async (req, res) => {
             ]
           );
 
-          console.log(`📋 Cancelled-order record created for user ${payment.user_id}`);
+          console.log(`ðŸ“‹ Cancelled-order record created for user ${payment.user_id}`);
         }
       } catch (orderErr) {
         console.error('Failed to create cancelled-order record:', orderErr.message);
@@ -427,7 +427,7 @@ exports.mpesaCallback = async (req, res) => {
   }
 };
 
-// ── GET /api/payments/status/:checkoutRequestId  (polled by frontend) ────────
+// â”€â”€ GET /api/payments/status/:checkoutRequestId  (polled by frontend) â”€â”€â”€â”€â”€â”€â”€â”€
 exports.getPaymentStatus = async (req, res) => {
   const { checkoutRequestId } = req.params;
   try {
@@ -455,7 +455,7 @@ exports.getPaymentStatus = async (req, res) => {
   }
 };
 
-// ── GET /api/payments/query/:checkoutRequestId  (manual STK query fallback) ──
+// â”€â”€ GET /api/payments/query/:checkoutRequestId  (manual STK query fallback) â”€â”€
 exports.querySTK = async (req, res) => {
   const { checkoutRequestId } = req.params;
   try {

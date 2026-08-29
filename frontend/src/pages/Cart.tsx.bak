@@ -369,7 +369,7 @@ export default function Cart() {
     sessionStorage.setItem('luku_zone',     deliveryZone);
     sessionStorage.setItem('luku_colors',   JSON.stringify(selectedColors));
     sessionStorage.setItem('luku_sizes',    JSON.stringify(selectedSizes));
-    navigate('/checkout', { state: { deliveryZone, shipping, selectedColors, selectedSizes, couponCode } });
+    navigate('/checkout', { state: { deliveryZone, shipping, selectedColors, selectedSizes } });
   };
 
   const inputStyle = (field: keyof ShippingInfo): React.CSSProperties => ({

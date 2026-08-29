@@ -1,5 +1,6 @@
 // src/pages/profile/Affiliate.tsx
-import { useOutletContext } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import type { User } from '../../constants/theme';
 
 interface OutletCtx { user: User; setUser: (u: User) => void; }
@@ -12,8 +13,39 @@ const STEPS = [
 
 export default function Affiliate() {
   const { user } = useOutletContext<OutletCtx>();
+  const navigate = useNavigate();
+  const [checking, setChecking] = useState(true);
+
+  // If this user is already an approved salesperson, skip the apply page
+  // and send them straight to their dashboard instead.
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch('/api/affiliate/me', { credentials: 'include' });
+        if (res.ok) {
+          if (!cancelled) navigate('/profile/affiliate/dashboard', { replace: true });
+          return;
+        }
+      } catch {
+        // couldn't check — fall through and show the apply page
+      }
+      if (!cancelled) setChecking(false);
+    })();
+
+    return () => { cancelled = true; };
+  }, [navigate]);
 
   const applyMailto = `mailto:lukuprime254@gmail.com?subject=${encodeURIComponent('Application for Salesperson')}&body=${encodeURIComponent('Hi Luku Prime team,\n\nI\'d like to apply to become a salesperson and get a coupon code.\n\nName:\nInstagram/TikTok/Audience:\nPhone number:\n')}`;
+
+  if (checking) {
+    return (
+      <div style={{ fontFamily: "'DM Sans',sans-serif", padding: '60px 0', textAlign: 'center', color: '#888' }}>
+        Loading…
+      </div>
+    );
+  }
 
   return (
     <div style={{ fontFamily: "'DM Sans',sans-serif" }}>

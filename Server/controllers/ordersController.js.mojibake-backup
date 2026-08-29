@@ -1,13 +1,13 @@
-const db = require('../config/db');
+﻿const db = require('../config/db');
 
-// ── GET /api/orders/reserve-number  — reserve the next order number ─────────
+// â”€â”€ GET /api/orders/reserve-number  â€” reserve the next order number â”€â”€â”€â”€â”€â”€â”€â”€â”€
 /**
  * Pulls the next value from the order_number sequence and formats it the
  * same way the DB trigger (trg_generate_order_number) does, WITHOUT
  * inserting an orders row. The frontend calls this once when the checkout
  * summary loads so it can display the order number before payment starts.
  * The reserved value is then threaded through stk-push / pesapal-initiate
- * and set explicitly on the eventual INSERT INTO orders — the trigger only
+ * and set explicitly on the eventual INSERT INTO orders â€” the trigger only
  * fires when order_number IS NULL, so it just no-ops there.
  */
 exports.reserveOrderNumber = async (req, res) => {
@@ -21,7 +21,7 @@ exports.reserveOrderNumber = async (req, res) => {
   }
 };
 
-// ── GET /api/orders  — all orders for the logged-in user ─────────────────────
+// â”€â”€ GET /api/orders  â€” all orders for the logged-in user â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 exports.getOrders = async (req, res) => {
   const userId = req.user.id;
   try {
@@ -87,7 +87,7 @@ exports.getOrders = async (req, res) => {
   }
 };
 
-// ── GET /api/orders/:id  — single order (must belong to user) ────────────────
+// â”€â”€ GET /api/orders/:id  â€” single order (must belong to user) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 exports.getOrderById = async (req, res) => {
   const userId  = req.user.id;
   const orderId = parseInt(req.params.id, 10);

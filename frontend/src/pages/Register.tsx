@@ -51,6 +51,7 @@ export default function Register() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const passwordStrength = getPasswordStrength(formData.password);
   const googleBtnRef = useRef<HTMLDivElement>(null);
+  const didInit = useRef(false);
   const handleGoogleResponse = useCallback(async (response: { credential: string }) => {
     setGoogleLoading(true); setServerError("");
     try {
@@ -70,7 +71,8 @@ export default function Register() {
     const t = setTimeout(() => {
       // GSI rejects percentage widths ("Provided button width is invalid: 100%").
       // Measure the container's real pixel width and pass that number instead.
-      if (window.google && googleBtnRef.current) {
+      if (window.google && googleBtnRef.current && !didInit.current) {
+        didInit.current = true;
         const pxWidth = googleBtnRef.current.offsetWidth || 320;
         window.google.accounts.id.initialize({ client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID, callback: handleGoogleResponse });
         window.google.accounts.id.renderButton(googleBtnRef.current, { theme: "filled_white", size: "large", width: pxWidth, text: "signup_with", shape: "rectangular" });

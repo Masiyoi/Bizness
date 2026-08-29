@@ -317,6 +317,7 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
   const [lockedUntil, setLockedUntil] = useState<Date | null>(null);
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const googleBtnMobileRef = useRef<HTMLDivElement>(null);
+  const didInit = useRef(false);
   // Show on every visit while logged out — but never on /login or /register,
   // which already have their own full sign-in/sign-up forms and Google button.
   useEffect(() => {
@@ -336,7 +337,8 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
   useEffect(() => {
     if (!visible) return;
     const init = () => {
-      if (!window.google) return;
+      if (!window.google || didInit.current) return;
+      didInit.current = true;
       window.google.accounts.id.initialize({
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         callback: handleGoogleResponse,

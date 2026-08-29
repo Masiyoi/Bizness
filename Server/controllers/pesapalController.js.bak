@@ -86,7 +86,6 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
   const discountAmount = Number(shippingMeta.discount_amount) || 0;
   const discountType   = shippingMeta.discount_type || null;
   const reservedOrderNumber = shippingMeta.reserved_order_number || null;
-  const affiliateCode = shippingMeta.affiliate_code || null;
 
   // NOTE: mirrors the same sale-price CASE WHEN used in initiatePayment's
   // total calculation, so the snapshot stores what was actually charged
@@ -123,13 +122,12 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
 
   const itemsSnapshot = { items: itemsArray, shipping, deliveryZone };
 
-  const orderInsertRes = await db.query(
+  await db.query(
     `INSERT INTO orders
        (user_id, payment_id, status, tracking_status, total, delivery_fee,
         delivery_zone, items_snapshot, customer_name, mpesa_phone, mpesa_receipt,
-        discount_type, discount_amount, order_number, affiliate_code)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-     RETURNING id`,
+        discount_type, discount_amount, order_number)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
     [
       payment.user_id,
       payment.id,
@@ -145,30 +143,8 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
       discountType,
       discountAmount,
       reservedOrderNumber,
-      affiliateCode,
     ]
   );
-  const newOrderId = orderInsertRes.rows[0]?.id;
-
-  if (affiliateCode && newOrderId) {
-    try {
-      const spRes = await db.query(
-        `SELECT id, commission_pct FROM salespersons WHERE coupon_code = $1 AND status = 'active'`,
-        [affiliateCode]
-      );
-      if (spRes.rows.length > 0) {
-        const sp = spRes.rows[0];
-        const commissionAmount = (Number(payment.amount) * Number(sp.commission_pct)) / 100;
-        await db.query(
-          `INSERT INTO affiliate_earnings (salesperson_id, order_id, order_total, commission_amount)
-           VALUES ($1, $2, $3, $4)`,
-          [sp.id, newOrderId, payment.amount, commissionAmount]
-        );
-      }
-    } catch (commErr) {
-      console.error('Affiliate commission recording error:', commErr.message);
-    }
-  }
 
   await db.query(
     `DELETE FROM cart_items
@@ -197,7 +173,6 @@ exports.initiatePayment = async (req, res) => {
     selectedColors = {},
     selectedSizes  = {},
     reserved_order_number = null,
-    affiliate_code = null,
   } = req.body;
   const userId = req.user.id;
 
@@ -237,21 +212,6 @@ exports.initiatePayment = async (req, res) => {
   } catch (err) {
     console.error('Order total calculation error:', err.message);
     return res.status(500).json({ msg: 'Failed to calculate order total' });
-  }
-
-  let validatedAffiliateCode = null;
-  if (affiliate_code) {
-    try {
-      const spRes = await db.query(
-        `SELECT coupon_code FROM salespersons WHERE coupon_code = $1 AND status = 'active'`,
-        [String(affiliate_code).trim().toUpperCase()]
-      );
-      if (spRes.rows.length > 0) {
-        validatedAffiliateCode = spRes.rows[0].coupon_code;
-      }
-    } catch (err) {
-      console.error('Affiliate code validation error:', err.message);
-    }
   }
 
   // Generate a unique merchant reference for this order
@@ -327,7 +287,6 @@ exports.initiatePayment = async (req, res) => {
           discount_amount: discountInfo.discountAmount,
           discount_type: discountInfo.eligible ? 'first_order' : null,
           reserved_order_number,
-          affiliate_code: validatedAffiliateCode,
         }),
       ]
     );
@@ -413,7 +372,6 @@ exports.pesapalIPN = async (req, res) => {
           const discountAmount = Number(shippingMeta.discount_amount) || 0;
           const discountType   = shippingMeta.discount_type || null;
           const reservedOrderNumber = shippingMeta.reserved_order_number || null;
-          const affiliateCode = shippingMeta.affiliate_code || null;
 
           const cartRes = await db.query(
             `SELECT
@@ -444,8 +402,8 @@ exports.pesapalIPN = async (req, res) => {
             `INSERT INTO orders
                (user_id, payment_id, status, tracking_status, total, delivery_fee,
                 delivery_zone, items_snapshot, customer_name, mpesa_phone, mpesa_receipt,
-                discount_type, discount_amount, order_number, affiliate_code)
-             VALUES ($1, $2, 'cancelled', 'Payment Failed', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+                discount_type, discount_amount, order_number)
+             VALUES ($1, $2, 'cancelled', 'Payment Failed', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
             [
               payment.user_id,
               payment.id,
@@ -459,7 +417,6 @@ exports.pesapalIPN = async (req, res) => {
               discountType,
               discountAmount,
               reservedOrderNumber,
-              affiliateCode,
             ]
           );
 
