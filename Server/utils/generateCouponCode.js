@@ -1,5 +1,5 @@
 // Server/utils/generateCouponCode.js
-const pool = require('../db'); // however you access Postgres
+const pool = require('../config/db'); // however you access Postgres
 
 function slugifyName(name) {
   return name.trim().toUpperCase().replace(/[^A-Z]/g, '').slice(0, 6) || 'LUKU';
