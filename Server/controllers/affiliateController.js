@@ -1,90 +1,118 @@
-// Server/controllers/affiliateController.js
-const pool = require('../db');
+const db = require('../config/db');
 const { generateUniqueCouponCode } = require('../utils/generateCouponCode');
 
-// POST /api/affiliate/salespersons  { userId, fullName, commissionPct? }
-exports.createSalesperson = async (req, res) => {
-  const { userId, fullName, commissionPct } = req.body;
-  try {
-    const code = await generateUniqueCouponCode(fullName);
-    const { rows } = await pool.query(
-      `INSERT INTO salespersons (user_id, coupon_code, commission_pct)
-       VALUES ($1, $2, $3) RETURNING *`,
-      [userId, code, commissionPct || 10.00]
-    );
-    res.status(201).json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Failed to create salesperson' });
-  }
-};
-
-// GET /api/affiliate/salespersons  (admin list w/ aggregated stats)
-exports.listSalespersons = async (req, res) => {
-  const { rows } = await pool.query(`
-    SELECT s.id, s.coupon_code, s.commission_pct, s.status,
-           u.name, u.email,
-           COUNT(e.id) AS total_sales,
-           COALESCE(SUM(e.commission_amount), 0) AS total_earned,
-           COALESCE(SUM(e.commission_amount) FILTER (WHERE e.payout_status = 'pending'), 0) AS pending_balance
-    FROM salespersons s
-    JOIN users u ON u.id = s.user_id
-    LEFT JOIN affiliate_earnings e ON e.salesperson_id = s.id
-    GROUP BY s.id, u.name, u.email
-    ORDER BY s.created_at DESC
-  `);
-  res.json(rows);
-};
-
-// PATCH /api/affiliate/salespersons/:id/payout  (mark pending earnings as paid)
-exports.markPaid = async (req, res) => {
-  const { id } = req.params;
-  await pool.query(
-    `UPDATE affiliate_earnings SET payout_status = 'paid', paid_at = now()
-     WHERE salesperson_id = $1 AND payout_status = 'pending'`,
-    [id]
-  );
-  res.json({ message: 'Payout marked as paid' });
-};
-// createSalesperson — swap userId for an email lookup
+// POST /api/affiliate/salespersons
 exports.createSalesperson = async (req, res) => {
   const { email, fullName, commissionPct } = req.body;
   try {
-    const { rows: userRows } = await pool.query(`SELECT id FROM users WHERE email = $1`, [email]);
-    if (!userRows[0]) return res.status(404).json({ message: 'No user found with that email' });
+    if (!email || !fullName) {
+      return res.status(400).json({ message: 'Email and fullName required' });
+    }
 
-    const code = await generateUniqueCouponCode(fullName);
-    const { rows } = await pool.query(
-      `INSERT INTO salespersons (user_id, coupon_code, commission_pct)
-       VALUES ($1, $2, $3) RETURNING *`,
-      [userRows[0].id, code, commissionPct || 10.00]
+    // Lookup user by email
+    const { rows: userRows } = await db.query(
+      `SELECT id FROM users WHERE email = $1`,
+      [email]
     );
-    res.status(201).json(rows[0]);
+    if (!userRows[0]) {
+      return res.status(404).json({ message: 'No user found with that email' });
+    }
+
+    // Generate unique coupon code
+    const code = await generateUniqueCouponCode(fullName);
+    
+    // Insert salesperson record
+    const { rows } = await db.query(
+      `INSERT INTO salespersons (user_id, coupon_code, commission_pct, status)
+       VALUES ($1, $2, $3, 'active')
+       RETURNING id, coupon_code, commission_pct, status`,
+      [userRows[0].id, code, commissionPct || 10.0]
+    );
+
+    res.status(201).json({ ...rows[0], message: `Added ${fullName}` });
   } catch (err) {
-    console.error(err);
+    console.error('createSalesperson error:', err);
     res.status(500).json({ message: 'Failed to create salesperson' });
   }
 };
 
-// GET /api/affiliate/me — logged-in user's own affiliate stats
-exports.getMyStats = async (req, res) => {
-  const userId = req.user.id; // adjust to however req.user is set in your auth middleware
+// GET /api/affiliate/salespersons
+exports.listSalespersons = async (req, res) => {
   try {
-    const { rows } = await pool.query(`
-      SELECT s.coupon_code, s.commission_pct, s.status, s.created_at,
-             COUNT(e.id) AS total_sales,
-             COALESCE(SUM(e.commission_amount), 0) AS total_earned,
-             COALESCE(SUM(e.commission_amount) FILTER (WHERE e.payout_status = 'pending'), 0) AS pending_balance
+    const { rows } = await db.query(`
+      SELECT 
+        s.id, 
+        s.coupon_code, 
+        s.commission_pct, 
+        s.status,
+        u.name, 
+        u.email,
+        COUNT(e.id) AS total_sales,
+        COALESCE(SUM(e.commission_amount), 0) AS total_earned,
+        COALESCE(
+          SUM(e.commission_amount) FILTER (WHERE e.payout_status = 'pending'), 
+          0
+        ) AS pending_balance
+      FROM salespersons s
+      JOIN users u ON u.id = s.user_id
+      LEFT JOIN affiliate_earnings e ON e.salesperson_id = s.id
+      GROUP BY s.id, u.id, u.name, u.email
+      ORDER BY s.created_at DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error('listSalespersons error:', err);
+    res.status(500).json({ message: 'Failed to load salespersons' });
+  }
+};
+
+// PATCH /api/affiliate/salespersons/:id/payout
+exports.markPaid = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query(
+      `UPDATE affiliate_earnings 
+       SET payout_status = 'paid', paid_at = now()
+       WHERE salesperson_id = $1 AND payout_status = 'pending'`,
+      [id]
+    );
+    res.json({ message: 'Payout marked as paid' });
+  } catch (err) {
+    console.error('markPaid error:', err);
+    res.status(500).json({ message: 'Failed to mark payout as paid' });
+  }
+};
+
+// GET /api/affiliate/me
+exports.getMyStats = async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const { rows } = await db.query(`
+      SELECT 
+        s.id,
+        s.coupon_code, 
+        s.commission_pct, 
+        s.status, 
+        s.created_at,
+        COUNT(e.id) AS total_sales,
+        COALESCE(SUM(e.commission_amount), 0) AS total_earned,
+        COALESCE(
+          SUM(e.commission_amount) FILTER (WHERE e.payout_status = 'pending'), 
+          0
+        ) AS pending_balance
       FROM salespersons s
       LEFT JOIN affiliate_earnings e ON e.salesperson_id = s.id
       WHERE s.user_id = $1
       GROUP BY s.id
     `, [userId]);
 
-    if (!rows[0]) return res.status(404).json({ isAffiliate: false });
+    if (!rows[0]) {
+      return res.status(404).json({ isAffiliate: false });
+    }
+    
     res.json({ isAffiliate: true, ...rows[0] });
   } catch (err) {
-    console.error(err);
+    console.error('getMyStats error:', err);
     res.status(500).json({ message: 'Failed to fetch affiliate stats' });
   }
 };
