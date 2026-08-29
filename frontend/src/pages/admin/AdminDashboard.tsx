@@ -21,6 +21,7 @@ import { OrderDetailModal } from './components/orders/OrderDetailModal';
 import { OrderStatusModal } from './components/orders/OrderStatusModal';
 import { CustomersTab }     from './components/customers/CustomersTab';
 import { ReportsTab }       from './components/reports/ReportsTab';
+import { AffiliateManagement } from './components/affiliate/AffiliateManagement';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -366,6 +367,11 @@ export default function AdminDashboard() {
 
               {tab === 'reports' && (
                 <ReportsTab showToast={showToast} />
+              )}
+              {tab === 'affiliate' && (
+                <AffiliateManagement
+                  showToast={(msg, type) => showToast(msg, type as 'ok' | 'err')}
+                />
               )}
             </>
           )}
