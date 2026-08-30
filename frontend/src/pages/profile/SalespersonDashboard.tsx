@@ -3,9 +3,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useOutletContext } from 'react-router-dom';
 import type { User } from '../../constants/theme';
-
 interface OutletCtx { user: User; setUser: (u: User) => void; }
-
 interface AffiliateStats {
   isAffiliate: boolean;
   coupon_code: string;
@@ -16,7 +14,6 @@ interface AffiliateStats {
   total_earned: string | number;
   pending_balance: string | number;
 }
-
 interface OrderItem {
   id: number;
   product_id: number;
@@ -24,6 +21,10 @@ interface OrderItem {
   price: number;
   image_url: string;
   quantity: number;
+  color?: string;
+  size?: string;
+  selected_color?: string;
+  selected_size?: string;
 }
 interface SalespersonOrder {
   earning_id: number;
@@ -41,53 +42,44 @@ const money = (v: string | number) =>
   `KSh ${Number(v || 0).toLocaleString('en-KE', { maximumFractionDigits: 2 })}`;
 const formatDate = (v: string) =>
   new Date(v).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
-const lastDayOfMonth = (ym: string) => {
-  const [y, m] = ym.split('-').map(Number);
-  return new Date(y, m, 0).getDate();
-};
-
 export default function SalespersonDashboard() {
   const { user } = useOutletContext<OutletCtx>();
-
   const [stats, setStats] = useState<AffiliateStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [orders, setOrders]               = useState<SalespersonOrder[]>([]);
   const [ordersTotal, setOrdersTotal]     = useState(0);
-  const [monthFilter, setMonthFilter]     = useState('');
-  const [dayFilter, setDayFilter]         = useState('');
+  const [fromDate, setFromDate]           = useState('');
+  const [toDate, setToDate]               = useState('');
   const [loadingOrders, setLoadingOrders] = useState(false);
-
+  const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
   useEffect(() => {
     let cancelled = false;
-
     (async () => {
       try {
         const res = await axios.get('/api/affiliate/me');
         const body = res.data;
-
         if (!body?.isAffiliate) {
           if (!cancelled) { setStats(null); setLoading(false); }
           return;
         }
-
         if (!cancelled) { setStats({ isAffiliate: true, ...body.data }); setLoading(false); }
       } catch (err) {
         console.error(err);
         if (!cancelled) { setError('Could not load your affiliate stats. Please try again.'); setLoading(false); }
       }
     })();
-
     return () => { cancelled = true; };
-  }, []);  const fetchOrders = async (opts: { reset?: boolean; monthOverride?: string; dayOverride?: string } = {}) => {
-    const month  = opts.monthOverride !== undefined ? opts.monthOverride : monthFilter;
-    const day    = opts.dayOverride   !== undefined ? opts.dayOverride   : dayFilter;
-    const offset = opts.reset ? 0 : orders.length;
+  }, []);
+  const fetchOrders = async (opts: { reset?: boolean; fromOverride?: string; toOverride?: string } = {}) => {
+    const dateFrom = opts.fromOverride !== undefined ? opts.fromOverride : fromDate;
+    const dateTo   = opts.toOverride   !== undefined ? opts.toOverride   : toDate;
+    const offset   = opts.reset ? 0 : orders.length;
     setLoadingOrders(true);
     try {
       const res = await axios.get('/api/affiliate/me/earnings', {
-        params: { month: month || undefined, day: day || undefined, limit: PAGE_SIZE, offset },
+        params: { dateFrom: dateFrom || undefined, dateTo: dateTo || undefined, limit: PAGE_SIZE, offset },
       });
       const { data, total } = res.data;
       setOrders(prev => (opts.reset ? data : [...prev, ...data]));
@@ -98,20 +90,18 @@ export default function SalespersonDashboard() {
       setLoadingOrders(false);
     }
   };
-  const handleMonthChange = (value: string) => {
-    setMonthFilter(value);
-    setDayFilter('');
-    fetchOrders({ reset: true, monthOverride: value, dayOverride: '' });
+  const handleFromDateChange = (value: string) => {
+    setFromDate(value);
+    fetchOrders({ reset: true, fromOverride: value });
   };
-  const handleDayChange = (value: string) => {
-    setDayFilter(value);
-    fetchOrders({ reset: true, dayOverride: value });
+  const handleToDateChange = (value: string) => {
+    setToDate(value);
+    fetchOrders({ reset: true, toOverride: value });
   };
   useEffect(() => {
     if (stats?.isAffiliate) fetchOrders({ reset: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stats?.isAffiliate]);
-
   const copyCode = async () => {
     if (!stats?.coupon_code) return;
     try {
@@ -122,7 +112,6 @@ export default function SalespersonDashboard() {
       // clipboard API unavailable — silently ignore
     }
   };
-
   if (loading) {
     return (
       <div style={{ fontFamily: "'DM Sans',sans-serif", padding: '60px 0', textAlign: 'center', color: '#888' }}>
@@ -130,7 +119,6 @@ export default function SalespersonDashboard() {
       </div>
     );
   }
-
   if (error) {
     return (
       <div style={{ fontFamily: "'DM Sans',sans-serif", padding: '40px 0', textAlign: 'center', color: '#B3261E' }}>
@@ -138,7 +126,6 @@ export default function SalespersonDashboard() {
       </div>
     );
   }
-
   // Not (yet) an approved affiliate — point them back to the application flow.
   if (!stats || !stats.isAffiliate) {
     return (
@@ -159,7 +146,6 @@ export default function SalespersonDashboard() {
       </div>
     );
   }
-
   const cards = [
     { label: 'Coupon Code', value: stats.coupon_code, isCode: true },
     { label: 'Commission Rate', value: `${stats.commission_pct}%` },
@@ -167,10 +153,12 @@ export default function SalespersonDashboard() {
     { label: 'Total Earned', value: money(stats.total_earned) },
     { label: 'Pending Payout', value: money(stats.pending_balance) },
   ];
-
+  const dateInputStyle = {
+    fontFamily: "'DM Sans',sans-serif", fontSize: 12, padding: '6px 10px',
+    border: '1px solid rgba(0,0,0,0.15)', borderRadius: 6, background: '#fff', color: '#0A1628',
+  };
   return (
     <div style={{ fontFamily: "'DM Sans',sans-serif" }}>
-
       {/* ── Hero ── */}
       <div style={{
         background: "linear-gradient(rgba(0,0,0,0.25),rgba(0,0,0,0.45)), url('/ganji.jpg')",
@@ -197,7 +185,6 @@ export default function SalespersonDashboard() {
           <h1 style={{ fontSize: 'clamp(22px,3vw,30px)', fontWeight: 700, color: '#fff', margin: '0 0 20px', letterSpacing: '-0.5px' }}>
                         Welcome back, {user?.full_name?.split(' ')[0] || 'there'}
           </h1>
-
           <div
             onClick={copyCode}
             role="button"
@@ -220,7 +207,6 @@ export default function SalespersonDashboard() {
           </div>
         </div>
       </div>
-
       {/* ── Stat cards ── */}
       <div style={{
         display: 'grid',
@@ -245,7 +231,6 @@ export default function SalespersonDashboard() {
           </div>
         ))}
       </div>
-
       {/* ── Payout info ── */}
       <div style={{
         background: '#fff', border: '1px solid rgba(0,0,0,0.09)', borderRadius: 10,
@@ -264,29 +249,22 @@ export default function SalespersonDashboard() {
           <div style={{ fontSize: 13, fontWeight: 700, color: '#0A1628', textTransform: 'uppercase', letterSpacing: '1px' }}>
             Orders You've Sold
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <input
-              type="month"
-              value={monthFilter}
-              onChange={e => handleMonthChange(e.target.value)}
-              style={{
-                fontFamily: "'DM Sans',sans-serif", fontSize: 12, padding: '6px 10px',
-                border: '1px solid rgba(0,0,0,0.15)', borderRadius: 6, background: '#fff', color: '#0A1628',
-              }}
+              type="date"
+              value={fromDate}
+              onChange={e => handleFromDateChange(e.target.value)}
+              max={toDate || undefined}
+              style={dateInputStyle}
             />
-            {monthFilter && (
-              <input
-                type="date"
-                value={dayFilter}
-                onChange={e => handleDayChange(e.target.value)}
-                min={`${monthFilter}-01`}
-                max={`${monthFilter}-${String(lastDayOfMonth(monthFilter)).padStart(2, '0')}`}
-                style={{
-                  fontFamily: "'DM Sans',sans-serif", fontSize: 12, padding: '6px 10px',
-                  border: '1px solid rgba(0,0,0,0.15)', borderRadius: 6, background: '#fff', color: '#0A1628',
-                }}
-              />
-            )}
+            <span style={{ fontSize: 11, color: '#999' }}>to</span>
+            <input
+              type="date"
+              value={toDate}
+              onChange={e => handleToDateChange(e.target.value)}
+              min={fromDate || undefined}
+              style={dateInputStyle}
+            />
           </div>
         </div>
         {loadingOrders && orders.length === 0 && (
@@ -294,7 +272,7 @@ export default function SalespersonDashboard() {
         )}
         {!loadingOrders && orders.length === 0 && (
           <div style={{ padding: '20px 0', textAlign: 'center', color: '#999', fontSize: 12 }}>
-            {monthFilter ? 'No orders in this period.' : "You haven't sold any orders yet."}
+            {(fromDate || toDate) ? 'No orders in this period.' : "You haven't sold any orders yet."}
           </div>
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -302,40 +280,94 @@ export default function SalespersonDashboard() {
             const items      = order.items_snapshot?.items || [];
             const firstItem  = items[0];
             const extraCount = items.length - 1;
+            const isExpanded = expandedOrderId === order.earning_id;
             return (
               <div
                 key={order.earning_id}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '10px 14px', background: '#FAFAFA',
+                  background: '#FAFAFA',
                   border: '1px solid rgba(0,0,0,0.08)', borderRadius: 8,
+                  overflow: 'hidden',
                 }}
               >
-                <img
-                  src={firstItem?.image_url}
-                  alt={firstItem?.name || 'Product'}
-                  style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover', flexShrink: 0, background: '#eee' }}
-                  onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/44x44/F5F5F5/000?text=LP'; }}
-                />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: '#0A1628', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {firstItem?.name || 'Item'}{extraCount > 0 ? ` +${extraCount} more` : ''}
+                <div
+                  onClick={() => setExpandedOrderId(isExpanded ? null : order.earning_id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '10px 14px', cursor: 'pointer',
+                  }}
+                >
+                  <img
+                    src={firstItem?.image_url}
+                    alt={firstItem?.name || 'Product'}
+                    style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover', flexShrink: 0, background: '#eee' }}
+                    onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/44x44/F5F5F5/000?text=LP'; }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: '#0A1628', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {firstItem?.name || 'Item'}{extraCount > 0 ? ` +${extraCount} more` : ''}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
+                      Order {order.order_number || `#${order.order_id}`} · {formatDate(order.order_date)}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
-                    Order {order.order_number || `#${order.order_id}`} · {formatDate(order.order_date)}
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: '#0A1628' }}>{money(order.commission_amount)}</div>
+                    <span style={{
+                      fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+                      background: order.payout_status === 'paid' ? '#E8F5E9' : '#F0F0F0',
+                      color: order.payout_status === 'paid' ? '#2E7D32' : '#999',
+                      textTransform: 'capitalize',
+                    }}>
+                      {order.payout_status}
+                    </span>
                   </div>
-                </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: '#0A1628' }}>{money(order.commission_amount)}</div>
                   <span style={{
-                    fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
-                    background: order.payout_status === 'paid' ? '#E8F5E9' : '#F0F0F0',
-                    color: order.payout_status === 'paid' ? '#2E7D32' : '#999',
-                    textTransform: 'capitalize',
-                  }}>
-                    {order.payout_status}
-                  </span>
+                    display: 'inline-block', width: 12, color: '#999', flexShrink: 0,
+                    transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s',
+                  }}>▸</span>
                 </div>
+                {isExpanded && (
+                  <div style={{ padding: '0 14px 14px', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                    {items.map(item => {
+                      const color = item.color || item.selected_color;
+                      const size  = item.size  || item.selected_size;
+                      return (
+                        <div
+                          key={item.id}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            padding: '10px 0', borderBottom: '1px solid rgba(0,0,0,0.05)',
+                          }}
+                        >
+                          <img
+                            src={item.image_url}
+                            alt={item.name}
+                            style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', flexShrink: 0, background: '#eee' }}
+                            onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/36x36/F5F5F5/000?text=LP'; }}
+                          />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#0A1628', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {item.name}
+                            </div>
+                            <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
+                              Qty {item.quantity}
+                              {color && ` · ${color}`}
+                              {size && ` · Size ${size}`}
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#0A1628', flexShrink: 0 }}>
+                            {money(Number(item.price) * item.quantity)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 12, fontSize: 12, color: '#666' }}>
+                      <span>Order Total</span>
+                      <span style={{ fontWeight: 700, color: '#0A1628' }}>{money(order.total)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}

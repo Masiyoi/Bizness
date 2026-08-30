@@ -260,10 +260,10 @@ exports.getMyStats = async (req, res) => {
 };
 
 // GET /api/affiliate/me/earnings
-// Get current user's own order/earnings history, with optional month/day filter + pagination
+// Get current user's own order/earnings history, with optional date-range filter + pagination
 exports.getMyEarnings = async (req, res) => {
   const userId = req.user.id;
-  const { month, day, limit = 10, offset = 0 } = req.query;
+  const { dateFrom, dateTo, limit = 10, offset = 0 } = req.query;
   try {
     const { rows: spRows } = await db.query(
       `SELECT id FROM salespersons WHERE user_id = $1`,
@@ -275,12 +275,15 @@ exports.getMyEarnings = async (req, res) => {
     const salespersonId = spRows[0].id;
     const params = [salespersonId];
     let dateClause = '';
-    if (day) {
-      params.push(day);
-      dateClause = `AND o.created_at::date = $${params.length}::date`;
-    } else if (month) {
-      params.push(`${month}-01`);
-      dateClause = `AND date_trunc('month', o.created_at) = date_trunc('month', $${params.length}::date)`;
+    if (dateFrom && dateTo) {
+      params.push(dateFrom, dateTo);
+      dateClause = `AND o.created_at::date BETWEEN $${params.length - 1}::date AND $${params.length}::date`;
+    } else if (dateFrom) {
+      params.push(dateFrom);
+      dateClause = `AND o.created_at::date >= $${params.length}::date`;
+    } else if (dateTo) {
+      params.push(dateTo);
+      dateClause = `AND o.created_at::date <= $${params.length}::date`;
     }
     const { rows: countRows } = await db.query(
       `SELECT COUNT(*) AS total
