@@ -1,5 +1,5 @@
 // src/pages/MembersClub.tsx
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -89,8 +89,8 @@ const MEMBER_UPDATES: CarouselItem[] = [
   { type: 'image', src: '/updates/new-drop-1.jpg', title: 'New Drop', subtitle: "This week's freshest arrivals" },
   { type: 'image', src: '/updates/best-seller-1.jpg', title: 'Best Seller', subtitle: 'Our most-loved piece this month' },
   { type: 'video', src: '/updates/behind-the-scenes.mp4', title: 'Behind the Scenes' },
-  { type: 'image', src: '/updates/next-sale.jpg', title: 'Next Sale — 15 Sept', subtitle: 'Up to 40% off storewide, members get early access' },
-  { type: 'image', src: '/updates/events-popups.jpg', title: 'Events & Pop-Ups', subtitle: 'Meet us in person at our next Nairobi pop-up' },
+  { type: 'video', src: '/updates/next-sale.mp4', title: 'Next Sale — 15 Sept', subtitle: 'Up to 40% off storewide, members get early access' },
+  { type: 'video', src: '/updates/events-popups.mp4', title: 'Events & Pop-Ups', subtitle: 'Meet us in person at our next Nairobi pop-up' },
 ];
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function getTier(points: number) {
@@ -195,7 +195,7 @@ const css = `
   }
   .referral-copy-btn:hover, .referral-share-btn:hover { opacity: 0.82; }
   .mc-carousel-wrap { position: relative; width: 100%; }
-  .mc-carousel-track { display: flex; transition: transform 0.5s cubic-bezier(.22,.68,0,1.2); }
+  .mc-carousel-track { display: flex; transition: transform 0.9s cubic-bezier(.22,.68,0,1.2); }
   .mc-carousel-slide { position: relative; flex: 0 0 100%; height: clamp(360px,60vh,640px); background: #111; }
   .mc-carousel-slide img, .mc-carousel-slide video { width: 100%; height: 100%; object-fit: cover; display: block; }
   .mc-carousel-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: clamp(20px,4vw,40px); background: linear-gradient(transparent, rgba(0,0,0,0.75)); }
@@ -213,7 +213,7 @@ const css = `
     .mc-hero-points { font-size: clamp(56px,18vw,96px) !important; }
     .referral-box   { flex-wrap: wrap; }
     .referral-link-text { flex-basis: 100%; }
-    .mc-carousel-arrow { width: 30px; height: 30px; font-size: 16px; }
+    .mc-carousel-arrow { display: none; }
   }
 `;
 // ── Main ─────────────────────────────────────────────────────────────────────
@@ -274,11 +274,37 @@ useEffect(() => {
     if (!user || !isMember) return;
     const id = setInterval(() => {
       setCarouselIndex(i => (i + 1) % MEMBER_UPDATES.length);
-    }, 5000);
+    }, 8000);
     return () => clearInterval(id);
   }, [user, isMember]);
   const prevSlide = () => setCarouselIndex(i => (i - 1 + MEMBER_UPDATES.length) % MEMBER_UPDATES.length);
   const nextSlide = () => setCarouselIndex(i => (i + 1) % MEMBER_UPDATES.length);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const [videoStates, setVideoStates] = useState<Record<number, { playing: boolean; muted: boolean }>>({});
+  const getVideoState = (i: number) => videoStates[i] ?? { playing: true, muted: true };
+  const togglePlay = (i: number) => {
+    const vid = videoRefs.current[i];
+    if (!vid) return;
+    const current = getVideoState(i);
+    if (current.playing) { vid.pause(); } else { vid.play().catch(() => {}); }
+    setVideoStates(prev => ({ ...prev, [i]: { ...current, playing: !current.playing } }));
+  };
+  const toggleMute = (i: number) => {
+    const vid = videoRefs.current[i];
+    if (!vid) return;
+    const current = getVideoState(i);
+    vid.muted = !current.muted;
+    setVideoStates(prev => ({ ...prev, [i]: { ...current, muted: !current.muted } }));
+  };
+  const touchStartX = useRef<number | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (delta > 50) prevSlide();
+    else if (delta < -50) nextSlide();
+    touchStartX.current = null;
+  };
   const handleJoin = async () => {
     if (!user) { navigate('/login?redirect=/members-club'); return; }
     setJoining(true);
@@ -695,7 +721,7 @@ useEffect(() => {
       )}
       {/* ── MEMBER-ONLY: New Drops & Updates carousel ── */}
       {user && isMember && (
-        <section style={{ background: '#0A0A0A', padding: 'clamp(48px,7vw,88px) 0', overflow: 'hidden' }}>
+        <section style={{ background: '#0A0A0A', paddingTop: 'clamp(48px,7vw,88px)', paddingBottom: 0, overflow: 'hidden' }}>
           <div style={{ textAlign: 'center', marginBottom: 32, padding: '0 20px' }}>
             <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: '#E8CD7A', marginBottom: 12 }}>
               Members Only
@@ -704,14 +730,39 @@ useEffect(() => {
               New Drops & Updates
             </h2>
           </div>
-          <div className="mc-carousel-wrap">
+          <div className="mc-carousel-wrap" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
             <div className="mc-carousel-track" style={{ transform: `translateX(-${carouselIndex * 100}%)` }}>
               {MEMBER_UPDATES.map((item, i) => (
                 <div className="mc-carousel-slide" key={i}>
                   {item.type === 'image' ? (
                     <img src={item.src} alt={item.title} />
                   ) : (
-                    <video src={item.src} autoPlay muted loop playsInline />
+                    <>
+                      <video
+                        ref={el => { videoRefs.current[i] = el; }}
+                        src={item.src}
+                        autoPlay
+                        muted={getVideoState(i).muted}
+                        loop
+                        playsInline
+                      />
+                      <div style={{ position: 'absolute', top: 14, right: 14, display: 'flex', gap: 8, zIndex: 2 }}>
+                        <button
+                          onClick={() => togglePlay(i)}
+                          aria-label={getVideoState(i).playing ? 'Pause' : 'Play'}
+                          style={{ background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
+                        >
+                          {getVideoState(i).playing ? '❚❚' : '▶'}
+                        </button>
+                        <button
+                          onClick={() => toggleMute(i)}
+                          aria-label={getVideoState(i).muted ? 'Unmute' : 'Mute'}
+                          style={{ background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
+                        >
+                          {getVideoState(i).muted ? '🔇' : '🔊'}
+                        </button>
+                      </div>
+                    </>
                   )}
                   <div className="mc-carousel-caption">
                     <p className="mc-carousel-title">{item.title}</p>
