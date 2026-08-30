@@ -1,6 +1,5 @@
 // src/pages/admin/components/affiliate/AffiliateManagement.tsx
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { T, lbl, inp } from '../../constants';
 import { ConfirmDialog } from '../ConfirmDialog';
 
@@ -39,8 +38,10 @@ export function AffiliateManagement({ showToast }: AffiliateManagementProps) {
 
   const loadSalespersons = async () => {
     try {
-      const res = await axios.get('/api/affiliate/salespersons');
-      setSalespersons(res.data.data);
+      const res = await fetch('/api/affiliate/salespersons', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to load salespersons');
+      const data = await res.json();
+      setSalespersons(data);
     } catch (err) {
       console.error(err);
       showToast('Failed to load salespersons', 'err');
@@ -57,19 +58,26 @@ export function AffiliateManagement({ showToast }: AffiliateManagementProps) {
 
     setAdding(true);
     try {
-      const res = await axios.post('/api/affiliate/salespersons', {
-        email: email.trim(),
-        fullName: fullName.trim(),
-        commissionPct: commissionPct ? Number(commissionPct) : undefined,
+      const res = await fetch('/api/affiliate/salespersons', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim(),
+          fullName: fullName.trim(),
+          commissionPct: commissionPct ? Number(commissionPct) : undefined,
+        }),
       });
 
-      const salesperson = res.data.data;
-      showToast(`✓ Added ${fullName} — code ${salesperson.coupon_code}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || 'Failed to add salesperson');
+
+      showToast(`✓ Added ${fullName} — code ${data.coupon_code}`);
       setEmail(''); setFullName(''); setCommissionPct('');
       loadSalespersons();
     } catch (err: any) {
       console.error(err);
-      showToast(err.response?.data?.message || 'Failed to add salesperson', 'err');
+      showToast(err.message || 'Failed to add salesperson', 'err');
     } finally {
       setAdding(false);
     }
@@ -79,7 +87,11 @@ export function AffiliateManagement({ showToast }: AffiliateManagementProps) {
     if (!confirmTarget) return;
     setMarkingPaid(true);
     try {
-      await axios.patch(`/api/affiliate/salespersons/${confirmTarget.id}/payout`);
+      const res = await fetch(`/api/affiliate/salespersons/${confirmTarget.id}/payout`, {
+        method: 'PATCH',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to mark payout as paid');
 
       showToast('✓ Payout marked as paid');
       loadSalespersons();
