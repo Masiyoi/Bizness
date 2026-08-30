@@ -692,6 +692,12 @@ export default function Checkout() {
             )}
 
             <div style={{ marginTop: 24 }}>
+              {affiliateCode && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span className="jost" style={{ fontSize: 13, color: T.muted }}>Coupon</span>
+                  <span className="jost" style={{ fontSize: 13, fontWeight: 700, color: '#16a34a', letterSpacing: '1px' }}>{affiliateCode}</span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <span className="jost" style={{ fontSize: 13, color: T.muted }}>Subtotal</span>
                 <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: T.navy }}>KSh {subtotal.toLocaleString()}</span>

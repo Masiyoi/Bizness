@@ -967,6 +967,12 @@ export default function Cart() {
                   </div>
                 )}
 
+                {couponCode && (
+                  <div style={{ background: T.cream, border: 'none', borderRadius: 12, padding: '10px 14px', marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span className="jost" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: T.muted }}>Coupon Applied</span>
+                    <span className="jost" style={{ fontSize: 13, fontWeight: 800, color: '#16a34a', letterSpacing: '1px' }}>{couponCode}</span>
+                  </div>
+                )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                   <span className="jost" style={{ fontSize: 13, color: T.muted }}>Subtotal</span>
                   <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: T.navy }}>KSh {subtotal.toLocaleString()}</span>

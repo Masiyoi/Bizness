@@ -55,6 +55,7 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
   const discountAmount = Number(shippingMeta.discount_amount) || 0;
   const discountType   = shippingMeta.discount_type || null;
   const reservedOrderNumber = shippingMeta.reserved_order_number || null;
+  const affiliateCode  = shippingMeta.affiliate_code || null;
 
   const cartRes = await db.query(
     `SELECT
@@ -88,12 +89,13 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
 
   const itemsSnapshot = { items: itemsArray, shipping, deliveryZone };
 
-  await db.query(
+  const orderInsertRes = await db.query(
     `INSERT INTO orders
        (user_id, payment_id, status, tracking_status, total, delivery_fee,
         delivery_zone, items_snapshot, customer_name, mpesa_phone, mpesa_receipt,
-        discount_type, discount_amount, order_number)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+        discount_type, discount_amount, order_number, affiliate_code)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+     RETURNING id`,
     [
       payment.user_id,
       payment.id,
@@ -109,8 +111,30 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
       discountType,
       discountAmount,
       reservedOrderNumber,
+      affiliateCode,
     ]
   );
+  const newOrderId = orderInsertRes.rows[0]?.id;
+
+  if (affiliateCode && newOrderId) {
+    try {
+      const spRes = await db.query(
+        `SELECT id, commission_pct FROM salespersons WHERE coupon_code = $1 AND status = 'active'`,
+        [affiliateCode]
+      );
+      if (spRes.rows.length > 0) {
+        const sp = spRes.rows[0];
+        const commissionAmount = (Number(payment.amount) * Number(sp.commission_pct)) / 100;
+        await db.query(
+          `INSERT INTO affiliate_earnings (salesperson_id, order_id, order_total, commission_amount)
+           VALUES ($1, $2, $3, $4)`,
+          [sp.id, newOrderId, payment.amount, commissionAmount]
+        );
+      }
+    } catch (commErr) {
+      console.error('Affiliate commission recording error:', commErr.message);
+    }
+  }
 
   await db.query(
     `DELETE FROM cart_items
@@ -136,7 +160,22 @@ exports.stkPush = async (req, res) => {
     selectedColors = {},
     selectedSizes  = {},
     reserved_order_number = null,
+    affiliate_code = null,
   } = req.body;
+  let validatedAffiliateCode = null;
+  if (affiliate_code) {
+    try {
+      const spRes = await db.query(
+        `SELECT coupon_code FROM salespersons WHERE coupon_code = $1 AND status = 'active'`,
+        [String(affiliate_code).trim().toUpperCase()]
+      );
+      if (spRes.rows.length > 0) {
+        validatedAffiliateCode = spRes.rows[0].coupon_code;
+      }
+    } catch (err) {
+      console.error('Affiliate code validation error:', err.message);
+    }
+  }
   const userId = req.user.id;
 
   if (!phone) {
@@ -238,6 +277,7 @@ exports.stkPush = async (req, res) => {
           discount_type: discountInfo.eligible ? 'first_order' : null,
           reserved_order_number,
           external_reference: externalReference,
+          affiliate_code: validatedAffiliateCode,
         }),
       ]
     );
@@ -322,6 +362,7 @@ exports.payHeroCallback = async (req, res) => {
           const discountAmount = Number(shippingMeta.discount_amount) || 0;
           const discountType   = shippingMeta.discount_type || null;
           const reservedOrderNumber = shippingMeta.reserved_order_number || null;
+          const affiliateCode = shippingMeta.affiliate_code || null;
 
           const cartRes = await db.query(
             `SELECT
@@ -352,8 +393,8 @@ exports.payHeroCallback = async (req, res) => {
             `INSERT INTO orders
                (user_id, payment_id, status, tracking_status, total, delivery_fee,
                 delivery_zone, items_snapshot, customer_name, mpesa_phone, mpesa_receipt,
-                discount_type, discount_amount, order_number)
-             VALUES ($1, $2, 'cancelled', 'Payment Failed', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+                discount_type, discount_amount, order_number, affiliate_code)
+             VALUES ($1, $2, 'cancelled', 'Payment Failed', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
             [
               payment.user_id,
               payment.id,
@@ -367,6 +408,7 @@ exports.payHeroCallback = async (req, res) => {
               discountType,
               discountAmount,
               reservedOrderNumber,
+              affiliateCode,
             ]
           );
 
