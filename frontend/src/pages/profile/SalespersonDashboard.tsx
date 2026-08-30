@@ -40,6 +40,8 @@ interface SalespersonOrder {
 const PAGE_SIZE = 10;
 const money = (v: string | number) =>
   `KSh ${Number(v || 0).toLocaleString('en-KE', { maximumFractionDigits: 2 })}`;
+const pct = (v: string | number) =>
+  `${Number(v || 0).toLocaleString('en-KE', { maximumFractionDigits: 2 })}%`;
 const formatDate = (v: string) =>
   new Date(v).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
 export default function SalespersonDashboard() {
@@ -148,7 +150,7 @@ export default function SalespersonDashboard() {
   }
   const cards = [
     { label: 'Coupon Code', value: stats.coupon_code, isCode: true },
-    { label: 'Commission Rate', value: `${stats.commission_pct}%` },
+    { label: 'Commission Rate', value: pct(stats.commission_pct) },
     { label: 'Total Sales', value: stats.total_sales },
     { label: 'Total Earned', value: money(stats.total_earned) },
     { label: 'Pending Payout', value: money(stats.pending_balance) },
