@@ -1,6 +1,5 @@
 // src/pages/profile/Affiliate.tsx
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import type { User } from '../../constants/theme';
 
@@ -24,8 +23,8 @@ export default function Affiliate() {
 
     (async () => {
       try {
-        const res = await axios.get('/api/affiliate/me');
-        if (res.data?.isAffiliate) {
+        const res = await fetch('/api/affiliate/me', { credentials: 'include' });
+        if (res.ok) {
           if (!cancelled) navigate('/profile/affiliate/dashboard', { replace: true });
           return;
         }

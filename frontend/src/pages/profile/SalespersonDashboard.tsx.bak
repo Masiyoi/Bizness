@@ -1,6 +1,5 @@
 // src/pages/profile/SalespersonDashboard.tsx
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useOutletContext } from 'react-router-dom';
 import type { User } from '../../constants/theme';
 
@@ -33,15 +32,16 @@ export default function SalespersonDashboard() {
 
     (async () => {
       try {
-        const res = await axios.get('/api/affiliate/me');
-        const body = res.data;
+        const res = await fetch('/api/affiliate/me', { credentials: 'include' });
 
-        if (!body?.isAffiliate) {
+        if (res.status === 404) {
           if (!cancelled) { setStats(null); setLoading(false); }
           return;
         }
+        if (!res.ok) throw new Error('Failed to load affiliate stats');
 
-        if (!cancelled) { setStats({ isAffiliate: true, ...body.data }); setLoading(false); }
+        const data = await res.json();
+        if (!cancelled) { setStats(data); setLoading(false); }
       } catch (err) {
         console.error(err);
         if (!cancelled) { setError('Could not load your affiliate stats. Please try again.'); setLoading(false); }
