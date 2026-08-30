@@ -269,14 +269,7 @@ useEffect(() => {
       .then(r => setTotalMembers(r.data.total_members))
       .catch(() => {});
   }, [user, isMember]);
-  // Auto-advance the member-only updates carousel every 5s
-  useEffect(() => {
-    if (!user || !isMember) return;
-    const id = setInterval(() => {
-      setCarouselIndex(i => (i + 1) % MEMBER_UPDATES.length);
-    }, 8000);
-    return () => clearInterval(id);
-  }, [user, isMember]);
+
   const prevSlide = () => setCarouselIndex(i => (i - 1 + MEMBER_UPDATES.length) % MEMBER_UPDATES.length);
   const nextSlide = () => setCarouselIndex(i => (i + 1) % MEMBER_UPDATES.length);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
@@ -305,6 +298,31 @@ useEffect(() => {
     else if (delta < -50) nextSlide();
     touchStartX.current = null;
   };
+  // Whenever the visible slide changes, stop every other video (pause + rewind,
+  // so it's silent and doesn't keep playing off-screen) and resume/autoplay
+  // the one now in view.
+  useEffect(() => {
+    videoRefs.current.forEach((vid, i) => {
+      if (!vid) return;
+      if (i === carouselIndex) {
+        vid.play().catch(() => {});
+      } else {
+        vid.pause();
+        vid.currentTime = 0;
+      }
+    });
+    setVideoStates(prev => {
+      const updated = { ...prev };
+      MEMBER_UPDATES.forEach((_, i) => {
+        if (i === carouselIndex) {
+          updated[i] = { ...(updated[i] ?? { playing: true, muted: true }), playing: true };
+        } else if (updated[i]) {
+          updated[i] = { ...updated[i], playing: false };
+        }
+      });
+      return updated;
+    });
+  }, [carouselIndex]);
   const handleJoin = async () => {
     if (!user) { navigate('/login?redirect=/members-club'); return; }
     setJoining(true);
