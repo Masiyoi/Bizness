@@ -48,6 +48,10 @@ const money = (v: string | number) =>
 
 const formatDate = (v: string) =>
   new Date(v).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
+const lastDayOfMonth = (ym: string) => {
+  const [y, m] = ym.split('-').map(Number);
+  return new Date(y, m, 0).getDate();
+};
 
 export function AffiliateManagement({ showToast }: AffiliateManagementProps) {
   const [salespersons, setSalespersons] = useState<Salesperson[]>([]);
@@ -68,6 +72,7 @@ export function AffiliateManagement({ showToast }: AffiliateManagementProps) {
   const [ordersMap, setOrdersMap]             = useState<Record<number, SalespersonOrder[]>>({});
   const [ordersTotalMap, setOrdersTotalMap]   = useState<Record<number, number>>({});
   const [monthFilterMap, setMonthFilterMap]   = useState<Record<number, string>>({});
+  const [dayFilterMap, setDayFilterMap]       = useState<Record<number, string>>({});
   const [loadingOrdersMap, setLoadingOrdersMap] = useState<Record<number, boolean>>({});
 
   const loadSalespersons = async () => {
@@ -132,15 +137,16 @@ export function AffiliateManagement({ showToast }: AffiliateManagementProps) {
   // ── Order history (expandable per row) ──────────────────────────────────
   const fetchOrders = async (
     spId: number,
-    opts: { reset?: boolean; monthOverride?: string } = {}
+    opts: { reset?: boolean; monthOverride?: string; dayOverride?: string } = {}
   ) => {
     const month  = opts.monthOverride !== undefined ? opts.monthOverride : (monthFilterMap[spId] || '');
+    const day    = opts.dayOverride !== undefined ? opts.dayOverride : (dayFilterMap[spId] || '');
     const offset = opts.reset ? 0 : (ordersMap[spId]?.length || 0);
 
     setLoadingOrdersMap(prev => ({ ...prev, [spId]: true }));
     try {
       const res = await axios.get(`/api/affiliate/salespersons/${spId}/orders`, {
-        params: { month: month || undefined, limit: PAGE_SIZE, offset },
+        params: { month: month || undefined, day: day || undefined, limit: PAGE_SIZE, offset },
       });
       const { data, total } = res.data;
       setOrdersMap(prev => ({
@@ -164,7 +170,12 @@ export function AffiliateManagement({ showToast }: AffiliateManagementProps) {
 
   const handleMonthChange = (spId: number, value: string) => {
     setMonthFilterMap(prev => ({ ...prev, [spId]: value }));
-    fetchOrders(spId, { reset: true, monthOverride: value });
+    setDayFilterMap(prev => ({ ...prev, [spId]: '' }));
+    fetchOrders(spId, { reset: true, monthOverride: value, dayOverride: '' });
+  };
+  const handleDayChange = (spId: number, value: string) => {
+    setDayFilterMap(prev => ({ ...prev, [spId]: value }));
+    fetchOrders(spId, { reset: true, dayOverride: value });
   };
 
   return (
@@ -277,7 +288,17 @@ export function AffiliateManagement({ showToast }: AffiliateManagementProps) {
                         <span style={{ display: 'inline-block', width: 12, color: T.grey1, transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>▸</span>
                         {' '}{sp.name}
                       </td>
-                      <td style={{ padding: '12px 16px', color: T.grey1 }}>{sp.email}</td>
+                      <td style={{ padding: '12px 16px', color: T.grey1 }}>
+                          <a
+                          href={`mailto:${sp.email}`}
+                          onClick={e => e.stopPropagation()}
+                          style={{ color: T.grey1, textDecoration: 'none' }}
+                          onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                          onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+                        >
+                          {sp.email}
+                        </a>
+                      </td>
                       <td style={{ padding: '12px 16px', fontWeight: 700, letterSpacing: '0.5px', color: T.black }}>{sp.coupon_code}</td>
                       <td style={{ padding: '12px 16px', color: T.black }}>{sp.commission_pct}%</td>
                       <td style={{ padding: '12px 16px', color: T.black }}>{sp.total_sales}</td>
@@ -314,16 +335,32 @@ export function AffiliateManagement({ showToast }: AffiliateManagementProps) {
                             <span style={{ fontSize: 10, fontWeight: 700, color: T.grey1, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
                               Order History
                             </span>
-                            <input
-                              type="month"
-                              value={monthFilterMap[sp.id] || ''}
-                              onChange={e => handleMonthChange(sp.id, e.target.value)}
-                              onClick={e => e.stopPropagation()}
-                              style={{
-                                fontFamily: "'Jost',sans-serif", fontSize: 12, padding: '6px 10px',
-                                border: `1px solid ${T.grey3}`, borderRadius: 6, background: T.white, color: T.black,
-                              }}
-                            />
+                            <div style={{ display: 'flex', gap: 8 }}>
+                              <input
+                                type="month"
+                                value={monthFilterMap[sp.id] || ''}
+                                onChange={e => handleMonthChange(sp.id, e.target.value)}
+                                onClick={e => e.stopPropagation()}
+                                style={{
+                                  fontFamily: "'Jost',sans-serif", fontSize: 12, padding: '6px 10px',
+                                  border: `1px solid ${T.grey3}`, borderRadius: 6, background: T.white, color: T.black,
+                                }}
+                              />
+                              {monthFilterMap[sp.id] && (
+                                <input
+                                  type="date"
+                                  value={dayFilterMap[sp.id] || ''}
+                                  onChange={e => handleDayChange(sp.id, e.target.value)}
+                                  onClick={e => e.stopPropagation()}
+                                  min={`${monthFilterMap[sp.id]}-01`}
+                                  max={`${monthFilterMap[sp.id]}-${String(lastDayOfMonth(monthFilterMap[sp.id])).padStart(2, '0')}`}
+                                  style={{
+                                    fontFamily: "'Jost',sans-serif", fontSize: 12, padding: '6px 10px',
+                                    border: `1px solid ${T.grey3}`, borderRadius: 6, background: T.white, color: T.black,
+                                  }}
+                                />
+                              )}
+                            </div>
                           </div>
 
                           {isLoading && orders.length === 0 && (
