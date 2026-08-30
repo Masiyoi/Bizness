@@ -332,4 +332,18 @@ async function getTotalPointsRewarded(req, res) {
     res.status(500).json({ error: 'Could not load total points rewarded' });
   }
 }
-module.exports = { registerMember, joinClub, getProfile, addPoints, awardOrderPoints, awardReferralBonus, awardBirthdayBonuses, getReferralLink, tierFor, TIERS, TIER_BONUS, getTotalPointsRewarded };
+// GET /api/members/count
+// Total number of club members (club_joined = true). Any authenticated
+// user can see this — it's just a headline stat, not sensitive.
+async function getMemberCount(req, res) {
+  try {
+    const { rows: [{ total }] } = await pool.query(
+      'SELECT COUNT(*)::int AS total FROM members WHERE club_joined = true'
+    );
+    res.json({ total_members: total });
+  } catch (err) {
+    console.error('getMemberCount error:', err);
+    res.status(500).json({ error: 'Could not load member count' });
+  }
+}
+module.exports = { registerMember, joinClub, getProfile, addPoints, awardOrderPoints, awardReferralBonus, awardBirthdayBonuses, getReferralLink, getMemberCount, tierFor, TIERS, TIER_BONUS, getTotalPointsRewarded };

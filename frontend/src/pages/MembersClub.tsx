@@ -199,6 +199,7 @@ export default function MembersClub() {
   const [wishlistCount, setWishlistCount] = useState(0);
   const [toast, setToast] = useState('');
   const [referral, setReferral] = useState<ReferralLink | null>(null);
+  const [totalMembers, setTotalMembers] = useState<number | null>(null);
   const [referralLoading, setReferralLoading] = useState(false);
   const showToast = (msg: string) => {
     setToast(msg); setTimeout(() => setToast(''), 3000);
@@ -231,6 +232,12 @@ useEffect(() => {
       .then(r => setReferral(r.data))
       .catch(() => {})
       .finally(() => setReferralLoading(false));
+  }, [user, isMember]);
+  useEffect(() => {
+    if (!user || !isMember) return;
+    axios.get('/api/members/count')
+      .then(r => setTotalMembers(r.data.total_members))
+      .catch(() => {});
   }, [user, isMember]);
   const handleJoin = async () => {
     if (!user) { navigate('/login?redirect=/members-club'); return; }
@@ -423,6 +430,11 @@ useEffect(() => {
               {profile.points.toLocaleString()}
             </div>
             <TierBadge tier={tier} size="md" />
+            {totalMembers !== null && (
+              <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#888', fontWeight: 600, letterSpacing: '1px', marginTop: 10 }}>
+                {totalMembers.toLocaleString()} subscriber{totalMembers !== 1 ? 's' : ''}
+              </p>
+            )}
             {next && (
               <div style={{ marginTop: 28, maxWidth: 360, margin: '28px auto 0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>

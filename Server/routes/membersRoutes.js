@@ -12,4 +12,6 @@ router.get("/referral-link", auth, membersController.getReferralLink);
 // GET /api/members/admin/total-points-rewarded
 // Admin-only stat — total points ever paid out across all members.
 router.get("/admin/total-points-rewarded", auth, adminOnly, membersController.getTotalPointsRewarded);
+router.get('/count', auth, membersController.getMemberCount);
+
 module.exports = router;
