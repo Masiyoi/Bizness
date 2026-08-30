@@ -332,7 +332,7 @@ exports.getSalespersonOrders = async (req, res) => {
        FROM affiliate_earnings e
        JOIN orders o ON o.id = e.order_id
        WHERE e.salesperson_id = $1
-       ${monthClause}
+       ${dateClause}
        ORDER BY o.created_at DESC
        LIMIT $${params.length - 1} OFFSET $${params.length}`,
       params
