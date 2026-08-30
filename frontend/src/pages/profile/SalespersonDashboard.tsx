@@ -173,7 +173,9 @@ export default function SalespersonDashboard() {
 
       {/* ── Hero ── */}
       <div style={{
-        background: '#000',
+        background: "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.75)), url('/Mathao.jpg')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         borderRadius: 16,
         padding: 'clamp(28px,4vw,44px)',
         position: 'relative',
