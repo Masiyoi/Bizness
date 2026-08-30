@@ -63,7 +63,7 @@ exports.listSalespersons = async (req, res) => {
         s.commission_pct, 
         s.status,
         s.created_at,
-        u.full_name AS name, 
+        u.name, 
         u.email,
         COUNT(e.id) AS total_sales,
         COALESCE(SUM(e.commission_amount), 0)::NUMERIC(10,2) AS total_earned,
@@ -78,7 +78,7 @@ exports.listSalespersons = async (req, res) => {
       FROM salespersons s
       JOIN users u ON u.id = s.user_id
       LEFT JOIN affiliate_earnings e ON e.salesperson_id = s.id
-      GROUP BY s.id, s.user_id, u.id, u.full_name, u.email, s.coupon_code, s.commission_pct, s.status, s.created_at
+      GROUP BY s.id, s.user_id, u.id, u.name, u.email, s.coupon_code, s.commission_pct, s.status, s.created_at
       ORDER BY s.created_at DESC
     `);
     res.json({
@@ -104,7 +104,7 @@ exports.getSalesperson = async (req, res) => {
         s.commission_pct, 
         s.status,
         s.created_at,
-        u.full_name AS name, 
+        u.name, 
         u.email,
         COUNT(e.id) AS total_sales,
         COALESCE(SUM(e.commission_amount), 0)::NUMERIC(10,2) AS total_earned,
@@ -116,7 +116,7 @@ exports.getSalesperson = async (req, res) => {
       JOIN users u ON u.id = s.user_id
       LEFT JOIN affiliate_earnings e ON e.salesperson_id = s.id
       WHERE s.id = $1
-      GROUP BY s.id, s.user_id, u.id, u.full_name, u.email
+      GROUP BY s.id, s.user_id, u.id, u.name, u.email
     `, [id]);
 
     if (!rows[0]) {
