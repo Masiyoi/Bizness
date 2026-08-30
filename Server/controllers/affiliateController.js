@@ -297,20 +297,23 @@ exports.getMyEarnings = async (req, res) => {
 // Paginated order history for one salesperson, with optional month filter (admin only)
 exports.getSalespersonOrders = async (req, res) => {
   const { id } = req.params;
-  const { month, limit = 5, offset = 0 } = req.query;
+  const { month, day, limit = 5, offset = 0 } = req.query;
   try {
     const params = [id];
-    let monthClause = '';
-    if (month) {
+    let dateClause = '';
+    if (day) {
+      params.push(day);
+      dateClause = `AND o.created_at::date = $${params.length}::date`;
+    } else if (month) {
       params.push(`${month}-01`);
-      monthClause = `AND date_trunc('month', o.created_at) = date_trunc('month', $${params.length}::date)`;
+      dateClause = `AND date_trunc('month', o.created_at) = date_trunc('month', $${params.length}::date)`;
     }
     const { rows: countRows } = await db.query(
       `SELECT COUNT(*) AS total
        FROM affiliate_earnings e
        JOIN orders o ON o.id = e.order_id
        WHERE e.salesperson_id = $1
-       ${monthClause}`,
+       ${dateClause}`,
       params
     );
     params.push(Number(limit));
