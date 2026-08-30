@@ -367,6 +367,11 @@ useEffect(() => {
           {user && isMember && profile && (
             <div className="mc-fade mc-d3" style={{ display: 'inline-block' }}>
               <TierBadge tier={tier} size="lg" />
+              {totalMembers !== null && (
+                <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 13, fontWeight: 800, color: '#fff', letterSpacing: '1px', marginTop: 12 }}>
+                  {totalMembers.toLocaleString()} subscriber{totalMembers !== 1 ? 's' : ''}
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -430,11 +435,6 @@ useEffect(() => {
               {profile.points.toLocaleString()}
             </div>
             <TierBadge tier={tier} size="md" />
-            {totalMembers !== null && (
-              <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#888', fontWeight: 600, letterSpacing: '1px', marginTop: 10 }}>
-                {totalMembers.toLocaleString()} subscriber{totalMembers !== 1 ? 's' : ''}
-              </p>
-            )}
             {next && (
               <div style={{ marginTop: 28, maxWidth: 360, margin: '28px auto 0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
