@@ -173,7 +173,7 @@ export default function SalespersonDashboard() {
 
       {/* ── Hero ── */}
       <div style={{
-        background: "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.75)), url('/ganji.jpg')",
+        background: "linear-gradient(rgba(0,0,0,0.25),rgba(0,0,0,0.45)), url('/ganji.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         borderRadius: 16,
