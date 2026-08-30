@@ -293,4 +293,55 @@ exports.getMyEarnings = async (req, res) => {
   }
 };
 
+// GET /api/affiliate/salespersons/:id/orders
+// Paginated order history for one salesperson, with optional month filter (admin only)
+exports.getSalespersonOrders = async (req, res) => {
+  const { id } = req.params;
+  const { month, limit = 5, offset = 0 } = req.query;
+  try {
+    const params = [id];
+    let monthClause = '';
+    if (month) {
+      params.push(`${month}-01`);
+      monthClause = `AND date_trunc('month', o.created_at) = date_trunc('month', $${params.length}::date)`;
+    }
+    const { rows: countRows } = await db.query(
+      `SELECT COUNT(*) AS total
+       FROM affiliate_earnings e
+       JOIN orders o ON o.id = e.order_id
+       WHERE e.salesperson_id = $1
+       ${monthClause}`,
+      params
+    );
+    params.push(Number(limit));
+    params.push(Number(offset));
+    const { rows } = await db.query(
+      `SELECT
+         e.id          AS earning_id,
+         e.commission_amount,
+         e.payout_status,
+         e.created_at  AS earning_created_at,
+         o.id          AS order_id,
+         o.order_number,
+         o.total,
+         o.created_at  AS order_date,
+         o.items_snapshot
+       FROM affiliate_earnings e
+       JOIN orders o ON o.id = e.order_id
+       WHERE e.salesperson_id = $1
+       ${monthClause}
+       ORDER BY o.created_at DESC
+       LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      params
+    );
+    res.json({
+      message: 'Order history loaded',
+      data: rows,
+      total: parseInt(countRows[0].total, 10)
+    });
+  } catch (err) {
+    console.error('getSalespersonOrders error:', err);
+    res.status(500).json({ message: 'Failed to fetch order history' });
+  }
+};
 module.exports = exports;

@@ -8,6 +8,7 @@ const {
   getSalesperson,
   updateSalesperson,
   markPaid,
+  getSalespersonOrders,
   getMyStats,
   getMyEarnings,
 } = require('../controllers/affiliateController');
@@ -18,6 +19,7 @@ router.get('/salespersons', auth, adminOnly, listSalespersons);
 router.get('/salespersons/:id', auth, adminOnly, getSalesperson);
 router.patch('/salespersons/:id', auth, adminOnly, updateSalesperson);
 router.patch('/salespersons/:id/payout', auth, adminOnly, markPaid);
+router.get('/salespersons/:id/orders', auth, adminOnly, getSalespersonOrders);
 
 // User routes
 router.get('/me', auth, getMyStats);
