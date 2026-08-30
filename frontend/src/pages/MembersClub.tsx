@@ -622,7 +622,9 @@ useEffect(() => {
                   +{way.points} <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 700, color: '#111' }}>pts</span>
                 </span>
                 {way.link && (
-                  <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#999', flexShrink: 0, marginLeft: 6 }}>up-right arrow</span>
+                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ flexShrink: 0, marginLeft: 6 }}>
+                    <path d="M2 9L9 2M9 2H3.5M9 2V7.5" stroke="#999" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 )}
               </div>
             );
