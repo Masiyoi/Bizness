@@ -78,6 +78,18 @@ const EARN_WAYS = [
   { label: 'Follow us on Instagram',  points: 30,  icon: igColouredIcon, link: 'https://www.instagram.com/lukuprime?igsh=MWxmazlvM2JseWNzeQ==' },
   { label: 'Birthday month bonus',    points: 50,  icon: fireworksIcon },
 ];
+// ── Member-only carousel content — swap these paths for real assets in /public/updates/ ──
+interface CarouselItem {
+  type: 'image' | 'video';
+  src: string;
+  title: string;
+  subtitle?: string;
+}
+const MEMBER_UPDATES: CarouselItem[] = [
+  { type: 'image', src: '/updates/new-drop-1.jpg', title: 'New Drop', subtitle: "This week's freshest arrivals" },
+  { type: 'image', src: '/updates/best-seller-1.jpg', title: 'Best Seller', subtitle: 'Our most-loved piece this month' },
+  { type: 'video', src: '/updates/behind-the-scenes.mp4', title: 'Behind the Scenes' },
+];
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function getTier(points: number) {
   return TIERS.find(t => points >= t.min && points <= t.max) ?? TIERS[0];
@@ -180,11 +192,26 @@ const css = `
     flex-shrink: 0;
   }
   .referral-copy-btn:hover, .referral-share-btn:hover { opacity: 0.82; }
+  .mc-carousel-wrap { position: relative; width: 100%; }
+  .mc-carousel-track { display: flex; transition: transform 0.5s cubic-bezier(.22,.68,0,1.2); }
+  .mc-carousel-slide { position: relative; flex: 0 0 100%; aspect-ratio: 16/7; background: #111; }
+  .mc-carousel-slide img, .mc-carousel-slide video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mc-carousel-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: clamp(20px,4vw,40px); background: linear-gradient(transparent, rgba(0,0,0,0.75)); }
+  .mc-carousel-title { font-family: 'Jost', sans-serif; font-weight: 700; font-size: clamp(16px,2.5vw,24px); color: #fff; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .mc-carousel-subtitle { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 13px; color: rgba(255,255,255,0.75); }
+  .mc-carousel-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.15); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+  .mc-carousel-arrow:hover { background: rgba(255,255,255,0.3); }
+  .mc-carousel-arrow-left { left: 16px; }
+  .mc-carousel-arrow-right { right: 16px; }
+  .mc-carousel-dots { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+  .mc-carousel-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.35); border: none; cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s; }
+  .mc-carousel-dot.active { background: #fff; transform: scale(1.3); }
   @media(max-width:640px) {
     .mc-tiers-grid  { grid-template-columns: 1fr !important; gap: 8px !important; }
     .mc-hero-points { font-size: clamp(56px,18vw,96px) !important; }
     .referral-box   { flex-wrap: wrap; }
     .referral-link-text { flex-basis: 100%; }
+    .mc-carousel-arrow { width: 30px; height: 30px; font-size: 16px; }
   }
 `;
 // ── Main ─────────────────────────────────────────────────────────────────────
@@ -201,6 +228,7 @@ export default function MembersClub() {
   const [referral, setReferral] = useState<ReferralLink | null>(null);
   const [totalMembers, setTotalMembers] = useState<number | null>(null);
   const [referralLoading, setReferralLoading] = useState(false);
+  const [carouselIndex, setCarouselIndex] = useState(0);
   const showToast = (msg: string) => {
     setToast(msg); setTimeout(() => setToast(''), 3000);
   };
@@ -239,6 +267,16 @@ useEffect(() => {
       .then(r => setTotalMembers(r.data.total_members))
       .catch(() => {});
   }, [user, isMember]);
+  // Auto-advance the member-only updates carousel every 5s
+  useEffect(() => {
+    if (!user || !isMember) return;
+    const id = setInterval(() => {
+      setCarouselIndex(i => (i + 1) % MEMBER_UPDATES.length);
+    }, 5000);
+    return () => clearInterval(id);
+  }, [user, isMember]);
+  const prevSlide = () => setCarouselIndex(i => (i - 1 + MEMBER_UPDATES.length) % MEMBER_UPDATES.length);
+  const nextSlide = () => setCarouselIndex(i => (i + 1) % MEMBER_UPDATES.length);
   const handleJoin = async () => {
     if (!user) { navigate('/login?redirect=/members-club'); return; }
     setJoining(true);
@@ -651,6 +689,48 @@ useEffect(() => {
           >
             {joining ? 'Joining…' : !user ? 'Create an Account' : 'Join the Club — Free'}
           </button>
+        </section>
+      )}
+      {/* ── MEMBER-ONLY: New Drops & Updates carousel ── */}
+      {user && isMember && (
+        <section style={{ background: '#0A0A0A', padding: 'clamp(48px,7vw,88px) 0', overflow: 'hidden' }}>
+          <div style={{ textAlign: 'center', marginBottom: 32, padding: '0 20px' }}>
+            <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: '#E8CD7A', marginBottom: 12 }}>
+              Members Only
+            </p>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 300, fontStyle: 'italic', fontSize: 'clamp(24px,4vw,38px)', color: '#fff', letterSpacing: '-0.5px' }}>
+              New Drops & Updates
+            </h2>
+          </div>
+          <div className="mc-carousel-wrap">
+            <div className="mc-carousel-track" style={{ transform: `translateX(-${carouselIndex * 100}%)` }}>
+              {MEMBER_UPDATES.map((item, i) => (
+                <div className="mc-carousel-slide" key={i}>
+                  {item.type === 'image' ? (
+                    <img src={item.src} alt={item.title} />
+                  ) : (
+                    <video src={item.src} autoPlay muted loop playsInline />
+                  )}
+                  <div className="mc-carousel-caption">
+                    <p className="mc-carousel-title">{item.title}</p>
+                    {item.subtitle && <p className="mc-carousel-subtitle">{item.subtitle}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button className="mc-carousel-arrow mc-carousel-arrow-left" onClick={prevSlide} aria-label="Previous">‹</button>
+            <button className="mc-carousel-arrow mc-carousel-arrow-right" onClick={nextSlide} aria-label="Next">›</button>
+            <div className="mc-carousel-dots">
+              {MEMBER_UPDATES.map((_, i) => (
+                <button
+                  key={i}
+                  className={`mc-carousel-dot${i === carouselIndex ? ' active' : ''}`}
+                  onClick={() => setCarouselIndex(i)}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+          </div>
         </section>
       )}
       <Footer />
