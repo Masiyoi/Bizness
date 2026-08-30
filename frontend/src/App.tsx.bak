@@ -25,7 +25,6 @@ import ProfileLayout  from './pages/profile/ProfileLayout';
 import Dashboard       from './pages/profile/Dashboard';
 import Discounts       from './pages/profile/Discounts';
 import Affiliate       from './pages/profile/Affiliate';
-import SalespersonDashboard from './pages/profile/SalespersonDashboard';
 import Settings        from './pages/profile/Settings';
 import AccountDetails  from './pages/profile/AccountDetails';
 
@@ -261,7 +260,6 @@ export default function App() {
           <Route path="dashboard"       element={<Dashboard />} />
           <Route path="discounts"       element={<Discounts />} />
           <Route path="affiliate"       element={<Affiliate />} />
-          <Route path="affiliate/dashboard" element={<SalespersonDashboard />} />
           <Route path="settings"        element={<Settings />} />
           <Route path="account"         element={<AccountDetails />} />
         </Route>
