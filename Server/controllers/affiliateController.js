@@ -260,40 +260,67 @@ exports.getMyStats = async (req, res) => {
 };
 
 // GET /api/affiliate/me/earnings
-// Get current user's earnings history
+// Get current user's own order/earnings history, with optional month/day filter + pagination
 exports.getMyEarnings = async (req, res) => {
   const userId = req.user.id;
+  const { month, day, limit = 10, offset = 0 } = req.query;
   try {
-    const { rows } = await db.query(`
-      SELECT 
-        e.id,
-        e.order_id,
-        e.commission_amount,
-        e.commission_pct,
-        e.payout_status,
-        e.created_at,
-        e.paid_at,
-        o.total_price,
-        o.created_at AS order_date
-      FROM affiliate_earnings e
-      JOIN orders o ON o.id = e.order_id
-      JOIN salespersons s ON s.id = e.salesperson_id
-      WHERE s.user_id = $1
-      ORDER BY e.created_at DESC
-      LIMIT 100
-    `, [userId]);
-
+    const { rows: spRows } = await db.query(
+      `SELECT id FROM salespersons WHERE user_id = $1`,
+      [userId]
+    );
+    if (!spRows[0]) {
+      return res.json({ message: 'Not an affiliate', data: [], total: 0 });
+    }
+    const salespersonId = spRows[0].id;
+    const params = [salespersonId];
+    let dateClause = '';
+    if (day) {
+      params.push(day);
+      dateClause = `AND o.created_at::date = $${params.length}::date`;
+    } else if (month) {
+      params.push(`${month}-01`);
+      dateClause = `AND date_trunc('month', o.created_at) = date_trunc('month', $${params.length}::date)`;
+    }
+    const { rows: countRows } = await db.query(
+      `SELECT COUNT(*) AS total
+       FROM affiliate_earnings e
+       JOIN orders o ON o.id = e.order_id
+       WHERE e.salesperson_id = $1
+       ${dateClause}`,
+      params
+    );
+    params.push(Number(limit));
+    params.push(Number(offset));
+    const { rows } = await db.query(
+      `SELECT
+         e.id          AS earning_id,
+         e.commission_amount,
+         e.payout_status,
+         e.created_at  AS earning_created_at,
+         o.id          AS order_id,
+         o.order_number,
+         o.total,
+         o.created_at  AS order_date,
+         o.items_snapshot
+       FROM affiliate_earnings e
+       JOIN orders o ON o.id = e.order_id
+       WHERE e.salesperson_id = $1
+       ${dateClause}
+       ORDER BY o.created_at DESC
+       LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      params
+    );
     res.json({
       message: 'Earnings history loaded',
-      data: rows
+      data: rows,
+      total: parseInt(countRows[0].total, 10)
     });
   } catch (err) {
     console.error('getMyEarnings error:', err);
     res.status(500).json({ message: 'Failed to fetch earnings history' });
   }
-};
-
-// GET /api/affiliate/salespersons/:id/orders
+};// GET /api/affiliate/salespersons/:id/orders
 // Paginated order history for one salesperson, with optional month filter (admin only)
 exports.getSalespersonOrders = async (req, res) => {
   const { id } = req.params;
