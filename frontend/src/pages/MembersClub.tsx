@@ -89,6 +89,8 @@ const MEMBER_UPDATES: CarouselItem[] = [
   { type: 'image', src: '/updates/new-drop-1.jpg', title: 'New Drop', subtitle: "This week's freshest arrivals" },
   { type: 'image', src: '/updates/best-seller-1.jpg', title: 'Best Seller', subtitle: 'Our most-loved piece this month' },
   { type: 'video', src: '/updates/behind-the-scenes.mp4', title: 'Behind the Scenes' },
+  { type: 'image', src: '/updates/next-sale.jpg', title: 'Next Sale — 15 Sept', subtitle: 'Up to 40% off storewide, members get early access' },
+  { type: 'image', src: '/updates/events-popups.jpg', title: 'Events & Pop-Ups', subtitle: 'Meet us in person at our next Nairobi pop-up' },
 ];
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function getTier(points: number) {
@@ -194,7 +196,7 @@ const css = `
   .referral-copy-btn:hover, .referral-share-btn:hover { opacity: 0.82; }
   .mc-carousel-wrap { position: relative; width: 100%; }
   .mc-carousel-track { display: flex; transition: transform 0.5s cubic-bezier(.22,.68,0,1.2); }
-  .mc-carousel-slide { position: relative; flex: 0 0 100%; aspect-ratio: 16/7; background: #111; }
+  .mc-carousel-slide { position: relative; flex: 0 0 100%; height: clamp(360px,60vh,640px); background: #111; }
   .mc-carousel-slide img, .mc-carousel-slide video { width: 100%; height: 100%; object-fit: cover; display: block; }
   .mc-carousel-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: clamp(20px,4vw,40px); background: linear-gradient(transparent, rgba(0,0,0,0.75)); }
   .mc-carousel-title { font-family: 'Jost', sans-serif; font-weight: 700; font-size: clamp(16px,2.5vw,24px); color: #fff; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
