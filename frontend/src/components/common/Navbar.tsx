@@ -341,6 +341,15 @@ export default function Navbar({
           from { opacity: 0; transform: translateY(-6px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+
+        @media (max-width: 767px) {
+          .navbar-brand-center {
+            position: absolute !important;
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) !important;
+          }
+        }
       `}</style>
 
       {/* ── Announcement marquee — first-order offer for new/guest visitors, rotating perks for returning customers ── */}
@@ -363,7 +372,7 @@ export default function Navbar({
         WebkitBackdropFilter: isTransparent ? 'none' : (mobileMenuOpen ? 'blur(20px) saturate(180%)' : 'blur(12px)') as any,
       }}>
 
-        <div style={{ padding: '0 5%', height: 64, display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center' }}>
+        <div style={{ padding: '0 5%', height: 64, display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', position: 'relative' }}>
 
           {/* ── LEFT ── */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -477,9 +486,9 @@ export default function Navbar({
           </div>
 
           {/* ── CENTER: Brand ── */}
-          <div style={{ justifySelf: 'center', cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: 8 }}
+          <div className="navbar-brand-center" style={{ justifySelf: 'center', cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: 8 }}
             onClick={() => navigate('/')}>
-            <img src="/plugwalk.jpg" alt="Plug Walk" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: '50%', display: 'block' }} />
+            <img src="/plugwalk.jpg" alt="Plug Walk" style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: '50%', display: 'block', mixBlendMode: 'multiply' }} />
             <span className="brand-logo" style={{ color: ink }}>
               𝓟𝓵𝓾𝓰 𝓦𝓪𝓵𝓴
             </span>

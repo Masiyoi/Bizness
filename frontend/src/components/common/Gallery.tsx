@@ -19,7 +19,7 @@ export default function Gallery() {
           fontSize: 'clamp(20px,3vw,28px)', color: T.navy,
           letterSpacing: '-0.3px', marginBottom: 6,
         }}>
-          Styled By Luku Prime
+          Styled By The Plug
         </h2>
         <p style={{
           fontFamily: "'Jost',sans-serif", fontSize: 12, color: T.muted,
