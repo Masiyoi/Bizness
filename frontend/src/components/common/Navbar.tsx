@@ -344,15 +344,7 @@ export default function Navbar({
 
         @media (max-width: 767px) {
           .navbar-brand-center {
-            gap: 6px !important;
-            min-width: 0;
-          }
-          .navbar-brand-center img {
-            width: 22px !important;
-            height: 22px !important;
-          }
-          .navbar-brand-center .brand-logo {
-            font-size: 15px !important;
+            display: none !important;
           }
         }
       `}</style>
@@ -487,10 +479,22 @@ export default function Navbar({
                   </div>
                 )}
               </div>
+
+              {/* Mobile: brand logo + title — right after the language flag */}
+              <div
+                className="navbar-brand-mobile"
+                onClick={() => navigate('/')}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', userSelect: 'none' }}
+              >
+                <img src="/plugwalk.jpg" alt="Plug Walk" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: '50%', display: 'block', mixBlendMode: 'multiply' }} />
+                <span className="brand-logo" style={{ color: ink, fontSize: 20 }}>
+                  𝓟𝓵𝓾𝓰 𝓦𝓪𝓵𝓴
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* ── CENTER: Brand ── */}
+          {/* ── CENTER: Brand — desktop only, hidden on mobile via CSS ── */}
           <div className="navbar-brand-center" style={{ justifySelf: 'center', cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: 8 }}
             onClick={() => navigate('/')}>
             <img src="/plugwalk.jpg" alt="Plug Walk" style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: '50%', display: 'block', mixBlendMode: 'multiply' }} />
