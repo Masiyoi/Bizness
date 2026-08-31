@@ -344,10 +344,15 @@ export default function Navbar({
 
         @media (max-width: 767px) {
           .navbar-brand-center {
-            position: absolute !important;
-            left: 50% !important;
-            top: 50% !important;
-            transform: translate(-50%, -50%) !important;
+            gap: 6px !important;
+            min-width: 0;
+          }
+          .navbar-brand-center img {
+            width: 22px !important;
+            height: 22px !important;
+          }
+          .navbar-brand-center .brand-logo {
+            font-size: 15px !important;
           }
         }
       `}</style>
@@ -372,7 +377,7 @@ export default function Navbar({
         WebkitBackdropFilter: isTransparent ? 'none' : (mobileMenuOpen ? 'blur(20px) saturate(180%)' : 'blur(12px)') as any,
       }}>
 
-        <div style={{ padding: '0 5%', height: 64, display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', position: 'relative' }}>
+        <div style={{ padding: '0 5%', height: 64, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)', alignItems: 'center', position: 'relative' }}>
 
           {/* ── LEFT ── */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
