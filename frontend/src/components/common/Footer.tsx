@@ -275,7 +275,7 @@ export default function Footer() {
         <div className="ft-bottom-strip">
 
           {/* Giant wordmark */}
-          <div className="ft-wordmark">𝓐𝔁𝓲𝓸𝓶 𝓓𝓮𝓹𝓽</div>
+          <div className="ft-wordmark">𝓟𝓵𝓾𝓰 𝓦𝓪𝓵𝓴</div>
 
           {/* Socials */}
           <div style={{ marginBottom: 24 }}>{SOCIAL_ICONS}</div>

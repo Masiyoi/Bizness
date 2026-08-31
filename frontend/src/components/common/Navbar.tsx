@@ -477,10 +477,11 @@ export default function Navbar({
           </div>
 
           {/* ── CENTER: Brand ── */}
-          <div style={{ justifySelf: 'center', cursor: 'pointer', userSelect: 'none' }}
+          <div style={{ justifySelf: 'center', cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: 8 }}
             onClick={() => navigate('/')}>
+            <img src="/plugwalk.jpg" alt="Plug Walk" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: '50%', display: 'block' }} />
             <span className="brand-logo" style={{ color: ink }}>
-              𝓐𝔁𝓲𝓸𝓶 𝓓𝓮𝓹𝓽
+              𝓟𝓵𝓾𝓰 𝓦𝓪𝓵𝓴
             </span>
           </div>
 
