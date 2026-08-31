@@ -1,4 +1,4 @@
-// src/components/common/Navbar.tsx
+﻿// src/components/common/Navbar.tsx
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation }  from 'react-router-dom';
 import axios            from 'axios';
@@ -346,6 +346,10 @@ export default function Navbar({
           .navbar-brand-center {
             display: none !important;
           }
+          .nav-grid {
+            grid-template-columns: auto 1fr auto !important;
+            padding: 0 4% !important;
+          }
         }
       `}</style>
 
@@ -369,7 +373,7 @@ export default function Navbar({
         WebkitBackdropFilter: isTransparent ? 'none' : (mobileMenuOpen ? 'blur(20px) saturate(180%)' : 'blur(12px)') as any,
       }}>
 
-        <div style={{ padding: '0 5%', height: 64, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)', alignItems: 'center', position: 'relative' }}>
+        <div className="nav-grid" style={{ padding: '0 5%', height: 64, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)', alignItems: 'center', position: 'relative' }}>
 
           {/* ── LEFT ── */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -484,10 +488,10 @@ export default function Navbar({
               <div
                 className="navbar-brand-mobile"
                 onClick={() => navigate('/')}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', userSelect: 'none' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', userSelect: 'none', minWidth: 0, overflow: 'hidden' }}
               >
-                <img src="/plugwalk.jpg" alt="Plug Walk" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: '50%', display: 'block', mixBlendMode: 'multiply' }} />
-                <span className="brand-logo" style={{ color: ink, fontSize: 20 }}>
+                <img src="/plugwalk.jpg" alt="Plug Walk" style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: '50%', display: 'block', mixBlendMode: 'multiply', flexShrink: 0 }} />
+                <span className="brand-logo" style={{ color: ink, fontSize: 18, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   𝓟𝓵𝓾𝓰 𝓦𝓪𝓵𝓴
                 </span>
               </div>
