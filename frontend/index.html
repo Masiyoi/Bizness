@@ -203,14 +203,25 @@
     <script type="module" src="/src/main.tsx"></script>
     <script>
       (function () {
+        var MIN_DISPLAY_MS = 2000;
+        var startTime = Date.now();
         var removed = false;
-        function removeLoader() {
+        function hideLoader() {
           if (removed) return;
           var loader = document.getElementById('initial-loader');
           if (!loader) return;
           removed = true;
           loader.classList.add('fade-out');
           setTimeout(function () { loader.remove(); }, 300);
+        }
+        function removeLoader() {
+          var elapsed = Date.now() - startTime;
+          var remaining = MIN_DISPLAY_MS - elapsed;
+          if (remaining > 0) {
+            setTimeout(hideLoader, remaining);
+          } else {
+            hideLoader();
+          }
         }
         var root = document.getElementById('root');
         var observer = new MutationObserver(function () {
