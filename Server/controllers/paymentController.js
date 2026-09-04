@@ -1,6 +1,7 @@
 const axios = require('axios');
 const db    = require('../config/db');
 const { calculateFirstOrderDiscount } = require('./discountController');
+const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -276,18 +277,19 @@ exports.mpesaCallback = async (req, res) => {
 
       const affiliateCode = shippingMeta.affiliate_code || null;
       // 4. Create the order
+      const deliveryState = computeInitialDeliveryState(deliveryZone);
       const orderInsertRes = await db.query(
         `INSERT INTO orders
            (user_id, payment_id, status, tracking_status, total, delivery_fee,
             delivery_zone, items_snapshot, customer_name, customer_email, mpesa_phone, mpesa_receipt,
-            discount_type, discount_amount, order_number, affiliate_code)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+            discount_type, discount_amount, order_number, affiliate_code, auto_deliver_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
          RETURNING id`,
         [
           payment.user_id,
           payment.id,
-          'confirmed',
-          'Payment Confirmed',
+          deliveryState.status,
+          deliveryState.tracking_status,
           payment.amount,
           deliveryFee,
           deliveryZone,
@@ -300,6 +302,7 @@ exports.mpesaCallback = async (req, res) => {
           discountAmount,
           reservedOrderNumber,
           affiliateCode,
+          deliveryState.auto_deliver_at,
         ]
       );
       const newOrderId = orderInsertRes.rows[0]?.id;

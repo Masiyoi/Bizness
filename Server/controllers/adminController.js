@@ -432,7 +432,7 @@ exports.updateOrderStatus = async (req, res) => {
     const { status, tracking_status } = req.body;
     const result = await db.query(
       `UPDATE orders
-       SET status = $1, tracking_status = $2, updated_at = NOW()
+       SET status = $1, tracking_status = $2, auto_deliver_at = NULL, updated_at = NOW()
        WHERE id = $3
        RETURNING *`,
       [status, tracking_status, req.params.id]

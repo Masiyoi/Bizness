@@ -29,6 +29,7 @@ const adminOnly = require('./middleware/adminOnly');
 
 // Controllers
 const { awardBirthdayBonuses } = require('./controllers/membersController');
+const { processAutoDeliveries } = require('./utils/deliveryAutomation');
 
 const app = express();
 
@@ -118,6 +119,22 @@ cron.schedule(
   },
   { timezone: 'Africa/Nairobi' }
 );
+/**
+ * Auto-Delivery Cron Job
+ * Runs every 5 minutes. Flips orders whose auto_deliver_at has passed
+ * (set based on delivery_zone: cbd=1h, environs=2h, county=24h;
+ * pickup orders are marked Delivered instantly at order creation)
+ * to Delivered. Skips cancelled orders and any order an admin already
+ * manually updated (which clears auto_deliver_at).
+ */
+cron.schedule('*/5 * * * *', async () => {
+  try {
+    const count = await processAutoDeliveries();
+    if (count > 0) console.log(`[CRON] Auto-delivery: marked ${count} order(s) delivered`);
+  } catch (err) {
+    console.error('[CRON] Auto-delivery error:', err.message);
+  }
+});
 
 // ── Error Handling ─────────────────────────────────────────────────────────────
 

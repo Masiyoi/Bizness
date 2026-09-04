@@ -2,6 +2,7 @@ const axios = require('axios');
 const db    = require('../config/db');
 const { calculateFirstOrderDiscount } = require('./discountController');
 const { awardOrderPoints } = require('./membersController');
+const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
 
 // ── PayHero base URL ──────────────────────────────────────────────────────────
 const PAYHERO_BASE = 'https://backend.payhero.co.ke/api/v2';
@@ -89,18 +90,19 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
 
   const itemsSnapshot = { items: itemsArray, shipping, deliveryZone };
 
+  const deliveryState = computeInitialDeliveryState(deliveryZone);
   const orderInsertRes = await db.query(
     `INSERT INTO orders
        (user_id, payment_id, status, tracking_status, total, delivery_fee,
         delivery_zone, items_snapshot, customer_name, mpesa_phone, mpesa_receipt,
-        discount_type, discount_amount, order_number, affiliate_code)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        discount_type, discount_amount, order_number, affiliate_code, auto_deliver_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
      RETURNING id`,
     [
       payment.user_id,
       payment.id,
-      'confirmed',
-      'Payment Confirmed',
+      deliveryState.status,
+      deliveryState.tracking_status,
       payment.amount,
       deliveryFee,
       deliveryZone,
@@ -112,6 +114,7 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
       discountAmount,
       reservedOrderNumber,
       affiliateCode,
+      deliveryState.auto_deliver_at,
     ]
   );
   const newOrderId = orderInsertRes.rows[0]?.id;
