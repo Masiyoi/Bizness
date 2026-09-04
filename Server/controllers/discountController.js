@@ -1,7 +1,5 @@
 const db = require('../config/db');
-
 const FIRST_ORDER_DISCOUNT_RATE = 0.10; // 10%
-
 // ── Internal: has this user ever completed (paid) an order? ──────────────────
 const isEligibleForFirstOrderDiscount = async (userId) => {
   const result = await db.query(
@@ -10,13 +8,11 @@ const isEligibleForFirstOrderDiscount = async (userId) => {
   );
   return result.rows.length === 0;
 };
-
 // ── Internal: compute discount for a given subtotal ───────────────────────────
 // Used by the /preview endpoint (display only) AND by paymentController
 // (the authoritative calculation used to build the real charge amount).
 const calculateFirstOrderDiscount = async (userId, subtotal) => {
   const eligible = subtotal > 0 && await isEligibleForFirstOrderDiscount(userId);
-
   if (!eligible) {
     return {
       eligible: false,
@@ -24,13 +20,10 @@ const calculateFirstOrderDiscount = async (userId, subtotal) => {
       discountedSubtotal: Math.round(subtotal * 100) / 100,
     };
   }
-
   const discountAmount = Math.round(subtotal * FIRST_ORDER_DISCOUNT_RATE * 100) / 100;
   const discountedSubtotal = Math.round((subtotal - discountAmount) * 100) / 100;
-
   return { eligible: true, discountAmount, discountedSubtotal };
 };
-
 // ── GET /api/discount/preview — called from cart page & checkout page ────────
 exports.getDiscountPreview = async (req, res) => {
   const userId = req.user.id;
@@ -50,14 +43,11 @@ exports.getDiscountPreview = async (req, res) => {
        WHERE c.user_id = $1`,
       [userId]
     );
-
     const subtotal = cartRes.rows.reduce(
       (sum, row) => sum + Number(row.effective_price) * row.quantity, 0
     );
-
     const { eligible, discountAmount, discountedSubtotal } =
       await calculateFirstOrderDiscount(userId, subtotal);
-
     return res.json({
       eligible,
       subtotal: Math.round(subtotal * 100) / 100,
@@ -70,13 +60,6 @@ exports.getDiscountPreview = async (req, res) => {
     return res.status(500).json({ msg: 'Failed to calculate discount' });
   }
 };
-// ── Addition to src/controllers/discountController.js ──────────────────────
-// Add this export alongside the existing getDiscountPreview. It reuses your
-// existing isEligibleForFirstOrderDiscount() helper (already defined at the
-// top of that file) but skips the cart lookup entirely, since the profile
-// page needs to show "do you have this offer" independent of what's
-// currently in the cart.
-
 // GET /api/discount/eligibility — called from the Discounts profile page.
 // Unlike getDiscountPreview, this doesn't depend on cart contents.
 exports.getDiscountEligibility = async (req, res) => {
@@ -89,7 +72,6 @@ exports.getDiscountEligibility = async (req, res) => {
     return res.status(500).json({ msg: 'Failed to check discount eligibility' });
   }
 };
-
 // GET /api/discount/history — called from the Discounts profile page.
 // Returns every past order where a discount was actually applied, so the
 // page can show "discounts you've used". Reads generically off
@@ -129,21 +111,21 @@ exports.getAdminDiscountSummary = async (req, res) => {
   try {
     const params = [];
     let dateFilter = '';
-    if (from) { params.push(from); dateFilter +=  AND created_at >= $${params.length}; }
-    if (to)   { params.push(to);   dateFilter +=  AND created_at <= $${params.length}::date + interval '1 day'; }
+    if (from) { params.push(from); dateFilter += ` AND created_at >= $${params.length}`; }
+    if (to)   { params.push(to);   dateFilter += ` AND created_at <= $${params.length}::date + interval '1 day'`; }
     const totalsRes = await db.query(
-      SELECT COALESCE(SUM(discount_amount), 0) AS total_discount,
+      `SELECT COALESCE(SUM(discount_amount), 0) AS total_discount,
               COUNT(*) AS orders_count
        FROM orders
-       WHERE discount_amount IS NOT NULL AND discount_amount > 0 ${dateFilter},
+       WHERE discount_amount IS NOT NULL AND discount_amount > 0 ${dateFilter}`,
       params
     );
     const ordersRes = await db.query(
-      SELECT order_number, customer_name, customer_email, mpesa_phone,
+      `SELECT order_number, customer_name, customer_email, mpesa_phone,
               total, discount_type, discount_amount, created_at
        FROM orders
        WHERE discount_amount IS NOT NULL AND discount_amount > 0 ${dateFilter}
-       ORDER BY created_at DESC,
+       ORDER BY created_at DESC`,
       params
     );
     return res.json({
