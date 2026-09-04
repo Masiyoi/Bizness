@@ -37,6 +37,8 @@ export interface Order {
   shipping_info?:  any;
   delivery_zone?:  string;
   delivery_fee?:   string | number;
+  member_tier?:    'Bronze' | 'Gold' | 'Diamond' | null;
+  member_points?:  number | null;
 }
 
 // ── Dashboard stats ───────────────────────────────────────────────────────────

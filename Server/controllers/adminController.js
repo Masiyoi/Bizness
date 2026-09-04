@@ -410,10 +410,13 @@ exports.getOrders = async (req, res) => {
               COALESCE(o.customer_name,  u.full_name)    AS customer_name,
               COALESCE(o.customer_email, u.email)         AS customer_email,
               COALESCE(o.mpesa_phone,    p.phone)         AS mpesa_phone,
-              COALESCE(o.mpesa_receipt,  p.mpesa_receipt) AS mpesa_receipt
+              COALESCE(o.mpesa_receipt,  p.mpesa_receipt) AS mpesa_receipt,
+              m.tier                                      AS member_tier,
+              m.points                                     AS member_points
        FROM orders o
        LEFT JOIN users    u ON o.user_id    = u.id
        LEFT JOIN payments p ON o.payment_id = p.id
+       LEFT JOIN members  m ON m.user_id = o.user_id AND m.club_joined = true
        ORDER BY o.created_at DESC`
     );
     res.json(result.rows);

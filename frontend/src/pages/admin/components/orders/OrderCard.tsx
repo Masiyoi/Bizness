@@ -6,6 +6,7 @@ import type { Order } from '../../types';
 import { T, SC } from '../../constants';
 import { parseItemsSnapshot } from '../../utils';
 import emailIcon from '../../../../assets/email.png';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 interface OrderCardProps {
   order:    Order;
@@ -13,6 +14,11 @@ interface OrderCardProps {
   onUpdate: (o: Order) => void;
 }
 
+const MEMBER_TIER_THEME: Record<'Bronze' | 'Gold' | 'Diamond', { color: string; lottie: string }> = {
+  Bronze:  { color: '#CD7F32', lottie: '/animations/bronze_coin.lottie' },
+  Gold:    { color: '#B8960C', lottie: '/animations/Gold_Coin.lottie' },
+  Diamond: { color: '#6A7FA8', lottie: '/animations/Red_Diamond.lottie' },
+};
 export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
   const TRACKING_CARD_THEME: Record<string, {
     bg: string; border: string; text: string; muted: string;
@@ -56,11 +62,30 @@ export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
             <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: theme.text }}>
               👤 <strong>{o.customer_name || 'Unknown'}</strong>
             </div>
-            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: theme.muted, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <img src={emailIcon} alt="" style={{ width: 12, height: 12, flexShrink: 0 }} />
-              {o.customer_email
-                ? <a href={`mailto:${o.customer_email}`} onClick={e => e.stopPropagation()} style={{ color: theme.text, textDecoration: 'underline' }}>{o.customer_email}</a>
-                : '—'}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: theme.muted, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <img src={emailIcon} alt="" style={{ width: 12, height: 12, flexShrink: 0 }} />
+                {o.customer_email
+                  ? <a href={`mailto:${o.customer_email}`} onClick={e => e.stopPropagation()} style={{ color: theme.text, textDecoration: 'underline' }}>{o.customer_email}</a>
+                  : '—'}
+              </div>
+              {o.member_tier && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <DotLottieReact
+                    src={MEMBER_TIER_THEME[o.member_tier].lottie}
+                    loop
+                    autoplay
+                    style={{ width: 16, height: 16, flexShrink: 0 }}
+                  />
+                  <span style={{
+                    fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 700,
+                    letterSpacing: '1.5px', textTransform: 'uppercase',
+                    color: MEMBER_TIER_THEME[o.member_tier].color,
+                  }}>
+                    {o.member_tier} Member
+                  </span>
+                </div>
+              )}
             </div>
             <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: theme.muted }}>
               📱 {o.mpesa_phone
