@@ -28,6 +28,7 @@ export function AdminReviews() {
   const [search, setSearch]     = useState('');
   const [drafts, setDrafts]     = useState<Record<number, string>>({});
   const [saving, setSaving]     = useState<Record<number, boolean>>({});
+  const [savedMsg, setSavedMsg] = useState<Record<number, boolean>>({});
   const load = () => {
     setLoading(true);
     setError(false);
@@ -57,6 +58,7 @@ export function AdminReviews() {
   }, [reviews, search]);
   const saveReply = async (id: number) => {
     setSaving(s => ({ ...s, [id]: true }));
+    setSavedMsg(s => ({ ...s, [id]: false }));
     try {
       const reply = drafts[id] || '';
       const res = await axios.patch(`/api/reviews/admin/${id}/reply`, { reply });
@@ -64,6 +66,8 @@ export function AdminReviews() {
         ? { ...r, admin_reply: res.data.admin_reply, admin_reply_at: res.data.admin_reply_at }
         : r
       ) ?? null);
+      setSavedMsg(s => ({ ...s, [id]: true }));
+      setTimeout(() => setSavedMsg(s => ({ ...s, [id]: false })), 3000);
     } catch {
       // leave draft as-is so the admin can retry
     } finally {
@@ -147,8 +151,10 @@ export function AdminReviews() {
                   }}
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-                  <span style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: T.grey1 }}>
-                    {r.admin_reply_at ? `Last replied ${fmtDate(r.admin_reply_at)}` : 'No reply yet'}
+                  <span style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: savedMsg[r.id] ? '#1F8A3D' : T.grey1, fontWeight: savedMsg[r.id] ? 700 : 400 }}>
+                    {savedMsg[r.id]
+                      ? '✓ Reply saved successfully'
+                      : (r.admin_reply_at ? `Last replied ${fmtDate(r.admin_reply_at)}` : 'No reply yet')}
                   </span>
                   <button
                     onClick={() => saveReply(r.id)}
@@ -162,6 +168,16 @@ export function AdminReviews() {
                     }}
                   >{saving[r.id] ? 'Saving…' : 'Save Reply'}</button>
                 </div>
+                {r.admin_reply && (
+                  <div style={{ marginTop: 14, background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 8, padding: '10px 14px' }}>
+                    <p style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 4 }}>
+                      Current live reply
+                    </p>
+                    <p style={{ fontFamily: 'Jost,sans-serif', fontSize: 13, color: '#166534', lineHeight: 1.5 }}>
+                      {r.admin_reply}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           ))}

@@ -70,7 +70,7 @@ function ReviewCard({ review, navigate }: { review: HomepageReview; navigate: (p
         <div className="font-sans text-[11px] font-bold text-navy">
           {displayName}
         </div>
-        <span className="text-[9px] font-bold text-[#1E40AF] bg-[#EFF6FF] border border-[#BFDBFE] rounded-full px-2 py-0.5 inline-flex items-center gap-1">
+        <span className="text-[9px] font-bold text-white bg-[#0095F6] rounded-full px-2 py-0.5 inline-flex items-center gap-1">
           &#10003; Verified purchase
         </span>
       </div>
@@ -81,7 +81,7 @@ function ReviewCard({ review, navigate }: { review: HomepageReview; navigate: (p
         {review.admin_reply && (
           <div className="mt-2 bg-[#F0FDF4] border border-[#BBF7D0] rounded-[8px] px-2.5 py-2 text-left">
             <div className="text-[9px] font-bold text-[#166534] uppercase tracking-wide mb-1">
-              Luku Prime replied
+              The Plug replied
             </div>
             <p className="text-[10px] text-[#166534] leading-[1.5]">
               {review.admin_reply}
