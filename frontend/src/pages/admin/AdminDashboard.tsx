@@ -22,6 +22,7 @@ import { OrderStatusModal } from './components/orders/OrderStatusModal';
 import { CustomersTab }     from './components/customers/CustomersTab';
 import { AdminDiscounts }   from './components/discounts/AdminDiscounts';
 import { AdminReviews }     from './components/reviews/AdminReviews';
+import { AdminMembers }     from './components/members/AdminMembers';
 import { ReportsTab }       from './components/reports/ReportsTab';
 import { AffiliateManagement } from './components/affiliate/AffiliateManagement';
 
@@ -371,6 +372,9 @@ export default function AdminDashboard() {
               )}
               {tab === 'reviews' && (
                 <AdminReviews />
+              )}
+              {tab === 'members' && (
+                <AdminMembers />
               )}
 
               {tab === 'reports' && (

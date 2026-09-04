@@ -495,8 +495,76 @@ useEffect(() => {
           ))}
         </div>
       </section>
+      {/* ── MEMBER-ONLY: New Drops & Updates carousel ── */}
+      {user && isMember && (
+        <section style={{ background: '#0A0A0A', paddingTop: 'clamp(48px,7vw,88px)', paddingBottom: 0, overflow: 'hidden' }}>
+          <div style={{ textAlign: 'center', marginBottom: 32, padding: '0 20px' }}>
+            <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: '#E8CD7A', marginBottom: 12 }}>
+              Members Only
+            </p>
+            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 300, fontStyle: 'italic', fontSize: 'clamp(24px,4vw,38px)', color: '#fff', letterSpacing: '-0.5px' }}>
+              New Drops & Updates
+            </h2>
+          </div>
+          <div className="mc-carousel-wrap" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+            <div className="mc-carousel-track" style={{ transform: `translateX(-${carouselIndex * 100}%)` }}>
+              {MEMBER_UPDATES.map((item, i) => (
+                <div className="mc-carousel-slide" key={i}>
+                  {item.type === 'image' ? (
+                    <img src={item.src} alt={item.title} />
+                  ) : (
+                    <>
+                      <video
+                        ref={el => { videoRefs.current[i] = el; }}
+                        src={item.src}
+                        autoPlay
+                        muted={getVideoState(i).muted}
+                        loop
+                        playsInline
+                      />
+                      <div style={{ position: 'absolute', top: 14, right: 14, display: 'flex', gap: 8, zIndex: 2 }}>
+                        <button
+                          onClick={() => togglePlay(i)}
+                          aria-label={getVideoState(i).playing ? 'Pause' : 'Play'}
+                          style={{ background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
+                        >
+                          {getVideoState(i).playing ? '❚❚' : '▶'}
+                        </button>
+                        <button
+                          onClick={() => toggleMute(i)}
+                          aria-label={getVideoState(i).muted ? 'Unmute' : 'Mute'}
+                          style={{ background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
+                        >
+                          {getVideoState(i).muted ? '🔇' : '🔊'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                  <div className="mc-carousel-caption">
+                    <p className="mc-carousel-title">{item.title}</p>
+                    {item.subtitle && <p className="mc-carousel-subtitle">{item.subtitle}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button className="mc-carousel-arrow mc-carousel-arrow-left" onClick={prevSlide} aria-label="Previous">‹</button>
+            <button className="mc-carousel-arrow mc-carousel-arrow-right" onClick={nextSlide} aria-label="Next">›</button>
+            <div className="mc-carousel-dots">
+              {MEMBER_UPDATES.map((_, i) => (
+                <button
+                  key={i}
+                  className={`mc-carousel-dot${i === carouselIndex ? ' active' : ''}`}
+                  onClick={() => setCarouselIndex(i)}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
       {/* ── MEMBER DASHBOARD (logged in + member) ── */}
       {user && isMember && profile && !loading && (
+
         <section style={{
           maxWidth: 840, margin: '0 auto',
           padding: 'clamp(40px,6vw,80px) clamp(20px,5%,40px)',
@@ -735,73 +803,6 @@ useEffect(() => {
           >
             {joining ? 'Joining…' : !user ? 'Create an Account' : 'Join the Club — Free'}
           </button>
-        </section>
-      )}
-      {/* ── MEMBER-ONLY: New Drops & Updates carousel ── */}
-      {user && isMember && (
-        <section style={{ background: '#0A0A0A', paddingTop: 'clamp(48px,7vw,88px)', paddingBottom: 0, overflow: 'hidden' }}>
-          <div style={{ textAlign: 'center', marginBottom: 32, padding: '0 20px' }}>
-            <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: '#E8CD7A', marginBottom: 12 }}>
-              Members Only
-            </p>
-            <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 300, fontStyle: 'italic', fontSize: 'clamp(24px,4vw,38px)', color: '#fff', letterSpacing: '-0.5px' }}>
-              New Drops & Updates
-            </h2>
-          </div>
-          <div className="mc-carousel-wrap" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-            <div className="mc-carousel-track" style={{ transform: `translateX(-${carouselIndex * 100}%)` }}>
-              {MEMBER_UPDATES.map((item, i) => (
-                <div className="mc-carousel-slide" key={i}>
-                  {item.type === 'image' ? (
-                    <img src={item.src} alt={item.title} />
-                  ) : (
-                    <>
-                      <video
-                        ref={el => { videoRefs.current[i] = el; }}
-                        src={item.src}
-                        autoPlay
-                        muted={getVideoState(i).muted}
-                        loop
-                        playsInline
-                      />
-                      <div style={{ position: 'absolute', top: 14, right: 14, display: 'flex', gap: 8, zIndex: 2 }}>
-                        <button
-                          onClick={() => togglePlay(i)}
-                          aria-label={getVideoState(i).playing ? 'Pause' : 'Play'}
-                          style={{ background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
-                        >
-                          {getVideoState(i).playing ? '❚❚' : '▶'}
-                        </button>
-                        <button
-                          onClick={() => toggleMute(i)}
-                          aria-label={getVideoState(i).muted ? 'Unmute' : 'Mute'}
-                          style={{ background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
-                        >
-                          {getVideoState(i).muted ? '🔇' : '🔊'}
-                        </button>
-                      </div>
-                    </>
-                  )}
-                  <div className="mc-carousel-caption">
-                    <p className="mc-carousel-title">{item.title}</p>
-                    {item.subtitle && <p className="mc-carousel-subtitle">{item.subtitle}</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <button className="mc-carousel-arrow mc-carousel-arrow-left" onClick={prevSlide} aria-label="Previous">‹</button>
-            <button className="mc-carousel-arrow mc-carousel-arrow-right" onClick={nextSlide} aria-label="Next">›</button>
-            <div className="mc-carousel-dots">
-              {MEMBER_UPDATES.map((_, i) => (
-                <button
-                  key={i}
-                  className={`mc-carousel-dot${i === carouselIndex ? ' active' : ''}`}
-                  onClick={() => setCarouselIndex(i)}
-                  aria-label={`Go to slide ${i + 1}`}
-                />
-              ))}
-            </div>
-          </div>
         </section>
       )}
       <Footer />

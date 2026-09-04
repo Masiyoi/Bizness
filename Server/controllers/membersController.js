@@ -346,4 +346,26 @@ async function getMemberCount(req, res) {
     res.status(500).json({ error: 'Could not load member count' });
   }
 }
-module.exports = { registerMember, joinClub, getProfile, addPoints, awardOrderPoints, awardReferralBonus, awardBirthdayBonuses, getReferralLink, getMemberCount, tierFor, TIERS, TIER_BONUS, getTotalPointsRewarded };
+// GET /api/members/admin/all
+// Admin-only. Every club member with tier, current points, lifetime
+// points earned, and join date — used by the Admin > Members tab.
+async function getAllMembers(req, res) {
+  try {
+    const { rows } = await pool.query(
+      `SELECT m.id, m.points, m.tier, m.joined_at,
+              u.full_name, u.email,
+              COALESCE(SUM(CASE WHEN ma.points > 0 THEN ma.points ELSE 0 END), 0)::int AS total_earned
+       FROM members m
+       JOIN users u ON u.id = m.user_id
+       LEFT JOIN member_activities ma ON ma.member_id = m.id
+       WHERE m.club_joined = true
+       GROUP BY m.id, u.full_name, u.email
+       ORDER BY m.points DESC`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('getAllMembers error:', err);
+    res.status(500).json({ error: 'Could not load members' });
+  }
+}
+module.exports = { registerMember, joinClub, getProfile, addPoints, awardOrderPoints, awardReferralBonus, awardBirthdayBonuses, getReferralLink, getMemberCount, tierFor, TIERS, TIER_BONUS, getTotalPointsRewarded, getAllMembers };
