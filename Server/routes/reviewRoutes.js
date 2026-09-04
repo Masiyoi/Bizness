@@ -1,27 +1,22 @@
-﻿// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 //  routes/reviewRoutes.js  ·  Luku Prime
 // ─────────────────────────────────────────────────────────────
-
 const express = require('express');
 const router  = express.Router();
 const pool    = require('../config/db');
 const auth    = require('../middleware/auth');
 const { addPoints } = require('../controllers/membersController'); // adjust path if your project layout differs
-
 // Points awarded per review — keep in sync with "Write a product review"
 // in EARN_WAYS in src/pages/MembersClub.tsx
 const REVIEW_POINTS = 20;
-
 const notFound = (res, msg = 'Review not found') => res.status(404).json({ error: msg });
 const badReq   = (res, msg)                       => res.status(400).json({ error: msg });
-
 // ── Helper: extract product IDs from any snapshot shape ───────
 // Your order controller stores: items_snapshot = { items: [...], shipping: {}, deliveryZone: "" }
 // Each item may use: item.product_id  OR  item.id
 function extractProductIds(snapshot) {
   if (!snapshot) return [];
   const ids = [];
-
   // Shape 1: { items: [ { product_id, ... } ] }  ← your current shape
   if (Array.isArray(snapshot.items)) {
     for (const item of snapshot.items) {
@@ -30,7 +25,6 @@ function extractProductIds(snapshot) {
     }
     return ids;
   }
-
   // Shape 2: snapshot is directly an array  [ { product_id, ... } ]
   if (Array.isArray(snapshot)) {
     for (const item of snapshot) {
@@ -39,10 +33,8 @@ function extractProductIds(snapshot) {
     }
     return ids;
   }
-
   return ids;
 }
-
 // ── Helper: award members-club points for writing a review ────
 // No-op for non-members; never throws — a points failure shouldn't
 // block a review from being saved.
@@ -58,7 +50,6 @@ async function awardReviewPoints(userId) {
     console.error('awardReviewPoints error:', err.message);
   }
 }
-
 // ── GET /api/reviews/homepage ──────────────────────────────────
 router.get('/homepage', async (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 12, 50);
@@ -66,6 +57,7 @@ router.get('/homepage', async (req, res) => {
     const { rows } = await pool.query(
       `SELECT
          r.id, r.rating, r.comment, r.created_at,
+         r.admin_reply, r.admin_reply_at,
          u.full_name,
          p.name       AS product_name,
          p.image_url  AS product_image,
@@ -91,7 +83,6 @@ router.get('/homepage', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
 // ── GET /api/reviews/my ────────────────────────────────────────
 router.get('/my', auth, async (req, res) => {
   try {
@@ -120,7 +111,6 @@ router.get('/my', auth, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
 // ── GET /api/reviews/check/:productId ─────────────────────────
 router.get('/check/:productId', auth, async (req, res) => {
   try {
@@ -136,7 +126,6 @@ router.get('/check/:productId', auth, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
 // ── GET /api/reviews/purchasable ──────────────────────────────
 // Auth required. Products the user bought (non-cancelled) but hasn't reviewed yet.
 router.get('/purchasable', auth, async (req, res) => {
@@ -148,16 +137,13 @@ router.get('/purchasable', auth, async (req, res) => {
          AND status NOT IN ('cancelled')`,
       [req.user.id]
     );
-
     // Collect unique product IDs across all qualifying orders
     const productIdSet = new Set();
     for (const order of orders) {
       const ids = extractProductIds(order.items_snapshot);
       ids.forEach(id => productIdSet.add(id));
     }
-
     if (productIdSet.size === 0) return res.json([]);
-
     // Remove already-reviewed products
     const { rows: alreadyReviewed } = await pool.query(
       `SELECT product_id FROM reviews WHERE user_id = $1`,
@@ -165,9 +151,7 @@ router.get('/purchasable', auth, async (req, res) => {
     );
     const reviewedSet = new Set(alreadyReviewed.map(r => Number(r.product_id)));
     const unreviewedIds = [...productIdSet].filter(id => !reviewedSet.has(id));
-
     if (unreviewedIds.length === 0) return res.json([]);
-
     const { rows: products } = await pool.query(
       `SELECT id, name, image_url, price, category
        FROM products
@@ -175,14 +159,12 @@ router.get('/purchasable', auth, async (req, res) => {
        ORDER BY name`,
       [unreviewedIds]
     );
-
     res.json(products);
   } catch (err) {
     console.error('GET /reviews/purchasable', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
-
 // ── GET /api/reviews/product/:productId ───────────────────────
 router.get('/product/:productId', async (req, res) => {
   const { productId } = req.params;
@@ -220,7 +202,6 @@ router.get('/product/:productId', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
 // ── GET /api/reviews/admin/all ─────────────────────────────────
 router.get('/admin/all', auth, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
@@ -229,6 +210,7 @@ router.get('/admin/all', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT r.id, r.rating, r.comment, r.created_at,
+              r.admin_reply, r.admin_reply_at,
               u.full_name, u.email, p.name AS product_name, p.id AS product_id
        FROM reviews r
        JOIN users    u ON u.id = r.user_id
@@ -244,15 +226,37 @@ router.get('/admin/all', auth, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
+// ── PATCH /api/reviews/admin/:id/reply ─────────────────────────
+// Admin only. Write or update the admin's public reply to a review.
+// Send { reply: "" } (empty string) to clear an existing reply.
+router.patch('/admin/:id/reply', auth, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+  const { reply } = req.body;
+  if (typeof reply !== 'string') return badReq(res, 'reply must be a string');
+  if (reply.length > 1000)       return badReq(res, 'reply too long (max 1000 chars)');
+  try {
+    const trimmed = reply.trim();
+    const { rows } = await pool.query(
+      `UPDATE reviews
+       SET admin_reply    = NULLIF($1, ''),
+           admin_reply_at = CASE WHEN NULLIF($1, '') IS NULL THEN NULL ELSE NOW() END
+       WHERE id = $2
+       RETURNING id, admin_reply, admin_reply_at`,
+      [trimmed, req.params.id]
+    );
+    if (!rows.length) return notFound(res);
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('PATCH /reviews/admin/:id/reply', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 // ── POST /api/reviews ──────────────────────────────────────────
 router.post('/', auth, async (req, res) => {
   const { product_id, rating, comment, media } = req.body;
-
   if (!product_id)                         return badReq(res, 'product_id is required');
   if (!rating || rating < 1 || rating > 5) return badReq(res, 'rating must be 1–5');
   if (comment && comment.length > 1000)    return badReq(res, 'comment too long (max 1000 chars)');
-
   try {
     // Purchase check via items_snapshot
     const { rows: orders } = await pool.query(
@@ -260,18 +264,15 @@ router.post('/', auth, async (req, res) => {
        WHERE user_id = $1 AND status NOT IN ('cancelled')`,
       [req.user.id]
     );
-
     const hasPurchased = orders.some(order => {
       const ids = extractProductIds(order.items_snapshot);
       return ids.includes(Number(product_id));
     });
-
     if (!hasPurchased) {
       return res.status(403).json({
         error: 'You can only review products you have purchased.',
       });
     }
-
     const { rows } = await pool.query(
       `INSERT INTO reviews (user_id, product_id, rating, comment)
        VALUES ($1, $2, $3, $4)
@@ -290,13 +291,10 @@ router.post('/', auth, async (req, res) => {
         );
       }
     }
-
     // Award members-club points now that the review is saved. No-op for
     // non-members; never throws — a points failure shouldn't block the response.
     await awardReviewPoints(req.user.id);
-
     res.status(201).json(rows[0]);
-
   } catch (err) {
     if (err.code === '23505') {
       return res.status(409).json({
@@ -307,7 +305,6 @@ router.post('/', auth, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
 // ── PATCH /api/reviews/:id ─────────────────────────────────────
 router.patch('/:id', auth, async (req, res) => {
   const { rating, comment, media } = req.body;
@@ -323,21 +320,16 @@ router.patch('/:id', auth, async (req, res) => {
       [rating || null, comment?.trim() || null, req.params.id, req.user.id]
     );
     if (!rows.length) return notFound(res);
-    console.log('[reviews:PATCH] media received:', JSON.stringify(media));
     if (Array.isArray(media)) {
       await pool.query('DELETE FROM review_media WHERE review_id = $1', [req.params.id]);
       const mediaItems = media.slice(0, 5);
       for (const m of mediaItems) {
-        if (!m?.url || !['image', 'video'].includes(m?.media_type)) {
-          console.log('[reviews:PATCH] SKIPPING media item:', JSON.stringify(m));
-          continue;
-        }
-        const mediaResult = await pool.query(
+        if (!m?.url || !['image', 'video'].includes(m?.media_type)) continue;
+        await pool.query(
           `INSERT INTO review_media (review_id, url, public_id, media_type)
            VALUES ($1, $2, $3, $4) RETURNING id`,
           [req.params.id, m.url, m.public_id || null, m.media_type]
         );
-        console.log('[reviews:PATCH] inserted review_media id:', mediaResult.rows[0].id);
       }
     }
     const fullReview = await pool.query(
@@ -356,7 +348,6 @@ router.patch('/:id', auth, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
 // ── DELETE /api/reviews/:id ────────────────────────────────────
 router.delete('/:id', auth, async (req, res) => {
   try {
@@ -373,5 +364,4 @@ router.delete('/:id', auth, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
 module.exports = router;

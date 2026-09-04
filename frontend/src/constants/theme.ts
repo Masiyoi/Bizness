@@ -1,4 +1,4 @@
-﻿// src/constants/theme.ts
+// src/constants/theme.ts
 // ─────────────────────────────────────────────────────────────────────────────
 // Single source of truth for Luku Prime brand tokens.
 // Use these for any inline styles that can't be expressed with Tailwind classes
@@ -181,6 +181,7 @@ export interface HomepageReview {
   product_id:    number;
   category?:    string;
   media?:        HomepageReviewMedia[];
+  admin_reply?:  string | null;
 }
 
 // ── Utility helpers ─────────────────────────────────────────────────────────

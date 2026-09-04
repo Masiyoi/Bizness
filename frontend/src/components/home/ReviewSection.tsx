@@ -1,4 +1,4 @@
-﻿// src/components/home/ReviewSection.tsx
+// src/components/home/ReviewSection.tsx
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { HomepageReview } from '../../constants/theme';
@@ -70,7 +70,7 @@ function ReviewCard({ review, navigate }: { review: HomepageReview; navigate: (p
         <div className="font-sans text-[11px] font-bold text-navy">
           {displayName}
         </div>
-        <span className="text-[9px] font-bold text-[#3A3A3A] bg-[#F0F0F0] border border-[#D1D5DB] rounded-full px-2 py-0.5 inline-flex items-center gap-1">
+        <span className="text-[9px] font-bold text-[#1E40AF] bg-[#EFF6FF] border border-[#BFDBFE] rounded-full px-2 py-0.5 inline-flex items-center gap-1">
           &#10003; Verified purchase
         </span>
       </div>
@@ -78,6 +78,16 @@ function ReviewCard({ review, navigate }: { review: HomepageReview; navigate: (p
         <p className="font-sans text-[10.5px] text-[#3A3A4A] leading-[1.6] text-center line-clamp-3">
           {review.comment}
         </p>
+        {review.admin_reply && (
+          <div className="mt-2 bg-[#F0FDF4] border border-[#BBF7D0] rounded-[8px] px-2.5 py-2 text-left">
+            <div className="text-[9px] font-bold text-[#166534] uppercase tracking-wide mb-1">
+              Luku Prime replied
+            </div>
+            <p className="text-[10px] text-[#166534] leading-[1.5]">
+              {review.admin_reply}
+            </p>
+          </div>
+        )}
         <div className="font-sans text-[9px] text-muted text-center mt-1.5 truncate">
           {new Date(review.created_at).toLocaleDateString('en-KE', {
             month: 'short',
