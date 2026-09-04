@@ -172,7 +172,7 @@ export const defaultDateRange = (): DateRange => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Navigation tabs (source of truth for sidebar + mobile drawer)
 // ─────────────────────────────────────────────────────────────────────────────
-export type Tab = 'overview' | 'analytics' | 'products' | 'orders' | 'customers' | 'reports' | 'affiliate';
+export type Tab = 'overview' | 'analytics' | 'products' | 'orders' | 'customers' | 'discounts' | 'reports' | 'affiliate';
 
 export interface NavItem {
   id:    Tab;
@@ -186,6 +186,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'products',   icon: '⊞',  label: 'Products'   },
   { id: 'orders',     icon: '≡',  label: 'Orders'     },
   { id: 'customers',  icon: '◎',  label: 'Customers'  },
+  { id: 'discounts',  icon: '🏷', label: 'Discounts'  },
   { id: 'reports',    icon: '⎙',  label: 'Reports'    },
   { id: 'affiliate',  icon: '✦',  label: 'Affiliate'  },
 ];

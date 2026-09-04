@@ -20,6 +20,7 @@ import { OrdersTab }        from './components/orders/OrdersTab';
 import { OrderDetailModal } from './components/orders/OrderDetailModal';
 import { OrderStatusModal } from './components/orders/OrderStatusModal';
 import { CustomersTab }     from './components/customers/CustomersTab';
+import { AdminDiscounts }   from './components/discounts/AdminDiscounts';
 import { ReportsTab }       from './components/reports/ReportsTab';
 import { AffiliateManagement } from './components/affiliate/AffiliateManagement';
 
@@ -363,6 +364,9 @@ export default function AdminDashboard() {
 
               {tab === 'customers' && (
                 <CustomersTab showToast={showToast} />
+              )}
+              {tab === 'discounts' && (
+                <AdminDiscounts />
               )}
 
               {tab === 'reports' && (

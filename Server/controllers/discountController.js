@@ -119,6 +119,52 @@ exports.getDiscountHistory = async (req, res) => {
     return res.status(500).json({ msg: 'Failed to load discount history' });
   }
 };
+// GET /api/admin/discount/summary?from=YYYY-MM-DD&to=YYYY-MM-DD
+// Called from the Admin > Discounts tab. Returns total discount amount
+// given (optionally within a date range) plus the full list of orders
+// that had a discount applied, so admin can see who bought what on
+// discount and when.
+exports.getAdminDiscountSummary = async (req, res) => {
+  const { from, to } = req.query;
+  try {
+    const params = [];
+    let dateFilter = '';
+    if (from) { params.push(from); dateFilter +=  AND created_at >= $${params.length}; }
+    if (to)   { params.push(to);   dateFilter +=  AND created_at <= $${params.length}::date + interval '1 day'; }
+    const totalsRes = await db.query(
+      SELECT COALESCE(SUM(discount_amount), 0) AS total_discount,
+              COUNT(*) AS orders_count
+       FROM orders
+       WHERE discount_amount IS NOT NULL AND discount_amount > 0 ${dateFilter},
+      params
+    );
+    const ordersRes = await db.query(
+      SELECT order_number, customer_name, customer_email, mpesa_phone,
+              total, discount_type, discount_amount, created_at
+       FROM orders
+       WHERE discount_amount IS NOT NULL AND discount_amount > 0 ${dateFilter}
+       ORDER BY created_at DESC,
+      params
+    );
+    return res.json({
+      totalDiscountAmount: Number(totalsRes.rows[0].total_discount),
+      ordersCount: Number(totalsRes.rows[0].orders_count),
+      orders: ordersRes.rows.map(r => ({
+        order_number:    r.order_number,
+        customer_name:   r.customer_name,
+        customer_email:  r.customer_email,
+        mpesa_phone:     r.mpesa_phone,
+        total:           Number(r.total),
+        discount_type:   r.discount_type,
+        discount_amount: Number(r.discount_amount),
+        created_at:      r.created_at,
+      })),
+    });
+  } catch (err) {
+    console.error('getAdminDiscountSummary error:', err.message);
+    return res.status(500).json({ msg: 'Failed to load discount summary' });
+  }
+};
 // Exported for internal use by paymentController — the source of truth used
 // when actually charging the customer, never the frontend-displayed value.
 exports.calculateFirstOrderDiscount     = calculateFirstOrderDiscount;
