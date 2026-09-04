@@ -6,10 +6,8 @@
 //
 // (adminMiddleware = your existing JWT + role==='admin' guard)
 // ─────────────────────────────────────────────────────────────────────────────
-
 const express = require('express');
 const router  = express.Router();
-
 const {
   getAnalytics,
   getSalesReport,
@@ -17,23 +15,21 @@ const {
   getProfitReport,
   updateCostPrice,
 } = require('../controllers/analyticsController');
-
+const { getAdminDiscountSummary } = require('../controllers/discountController');
 // ── Analytics (date-ranged, for the Analytics tab) ────────────────────────────
 // GET /api/admin/analytics?from=YYYY-MM-DD&to=YYYY-MM-DD
 router.get('/analytics', getAnalytics);
-
 // ── Reports (printable, for the Reports tab) ─────────────────────────────────
 // GET /api/admin/reports/sales?from=YYYY-MM-DD&to=YYYY-MM-DD
 router.get('/reports/sales', getSalesReport);
-
 // GET /api/admin/reports/inventory
 router.get('/reports/inventory', getInventoryReport);
-
 // GET /api/admin/reports/profit?from=YYYY-MM-DD&to=YYYY-MM-DD
 router.get('/reports/profit', getProfitReport);
-
 // ── Product cost price ────────────────────────────────────────────────────────
 // PATCH /api/admin/products/:id/cost   body: { cost_price: number }
 router.patch('/products/:id/cost', updateCostPrice);
-
+// ── Discounts (for the Admin > Discounts tab) ─────────────────────────────────
+// GET /api/admin/discount/summary?from=YYYY-MM-DD&to=YYYY-MM-DD
+router.get('/discount/summary', getAdminDiscountSummary);
 module.exports = router;
