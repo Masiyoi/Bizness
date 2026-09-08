@@ -151,6 +151,8 @@ function AdminUpdatesManager() {
         <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, fontWeight: 700, color: T.grey1, letterSpacing: '2.5px', textTransform: 'uppercase', marginBottom: 6 }}>Loyalty Program</div>
         <h1 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 32, color: T.black, lineHeight: 1 }}>Members</h1>
       </div>
+      <AdminUpdatesManager />
+
       {/* Stat cards */}
       <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 24 }}>
         <div className="pf-card" style={{ flex: '1 1 200px', padding: '18px 20px' }}>
@@ -158,7 +160,7 @@ function AdminUpdatesManager() {
             Total Subscribers
           </p>
           <p style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 28, color: T.black }}>
-            {loading ? 'â€”' : (members?.length ?? 0)}
+            {loading ? '—' : (members?.length ?? 0)}
           </p>
         </div>
         <div className="pf-card" style={{ flex: '1 1 200px', padding: '18px 20px' }}>
@@ -166,7 +168,7 @@ function AdminUpdatesManager() {
             Total Points Rewarded
           </p>
           <p style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 28, color: T.black }}>
-            {loading ? 'â€”' : (totalRewarded ?? 0).toLocaleString()}
+            {loading ? '—' : (totalRewarded ?? 0).toLocaleString()}
           </p>
         </div>
         {(['Bronze', 'Gold', 'Diamond'] as const).map(t => (
@@ -175,7 +177,7 @@ function AdminUpdatesManager() {
               {t}
             </p>
             <p style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 28, color: T.black }}>
-              {loading ? 'â€”' : tierCounts[t]}
+              {loading ? '—' : tierCounts[t]}
             </p>
           </div>
         ))}
@@ -200,7 +202,7 @@ function AdminUpdatesManager() {
           style={{ flex: '1 1 220px', padding: '8px 12px', borderRadius: 7, border: `1px solid ${T.grey3}`, fontFamily: 'Jost,sans-serif', fontSize: 12 }}
         />
       </div>
-      {loading && <div className="pf-card" style={{ padding: 20 }}>Loadingâ€¦</div>}
+      {loading && <div className="pf-card" style={{ padding: 20 }}>Loading…</div>}
       {!loading && error && (
         <div className="pf-card" style={{ padding: 20 }}>
           <div className="pf-empty">
