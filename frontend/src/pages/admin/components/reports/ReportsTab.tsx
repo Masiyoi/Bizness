@@ -238,7 +238,7 @@ function SalesReportView() {
 
       {!report && !loading && (
         <div style={{ textAlign: 'center', padding: '60px 0', fontFamily: 'Jost,sans-serif', color: T.grey1 }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>📊</div>
+          <img src="/salesreport.png" alt="sales" style={{ width: 40, height: 40, marginBottom: 12, opacity: 0.6 }} />
           <div style={{ fontWeight: 600, fontSize: 15, color: T.black, marginBottom: 6 }}>Select a date range and generate your report</div>
           <div style={{ fontSize: 13 }}>The report will include all orders, revenue, cost and profit data.</div>
         </div>
@@ -349,7 +349,7 @@ function InventoryReportView() {
 
       {!report && !loading && (
         <div style={{ textAlign: 'center', padding: '60px 0', fontFamily: 'Jost,sans-serif', color: T.grey1 }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>📦</div>
+          <img src="/inventory-management.png" alt="inventory" style={{ width: 40, height: 40, marginBottom: 12, opacity: 0.6 }} />
           <div style={{ fontWeight: 600, fontSize: 15, color: T.black, marginBottom: 6 }}>Click Generate to load your inventory valuation</div>
           <div style={{ fontSize: 13 }}>Shows stock levels, retail value, cost value and potential profit for all products.</div>
         </div>
@@ -455,7 +455,7 @@ function ProfitReportView() {
 
       {!report && !loading && (
         <div style={{ textAlign: 'center', padding: '60px 0', fontFamily: 'Jost,sans-serif', color: T.grey1 }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>💰</div>
+          <img src="/profit.png" alt="profit" style={{ width: 40, height: 40, marginBottom: 12, opacity: 0.6 }} />
           <div style={{ fontWeight: 600, fontSize: 15, color: T.black, marginBottom: 6 }}>Select a period and generate your profit report</div>
           <div style={{ fontSize: 13 }}>Shows revenue, cost and profit margin broken down by product.</div>
         </div>
