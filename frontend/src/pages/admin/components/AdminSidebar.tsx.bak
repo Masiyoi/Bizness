@@ -46,18 +46,21 @@ export function AdminSidebar({
         borderBottom: `1px solid ${T.black3}`,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/plugwalk.jpg" alt="Plug Walk" style={{
-            width: 32, height: 32, borderRadius: '50%', objectFit: 'cover',
-            display: 'block', mixBlendMode: 'multiply', flexShrink: 0,
-          }} />
+          <div style={{
+            width: 32, height: 32, borderRadius: 8,
+            background: T.white,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: "'Cormorant Garamond', serif",
+            fontWeight: 700, fontSize: 16, color: T.black, flexShrink: 0,
+          }}>L</div>
           <div>
             <div style={{
-              fontFamily:    "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-              fontWeight:    400,
+              fontFamily:    "'Cormorant Garamond', serif",
+              fontWeight:    700,
               fontSize:      15,
               color:         T.white,
               letterSpacing: '0.5px',
-            }}>𝓟𝓵𝓾𝓰 𝓦𝓪𝓵𝓴</div>
+            }}>Luku Prime</div>
             <div style={{
               fontFamily:    'Jost, sans-serif',
               fontSize:      9,
