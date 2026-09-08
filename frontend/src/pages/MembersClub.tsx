@@ -7,7 +7,7 @@ import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import { readUser } from '../constants/theme';
 import type { User } from '../constants/theme';
-// Icon imports â€” must be imported (not string paths) so Vite bundles/hashes them for production
+// Icon imports — must be imported (not string paths) so Vite bundles/hashes them for production
 import signupIcon from '../assets/signup.png';
 import walletIcon from '../assets/wallet.png';
 import redeemPointsIcon from '../assets/redeem-points.png';
@@ -17,7 +17,7 @@ import satisfactionIcon from '../assets/satisfaction.png';
 import referIcon from '../assets/refer.png';
 import igColouredIcon from '../assets/IGcoloured.png';
 import fireworksIcon from '../assets/fireworks-.png';
-// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Types ────────────────────────────────────────────────────────────────────
 interface MemberProfile {
   points:        number;
   tier:          'Bronze' | 'Gold' | 'Diamond';
@@ -36,7 +36,7 @@ interface ReferralLink {
   referral_code: string;
   referral_url:  string;
 }
-// â”€â”€ Tier config â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Tier config ──────────────────────────────────────────────────────────────
 const TIERS = [
   {
     name:     'Bronze' as const,
@@ -78,7 +78,7 @@ const EARN_WAYS = [
   { label: 'Follow us on Instagram',  points: 30,  icon: igColouredIcon, link: 'https://www.instagram.com/lukuprime?igsh=MWxmazlvM2JseWNzeQ==' },
   { label: 'Birthday month bonus',    points: 50,  icon: fireworksIcon },
 ];
-// â”€â”€ Member-only carousel content â€” swap these paths for real assets in /public/updates/ â”€â”€
+// ── Member-only carousel content — swap these paths for real assets in /public/updates/ ──
 interface CarouselItem {
   type: 'image' | 'video';
   src: string;
@@ -89,10 +89,10 @@ const memberUpdates: CarouselItem[] = [
   { type: 'image', src: '/updates/new-drop-1.jpg', title: 'New Drop', subtitle: "This week's freshest arrivals" },
   { type: 'image', src: '/updates/best-seller-1.jpg', title: 'Best Seller', subtitle: 'Our most-loved piece this month' },
   { type: 'video', src: '/updates/behind-the-scenes.mp4', title: 'Behind the Scenes' },
-  { type: 'video', src: '/updates/next-sale.mp4', title: 'Next Sale â€” 15 Sept', subtitle: 'Up to 40% off storewide, members get early access' },
+  { type: 'video', src: '/updates/next-sale.mp4', title: 'Next Sale — 15 Sept', subtitle: 'Up to 40% off storewide, members get early access' },
   { type: 'video', src: '/updates/events-popups.mp4', title: 'Events & Pop-Ups', subtitle: 'Meet us in person at our next Nairobi pop-up' },
 ];
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Helpers ──────────────────────────────────────────────────────────────────
 function getTier(points: number) {
   return TIERS.find(t => points >= t.min && points <= t.max) ?? TIERS[0];
 }
@@ -115,7 +115,7 @@ function TierBadge({ tier, size = 'md' }: { tier: typeof TIERS[0]; size?: 'sm' |
     </span>
   );
 }
-// â”€â”€ CSS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── CSS ──────────────────────────────────────────────────────────────────────
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -216,7 +216,7 @@ const css = `
     .mc-carousel-arrow { display: none; }
   }
 `;
-// â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Main ─────────────────────────────────────────────────────────────────────
 export default function MembersClub() {
   const navigate = useNavigate();
   const [user,    setUser]    = useState<User | null>(readUser);
@@ -253,7 +253,7 @@ useEffect(() => {
     axios.get('/api/cart').then(r => setCartCount(r.data.reduce((s: number, i: any) => s + i.quantity, 0))).catch(() => {});
     axios.get('/api/wishlist').then(r => setWishlistCount(r.data.length)).catch(() => {});
   }, [user]);
-  // Fetch the referral link once the user is a confirmed club member â€”
+  // Fetch the referral link once the user is a confirmed club member —
   // referral bonuses only pay out to joined members, so there's no point
   // generating/showing a link before then.
   useEffect(() => {
@@ -268,6 +268,11 @@ useEffect(() => {
     if (!user || !isMember) return;
     axios.get('/api/members/count')
       .then(r => setTotalMembers(r.data.total_members))
+      .catch(() => {});
+  }, [user, isMember]);  useEffect(() => {
+    if (!user || !isMember) return;
+    axios.get('/api/members/updates')
+      .then(r => setMemberUpdates(r.data))
       .catch(() => {});
   }, [user, isMember]);
 
@@ -329,10 +334,10 @@ useEffect(() => {
     setJoining(true);
     try {
       await axios.post('/api/members/join');
-      showToast('âœ¦ Welcome to Luku Prime Members Club!');
+      showToast('✦ Welcome to Luku Prime Members Club!');
       fetchProfile();
     } catch {
-      showToast('Could not join â€” please try again.');
+      showToast('Could not join — please try again.');
     } finally {
       setJoining(false);
     }
@@ -341,9 +346,9 @@ useEffect(() => {
     if (!referral) return;
     try {
       await navigator.clipboard.writeText(referral.referral_url);
-      showToast('âœ“ Referral link copied!');
+      showToast('✓ Referral link copied!');
     } catch {
-      showToast('Could not copy â€” please copy it manually.');
+      showToast('Could not copy — please copy it manually.');
     }
   };
   const handleShareReferral = async () => {
@@ -356,7 +361,7 @@ useEffect(() => {
           url: referral.referral_url,
         });
       } catch {
-        /* user cancelled share â€” no-op */
+        /* user cancelled share — no-op */
       }
     } else {
       handleCopyReferral();
@@ -392,7 +397,7 @@ useEffect(() => {
         wishlistCount={wishlistCount}
         onLogout={() => { setUser(null); setCartCount(0); setWishlistCount(0); }}
       />
-      {/* â”€â”€ HERO â€” full-bleed image banner â”€â”€ */}
+      {/* ── HERO — full-bleed image banner ── */}
       <section style={{
         position: 'relative',
         minHeight: 'clamp(360px,52vw,560px)',
@@ -445,7 +450,7 @@ useEffect(() => {
                 onClick={handleJoin} disabled={joining}
                 style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', background: '#fff', color: '#111', border: 'none', padding: '16px 36px', cursor: joining ? 'not-allowed' : 'pointer', opacity: joining ? 0.6 : 1 }}
               >
-                {joining ? 'Joiningâ€¦' : "Join the Club â€” It's Free"}
+                {joining ? 'Joining…' : "Join the Club — It's Free"}
               </button>
             </div>
           )}
@@ -461,7 +466,7 @@ useEffect(() => {
           )}
         </div>
       </section>
-      {/* â”€â”€ HOW IT WORKS â€” Step 1 to 3 â”€â”€ */}
+      {/* ── HOW IT WORKS — Step 1 to 3 ── */}
       <section style={{
         background: '#fff',
         padding: 'clamp(48px,7vw,88px) clamp(20px,5%,40px)', textAlign: 'center',
@@ -496,8 +501,8 @@ useEffect(() => {
           ))}
         </div>
       </section>
-      {/* â”€â”€ MEMBER-ONLY: New Drops & Updates carousel â”€â”€ */}
-      {user && isMember && (
+      {/* ── MEMBER-ONLY: New Drops & Updates carousel ── */}
+      {user && isMember && memberUpdates.length > 0 && (
         <section style={{ background: '#0A0A0A', paddingTop: 'clamp(48px,7vw,88px)', paddingBottom: 0, overflow: 'hidden' }}>
           <div style={{ textAlign: 'center', marginBottom: 32, padding: '0 20px' }}>
             <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: '#E8CD7A', marginBottom: 12 }}>
@@ -529,14 +534,14 @@ useEffect(() => {
                           aria-label={getVideoState(i).playing ? 'Pause' : 'Play'}
                           style={{ background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
                         >
-                          {getVideoState(i).playing ? 'âšâš' : 'â–¶'}
+                          {getVideoState(i).playing ? '❚❚' : '▶'}
                         </button>
                         <button
                           onClick={() => toggleMute(i)}
                           aria-label={getVideoState(i).muted ? 'Unmute' : 'Mute'}
                           style={{ background: 'rgba(0,0,0,0.5)', border: 'none', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}
                         >
-                          {getVideoState(i).muted ? 'ðŸ”‡' : 'ðŸ”Š'}
+                          {getVideoState(i).muted ? '🔇' : '🔊'}
                         </button>
                       </div>
                     </>
@@ -548,8 +553,8 @@ useEffect(() => {
                 </div>
               ))}
             </div>
-            <button className="mc-carousel-arrow mc-carousel-arrow-left" onClick={prevSlide} aria-label="Previous">â€¹</button>
-            <button className="mc-carousel-arrow mc-carousel-arrow-right" onClick={nextSlide} aria-label="Next">â€º</button>
+            <button className="mc-carousel-arrow mc-carousel-arrow-left" onClick={prevSlide} aria-label="Previous">‹</button>
+            <button className="mc-carousel-arrow mc-carousel-arrow-right" onClick={nextSlide} aria-label="Next">›</button>
             <div className="mc-carousel-dots">
               {memberUpdates.map((_, i) => (
                 <button
@@ -563,7 +568,7 @@ useEffect(() => {
           </div>
         </section>
       )}
-      {/* â”€â”€ MEMBER DASHBOARD (logged in + member) â”€â”€ */}
+      {/* ── MEMBER DASHBOARD (logged in + member) ── */}
       {user && isMember && profile && !loading && (
 
         <section style={{
@@ -607,7 +612,7 @@ useEffect(() => {
             )}
             {!next && (
               <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#6A7FA8', marginTop: 16, fontWeight: 600, letterSpacing: '1px' }}>
-                âœ¦ You've reached Diamond â€” the highest tier
+                ✦ You've reached Diamond — the highest tier
               </p>
             )}
             <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#0A0A0A', fontWeight: 700, marginTop: 20, letterSpacing: '1px' }}>
@@ -620,7 +625,7 @@ useEffect(() => {
           {/* Refer a friend */}
           <div id="refer-a-friend" className="mc-fade mc-d2" style={{ marginBottom: 48 }}>
             <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: '#0A0A0A', marginBottom: 20 }}>
-              Refer a Friend â€” Earn 150 Points
+              Refer a Friend — Earn 150 Points
             </p>
             <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.08)', padding: 'clamp(20px,3vw,32px)' }}>
               <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 13, color: '#333', lineHeight: 1.7, marginBottom: 4 }}>
@@ -638,7 +643,7 @@ useEffect(() => {
               )}
               {!referralLoading && !referral && (
                 <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 12, color: '#888', marginTop: 14 }}>
-                  Could not load your referral link â€” please refresh the page.
+                  Could not load your referral link — please refresh the page.
                 </p>
               )}
             </div>
@@ -646,12 +651,12 @@ useEffect(() => {
           {/* Tier perks */}
           <div className="mc-fade mc-d2" style={{ marginBottom: 48 }}>
             <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: tier.color, marginBottom: 20 }}>
-              Your Perks â€” {tier.name}
+              Your Perks — {tier.name}
             </p>
             <div style={{ background: '#fff', border: `1px solid ${tier.border}`, padding: 'clamp(20px,3vw,32px)' }}>
               {tier.perks.map((perk, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 0', borderBottom: i < tier.perks.length - 1 ? '1px solid rgba(0,0,0,0.06)' : 'none' }}>
-                  <span style={{ color: tier.color, fontSize: 14, flexShrink: 0 }}>âœ¦</span>
+                  <span style={{ color: tier.color, fontSize: 14, flexShrink: 0 }}>✦</span>
                   <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 13, color: '#0A0A0A', fontWeight: 700 }}>{perk}</span>
                 </div>
               ))}
@@ -683,14 +688,14 @@ useEffect(() => {
           )}
         </section>
       )}
-      {/* â”€â”€ LOADING SKELETON â”€â”€ */}
+      {/* ── LOADING SKELETON ── */}
       {user && loading && (
         <section style={{ maxWidth: 840, margin: '0 auto', padding: 'clamp(40px,6vw,80px) clamp(20px,5%,40px)' }}>
           <div className="skel" style={{ height: 220, marginBottom: 24 }} />
           <div className="skel" style={{ height: 140 }} />
         </section>
       )}
-      {/* â”€â”€ TIERS SECTION (always visible) â”€â”€ */}
+      {/* ── TIERS SECTION (always visible) ── */}
       <section style={{
         background: '#fff',
         padding: 'clamp(48px,7vw,96px) clamp(20px,5%,80px)',
@@ -726,12 +731,12 @@ useEffect(() => {
                   />
                 </div>
                 <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#111', margin: '10px 0 20px', letterSpacing: '0.5px' }}>
-                  {t.max === Infinity ? `${t.min.toLocaleString()}+ points` : `${t.min}â€“${t.max.toLocaleString()} points`}
+                  {t.max === Infinity ? `${t.min.toLocaleString()}+ points` : `${t.min}–${t.max.toLocaleString()} points`}
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {t.perks.map((perk, pi) => (
 <div key={pi} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                      <span style={{ color: t.color, fontSize: 11, flexShrink: 0, marginTop: 1 }}>âœ¦</span>
+                      <span style={{ color: t.color, fontSize: 11, flexShrink: 0, marginTop: 1 }}>✦</span>
                       <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 12, color: '#444', lineHeight: 1.5, fontWeight: 400 }}>{perk}</span>
                     </div>
                   ))}
@@ -741,7 +746,7 @@ useEffect(() => {
           </div>
         </div>
       </section>
-      {/* â”€â”€ EARN SECTION â”€â”€ */}
+      {/* ── EARN SECTION ── */}
       <section style={{
         background: '#fff',
         maxWidth: 640, margin: '0 auto',
@@ -784,7 +789,7 @@ useEffect(() => {
           })}
         </div>
       </section>
-      {/* â”€â”€ CTA FOOTER BAND â”€â”€ */}
+      {/* ── CTA FOOTER BAND ── */}
       {(!user || (user && !isMember && !loading)) && (
         <section style={{
           background: '#0A0A0A', padding: 'clamp(48px,7vw,80px) clamp(20px,5%,80px)',
@@ -802,7 +807,7 @@ useEffect(() => {
             onClick={handleJoin}
             disabled={joining}
           >
-            {joining ? 'Joiningâ€¦' : !user ? 'Create an Account' : 'Join the Club â€” Free'}
+            {joining ? 'Joining…' : !user ? 'Create an Account' : 'Join the Club — Free'}
           </button>
         </section>
       )}
