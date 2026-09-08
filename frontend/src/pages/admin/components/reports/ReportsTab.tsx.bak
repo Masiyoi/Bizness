@@ -477,9 +477,9 @@ export function ReportsTab({ showToast }: ReportsTabProps) {
   const [active, setActive] = useState<ReportType>('sales');
 
   const TABS: { id: ReportType; label: string; icon: string; desc: string }[] = [
-    { id: 'sales',     label: 'Sales Report',     icon: '/salesreport.png',          desc: 'Order-level revenue & profit by date range' },
-    { id: 'inventory', label: 'Inventory Report',  icon: '/inventory-management.png', desc: 'Stock levels, retail value & cost valuation' },
-    { id: 'profit',    label: 'Profit Report',     icon: '/profit.png',               desc: 'Product-level profit margin analysis' },
+    { id: 'sales',     label: 'Sales Report',     icon: '📊', desc: 'Order-level revenue & profit by date range' },
+    { id: 'inventory', label: 'Inventory Report',  icon: '📦', desc: 'Stock levels, retail value & cost valuation' },
+    { id: 'profit',    label: 'Profit Report',     icon: '💰', desc: 'Product-level profit margin analysis' },
   ];
 
   return (
@@ -506,7 +506,7 @@ export function ReportsTab({ showToast }: ReportsTabProps) {
               transition:  'all 0.15s',
             }}
           >
-            <img src={t.icon} alt={t.label} style={{ width: 22, height: 22, objectFit: 'contain', marginBottom: 8, filter: active === t.id ? 'invert(1) brightness(2)' : 'none' }} />
+            <div style={{ fontSize: 20, marginBottom: 8 }}>{t.icon}</div>
             <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 13, fontWeight: 700, color: active === t.id ? T.white : T.black, marginBottom: 4 }}>
               {t.label}
             </div>

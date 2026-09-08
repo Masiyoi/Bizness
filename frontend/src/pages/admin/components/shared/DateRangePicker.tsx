@@ -77,7 +77,7 @@ export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
           color: T.black, cursor: 'pointer',
         }}
       >
-        <span style={{ fontSize: 14 }}>📅</span>
+        <img src="/calendar.png" alt="calendar" style={{ width: 16, height: 16 }} />
         {fmtShort(value.from)} – {fmtShort(value.to)}
         <span style={{ color: T.grey1, fontSize: 10 }}>▾</span>
       </button>
