@@ -46,10 +46,13 @@ export function AdminSidebar({
         borderBottom: `1px solid ${T.black3}`,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/plugwalk.jpg" alt="Plug Walk" style={{
-            width: 32, height: 32, borderRadius: '50%', objectFit: 'cover',
+          {/* Logo backdrop — white circle so the dark logo shows up on dark backgrounds */}
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 3 }}>
+            <img src="/plugwalk.jpg" alt="Plug Walk" style={{
+            width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover',
             display: 'block', mixBlendMode: 'multiply', flexShrink: 0,
           }} />
+          </div>
           <div>
             <div style={{
               fontFamily:    "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
@@ -119,7 +122,7 @@ export function AdminSidebar({
                   background:   T.white,
                 }}/>
               )}
-              <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>{item.icon}</span>
+              <img src={item.icon} alt={item.label} style={{ width: 16, height: 16, objectFit: 'contain', flexShrink: 0 }} />
               <span style={{ flex: 1 }}>{item.label}</span>
               {badge !== null && (
                 <span style={{

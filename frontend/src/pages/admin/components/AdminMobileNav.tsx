@@ -55,10 +55,13 @@ export function AdminMobileNav(props: AdminMobileNavProps) {
 >
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-          <img src="/plugwalk.jpg" alt="Plug Walk" style={{
-            width: 28, height: 28, borderRadius: '50%', objectFit: 'cover',
+          {/* Logo backdrop — white circle so the dark logo shows up on dark backgrounds */}
+          <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, padding: 3 }}>
+            <img src="/plugwalk.jpg" alt="Plug Walk" style={{
+            width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover',
             display: 'block', mixBlendMode: 'multiply',
           }} />
+          </div>
           <span style={{
             fontFamily:    "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
             fontWeight:    400,
@@ -216,7 +219,7 @@ export function AdminMobileNav(props: AdminMobileNavProps) {
                   transition:    'all 0.15s',
                 }}
               >
-                <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>{item.icon}</span>
+                <img src={item.icon} alt={item.label} style={{ width: 18, height: 18, objectFit: 'contain', flexShrink: 0 }} />
                 <span style={{ flex: 1 }}>{item.label}</span>
                 {badge !== null && (
                   <span style={{
