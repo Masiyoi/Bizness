@@ -113,7 +113,7 @@ export function OrderDetailModal({ order, onClose, onUpdateStatus }: OrderDetail
                     {shippingInfo.pickupLocation && (
                       <div style={{ gridColumn: '1/-1' }}>
                         <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 700, color: T.grey1, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 3 }}>Pickup</div>
-                        <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 13, color: T.black }}>🏪 {shippingInfo.pickupLocation}</div>
+                        <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 13, color: T.black, display: 'flex', alignItems: 'center', gap: 5 }}><img src={mapIcon} alt="" style={{ width: 12, height: 12, flexShrink: 0 }} />{shippingInfo.pickupLocation}</div>
                       </div>
                     )}
                     {shippingInfo.additionalInfo && (
