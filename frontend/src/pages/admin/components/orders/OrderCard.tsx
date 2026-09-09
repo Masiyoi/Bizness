@@ -19,6 +19,58 @@ const MEMBER_TIER_THEME: Record<'Bronze' | 'Gold' | 'Diamond', { color: string; 
   Gold:    { color: '#B8960C', lottie: '/animations/Gold_Coin.lottie' },
   Diamond: { color: '#6A7FA8', lottie: '/animations/Red_Diamond.lottie' },
 };
+
+// Status badge color mapping
+const getStatusStyle = (status: string): React.CSSProperties => {
+  const baseStyle = {
+    fontFamily: 'Jost,sans-serif',
+    fontSize: 10,
+    fontWeight: 600,
+    borderRadius: 20,
+    padding: '2px 9px',
+    border: '1px solid',
+    display: 'inline-block',
+  } as React.CSSProperties;
+
+  switch (status) {
+    case 'Delivered':
+      return {
+        ...baseStyle,
+        background: '#E0F2FE',
+        color: '#0369A1',
+        borderColor: '#BAE6FD',
+      };
+    case 'Delivery in progress':
+      return {
+        ...baseStyle,
+        background: '#DCFCE7',
+        color: '#166534',
+        borderColor: '#BBF7D0',
+      };
+    case 'New order':
+      return {
+        ...baseStyle,
+        background: '#FFFFFF',
+        color: '#000000',
+        borderColor: '#E5E7EB',
+      };
+    case 'Payment Confirmed':
+      return {
+        ...baseStyle,
+        background: '#FEF3C7',
+        color: '#92400E',
+        borderColor: '#FCD34D',
+      };
+    default:
+      return {
+        ...baseStyle,
+        background: '#F3F4F6',
+        color: '#6B7280',
+        borderColor: '#E5E7EB',
+      };
+  }
+};
+
 export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
   const TRACKING_CARD_THEME: Record<string, {
     bg: string; border: string; text: string; muted: string;
@@ -50,11 +102,9 @@ export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
             <span style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 16, color: theme.text }}>
               Order #{o.order_number || o.id}
             </span>
-            <span style={{
-              fontFamily: 'Jost,sans-serif', fontSize: 10, fontWeight: 600, color: theme.badgeCol,
-              background: theme.badgeBg, border: `1px solid ${theme.badgeBorder}`,
-              borderRadius: 20, padding: '2px 9px',
-            }}>🚚 {o.tracking_status}</span>
+            <span style={getStatusStyle(o.tracking_status)}>
+              🚚 {o.tracking_status}
+            </span>
           </div>
 
           {/* Meta */}
