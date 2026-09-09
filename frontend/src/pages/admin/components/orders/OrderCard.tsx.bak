@@ -5,16 +5,8 @@ import React from 'react';
 import type { Order } from '../../types';
 import { T, SC } from '../../constants';
 import { parseItemsSnapshot } from '../../utils';
-import emailIcon    from '../../../../assets/email.png';
-import deliveryIcon from '../../../../assets/delivery.png';
+import emailIcon from '../../../../assets/email.png';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-const userIcon = '/orders/user.png';
-const billIcon = '/orders/bill.png';
-const timeIcon = '/orders/time (1).png';
-const TRACKING_ICON: Record<string, string> = {
-  'Delivered':            '/delivered.png',
-  'Delivery in progress': '/deliveryinprogress.png',
-};
 
 interface OrderCardProps {
   order:    Order;
@@ -111,14 +103,14 @@ export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
               Order #{o.order_number || o.id}
             </span>
             <span style={getStatusStyle(o.tracking_status)}>
-              <img src={TRACKING_ICON[o.tracking_status] || deliveryIcon} alt="" style={{ width: 11, height: 11, verticalAlign: 'middle', marginRight: 4 }} />{o.tracking_status}
+              🚚 {o.tracking_status}
             </span>
           </div>
 
           {/* Meta */}
           <div className="order-meta-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px,1fr))', gap: 4, marginBottom: preview.length > 0 ? 12 : 0 }}>
             <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: theme.text }}>
-              <img src={userIcon} alt="" style={{ width: 12, height: 12, verticalAlign: 'middle', marginRight: 5 }} /><strong>{o.customer_name || 'Unknown'}</strong>
+              👤 <strong>{o.customer_name || 'Unknown'}</strong>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: theme.muted, display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -156,12 +148,12 @@ export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
                 title="Click to copy"
                 style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: T.grey1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
               >
-                <img src={billIcon} alt="" style={{ width: 12, height: 12, verticalAlign: 'middle', marginRight: 5 }} /><strong style={{ color: '#166534' }}>{o.mpesa_receipt}</strong>
+                🧾 <strong style={{ color: '#166534' }}>{o.mpesa_receipt}</strong>
                 <span style={{ fontSize: 9, color: T.grey2, background: T.grey5, border: `1px solid ${T.grey3}`, borderRadius: 4, padding: '1px 5px' }}>copy</span>
               </div>
             )}
             <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, color: theme.muted }}>
-              <img src={timeIcon} alt="" style={{ width: 10, height: 10, verticalAlign: 'middle', marginRight: 4 }} />{new Date(o.created_at).toLocaleString('en-KE')}
+              🕐 {new Date(o.created_at).toLocaleString('en-KE')}
             </div>
           </div>
 

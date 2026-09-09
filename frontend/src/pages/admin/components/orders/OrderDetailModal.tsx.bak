@@ -2,15 +2,6 @@ import React from 'react';
 import type { Order } from '../../types';
 import { T, ZONE_LABELS } from '../../constants';
 import { parseItemsSnapshot, parseShippingInfo, parseDeliveryZone } from '../../utils';
-import emailIcon    from '../../../../assets/email.png';
-import deliveryIcon from '../../../../assets/delivery.png';
-const userIcon = '/orders/user.png';
-const billIcon = '/orders/bill.png';
-const mapIcon  = '/orders/map.png';
-const TRACKING_ICON: Record<string, string> = {
-  'Delivered':            '/delivered.png',
-  'Delivery in progress': '/deliveryinprogress.png',
-};
  
 interface OrderDetailModalProps {
   order:          Order;
@@ -45,7 +36,7 @@ export function OrderDetailModal({ order, onClose, onUpdateStatus }: OrderDetail
               fontFamily: 'Jost,sans-serif', fontSize: 11, fontWeight: 700,
               padding: '4px 12px', borderRadius: 20,
               background: 'rgba(255,255,255,0.12)', color: T.white, border: '1px solid rgba(255,255,255,0.25)',
-            }}><img src={TRACKING_ICON[order.tracking_status] || deliveryIcon} alt="" style={{ width: 12, height: 12, verticalAlign: 'middle', marginRight: 4 }} />{order.tracking_status}</span>
+            }}>🚚 {order.tracking_status}</span>
             <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, width: 34, height: 34, cursor: 'pointer', fontSize: 14, color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
           </div>
         </div>
@@ -54,23 +45,23 @@ export function OrderDetailModal({ order, onClose, onUpdateStatus }: OrderDetail
  
           {/* ── Customer + Payment ── */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div style={{ padding: '4px 0' }}>
-              <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 700, color: T.grey1, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: 10, borderBottom: `1px solid ${T.grey3}`, paddingBottom: 6 }}>Customer</div>
+            <div style={{ background: T.grey5, border: `1px solid ${T.grey3}`, borderRadius: 12, padding: '14px 16px' }}>
+              <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 700, color: T.grey1, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: 10 }}>Customer</div>
               <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 15, color: T.black, marginBottom: 5 }}>{order.customer_name || 'Unknown'}</div>
-              {order.customer_email && <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.grey1, marginBottom: 3 }}><img src={emailIcon} alt="" style={{ width: 11, height: 11, verticalAlign: 'middle', marginRight: 5 }} />{order.customer_email}</div>}
+              {order.customer_email && <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.grey1, marginBottom: 3 }}>✉ {order.customer_email}</div>}
               {order.mpesa_phone    && <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.grey1 }}>📱 {order.mpesa_phone}</div>}
             </div>
-            <div style={{ padding: '4px 0' }}>
-              <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 700, color: T.grey1, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: 10, borderBottom: `1px solid ${T.grey3}`, paddingBottom: 6 }}>Payment</div>
+            <div style={{ background: T.grey5, border: `1px solid ${T.grey3}`, borderRadius: 12, padding: '14px 16px' }}>
+              <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 700, color: T.grey1, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: 10 }}>Payment</div>
               <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 22, color: T.black, marginBottom: 6 }}>KSh {Number(order.total).toLocaleString()}</div>
               {order.mpesa_receipt && (
                 <button
                   onClick={() => navigator.clipboard.writeText(order.mpesa_receipt)}
                   title="Click to copy"
                   style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, fontWeight: 700, color: '#166534', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 6, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', marginBottom: 6 }}
-                ><img src={billIcon} alt="" style={{ width: 12, height: 12, verticalAlign: 'middle', marginRight: 5 }} />{order.mpesa_receipt} <span style={{ fontSize: 9, opacity: 0.6 }}>copy</span></button>
+                >🧾 {order.mpesa_receipt} <span style={{ fontSize: 9, opacity: 0.6 }}>copy</span></button>
               )}
-              <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: T.grey1 }}><img src={TRACKING_ICON[order.tracking_status] || deliveryIcon} alt="" style={{ width: 12, height: 12, verticalAlign: 'middle', marginRight: 4 }} />{order.tracking_status}</div>
+              <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: T.grey1 }}>🚚 {order.tracking_status}</div>
             </div>
           </div>
  
@@ -107,7 +98,7 @@ export function OrderDetailModal({ order, onClose, onUpdateStatus }: OrderDetail
                     {(shippingInfo.county || shippingInfo.town) && (
                       <div>
                         <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 700, color: T.grey1, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 3 }}>Location</div>
-                        <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 13, color: T.black }}><img src={mapIcon} alt="" style={{ width: 11, height: 11, verticalAlign: 'middle', marginRight: 5 }} />{[shippingInfo.town, shippingInfo.county].filter(Boolean).join(', ')}</div>
+                        <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 13, color: T.black }}>📍 {[shippingInfo.town, shippingInfo.county].filter(Boolean).join(', ')}</div>
                       </div>
                     )}
                     {shippingInfo.pickupLocation && (
@@ -117,7 +108,7 @@ export function OrderDetailModal({ order, onClose, onUpdateStatus }: OrderDetail
                       </div>
                     )}
                     {shippingInfo.additionalInfo && (
-                      <div style={{ gridColumn: '1/-1', padding: '10px 0', borderTop: `1px solid ${T.grey3}` }}>
+                      <div style={{ gridColumn: '1/-1', background: T.grey5, borderRadius: 8, padding: '10px 12px' }}>
                         <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 700, color: T.grey1, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 4 }}>Notes</div>
                         <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 13, color: T.black, lineHeight: 1.6, fontStyle: 'italic' }}>"{shippingInfo.additionalInfo}"</div>
                       </div>
@@ -132,7 +123,7 @@ export function OrderDetailModal({ order, onClose, onUpdateStatus }: OrderDetail
  
           {/* ── Items ── */}
           <div style={{ background: T.white, border: `1px solid ${T.grey3}`, borderRadius: 12, overflow: 'hidden' }}>
-            <div style={{ borderBottom: `1px solid ${T.grey3}`, padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ background: T.grey5, borderBottom: `1px solid ${T.grey3}`, padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, fontWeight: 700, color: T.black, letterSpacing: '1.5px', textTransform: 'uppercase' }}>Items Ordered</div>
               <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: T.grey1 }}>{items.length} item{items.length !== 1 ? 's' : ''}</div>
             </div>
@@ -185,7 +176,7 @@ export function OrderDetailModal({ order, onClose, onUpdateStatus }: OrderDetail
                     </div>
                   );
                 })}
-                <div style={{ borderTop: `2px solid ${T.grey3}`, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ borderTop: `2px solid ${T.grey3}`, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: T.grey5 }}>
                   <span style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, fontWeight: 700, color: T.grey1, textTransform: 'uppercase', letterSpacing: '1px' }}>Order Total</span>
                   <span style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 20, color: T.black }}>KSh {Number(order.total).toLocaleString()}</span>
                 </div>
