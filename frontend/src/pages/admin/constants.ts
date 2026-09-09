@@ -61,6 +61,7 @@ export const SC: Record<string, { bg: string; col: string; border: string }> = {
   shipped:    { bg: T.infoBg,  col: T.info,  border: T.infoBdr  },
   delivered:  { bg: T.okBg,   col: T.ok,    border: T.okBdr    },
   cancelled:  { bg: T.errBg,  col: T.err,   border: T.errBdr   },
+  paymentFailed: { bg: T.errBg, col: T.err, border: T.errBdr   },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -76,6 +77,7 @@ export const ORDER_STATUSES = [
   'Payment Confirmed',
   'Delivery in progress',
   'Delivered',
+  'Payment Failed',
 ];
 
 export const STATUS_LABELS: Record<string, string> = {
@@ -92,6 +94,7 @@ export const TRACKING_TO_STATUS: Record<string, string> = {
   'Shipped':           'shipped',
   'Out for Delivery':  'shipped',
   'Delivered':         'delivered',
+  'Payment Failed':    'paymentFailed',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

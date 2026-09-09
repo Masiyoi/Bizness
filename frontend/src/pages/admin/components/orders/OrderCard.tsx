@@ -69,6 +69,14 @@ const getStatusStyle = (status: string): React.CSSProperties => {
         color: '#92400E',
         borderColor: '#FCD34D',
       };
+    case 'Payment Failed':
+    case 'Cancelled':
+      return {
+        ...baseStyle,
+        background: '#FEF2F2',
+        color: '#B91C1C',
+        borderColor: '#FECACA',
+      };
     default:
       return {
         ...baseStyle,
@@ -87,6 +95,8 @@ export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
   'Payment Confirmed':    { bg: T.white,   border: T.grey3,   text: T.black, muted: T.grey1, badgeBg: T.grey5, badgeCol: T.grey1,   badgeBorder: T.grey3  },
   'Delivery in progress': { bg: '#DCFCE7', border: '#86EFAC', text: T.black, muted: '#166534', badgeBg: T.white, badgeCol: '#166534', badgeBorder: '#86EFAC' },
   'Delivered':             { bg: '#DBEAFE', border: '#93C5FD', text: T.black, muted: '#1D4ED8', badgeBg: T.white, badgeCol: '#1D4ED8', badgeBorder: '#93C5FD' },
+  'Payment Failed':        { bg: '#FEF2F2', border: '#FECACA', text: T.black, muted: '#B91C1C', badgeBg: T.white, badgeCol: '#B91C1C', badgeBorder: '#FECACA' },
+  'Cancelled':             { bg: '#FEF2F2', border: '#FECACA', text: T.black, muted: '#B91C1C', badgeBg: T.white, badgeCol: '#B91C1C', badgeBorder: '#FECACA' },
 };
   const theme = TRACKING_CARD_THEME[o.tracking_status] || {
     bg: T.white, border: T.grey3, text: T.black, muted: T.grey1,
@@ -146,7 +156,7 @@ export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
               )}
             </div>
             <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: theme.muted }}>
-              📱 {o.mpesa_phone
+              <img src="/orders/mobile.png" alt="" style={{ width: 12, height: 12, verticalAlign: 'middle', marginRight: 5 }} />{o.mpesa_phone
                 ? <a href={`tel:${o.mpesa_phone}`} onClick={e => e.stopPropagation()} style={{ color: theme.text, textDecoration: 'underline' }}>{o.mpesa_phone}</a>
                 : '—'}
             </div>
@@ -160,8 +170,8 @@ export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
                 <span style={{ fontSize: 9, color: T.grey2, background: T.grey5, border: `1px solid ${T.grey3}`, borderRadius: 4, padding: '1px 5px' }}>copy</span>
               </div>
             )}
-            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, color: theme.muted }}>
-              <img src={timeIcon} alt="" style={{ width: 10, height: 10, verticalAlign: 'middle', marginRight: 4 }} />{new Date(o.created_at).toLocaleString('en-KE')}
+            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 10, color: theme.muted, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+              <img src={timeIcon} alt="" style={{ width: 10, height: 10, flexShrink: 0 }} />{new Date(o.created_at).toLocaleString('en-KE')}
             </div>
           </div>
 

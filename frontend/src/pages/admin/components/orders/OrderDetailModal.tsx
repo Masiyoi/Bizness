@@ -58,7 +58,7 @@ export function OrderDetailModal({ order, onClose, onUpdateStatus }: OrderDetail
               <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 700, color: T.grey1, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: 10, borderBottom: `1px solid ${T.grey3}`, paddingBottom: 6 }}>Customer</div>
               <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 15, color: T.black, marginBottom: 5 }}>{order.customer_name || 'Unknown'}</div>
               {order.customer_email && <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.grey1, marginBottom: 3 }}><img src={emailIcon} alt="" style={{ width: 11, height: 11, verticalAlign: 'middle', marginRight: 5 }} />{order.customer_email}</div>}
-              {order.mpesa_phone    && <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.grey1 }}>📱 {order.mpesa_phone}</div>}
+              {order.mpesa_phone    && <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.grey1 }}><img src="/orders/mobile.png" alt="" style={{ width: 11, height: 11, verticalAlign: 'middle', marginRight: 5 }} />{order.mpesa_phone}</div>}
             </div>
             <div style={{ padding: '4px 0' }}>
               <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 700, color: T.grey1, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: 10, borderBottom: `1px solid ${T.grey3}`, paddingBottom: 6 }}>Payment</div>
