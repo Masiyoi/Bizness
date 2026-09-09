@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
@@ -37,9 +37,9 @@ const app = express();
 
 // Define allowed origins for CORS
 const allowedOrigins = [
-  'https://lukuprime.vercel.app',
-  'https://lukuprime.shop',
-  'https://www.lukuprime.shop',
+  'https://plugwalk.co',
+  'https://www.plugwalk.co',
+  'https://plugwalk.vercel.app',
   'http://localhost:5173',
   'https://bizness.onrender.com',
 ];
