@@ -72,13 +72,13 @@ const getStatusStyle = (status: string): React.CSSProperties => {
 };
 
 export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
-  const TRACKING_CARD_THEME: Record<string, {
+ const TRACKING_CARD_THEME: Record<string, {
   bg: string; border: string; text: string; muted: string;
   badgeBg: string; badgeCol: string; badgeBorder: string;
 }> = {
   'Payment Confirmed':    { bg: T.white,   border: T.grey3,   text: T.black, muted: T.grey1, badgeBg: T.grey5, badgeCol: T.grey1,   badgeBorder: T.grey3  },
-  'Delivery in progress': { bg: '#F0FDF4', border: '#BBF7D0', text: T.black, muted: T.grey1, badgeBg: T.white, badgeCol: '#166534', badgeBorder: '#BBF7D0' },
-  'Delivered':             { bg: '#F0F9FF', border: '#BAE6FD', text: T.black, muted: T.grey1, badgeBg: T.white, badgeCol: '#0369A1', badgeBorder: '#BAE6FD' },
+  'Delivery in progress': { bg: '#DCFCE7', border: '#86EFAC', text: T.black, muted: '#166534', badgeBg: T.white, badgeCol: '#166534', badgeBorder: '#86EFAC' },
+  'Delivered':             { bg: '#DBEAFE', border: '#93C5FD', text: T.black, muted: '#1D4ED8', badgeBg: T.white, badgeCol: '#1D4ED8', badgeBorder: '#93C5FD' },
 };
   const theme = TRACKING_CARD_THEME[o.tracking_status] || {
     bg: T.white, border: T.grey3, text: T.black, muted: T.grey1,
