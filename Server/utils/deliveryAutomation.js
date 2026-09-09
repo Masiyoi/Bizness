@@ -3,9 +3,9 @@ const db = require('../config/db');
 // "Delivered", based on delivery_zone. Keep in sync with ZONE_LABELS in
 // frontend/src/pages/admin/constants.ts.
 const DELIVERY_DELAYS_MS = {
-  pickup:   0,
-  cbd:      60 * 60 * 1000,        // 1 hour
-  environs: 2 * 60 * 60 * 1000,    // 2 hours
+  pickup:   24 * 60 * 60 * 1000,        // 24 hours
+  cbd:      24 * 60 * 60 * 1000,        // 24 hours
+  environs: 24 * 60 * 60 * 1000,    // 24 hours
   county:   24 * 60 * 60 * 1000,   // 24 hours
 };
 // Called at order-creation time (right after payment is confirmed). Pickup
