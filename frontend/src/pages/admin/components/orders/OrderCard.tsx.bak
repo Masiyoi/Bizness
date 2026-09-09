@@ -127,8 +127,8 @@ export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
 
           {/* Meta */}
           <div className="order-meta-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px,1fr))', gap: 4, marginBottom: preview.length > 0 ? 12 : 0 }}>
-            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: theme.text, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <img src={userIcon} alt="" style={{ width: 12, height: 12, flexShrink: 0 }} /><strong>{o.customer_name || 'Unknown'}</strong>
+            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: theme.text }}>
+              <img src={userIcon} alt="" style={{ width: 12, height: 12, verticalAlign: 'middle', marginRight: 5 }} /><strong>{o.customer_name || 'Unknown'}</strong>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: theme.muted, display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -155,8 +155,8 @@ export function OrderCard({ order: o, onView, onUpdate }: OrderCardProps) {
                 </div>
               )}
             </div>
-            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: theme.muted, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <img src="/orders/mobile.png" alt="" style={{ width: 12, height: 12, flexShrink: 0 }} />{o.mpesa_phone
+            <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, color: theme.muted }}>
+              <img src="/orders/mobile.png" alt="" style={{ width: 12, height: 12, verticalAlign: 'middle', marginRight: 5 }} />{o.mpesa_phone
                 ? <a href={`tel:${o.mpesa_phone}`} onClick={e => e.stopPropagation()} style={{ color: theme.text, textDecoration: 'underline' }}>{o.mpesa_phone}</a>
                 : '—'}
             </div>

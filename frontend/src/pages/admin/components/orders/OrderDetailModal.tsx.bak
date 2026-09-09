@@ -78,7 +78,7 @@ export function OrderDetailModal({ order, onClose, onUpdateStatus }: OrderDetail
           {(shippingInfo || zoneLabel) && (
             <div style={{ background: T.white, border: `1px solid ${T.grey3}`, borderRadius: 12, overflow: 'hidden' }}>
               <div style={{ background: T.black, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 9 }}>
-                <img src={mapIcon} alt="" style={{ width: 14, height: 14, flexShrink: 0 }} />
+                <span style={{ fontSize: 14 }}>{zoneLabel?.icon || '📦'}</span>
                 <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
                   Delivery{zoneLabel ? ` — ${zoneLabel.label}` : ''}
                 </div>
