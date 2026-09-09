@@ -1,10 +1,10 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <script>
       // Pesapal's redirect sometimes drops the URL fragment (#/checkout)
       // entirely when it appends its own OrderTrackingId query param,
-      // landing us on a bare "/?OrderTrackingId=xxx" with no hash — which
+      // landing us on a bare "/?OrderTrackingId=xxx" with no hash â€” which
       // HashRouter can't route (it falls through to "/"). Catch that here,
       // before the app bundle even loads, and rewrite it into the hash
       // shape the router expects.
@@ -21,19 +21,19 @@
     <!-- REQUIRED FOR GOOGLE OAUTH ORIGIN VERIFICATION -->
     <meta name="referrer" content="no-referrer-when-downgrade" />
 
-    <!-- ═══════════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          FAVICON SUITE
          Place all these files in your /public folder.
          The SVG favicon below is inline-compatible but
          you should also export your logo as:
-           • /public/favicon.ico          (32×32, legacy browsers)
-           • /public/favicon-96x96.png    (standard)
-           • /public/apple-touch-icon.png (180×180, iOS home screen)
-           • /public/web-app-manifest-192x192.png
-           • /public/web-app-manifest-512x512.png
-    ════════════════════════════════════════════ -->
+           â€¢ /public/favicon.ico          (32Ã—32, legacy browsers)
+           â€¢ /public/favicon-96x96.png    (standard)
+           â€¢ /public/apple-touch-icon.png (180Ã—180, iOS home screen)
+           â€¢ /public/web-app-manifest-192x192.png
+           â€¢ /public/web-app-manifest-512x512.png
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 
-    <!-- SVG favicon (modern browsers — crisp at any size) -->
+    <!-- SVG favicon (modern browsers â€” crisp at any size) -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <!-- PNG fallback for older browsers -->
@@ -48,65 +48,65 @@
     <!-- Web App Manifest (PWA + Android home-screen) -->
     <link rel="manifest" href="/site.webmanifest" />
 
-    <!-- Theme color — matches your navy brand color -->
+    <!-- Theme color â€” matches your navy brand color -->
     <meta name="theme-color" content="#1B2B5E" />
     <meta name="msapplication-TileColor" content="#1B2B5E" />
     <meta name="msapplication-config" content="/browserconfig.xml" />
 
-    <!-- ═══════════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          PRIMARY SEO
-    ════════════════════════════════════════════ -->
-    <title>Luku Prime | Online Fashion Store Kenya — Nairobi Delivery</title>
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <title>Plug Walk | Online Fashion Store Kenya â€” Nairobi Delivery</title>
     <meta name="description" content="Kenya's best online fashion store. Shop sneakers, dresses, bags, heels & designer wear with fast Nairobi CBD delivery from KSh 100. Authentic fashion at the best prices." />
-    <meta name="keywords" content="online fashion Kenya, buy clothes Nairobi, sneakers Kenya, dresses Kenya, designer wear Nairobi, bags Kenya, heels Kenya, affordable fashion Kenya, Luku Prime, online shopping Kenya" />
+    <meta name="keywords" content="online fashion Kenya, buy clothes Nairobi, sneakers Kenya, dresses Kenya, designer wear Nairobi, bags Kenya, heels Kenya, affordable fashion Kenya, Plug Walk, online shopping Kenya" />
     <meta name="robots" content="index, follow" />
-    <meta name="author" content="Luku Prime" />
+    <meta name="author" content="Plug Walk" />
     <link rel="canonical" href="https://lukuprime.shop" />
 
-    <!-- ═══════════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          OPEN GRAPH (Facebook, WhatsApp, LinkedIn)
-    ════════════════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://lukuprime.shop" />
-    <meta property="og:title" content="Luku Prime | Kenya's Premier Online Fashion Store" />
+    <meta property="og:title" content="Plug Walk | Kenya's Premier Online Fashion Store" />
     <meta property="og:description" content="Authentic drops, fast Nairobi CBD delivery from KSh 100, and style that speaks before you do." />
     <meta property="og:image" content="https://lukuprime.shop/og-image.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Luku Prime — Shop The Finest" />
+    <meta property="og:image:alt" content="Plug Walk â€” Shop The Finest" />
     <meta property="og:locale" content="en_KE" />
-    <meta property="og:site_name" content="Luku Prime" />
+    <meta property="og:site_name" content="Plug Walk" />
 
-    <!-- ═══════════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          TWITTER / X CARD
-    ════════════════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@lukuprime" />
-    <meta name="twitter:title" content="Luku Prime | Online Fashion Store Kenya" />
+    <meta name="twitter:title" content="Plug Walk | Online Fashion Store Kenya" />
     <meta name="twitter:description" content="Shop sneakers, dresses, bags & designer wear in Kenya. Fast Nairobi delivery from KSh 100." />
     <meta name="twitter:image" content="https://lukuprime.shop/og-image.jpg" />
-    <meta name="twitter:image:alt" content="Luku Prime — Shop The Finest" />
+    <meta name="twitter:image:alt" content="Plug Walk â€” Shop The Finest" />
 
-    <!-- ═══════════════════════════════════════════
-         PERFORMANCE — DNS PREFETCH & PRECONNECT
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         PERFORMANCE â€” DNS PREFETCH & PRECONNECT
          Add domains your app fetches from (fonts,
          APIs, CDNs) so the browser resolves them early.
-    ════════════════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="dns-prefetch" href="https://accounts.google.com" />
 
-    <!-- ═══════════════════════════════════════════
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
          SCHEMA.ORG STRUCTURED DATA
          Helps Google show rich results (ratings,
          opening hours, location) in search.
-    ════════════════════════════════════════════ -->
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "ClothingStore",
-      "name": "Luku Prime",
-      "description": "Kenya's premier online fashion store — sneakers, dresses, bags, heels and designer wear with fast Nairobi CBD delivery.",
+      "name": "Plug Walk",
+      "description": "Kenya's premier online fashion store â€” sneakers, dresses, bags, heels and designer wear with fast Nairobi CBD delivery.",
       "url": "https://lukuprime.shop",
       "logo": "https://lukuprime.shop/logo.png",
       "image": "https://lukuprime.co.ke/og-image.jpg",
@@ -144,9 +144,9 @@
     }
     </script>
 
-    <!-- ═══════════════════════════════════════════
-         GOOGLE SIGN-IN (deferred — non-blocking)
-    ════════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+         GOOGLE SIGN-IN (deferred â€” non-blocking)
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style id="initial-loader-style">
       #initial-loader {
