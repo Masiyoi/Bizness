@@ -71,6 +71,9 @@ export function AffiliateManagement({ showToast }: AffiliateManagementProps) {
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // reactivate (undo remove)
+  const [reactivatingId, setReactivatingId] = useState<number | null>(null);
+
   // per-salesperson expandable order history
   const [expandedId, setExpandedId]           = useState<number | null>(null);
   const [ordersMap, setOrdersMap]             = useState<Record<number, SalespersonOrder[]>>({});
@@ -153,6 +156,21 @@ export function AffiliateManagement({ showToast }: AffiliateManagementProps) {
     } finally {
       setDeleting(false);
       setDeleteTarget(null);
+    }
+  };
+
+  const handleReactivate = async (id: number) => {
+    setReactivatingId(id);
+    try {
+      await axios.patch(`/api/affiliate/salespersons/${id}`, { status: 'active' });
+
+      showToast('✓ Affiliate reactivated — their code is active again');
+      loadSalespersons();
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to reactivate salesperson', 'err');
+    } finally {
+      setReactivatingId(null);
     }
   };
 
@@ -347,14 +365,24 @@ export function AffiliateManagement({ showToast }: AffiliateManagementProps) {
                           >
                             Mark Paid
                           </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: sp.id, name: sp.name }); }}
-                            disabled={sp.status === 'inactive'}
-                            className="btn btn-secondary"
-                            style={{ fontSize: 11.5, color: '#C0392B', borderColor: 'rgba(192,57,43,0.35)' }}
-                          >
-                            {sp.status === 'inactive' ? 'Removed' : 'Remove'}
-                          </button>
+                          {sp.status === 'inactive' ? (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleReactivate(sp.id); }}
+                              disabled={reactivatingId === sp.id}
+                              className="btn btn-secondary"
+                              style={{ fontSize: 11.5, color: '#1F8A3D', borderColor: 'rgba(31,138,61,0.35)' }}
+                            >
+                              {reactivatingId === sp.id ? 'Reactivating…' : 'Reactivate'}
+                            </button>
+                          ) : (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: sp.id, name: sp.name }); }}
+                              className="btn btn-secondary"
+                              style={{ fontSize: 11.5, color: '#C0392B', borderColor: 'rgba(192,57,43,0.35)' }}
+                            >
+                              Remove
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
