@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -52,16 +52,6 @@ export default function AdminDashboard() {
     setEditProduct(null);
     showToast(editProduct ? '✓ Product updated' : '✓ Product published');
     fetchAll();
-  };
-  const handleEditProduct = async (p: Product) => {
-    try {
-      const res = await axios.get('/api/products/' + p.id);
-      setEditProduct(res.data);
-    } catch {
-      // Fallback: open with the list row if the detail fetch fails
-      // (per-variant stock grid may show zeros in this case)
-      setEditProduct(p);
-    }
   };
 
   const handleDeleteConfirm = async () => {
@@ -358,7 +348,7 @@ export default function AdminDashboard() {
                 <ProductsTab
                   products={products}
                   onAddNew={() => { setEditProduct(null); setShowWizard(true); }}
-                  onEdit={handleEditProduct}
+                  onEdit={p  => setEditProduct(p)}
                   onDelete={(id, name) => setDeleteTarget({ id, name })}
                   onStockSaved={fetchAll}
                   showToast={showToast}
