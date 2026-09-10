@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { Order, Stats } from '../../types';
 import { T, TRACKING_TO_STATUS } from '../../constants';
 import { OrderCard }    from './OrderCard';
@@ -62,9 +62,8 @@ export function OrdersTab({ orders, stats, onView, onUpdate }: OrdersTabProps) {
 
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           {stats && stats.activeOrders > 0 && (
-            <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 9, padding: '9px 16px', fontFamily: 'Jost,sans-serif', fontSize: 12, color: '#92400E', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <img src="/pending.png" alt="Pending" style={{ width: 14, height: 14 }}/>
-              {stats.activeOrders} active order{stats.activeOrders !== 1 ? 's' : ''} pending
+            <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 9, padding: '9px 16px', fontFamily: 'Jost,sans-serif', fontSize: 12, color: '#92400E', fontWeight: 700 }}>
+              ⏳ {stats.activeOrders} active order{stats.activeOrders !== 1 ? 's' : ''} pending
             </div>
           )}
           {/* CSV export */}

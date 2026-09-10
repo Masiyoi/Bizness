@@ -67,10 +67,6 @@ export function AffiliateManagement({ showToast }: AffiliateManagementProps) {
   const [confirmTarget, setConfirmTarget] = useState<{ id: number; name: string } | null>(null);
   const [markingPaid, setMarkingPaid] = useState(false);
 
-  // remove (soft-delete) confirmation
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
   // per-salesperson expandable order history
   const [expandedId, setExpandedId]           = useState<number | null>(null);
   const [ordersMap, setOrdersMap]             = useState<Record<number, SalespersonOrder[]>>({});
@@ -135,24 +131,6 @@ export function AffiliateManagement({ showToast }: AffiliateManagementProps) {
     } finally {
       setMarkingPaid(false);
       setConfirmTarget(null);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      await axios.patch(`/api/affiliate/salespersons/${deleteTarget.id}`, { status: 'inactive' });
-
-      showToast(`✓ Removed ${deleteTarget.name} — their code no longer applies`);
-      if (expandedId === deleteTarget.id) setExpandedId(null);
-      loadSalespersons();
-    } catch (err) {
-      console.error(err);
-      showToast('Failed to remove salesperson', 'err');
-    } finally {
-      setDeleting(false);
-      setDeleteTarget(null);
     }
   };
 
@@ -338,24 +316,14 @@ export function AffiliateManagement({ showToast }: AffiliateManagementProps) {
                         </span>
                       </td>
                       <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setConfirmTarget({ id: sp.id, name: sp.name }); }}
-                            disabled={Number(sp.pending_balance) <= 0}
-                            className="btn btn-secondary"
-                            style={{ fontSize: 11.5 }}
-                          >
-                            Mark Paid
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: sp.id, name: sp.name }); }}
-                            disabled={sp.status === 'inactive'}
-                            className="btn btn-secondary"
-                            style={{ fontSize: 11.5, color: '#C0392B', borderColor: 'rgba(192,57,43,0.35)' }}
-                          >
-                            {sp.status === 'inactive' ? 'Removed' : 'Remove'}
-                          </button>
-                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setConfirmTarget({ id: sp.id, name: sp.name }); }}
+                          disabled={Number(sp.pending_balance) <= 0}
+                          className="btn btn-secondary"
+                          style={{ fontSize: 11.5 }}
+                        >
+                          Mark Paid
+                        </button>
                       </td>
                     </tr>
 
@@ -480,16 +448,6 @@ export function AffiliateManagement({ showToast }: AffiliateManagementProps) {
           confirmLabel={markingPaid ? 'Marking…' : 'Confirm'}
           onConfirm={handleMarkPaid}
           onCancel={() => setConfirmTarget(null)}
-        />
-      )}
-
-      {deleteTarget && (
-        <ConfirmDialog
-          title="Remove Affiliate"
-          message={`Remove ${deleteTarget.name}? Their coupon code "${salespersons.find(s => s.id === deleteTarget.id)?.coupon_code || ''}" will stop working immediately. Their order and commission history is kept.`}
-          confirmLabel={deleting ? 'Removing…' : 'Confirm'}
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteTarget(null)}
         />
       )}
     </div>

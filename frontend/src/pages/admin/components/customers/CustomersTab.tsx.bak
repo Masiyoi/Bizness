@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { T, SC } from '../../constants';
 import { authH } from '../../utils';
@@ -276,9 +276,8 @@ export function CustomersTab({ showToast }: CustomersTabProps) {
               ⏳ {unverifiedCount} awaiting verification
             </div>
           )}
-          <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.grey1, background: T.white, border: `1px solid ${T.grey3}`, borderRadius: 9, padding: '7px 13px', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <img src="/registered.png" alt="Registered" style={{ width: 14, height: 14 }}/>
-            {customers.length} registered
+          <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.grey1, background: T.white, border: `1px solid ${T.grey3}`, borderRadius: 9, padding: '7px 13px' }}>
+            👥 {customers.length} registered
           </div>
         </div>
       </div>

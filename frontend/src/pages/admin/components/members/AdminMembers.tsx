@@ -256,7 +256,7 @@ function AdminUpdatesManager() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 12 }}>
                     {theme.perks.map((perk, i) => (
                       <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                        <span style={{ color: theme.color, fontSize: 11, flexShrink: 0, marginTop: 1 }}>âœ¦</span>
+                        <span style={{ color: theme.color, fontSize: 11, flexShrink: 0, marginTop: 1 }}>✦</span>
                         <span style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.black }}>{perk}</span>
                       </div>
                     ))}
