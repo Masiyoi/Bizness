@@ -326,7 +326,7 @@ export default function AdminDashboard() {
         {/* ── Main content ── */}
         <main
           className="admin-main"
-          style={{ flex: 1, padding: '32px 36px 60px', overflowY: 'auto', minWidth: 0 }}
+          style={{ flex: 1, padding: '32px 36px 60px', overflowY: 'auto', minWidth: 0, background: tab === 'orders' ? T.white : 'transparent' }}
         >
           {loading ? (
             <div style={{

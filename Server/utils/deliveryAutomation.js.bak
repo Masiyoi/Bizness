@@ -1,4 +1,4 @@
-﻿const db = require('../config/db');
+const db = require('../config/db');
 // Time (ms) after payment confirmation before an order auto-transitions to
 // "Delivered", based on delivery_zone. Keep in sync with ZONE_LABELS in
 // frontend/src/pages/admin/constants.ts.
@@ -14,6 +14,9 @@ const DELIVERY_DELAYS_MS = {
 // server.js flips them to Delivered once that time passes.
 function computeInitialDeliveryState(deliveryZone) {
   const zone = deliveryZone || 'cbd';
+  if (zone === 'pickup') {
+    return { status: 'delivered', tracking_status: 'Delivered', auto_deliver_at: null };
+  }
   const delayMs = DELIVERY_DELAYS_MS[zone] ?? DELIVERY_DELAYS_MS.cbd;
   return {
     status: 'confirmed',
