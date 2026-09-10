@@ -160,9 +160,9 @@ exports.updateSalesperson = async (req, res) => {
     values.push(id);
     const query = `
       UPDATE salespersons 
-      SET ${updates.join(', ')}
+      SET ${updates.join(', ')}, updated_at = now()
       WHERE id = $${paramCount}
-      RETURNING id, coupon_code, commission_pct, status
+      RETURNING id, coupon_code, commission_pct, status, updated_at
     `;
 
     const { rows } = await db.query(query, values);

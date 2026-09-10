@@ -97,7 +97,12 @@ export function AdminDiscounts() {
             Total Discount Given
           </p>
           <p style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 28, color: '#1F8A3D' }}>
-            {loading ? '—' : `-KSh ${(data?.totalDiscountAmount ?? 0).toLocaleString()}`}
+            {loading ? '—' : (
+              <>
+                <span style={{ fontFamily: 'Jost,sans-serif' }}>-</span>
+                {`KSh ${(data?.totalDiscountAmount ?? 0).toLocaleString()}`}
+              </>
+            )}
           </p>
         </div>
         <div className="pf-card" style={{ flex: '1 1 220px', padding: '18px 20px' }}>

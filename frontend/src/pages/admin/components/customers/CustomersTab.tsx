@@ -285,12 +285,15 @@ export function CustomersTab({ showToast }: CustomersTabProps) {
 
       {/* Search + filter + sort */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="🔍  Search by name, email or phone…"
-          style={{ flex: 1, minWidth: 200, fontFamily: 'Jost,sans-serif', fontSize: 13, color: T.black, background: T.white, border: `1.5px solid ${T.grey3}`, borderRadius: 9, padding: '9px 13px', outline: 'none' }}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 200, background: T.white, border: `1.5px solid ${T.grey3}`, borderRadius: 9, padding: '0 13px', gap: 9 }}>
+          <img src="/search.png" alt="" style={{ width: 14, height: 14, opacity: 0.45, flexShrink: 0 }}/>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by name, email or phone…"
+            style={{ flex: 1, fontFamily: 'Jost,sans-serif', fontSize: 13, color: T.black, background: 'transparent', border: 'none', padding: '9px 0', outline: 'none' }}
+          />
+        </div>
 
         {/* Filter pills */}
         {(['all', 'verified', 'unverified'] as const).map(f => (
@@ -302,7 +305,11 @@ export function CustomersTab({ showToast }: CustomersTabProps) {
             border:     `1px solid ${filter === f ? T.black : T.grey3}`,
             transition: 'all 0.15s',
           }}>
-            {f === 'unverified' ? '⏳ Pending' : f === 'verified' ? '✓ Verified' : 'All'}
+            {f === 'unverified' ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <img src="/pending.png" alt="" style={{ width: 12, height: 12 }}/> Pending
+              </span>
+            ) : f === 'verified' ? '✓ Verified' : 'All'}
           </button>
         ))}
 

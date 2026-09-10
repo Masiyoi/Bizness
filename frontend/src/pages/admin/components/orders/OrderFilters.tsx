@@ -15,7 +15,7 @@ export function OrderFilters({ search, setSearch, statusFilter, setStatusFilter,
     <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
       {/* Search */}
       <div style={{ display: 'flex', alignItems: 'center', background: T.white, border: `1px solid ${T.grey3}`, borderRadius: 9, padding: '9px 14px', gap: 9, flex: 1, minWidth: 220 }}>
-        <span style={{ opacity: 0.35, fontSize: 14 }}>🔍</span>
+        <img src="/search.png" alt="" style={{ width: 14, height: 14, opacity: 0.45, flexShrink: 0 }}/>
         <input
           style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'Jost,sans-serif', fontSize: 13, color: T.black, flex: 1 }}
           placeholder="Search customer, receipt, phone, order #…"
