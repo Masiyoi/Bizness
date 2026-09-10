@@ -1,7 +1,8 @@
-const axios = require('axios');
+﻿const axios = require('axios');
 const db    = require('../config/db');
 const { calculateFirstOrderDiscount } = require('./discountController');
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
+const { decrementStockForItems } = require('../utils/stockDeduction');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -327,6 +328,8 @@ exports.mpesaCallback = async (req, res) => {
         }
       }
 
+      // 4c. Decrement stock for the items in this order
+      await decrementStockForItems(itemsArray);
       // 5. Clear the user's cart
       await db.query(
         `DELETE FROM cart_items

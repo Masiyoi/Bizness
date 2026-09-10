@@ -1,8 +1,9 @@
-const axios = require('axios');
+﻿const axios = require('axios');
 const db    = require('../config/db');
 const { calculateFirstOrderDiscount } = require('./discountController');
 const { awardOrderPoints } = require('./membersController');
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
+const { decrementStockForItems } = require('../utils/stockDeduction');
 
 // ── PayHero base URL ──────────────────────────────────────────────────────────
 const PAYHERO_BASE = 'https://backend.payhero.co.ke/api/v2';
@@ -138,6 +139,8 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
       console.error('Affiliate commission recording error:', commErr.message);
     }
   }
+
+  await decrementStockForItems(itemsArray);
 
   await db.query(
     `DELETE FROM cart_items

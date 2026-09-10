@@ -1,8 +1,9 @@
-const axios = require('axios');
+﻿const axios = require('axios');
 const db    = require('../config/db');
 const { calculateFirstOrderDiscount } = require('./discountController');
 const { awardOrderPoints } = require('./membersController');
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
+const { decrementStockForItems } = require('../utils/stockDeduction');
 
 // ── Pesapal base URLs ─────────────────────────────────────────────────────────
 const PESAPAL_BASE = process.env.PESAPAL_ENV === 'production'
@@ -172,6 +173,8 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
       console.error('Affiliate commission recording error:', commErr.message);
     }
   }
+
+  await decrementStockForItems(itemsArray);
 
   await db.query(
     `DELETE FROM cart_items
