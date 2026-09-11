@@ -1,4 +1,4 @@
-// src/App.tsx
+﻿// src/App.tsx
 import { HashRouter as Router, Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
@@ -36,6 +36,7 @@ import AccountDetails  from './pages/profile/AccountDetails';
 // BestSellers aren't part of the gender/department tree, so they stay as
 // their own routed pages.
 import CategoryPage   from './pages/categories/CategoryPage';
+import ShopGenderPage from './pages/categories/ShopGenderPage';
 import NewArrivals    from './pages/categories/NewArrivals';
 import BestSellers    from './pages/categories/BestSellers';
 
@@ -205,7 +206,7 @@ export default function App() {
         {/* Dynamic category page — replaces the old per-category files (Tops,
             Bottoms, Outwear, Heels, Accessories, Bags, Footwear, Sets,
             Headgear, HoodiesJackets). Matches the links Navbar.tsx builds via
-            goCategory(): /shop/${gender}/${department}/${slug} */}
+            goCategory(): /shop/${gender}/${department}/${slug} */}        <Route path="/shop/:gender" element={<ShopGenderPage />} />
         <Route path="/shop/:gender/:department/:slug" element={<CategoryPage />} />
 
         {/* Not part of the gender/department tree, so they keep their own routes */}

@@ -44,9 +44,14 @@ export default function Navbar({
   const [cartCount,      setCartCount]      = useState(cartCountProp ?? 0);
   const [wishlistCount,  setWishlistCount]  = useState(wishlistCountProp ?? 0);
   const [showSaleMenu,   setShowSaleMenu]   = useState(false);
-  const [flashProducts,  setFlashProducts]  = useState<any[]>([]);
-  const [categoryTree,   setCategoryTree]   = useState<CategoryTree | null>(null);
-  const [shopGenderTab,  setShopGenderTab]  = useState<'men' | 'women'>('men');
+  const [flashProducts,  setFlashProducts]  = useState<any[]>([]);  const [categoryTree,   setCategoryTree]   = useState<CategoryTree | null>(null);
+  const [shopGenderTab,  setShopGenderTab]  = useState<'men' | 'women'>(() => {
+    const saved = localStorage.getItem('shopGenderTab');
+    return saved === 'women' ? 'women' : 'men';
+  });
+  const [showFootwearList, setShowFootwearList] = useState(false);
+  const [showClothingList, setShowClothingList] = useState(false);
+  const [genderFootwearPreview, setGenderFootwearPreview] = useState<any[]>([]);
 
   const [lang, setLang] = useState(() => {
     const match = document.cookie.match(/googtrans=\/en\/([^;]+)/);
@@ -191,6 +196,21 @@ export default function Navbar({
   }, []);  useEffect(() => {
     axios.get('/api/categories/tree').then(r => setCategoryTree(r.data)).catch(() => {});
   }, []);
+  // Remember the gender tab across visits — sticks until the user changes it
+  useEffect(() => {
+    localStorage.setItem('shopGenderTab', shopGenderTab);
+  }, [shopGenderTab]);
+  // 3 random footwear items for the currently selected gender, shown in the
+  // mobile hamburger menu below the category dropdowns
+  useEffect(() => {
+    axios.get('/api/products', { params: { gender: shopGenderTab, department: 'footwear' } })
+      .then(r => {
+        const all = Array.isArray(r.data) ? r.data : [];
+        const shuffled = [...all].sort(() => Math.random() - 0.5);
+        setGenderFootwearPreview(shuffled.slice(0, 3));
+      })
+      .catch(() => {});
+  }, [shopGenderTab]);
 
   // Cookie-based (axios.defaults.withCredentials is set globally in App.tsx) —
   // no manual Authorization header. A leftover localStorage 'token' read here
@@ -679,9 +699,8 @@ export default function Navbar({
             </button>
           </div>
 
-          {/* ── Categories label ── */}
-          <div style={{ marginBottom: 6 }}>
-            <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: '2.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)' }}>Shop by Category</span>
+          {/* ── Categories label ── */}          <div style={{ marginBottom: 6 }}>
+            <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 800, letterSpacing: '2.5px', textTransform: 'uppercase', color: '#111' }}>Shop by Category</span>
           </div>
 
           {/* ── Sale — red, always shows 3 flash-sale previews below it ── */}
@@ -716,21 +735,53 @@ export default function Navbar({
                   {g === 'men' ? 'Men' : 'Women'}
                 </button>
               ))}
-            </div>
-            <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)', padding: '4px 26px' }}>Footwear</div>
-            {(categoryTree?.[shopGenderTab]?.footwear ?? []).map(c => (
+            </div>            <button
+              onClick={() => setShowFootwearList(s => !s)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#111', padding: '10px 26px 6px' }}
+            >
+              Footwear
+              <svg width="8" height="5" viewBox="0 0 8 5" fill="none" style={{ transition: 'transform 0.2s', transform: showFootwearList ? 'rotate(180deg)' : 'none' }}>
+                <path d="M1 1l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            {showFootwearList && (categoryTree?.[shopGenderTab]?.footwear ?? []).map(c => (
               <button key={c.id} className="mitem" style={{ padding: '9px 14px 9px 26px' }} onClick={() => goCategory(shopGenderTab, 'footwear', c.slug)}>
                 {c.name}
               </button>
             ))}
-            <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)', padding: '10px 26px 4px' }}>Clothing</div>
-            {(categoryTree?.[shopGenderTab]?.clothing ?? []).map(c => (
+            <button
+              onClick={() => setShowClothingList(s => !s)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#111', padding: '10px 26px 6px' }}
+            >
+              Clothing
+              <svg width="8" height="5" viewBox="0 0 8 5" fill="none" style={{ transition: 'transform 0.2s', transform: showClothingList ? 'rotate(180deg)' : 'none' }}>
+                <path d="M1 1l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>            {showClothingList && (categoryTree?.[shopGenderTab]?.clothing ?? []).map(c => (
               <button key={c.id} className="mitem" style={{ padding: '9px 14px 9px 26px' }} onClick={() => goCategory(shopGenderTab, 'clothing', c.slug)}>
                 {c.name}
               </button>
             ))}
           </div>
-
+          {/* ── Footwear preview — 3 items for the selected gender ── */}
+          {genderFootwearPreview.length > 0 && (
+            <div style={{ padding: '14px 14px 4px' }}>
+              <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.35)', marginBottom: 8 }}>
+                {shopGenderTab === 'men' ? "Men's" : "Women's"} Footwear
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {genderFootwearPreview.map((p: any) => (
+                  <div key={p.id} onClick={() => go(`/product/${p.id}`)} style={{ width: 76, cursor: 'pointer' }}>
+                    <div style={{ width: 76, height: 76, borderRadius: 8, overflow: 'hidden', background: '#f0f0f0', marginBottom: 5 }}>
+                      <img src={(p.images && p.images[0]) || p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
+                    </div>
+                    <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 600, color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                    <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, color: '#333' }}>KSh {Number(p.price).toLocaleString()}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {/* ── Gallery — styled looks ── */}
           <Gallery/>
 
