@@ -1,4 +1,4 @@
-﻿// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // Luku Prime Admin — TypeScript Types
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -9,7 +9,7 @@ export interface Product {
   name:        string;
   price:       string;
   cost_price:  string | null;    // NEW — null until admin sets it
-  category_id: string | null;
+  category:    string;
   description: string;
   features:    string[];
   stock:       number;
@@ -87,7 +87,7 @@ export interface LowStockItem {
 // ── Analytics ─────────────────────────────────────────────────────────────────
 
 export interface CategoryStat {
-  category_id: string | null;
+  category:    string;
   revenue:     number;
   orders:      number;
   units_sold:  number;

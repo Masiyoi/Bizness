@@ -1,7 +1,7 @@
 // controllers/productController.js
 const db = require('../config/db');
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬ Helpers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 const parseJson = (val, fallback = []) => {
   if (Array.isArray(val)) return val;
   if (typeof val === 'string') {
@@ -32,17 +32,25 @@ const RATING_JOIN = `
   ) rv ON true`;
 const RATING_SELECT = `p.*, rv.avg_rating::float AS rating, COALESCE(rv.review_count, 0)::int AS review_count`;
 
-// ── GET /api/products  (public) ───────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬ GET /api/products  (public) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 exports.getProducts = async (req, res) => {
   try {
-    const { category, search, sort } = req.query;
+    const { category, gender, department, search, sort } = req.query;
 
     let query  = `SELECT ${RATING_SELECT} FROM products p ${RATING_JOIN} WHERE 1=1`;
     const vals = [];
 
     if (category) {
       vals.push(category);
-      query += ` AND p.category = $${vals.length}`;
+      query += ` AND p.category_id = (SELECT id FROM categories WHERE slug = $${vals.length})`;
+    } else if (gender && department) {
+      vals.push(gender);
+      query += ` AND p.category_id IN (SELECT id FROM categories WHERE gender = $${vals.length}`;
+      vals.push(department);
+      query += ` AND department = $${vals.length})`;
+    } else if (gender) {
+      vals.push(gender);
+      query += ` AND p.category_id IN (SELECT id FROM categories WHERE gender = $${vals.length})`;
     }
 
     if (search) {
@@ -63,8 +71,8 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// ── GET /api/products/:id  (public) ──────────────────────────────────────────
-// ── GET /api/products/:id  (public) ──────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬ GET /api/products/:id  (public) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Ã¢â€â‚¬Ã¢â€â‚¬ GET /api/products/:id  (public) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 exports.getProductById = async (req, res) => {
   try {
     const result = await db.query(
@@ -78,7 +86,7 @@ exports.getProductById = async (req, res) => {
 
     const product = normaliseProduct(result.rows[0]);
 
-    // ── Fetch variants ────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Fetch variants Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     const variantResult = await db.query(
       `SELECT id, product_id, color, size,
               stock::integer AS stock,
@@ -95,7 +103,7 @@ exports.getProductById = async (req, res) => {
       product.colors = [...new Set(product.variants.map(v => v.color).filter(Boolean))];
       product.sizes  = [...new Set(product.variants.map(v => v.size).filter(Boolean))];
     }
-    // ─────────────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     res.json(product);
   } catch (err) {
@@ -104,7 +112,7 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// ── GET /api/products/new-arrivals  (public) ──────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬ GET /api/products/new-arrivals  (public) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 exports.getNewArrivals = async (req, res) => {
   try {
     const { limit = 20 } = req.query;
@@ -123,19 +131,19 @@ exports.getNewArrivals = async (req, res) => {
   }
 };
 
-// ── GET /api/products/best-sellers  (public) ──────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬ GET /api/products/best-sellers  (public) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 exports.getBestSellers = async (req, res) => {
   try {
     const { limit = 12 } = req.query;
 
-    // Step 1 — pull all confirmed/delivered orders with their snapshots
+    // Step 1 Ã¢â‚¬â€ pull all confirmed/delivered orders with their snapshots
     const ordersResult = await db.query(
       `SELECT items_snapshot FROM orders
        WHERE status NOT IN ('cancelled', 'pending')
        AND items_snapshot IS NOT NULL`
     );
 
-    // Step 2 — count how many times each product_id appears across all orders
+    // Step 2 Ã¢â‚¬â€ count how many times each product_id appears across all orders
     const countMap = {};
 
     for (const row of ordersResult.rows) {
@@ -160,7 +168,7 @@ exports.getBestSellers = async (req, res) => {
       }
     }
 
-    // Step 3 — filter to only products bought 3 or more times
+    // Step 3 Ã¢â‚¬â€ filter to only products bought 3 or more times
     const qualifyingIds = Object.entries(countMap)
       .filter(([, count]) => count >= 3)
       .sort(([, a], [, b]) => b - a)          // most bought first
@@ -171,7 +179,7 @@ exports.getBestSellers = async (req, res) => {
       return res.json([]);
     }
 
-    // Step 4 — fetch the actual product rows in order of popularity
+    // Step 4 Ã¢â‚¬â€ fetch the actual product rows in order of popularity
     // Using unnest to preserve the sort order from countMap
     const placeholders = qualifyingIds.map((_, i) => `$${i + 1}`).join(', ');
     const productsResult = await db.query(
@@ -181,7 +189,7 @@ exports.getBestSellers = async (req, res) => {
       qualifyingIds
     );
 
-    // Step 5 — re-sort by our countMap order (SQL IN doesn't guarantee order)
+    // Step 5 Ã¢â‚¬â€ re-sort by our countMap order (SQL IN doesn't guarantee order)
     const sorted = productsResult.rows
       .map(normaliseProduct)
       .map(p => ({ ...p, is_bestseller: true }))
@@ -194,7 +202,7 @@ exports.getBestSellers = async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 };
-// ── GET /api/products/flash-sales  (public) ───────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬ GET /api/products/flash-sales  (public) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 exports.getFlashSales = async (req, res) => {
   try {
     const { limit = 20 } = req.query;

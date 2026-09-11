@@ -1,16 +1,11 @@
-﻿import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import type { Product } from '../../types';
-import { T, lbl, inp } from '../../constants';
+import { T, CATEGORIES, lbl, inp } from '../../constants';
 import { authH } from '../../utils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Variant { color: string; size: string; stock: number; sku: string; }
-interface CategoryNode { id: string; name: string; slug: string; sort_order?: number; }
-interface CategoryTree {
-  men:   { footwear: CategoryNode[]; clothing: CategoryNode[] };
-  women: { footwear: CategoryNode[]; clothing: CategoryNode[] };
-}
 
 interface WizardProps {
   onClose:      () => void;
@@ -250,10 +245,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
   const [isFlashSale,  setIsFlashSale]  = useState<boolean>(!!(editProduct as any)?.sale_price);
   const [salePrice,    setSalePrice]    = useState<string>((editProduct as any)?.sale_price ? String((editProduct as any).sale_price) : '');
   const [saleEndsAt,   setSaleEndsAt]   = useState<string>((editProduct as any)?.sale_ends_at ? String((editProduct as any).sale_ends_at).slice(0,16) : '');
-  const [tree,        setTree]        = useState<CategoryTree | null>(null);
-  const [gender,      setGender]      = useState<'men' | 'women'>('men');
-  const [department,  setDepartment]  = useState<'footwear' | 'clothing'>('footwear');
-  const [categoryId,  setCategoryId]  = useState<string>(editProduct?.category_id || '');
+  const [category,    setCategory]    = useState(editProduct?.category    || '');
   const [description, setDescription] = useState(editProduct?.description || '');
 
   // Variants
@@ -262,22 +254,6 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
   const [sizes,      setSizes]      = useState<string[]>(editProduct?.sizes  || []);
   const [sizeInput,  setSizeInput]  = useState('');
 
-  useEffect(() => {
-    axios.get('/api/categories/tree').then(res => setTree(res.data)).catch(() => {});
-  }, []);
-  useEffect(() => {
-    const cid = editProduct?.category_id;
-    if (!tree || !cid) return;
-    (['men', 'women'] as const).forEach(g => {
-      (['footwear', 'clothing'] as const).forEach(d => {
-        if (tree[g][d].some(c => c.id === cid)) {
-          setGender(g);
-          setDepartment(d);
-          setCategoryId(cid);
-        }
-      });
-    });
-  }, [tree, editProduct]);
   const initVariants = useCallback((): Variant[] => {
   if (!editProduct?.variants?.length) return [];
   return editProduct.variants.map(v => ({
@@ -381,7 +357,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
       fd.append('name',        name.trim());
       fd.append('price',       price);
       fd.append('cost_price',  costPrice || '');
-      fd.append('category_id', categoryId);
+      fd.append('category',    category);
       fd.append('description', description);
       fd.append('features',    JSON.stringify([]));
       fd.append('colors',      JSON.stringify(colors));
@@ -605,20 +581,11 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
               <div>
                 <label style={lbl}>Category</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7 }}>
-                  <select value={gender} onChange={e => { const g = e.target.value as 'men' | 'women'; setGender(g); setCategoryId(''); }} style={inp}>
-                    <option value="men">Men</option>
-                    <option value="women">Women</option>
-                  </select>
-                  <select value={department} onChange={e => { const d = e.target.value as 'footwear' | 'clothing'; setDepartment(d); setCategoryId(''); }} style={inp}>
-                    <option value="footwear">Footwear</option>
-                    <option value="clothing">Clothing</option>
-                  </select>
-                  <select value={categoryId} onChange={e => setCategoryId(e.target.value)} style={inp}>
-                    <option value="">Select subcategory</option>
-                    {(tree?.[gender]?.[department] ?? []).map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
+                  {CATEGORIES.map(c => (
+                    <button key={c} onClick={() => setCategory(cat => cat === c ? '' : c)} style={{ border: `1.5px solid ${category === c ? T.black : T.grey3}`, borderRadius: 7, padding: '8px 6px', background: category === c ? T.black : T.grey5, fontFamily: 'Jost,sans-serif', fontSize: 12, fontWeight: 600, color: category === c ? T.white : T.grey1, cursor: 'pointer', transition: 'all 0.15s' }}>
+                      {c}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -828,12 +795,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
                     ? <img src={existingImgs[0] || previews[0]} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}/>
                     : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8, fontFamily: 'Jost,sans-serif', fontSize: 13, color: T.grey1 }}><span style={{ fontSize: 32 }}>📷</span>No cover image</div>
                   }
-                  {(() => {
-                    const selectedCategoryName = tree?.[gender]?.[department]?.find(c => c.id === categoryId)?.name || '';
-                    return selectedCategoryName && (
-                      <div style={{ position: 'absolute', top: 10, left: 10, background: 'rgba(0,0,0,0.75)', color: T.white, borderRadius: 4, padding: '3px 9px', fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' }}>{selectedCategoryName}</div>
-                    );
-                  })()}
+                  {category && <div style={{ position: 'absolute', top: 10, left: 10, background: 'rgba(0,0,0,0.75)', color: T.white, borderRadius: 4, padding: '3px 9px', fontFamily: 'Jost,sans-serif', fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' }}>{category}</div>}
                 </div>
 
                 <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>

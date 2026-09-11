@@ -1,6 +1,6 @@
-// src/pages/categories/CategoryPage.tsx
+// src/pages/categories/ShopGenderPage.tsx
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 
 import Navbar      from '../../components/common/Navbar';
@@ -20,21 +20,20 @@ interface CategoryTree {
   women: { footwear: CategoryNode[]; clothing: CategoryNode[] };
 }
 
-// Optional per-slug overrides for the hero banner / copy / badge that your old
-// Bags.tsx, Heels.tsx, etc. used to hardcode. Anything not listed here falls
-// back to a generic banner + auto-generated copy, so a brand-new category
-// created purely in the DB "just works" with zero frontend changes.
-const CATEGORY_META: Record<string, { bannerUrl?: string; description?: string; badge?: string; badgeStyle?: 'gold' | 'red' }> = {
-  // 'heels':           { bannerUrl: '/banners/heels.jpg', description: 'Elevated silhouettes for every occasion.' },
-  // 'hoodies-jackets': { bannerUrl: '/banners/hoodies.jpg' },
-  // 'bags':            { bannerUrl: '/banners/bags.jpg', badge: 'New', badgeStyle: 'gold' },
+const GENDER_META: Record<Gender, { headline: string; description: string; bannerUrl: string }> = {
+  men:   { headline: 'Shop Men',   description: 'The full men\u2019s edit — footwear and clothing, all in one place.',   bannerUrl: '/banners/men.jpg' },
+  women: { headline: 'Shop Women', description: 'The full women\u2019s edit — footwear and clothing, all in one place.', bannerUrl: '/banners/women.jpg' },
 };
 
-const DEFAULT_BANNER = '/banners/default.jpg';
-
-export default function CategoryPage() {
+export default function ShopGenderPage() {
   const navigate = useNavigate();
-  const { gender, department, slug } = useParams<{ gender: Gender; department: Department; slug: string }>();
+  const { gender } = useParams<{ gender: Gender }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // department is an optional facet held in the query string (?department=footwear)
+  // rather than the path, so this stays one route instead of duplicating
+  // CategoryPage's per-category routing.
+  const department = (searchParams.get('department') as Department | null) ?? null;
 
   const [user,       setUser]       = useState<User | null>(readUser);
   const [tree,       setTree]       = useState<CategoryTree | null>(null);
@@ -46,36 +45,22 @@ export default function CategoryPage() {
   const [wishlist,   setWishlist]   = useState<number[]>([]);
   const [navSpacerHeight, setNavSpacerHeight] = useState(96);
 
-  // ── Resolve display name from the same tree the navbar uses ─────
+  // ── Category tree (for the "browse by category" quick links) ────
   useEffect(() => {
     axios.get('/api/categories/tree').then(r => setTree(r.data)).catch(() => {});
   }, []);
 
-  const categoryNode = gender && department
-    ? tree?.[gender]?.[department]?.find(c => c.slug === slug)
-    : undefined;
-
-  const fallbackName = (slug ?? '').replace(/-/g, ' ');
-  const categoryName = categoryNode?.name ?? fallbackName;
-  const meta          = CATEGORY_META[slug ?? ''] ?? {};
-  const headline      = categoryNode?.name ?? categoryName;
-  const description   = meta.description ?? `Shop our full ${categoryName.toLowerCase()} collection.`;
-  const bannerUrl      = meta.bannerUrl ?? DEFAULT_BANNER;
-
-  // ── Fetch products for this gender/department/slug ──────────────
-  // Backend resolves `category` (the slug) to a category_id and filters by
-  // gender + department too, so a stale/mismatched combination in the URL
-  // just returns an empty set rather than someone else's products.
+  // ── Fetch products for this gender, optionally narrowed by department ──
   useEffect(() => {
-    if (!gender || !department || !slug) return;
+    if (!gender) return;
     setLoading(true);
-    axios.get('/api/products', { params: { gender, department, category: slug } })
+    axios.get('/api/products', { params: { gender, department: department || undefined } })
       .then(res => {
         setProducts(Array.isArray(res.data) ? res.data : []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [gender, department, slug]);
+  }, [gender, department]);
 
   // ── Fetch cart ────────────────────────────────────────────────
   const fetchCart = useCallback(() => {
@@ -90,7 +75,7 @@ export default function CategoryPage() {
 
   useEffect(() => { fetchCart(); }, [fetchCart]);
 
-  // ── Fetch wishlist ───────────────────────────────────────────────
+  // ── Fetch wishlist ───────────────────────────────────────────
   const fetchWishlist = useCallback(() => {
     if (!user || user.role === 'admin') { setWishlist([]); return; }
     axios.get('/api/wishlist')
@@ -100,7 +85,7 @@ export default function CategoryPage() {
 
   useEffect(() => { fetchWishlist(); }, [fetchWishlist]);
 
-  // ── Cart toggle ───────────────────────────────────────────────
+  // ── Cart toggle ──────────────────────────────────────────────
   const toggleCart = async (productId: number) => {
     if (!user) { navigate('/login'); return; }
     if (cartIds.includes(productId)) {
@@ -118,7 +103,7 @@ export default function CategoryPage() {
     }
   };
 
-  // ── Wishlist toggle ──────────────────────────────────────────
+  // ── Wishlist toggle ────────────────────────────────────────────
   const toggleWishlist = async (productId: number) => {
     if (!user) { navigate('/login'); return; }
     if (wishlist.includes(productId)) {
@@ -136,7 +121,7 @@ export default function CategoryPage() {
     setUser(null); setCartIds([]); setCartCount(0); setWishlist([]);
   };
 
-  // ── Measure real navbar height ────────────────────────────────
+  // ── Measure real navbar height ─────────────────────────────────
   useEffect(() => {
     const measure = () => {
       const navEl = document.querySelector('nav');
@@ -148,7 +133,7 @@ export default function CategoryPage() {
     return () => { clearTimeout(t); window.removeEventListener('resize', measure); };
   }, []);
 
-  // ── Sort ─────────────────────────────────────────────────────
+  // ── Sort ────────────────────────────────────────────────────
   const sorted = [...products].sort((a, b) => {
     if (sortBy === 'price-asc')  return Number(a.price) - Number(b.price);
     if (sortBy === 'price-desc') return Number(b.price) - Number(a.price);
@@ -156,7 +141,15 @@ export default function CategoryPage() {
     return 0;
   });
 
-  if (!gender || !department || !slug) return null;
+  if (!gender) return null;
+
+  const meta = GENDER_META[gender];
+  const setDepartment = (d: Department | null) => {
+    const next = new URLSearchParams(searchParams);
+    if (d) next.set('department', d); else next.delete('department');
+    setSearchParams(next, { replace: true });
+  };
+  const categoriesForDept = department ? (tree?.[gender]?.[department] ?? []) : [];
 
   return (
     <div className="font-serif bg-cream min-h-screen text-navy overflow-x-hidden">
@@ -171,29 +164,56 @@ export default function CategoryPage() {
 
       {/* ── Hero Banner ── */}
       <div className="relative w-full h-[38vw] min-h-[200px] max-h-[420px] overflow-hidden">
-        <img src={bannerUrl} alt={categoryName} className="absolute inset-0 w-full h-full object-cover" />
+        <img src={meta.bannerUrl} alt={meta.headline} className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(8,5,3,0.75) 0%, rgba(8,5,3,0.1) 60%)' }} />
-        {meta.badge && (
-          <span className={`absolute top-4 right-4 z-10 font-sans text-[11px] font-bold px-3 py-1.5 rounded-full tracking-[0.5px] ${
-            meta.badgeStyle === 'red' ? 'bg-[#e8443a] text-white' : 'bg-gold text-navy'
-          }`}>
-            {meta.badge}
-          </span>
-        )}
         <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-10 font-sans text-[12px] font-semibold text-white bg-black/30 hover:bg-black/50 transition-colors px-3 py-1.5 rounded-full backdrop-blur-sm">
           ← Back
         </button>
         <div className="absolute bottom-0 left-0 p-6 md:p-10 z-10">
-          <Ornament label={categoryName} />
+          <Ornament label={gender === 'men' ? 'Men' : 'Women'} />
           <h1 className="font-serif font-bold text-white mt-1" style={{ fontSize: 'clamp(24px, 5vw, 48px)', textShadow: '0 2px 16px rgba(0,0,0,0.5)' }}>
-            {headline}
+            {meta.headline}
           </h1>
-          <p className="font-sans text-white/70 text-[13px] mt-1 max-w-md">{description}</p>
+          <p className="font-sans text-white/70 text-[13px] mt-1 max-w-md">{meta.description}</p>
         </div>
       </div>
 
+      {/* ── Department filter chips ── */}
+      <div className="px-[5%] pt-5 flex flex-wrap items-center gap-2">
+        {([null, 'footwear', 'clothing'] as const).map(d => (
+          <button
+            key={d ?? 'all'}
+            onClick={() => setDepartment(d)}
+            className="font-sans text-[10px] font-bold tracking-[1.5px] uppercase px-4 py-2 rounded-full transition-colors"
+            style={{
+              background: department === d ? '#111' : '#f5f5f5',
+              color: department === d ? '#fff' : '#666',
+              border: 'none', cursor: 'pointer',
+            }}
+          >
+            {d === null ? 'All' : d === 'footwear' ? 'Footwear' : 'Clothing'}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Category quick links — only once a department is picked ── */}
+      {department && categoriesForDept.length > 0 && (
+        <div className="px-[5%] pt-3 flex flex-wrap gap-2">
+          {categoriesForDept.map(c => (
+            <button
+              key={c.id}
+              onClick={() => navigate(`/shop/${gender}/${department}/${c.slug}`)}
+              className="font-sans text-[10px] tracking-[1px] uppercase px-3.5 py-1.5 rounded-full border border-cream-deep text-navy/70 hover:border-navy/40 transition-colors"
+              style={{ background: '#fff', cursor: 'pointer' }}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* ── Toolbar ── */}
-      <div className="px-[5%] py-4 flex justify-between items-center border-b border-cream-deep">
+      <div className="px-[5%] py-4 mt-2 flex justify-between items-center border-b border-cream-deep">
         <span className="font-sans text-[12px] text-muted">
           {loading ? 'Loading...' : `${sorted.length} product${sorted.length !== 1 ? 's' : ''}`}
         </span>
@@ -227,7 +247,7 @@ export default function CategoryPage() {
             <img src={emptyIcon} alt="No products available" className="w-20 h-20 mx-auto mb-4 opacity-70 object-contain" />
             <p className="font-sans font-bold text-[16px] text-navy mb-2">No products here yet</p>
             <p className="font-sans text-[13px] text-muted mb-6">
-              We're stocking up {categoryName} — check back soon!
+              We're stocking up {gender === 'men' ? "men's" : "women's"}{department ? ` ${department}` : ''} — check back soon!
             </p>
             <button onClick={() => navigate('/')} className="font-sans text-[11px] font-semibold tracking-[2px] uppercase bg-black text-white px-8 py-3.5 hover:bg-[#222] transition-colors">
               Back to Home →

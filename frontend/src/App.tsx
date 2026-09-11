@@ -30,16 +30,12 @@ import Settings        from './pages/profile/Settings';
 import AccountDetails  from './pages/profile/AccountDetails';
 
 // ── Category Pages ─────────────────────────────────────────────────────────────
-import Tops           from './pages/categories/Tops';
-import Bottoms        from './pages/categories/Bottoms';
-import Outwear        from './pages/categories/Outwear';
-import Heels          from './pages/categories/Heels';
-import Accessories    from './pages/categories/Accessories';
-import Bags           from './pages/categories/Bags';
-import Footwear       from './pages/categories/Footwear';
-import Sets           from './pages/categories/Sets';
-import Headgear       from './pages/categories/Headgear';
-import HoodiesJackets from './pages/categories/HoodiesJackets';
+// Tops / Bottoms / Outwear / Heels / Accessories / Bags / Footwear / Sets /
+// Headgear / HoodiesJackets are gone — CategoryPage now handles all of them
+// dynamically via /shop/:gender/:department/:slug. NewArrivals and
+// BestSellers aren't part of the gender/department tree, so they stay as
+// their own routed pages.
+import CategoryPage   from './pages/categories/CategoryPage';
 import NewArrivals    from './pages/categories/NewArrivals';
 import BestSellers    from './pages/categories/BestSellers';
 
@@ -147,7 +143,9 @@ function FloatingCartManager() {
   const { pathname } = useLocation();
 
   const allowedPaths    = ['/', '/wishlist', '/orders'];
-  const allowedPrefixes = ['/categories/', '/product/'];
+  // '/categories/' still covers New Arrivals / Best Sellers; '/shop/' covers
+  // the new dynamic gender/department/slug category pages.
+  const allowedPrefixes = ['/categories/', '/shop/', '/product/'];
 
   const shouldShow =
     allowedPaths.includes(pathname) ||
@@ -204,18 +202,15 @@ export default function App() {
         <Route path="/product/:id" element={<ProductDetail />} />
 
         {/* ── Categories ──────────────────────────────────────────────────────── */}
-        <Route path="/categories/tops"                element={<Tops />} />
-        <Route path="/categories/bottoms"             element={<Bottoms />} />
-        <Route path="/categories/outwear"             element={<Outwear />} />
-        <Route path="/categories/heels"               element={<Heels />} />
-        <Route path="/categories/accessories"         element={<Accessories />} />
-        <Route path="/categories/bags"                element={<Bags />} />
-        <Route path="/categories/footwear"            element={<Footwear />} />
-        <Route path="/categories/sets"                element={<Sets />} />
-        <Route path="/categories/headgear"            element={<Headgear />} />
-        <Route path="/categories/hoodies-and-jackets" element={<HoodiesJackets />} />
-        <Route path="/categories/new-arrivals"        element={<NewArrivals />} />
-        <Route path="/categories/best-sellers"        element={<BestSellers />} />
+        {/* Dynamic category page — replaces the old per-category files (Tops,
+            Bottoms, Outwear, Heels, Accessories, Bags, Footwear, Sets,
+            Headgear, HoodiesJackets). Matches the links Navbar.tsx builds via
+            goCategory(): /shop/${gender}/${department}/${slug} */}
+        <Route path="/shop/:gender/:department/:slug" element={<CategoryPage />} />
+
+        {/* Not part of the gender/department tree, so they keep their own routes */}
+        <Route path="/categories/new-arrivals" element={<NewArrivals />} />
+        <Route path="/categories/best-sellers" element={<BestSellers />} />
 
         {/* ── Support ─────────────────────────────────────────────────────────── */}
         <Route path="/track-order" element={<TrackOrder />} />

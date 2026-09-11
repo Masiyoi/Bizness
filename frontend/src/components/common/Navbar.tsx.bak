@@ -6,11 +6,6 @@ import { getInitials, readUser } from '../../constants/theme';
 import type { User } from '../../constants/theme';
 import { performLogout } from '../../pages/profile/ProfileLayout';
 import Gallery from './Gallery';
-interface CategoryNode { id: string; name: string; slug: string; sort_order?: number; }
-interface CategoryTree {
-  men:   { footwear: CategoryNode[]; clothing: CategoryNode[] };
-  women: { footwear: CategoryNode[]; clothing: CategoryNode[] };
-}
 
 interface NavbarProps {
   cartCount?: number;
@@ -43,10 +38,9 @@ export default function Navbar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartCount,      setCartCount]      = useState(cartCountProp ?? 0);
   const [wishlistCount,  setWishlistCount]  = useState(wishlistCountProp ?? 0);
+  const [navCategories,  setNavCategories]  = useState<string[]>(categories);
   const [showSaleMenu,   setShowSaleMenu]   = useState(false);
   const [flashProducts,  setFlashProducts]  = useState<any[]>([]);
-  const [categoryTree,   setCategoryTree]   = useState<CategoryTree | null>(null);
-  const [shopGenderTab,  setShopGenderTab]  = useState<'men' | 'women'>('men');
 
   const [lang, setLang] = useState(() => {
     const match = document.cookie.match(/googtrans=\/en\/([^;]+)/);
@@ -188,9 +182,17 @@ export default function Navbar({
         setFlashProducts(shuffled.slice(0, 4));
       })
       .catch(() => {});
-  }, []);  useEffect(() => {
-    axios.get('/api/categories/tree').then(r => setCategoryTree(r.data)).catch(() => {});
   }, []);
+
+  const ALL_CATEGORIES = [
+    'Tops', 'Bottoms', 'Outwear', 'Heels', 'Accessories',
+    'Bags', 'Footwear', 'Sets', 'Headgear', 'Hoodies and jackets',
+  ];
+
+  useEffect(() => {
+    if (categories.length > 0) { setNavCategories(categories); return; }
+    setNavCategories(ALL_CATEGORIES);
+  }, [categories.length]);
 
   // Cookie-based (axios.defaults.withCredentials is set globally in App.tsx) —
   // no manual Authorization header. A leftover localStorage 'token' read here
@@ -257,9 +259,22 @@ export default function Navbar({
     navigate('/');
   };
 
-  const go = (path: string) => { navigate(path); setShowMenu(false); setMobileMenuOpen(false); };  const goCategory = (gender: 'men' | 'women', department: 'footwear' | 'clothing', slug: string) => {
-    onCategorySelect?.(slug);
-    navigate(`/shop/${gender}/${department}/${slug}`);
+  const go = (path: string) => { navigate(path); setShowMenu(false); setMobileMenuOpen(false); };
+
+  const categorySlugMap: Record<string, string> = {
+    'Tops': 'tops', 'Bottoms': 'bottoms', 'Outwear': 'outwear', 'Heels': 'heels',
+    'Accessories': 'accessories', 'Bags': 'bags', 'Footwear': 'footwear',
+    'Sets': 'sets', 'Headgear': 'headgear', 'Hoodies and jackets': 'hoodies-and-jackets',
+    'New Arrivals': 'new-arrivals', 'Best Sellers': 'best-sellers',
+  };
+
+  const goCategory = (cat: string) => {
+    onCategorySelect?.(cat);
+    if (cat === 'All') navigate('/');
+    else {
+      const slug = categorySlugMap[cat] ?? cat.toLowerCase().replace(/\s+/g, '-');
+      navigate(`/categories/${slug}`);
+    }
     setShowShopMenu(false);
     setMobileMenuOpen(false);
   };
@@ -400,46 +415,34 @@ export default function Navbar({
                 )}
               </div>
 
-              {/* ── Shop — Men/Women mega-menu with Footwear/Clothing columns ── */}
-              <div ref={shopMenuRef} style={{ position: 'relative' }}>
-                <span className="nav-link flex items-center gap-1" style={{ color: ink }}
-                  onClick={() => setShowShopMenu(s => !s)}>
-                  Shop
-                  <svg width="7" height="4" viewBox="0 0 7 4" fill="none"
-                    style={{ transition: 'transform 0.2s', transform: showShopMenu ? 'rotate(180deg)' : 'none' }}>
-                    <path d="M1 1l2.5 2L6 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </span>
-                {showShopMenu && (
-                  <div style={{ position: 'absolute', top: 'calc(100% + 16px)', left: '50%', transform: 'translateX(-50%)', background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, padding: 16, minWidth: 420, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 200, animation: 'fadeInDown 0.15s ease' }}>
-                    <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-                      {(['men', 'women'] as const).map(g => (
-                        <button key={g} onClick={() => setShopGenderTab(g)} style={{ flex: 1, fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '8px 0', border: 'none', borderRadius: 8, cursor: 'pointer', background: shopGenderTab === g ? '#111' : '#f5f5f5', color: shopGenderTab === g ? '#fff' : '#666' }}>
-                          {g === 'men' ? 'Men' : 'Women'}
+              {/* ── Shop — categories dropdown ── */}
+              {navCategories.length > 0 ? (
+                <div ref={shopMenuRef} style={{ position: 'relative' }}>
+                  <span className="nav-link flex items-center gap-1" style={{ color: ink }}
+                    onClick={() => setShowShopMenu(s => !s)}>
+                    Shop
+                    <svg width="7" height="4" viewBox="0 0 7 4" fill="none"
+                      style={{ transition: 'transform 0.2s', transform: showShopMenu ? 'rotate(180deg)' : 'none' }}>
+                      <path d="M1 1l2.5 2L6 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </span>
+                  {showShopMenu && (
+                    <div style={{ position: 'absolute', top: 'calc(100% + 16px)', left: '50%', transform: 'translateX(-50%)', background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, padding: 8, minWidth: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 200, animation: 'fadeInDown 0.15s ease' }}>
+                      <button className="mitem" style={{ fontWeight: activeCategory === 'All' ? 600 : undefined }} onClick={() => goCategory('All')}>
+                        All Products {activeCategory === 'All' && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
+                      </button>
+                      <div style={{ margin: '4px 12px', borderTop: '1px solid rgba(0,0,0,0.06)' }} />
+                      {navCategories.map(cat => (
+                        <button key={cat} className="mitem" style={{ fontWeight: activeCategory === cat ? 600 : undefined }} onClick={() => goCategory(cat)}>
+                          {cat} {activeCategory === cat && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
                         </button>
                       ))}
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                      <div>
-                        <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.35)', marginBottom: 6, padding: '0 14px' }}>Footwear</div>
-                        {(categoryTree?.[shopGenderTab]?.footwear ?? []).map(c => (
-                          <button key={c.id} className="mitem" onClick={() => goCategory(shopGenderTab, 'footwear', c.slug)}>{c.name}</button>
-                        ))}
-                      </div>
-                      <div>
-                        <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.35)', marginBottom: 6, padding: '0 14px' }}>Clothing</div>
-                        {(categoryTree?.[shopGenderTab]?.clothing ?? []).map(c => (
-                          <button key={c.id} className="mitem" onClick={() => goCategory(shopGenderTab, 'clothing', c.slug)}>{c.name}</button>
-                        ))}
-                      </div>
-                    </div>
-                    <div style={{ margin: '10px 0', borderTop: '1px solid rgba(0,0,0,0.06)' }} />
-                    <button className="mitem" style={{ justifyContent: 'center', fontWeight: 700 }} onClick={() => { navigate(`/shop/${shopGenderTab}`); setShowShopMenu(false); }}>
-                      Shop All {shopGenderTab === 'men' ? 'Men' : 'Women'} →
-                    </button>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              ) : (
+                <span className="nav-link" style={{ color: ink }} onClick={() => navigate('/')}>Shop</span>
+              )}
 
               {/* ── Members Club — last ── */}
               <span className="nav-link" style={{ color: ink }} onClick={() => navigate('/members-club')}>Members Club</span>
@@ -705,28 +708,29 @@ export default function Navbar({
                 ))}
               </div>
             )}
-          </div>          {/* ── Shop — Men/Women tabs with Footwear/Clothing subcategories ── */}
+          </div>
+
+          {/* ── Shop — always-expanded category list, no toggle ── */}
           <div className="mitem" style={{ borderRadius: 0, padding: '11px 14px', fontWeight: 700, cursor: 'default' }}>
             Shop
           </div>
-          <div style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', paddingBottom: 8 }}>
-            <div style={{ display: 'flex', gap: 6, padding: '0 14px 10px' }}>
-              {(['men', 'women'] as const).map(g => (
-                <button key={g} onClick={() => setShopGenderTab(g)} style={{ flex: 1, fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '8px 0', border: 'none', borderRadius: 8, cursor: 'pointer', background: shopGenderTab === g ? '#111' : '#f5f5f5', color: shopGenderTab === g ? '#fff' : '#666' }}>
-                  {g === 'men' ? 'Men' : 'Women'}
-                </button>
-              ))}
-            </div>
-            <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)', padding: '4px 26px' }}>Footwear</div>
-            {(categoryTree?.[shopGenderTab]?.footwear ?? []).map(c => (
-              <button key={c.id} className="mitem" style={{ padding: '9px 14px 9px 26px' }} onClick={() => goCategory(shopGenderTab, 'footwear', c.slug)}>
-                {c.name}
-              </button>
-            ))}
-            <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)', padding: '10px 26px 4px' }}>Clothing</div>
-            {(categoryTree?.[shopGenderTab]?.clothing ?? []).map(c => (
-              <button key={c.id} className="mitem" style={{ padding: '9px 14px 9px 26px' }} onClick={() => goCategory(shopGenderTab, 'clothing', c.slug)}>
-                {c.name}
+
+          <div style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', paddingBottom: 4 }}>
+            <button
+              className="mitem"
+              style={{ padding: '9px 14px 9px 26px', fontWeight: activeCategory === 'All' ? 600 : undefined }}
+              onClick={() => goCategory('All')}
+            >
+              All Products {activeCategory === 'All' && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
+            </button>
+            {navCategories.map(cat => (
+              <button
+                key={cat}
+                className="mitem"
+                style={{ padding: '9px 14px 9px 26px', fontWeight: activeCategory === cat ? 600 : undefined }}
+                onClick={() => goCategory(cat)}
+              >
+                {cat} {activeCategory === cat && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
               </button>
             ))}
           </div>

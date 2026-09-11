@@ -34,7 +34,7 @@ const { processAutoDeliveries } = require('./utils/deliveryAutomation');
 
 const app = express();
 
-// â”€â”€ Middleware â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Middleware ─────────────────────────────────────────────────────────────────
 
 // Define allowed origins for CORS
 const allowedOrigins = [
@@ -76,7 +76,7 @@ app.use(helmet({
 }));
 app.set('trust proxy', 1);
 
-// â”€â”€ API Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── API Routes ─────────────────────────────────────────────────────────────────
 
 // Public routes (no auth required)
 app.use('/api/products', productRoutes);
@@ -100,10 +100,7 @@ app.use('/api/affiliate', affiliateRoutes);
 app.use('/api', adminRoutes);
 app.use('/api/admin', auth, adminOnly, analyticsRoutes);
 
-// Categories (public)
-app.use('/api', categoryRoutes);
-
-// â”€â”€ Scheduled Jobs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Scheduled Jobs ─────────────────────────────────────────────────────────────
 
 /**
  * Birthday Bonus Cron Job
@@ -140,7 +137,7 @@ cron.schedule('*/5 * * * *', async () => {
   }
 });
 
-// â”€â”€ Error Handling â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Error Handling ─────────────────────────────────────────────────────────────
 
 // 404 handler
 app.use((req, res) => {
@@ -155,12 +152,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-// â”€â”€ Server Start â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Server Start ───────────────────────────────────────────────────────────────
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`âœ“ Server running on port ${PORT}`);
-  console.log(`âœ“ Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`✓ Server running on port ${PORT}`);
+  console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 module.exports = app;
