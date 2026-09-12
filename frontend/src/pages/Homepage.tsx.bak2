@@ -503,7 +503,7 @@ export default function Homepage() {
         cartCount={cartCount}
         wishlistCount={wishlist.length}
         onLogout={handleLogout}
-        categories={navCategoryNames}
+        categories={bannerCategories.filter(c => c.slug !== 'all').map(c => c.name)}
         activeCategory={activeCategory}
         onCategorySelect={selectCategory}
       />
