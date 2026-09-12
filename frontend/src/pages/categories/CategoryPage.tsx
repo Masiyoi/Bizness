@@ -25,9 +25,22 @@ interface CategoryTree {
 // back to a generic banner + auto-generated copy, so a brand-new category
 // created purely in the DB "just works" with zero frontend changes.
 const CATEGORY_META: Record<string, { bannerUrl?: string; description?: string; badge?: string; badgeStyle?: 'gold' | 'red' }> = {
-  // 'heels':           { bannerUrl: '/banners/heels.jpg', description: 'Elevated silhouettes for every occasion.' },
-  // 'hoodies-jackets': { bannerUrl: '/banners/hoodies.jpg' },
-  // 'bags':            { bannerUrl: '/banners/bags.jpg', badge: 'New', badgeStyle: 'gold' },
+  'men-sandals-slides': {
+    bannerUrl: 'https://placehold.co/1600x600/2b2b2b/ffffff?text=Sandals+%26+Slides',
+    description: 'Upgrade your warm weather footwear. Browse breathable sandals, easy pool slides, and supportive footbed designs made for effortless casual wear. Explore now.',
+  },
+  'men-sneakers': {
+    bannerUrl: 'https://placehold.co/1600x600/2b2b2b/ffffff?text=Sneakers',
+    description: 'Explore everyday sneakers, high performance running shoes, and iconic court classics. Shop lightweight, durable kicks built for all day comfort. Order now.',
+  },
+  'men-boots': {
+    bannerUrl: 'https://placehold.co/1600x600/2b2b2b/ffffff?text=Boots',
+    description: 'Step out in premium leather and suede boots. From sleek chelsea boots to heavy duty outdoor and combat styles, discover durable footwear made to last. Shop now.',
+  },
+  'men-formal-shoes': {
+    bannerUrl: 'https://placehold.co/1600x600/2b2b2b/ffffff?text=Formal+Shoes',
+    description: 'Elevate your wardrobe with handcrafted formal footwear. Browse classic leather oxfords, brogues, and tailored loafers built for sharp professional style. Shop now.',
+  },
 };
 
 const DEFAULT_BANNER = '/banners/default.jpg';
