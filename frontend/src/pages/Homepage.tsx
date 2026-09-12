@@ -128,6 +128,12 @@ const css = `
   .lp-bestsellers-desc { font-family: var(--f-sans); font-size: clamp(13px,1.4vw,15px); font-weight: 300; color: rgba(255,255,255,0.85); line-height: 1.8; margin-bottom: 32px; }
   @media(max-width:640px) { .lp-bestsellers { min-height: 380px; } }
   .lp-video-wrap-top { border-top: 1px solid var(--rule); }
+  .lp-filter-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 0 clamp(20px,5%,80px) 20px; }
+  .lp-toggle-group { display: flex; gap: 6px; }
+  .lp-toggle-btn { font-family: var(--f-sans); font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; padding: 9px 18px; border: 1px solid rgba(0,0,0,0.15); background: #fff; color: var(--mid); cursor: pointer; transition: all 0.18s; }
+  .lp-toggle-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .lp-toggle-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  @media(max-width:640px) { .lp-toggle-btn { padding: 8px 12px; font-size: 9px; letter-spacing: 1px; } }
 `;
 
 function Hero({ onShop }: { onShop: (cat?: string) => void }) {
@@ -292,6 +298,7 @@ export default function Homepage() {
   const [products, setProducts]       = useState<Product[]>([]);
   const [loading, setLoading]         = useState(true);
   const [genderFilter, setGenderFilter] = useState<'men' | 'women'>('men');
+  const [departmentFilter, setDepartmentFilter] = useState<'all' | 'clothing' | 'footwear'>('all');
   const [categoryTree, setCategoryTree] = useState<CategoryTree | null>(null);
   const [activeCategory, setCategory] = useState('all');
   const [search, setSearch]           = useState(searchParams.get('search') ?? '');
@@ -429,7 +436,9 @@ export default function Homepage() {
   const handleLogout = () => { setUser(null); setCartIds([]); setCartCount(0); setWishlist([]); };
 
   const genderCategoryNodes = categoryTree
-    ? [...categoryTree[genderFilter].clothing, ...categoryTree[genderFilter].footwear]
+    ? (departmentFilter === 'all'
+        ? [...categoryTree[genderFilter].clothing, ...categoryTree[genderFilter].footwear]
+        : categoryTree[genderFilter][departmentFilter])
     : [];
 
   // CategoryBanner needs { slug, name }; slugs are gender-prefixed to match
@@ -464,6 +473,7 @@ export default function Homepage() {
     .filter(p => !(p.id in flashSaleMap))
     .filter(p =>
       (activeBaseSlug === null || (p.category_slug === activeBaseSlug && p.category_gender === genderFilter)) &&
+      (departmentFilter === 'all' || p.category_department === departmentFilter) &&
       p.name.toLowerCase().includes(search.toLowerCase())
     );
   if (sortBy === 'price_asc')  filtered = [...filtered].sort((a,b) => Number(a.price) - Number(b.price));
@@ -471,7 +481,7 @@ export default function Homepage() {
   if (sortBy === 'newest')     filtered = [...filtered].sort((a,b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
 
   useEffect(() => { setPage(1); }, [activeCategory, search]);
-  useEffect(() => { setCategory('all'); setPage(1); }, [genderFilter]);
+  useEffect(() => { setCategory('all'); setPage(1); }, [genderFilter, departmentFilter]);
 
   const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
   const pageStart  = (currentPage - 1) * PRODUCTS_PER_PAGE;
@@ -653,6 +663,31 @@ export default function Homepage() {
                 </>
               )}
             </div>
+          </div>
+        </div>
+
+        <div className="lp-filter-row">
+          <div className="lp-toggle-group">
+            {(['men', 'women'] as const).map(g => (
+              <button
+                key={g}
+                className={`lp-toggle-btn ${genderFilter === g ? 'active' : ''}`}
+                onClick={() => setGenderFilter(g)}
+              >
+                {g === 'men' ? 'Men' : 'Women'}
+              </button>
+            ))}
+          </div>
+          <div className="lp-toggle-group">
+            {(['all', 'clothing', 'footwear'] as const).map(d => (
+              <button
+                key={d}
+                className={`lp-toggle-btn ${departmentFilter === d ? 'active' : ''}`}
+                onClick={() => setDepartmentFilter(d)}
+              >
+                {d === 'all' ? 'All' : d === 'clothing' ? 'Clothing' : 'Footwear'}
+              </button>
+            ))}
           </div>
         </div>
 
