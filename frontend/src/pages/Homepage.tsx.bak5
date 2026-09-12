@@ -472,8 +472,7 @@ export default function Homepage() {
   let filtered = products
     .filter(p => !(p.id in flashSaleMap))
     .filter(p =>
-      p.category_gender === genderFilter &&
-      (activeBaseSlug === null || p.category_slug === activeBaseSlug) &&
+      (activeBaseSlug === null || (p.category_slug === activeBaseSlug && p.category_gender === genderFilter)) &&
       (departmentFilter === 'all' || p.category_department === departmentFilter) &&
       p.name.toLowerCase().includes(search.toLowerCase())
     );
