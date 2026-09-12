@@ -25,64 +25,124 @@ interface CategoryTree {
 // back to a generic banner + auto-generated copy, so a brand-new category
 // created purely in the DB "just works" with zero frontend changes.
 const CATEGORY_META: Record<string, { bannerUrl?: string; description?: string; badge?: string; badgeStyle?: 'gold' | 'red' }> = {
-  // ── Footwear ──────────────────────────────────────────────
+  // ── Men's Footwear ──────────────────────────────────────────
   'men-sandals-slides': {
-    bannerUrl: 'https://source.unsplash.com/1600x600/?sandals,slides',
+    bannerUrl: 'https://images.pexels.com/photos/20298288/pexels-photo-20298288.jpeg?auto=compress&cs=tinysrgb&w=1600&h=600&fit=crop',
     description: 'Upgrade your warm weather footwear. Browse breathable sandals, easy pool slides, and supportive footbed designs made for effortless casual wear. Explore now.',
   },
   'men-sneakers': {
-    bannerUrl: 'https://source.unsplash.com/1600x600/?sneakers,shoes',
-    description: 'Explore everyday sneakers, high performance running shoes, and iconic court classics. Shop lightweight, durable kicks built for all day comfort. Order now.',
+    bannerUrl: 'https://picsum.photos/seed/men-sneakers/1600/600',
+    description: 'Explore everyday sneakers, high-performance running shoes, and iconic court classics. Shop lightweight, durable kicks built for all-day comfort. Order today.',
   },
   'men-boots': {
-    bannerUrl: 'https://source.unsplash.com/1600x600/?leather,boots',
-    description: 'Step out in premium leather and suede boots. From sleek chelsea boots to heavy duty outdoor and combat styles, discover durable footwear made to last. Shop now.',
+    bannerUrl: 'https://picsum.photos/seed/men-boots/1600/600',
+    description: 'Step out in premium leather and suede boots. From sleek Chelsea boots to heavy-duty outdoor and combat styles, discover durable footwear made to last. Shop now.',
   },
   'men-formal-shoes': {
-    bannerUrl: 'https://source.unsplash.com/1600x600/?formal,oxford,shoes',
-    description: 'Elevate your wardrobe with handcrafted formal footwear. Browse classic leather oxfords, brogues, and tailored loafers built for sharp professional style. Shop now.',
+    bannerUrl: 'https://picsum.photos/seed/men-formal-shoes/1600/600',
+    description: 'Elevate your wardrobe with handcrafted formal footwear. Browse classic leather Oxfords, brogues, and tailored dress loafers built for sharp, professional style.',
   },
 
-  // ── Clothing ──────────────────────────────────────────────
-  'men-clothing': {
-    bannerUrl: 'https://source.unsplash.com/1600x600/?mens,fashion,wardrobe',
-    description: 'Refresh your wardrobe with premium everyday clothing. Shop quality essentials, modern cuts, and versatile staples designed for all-day comfort and style.',
-  },
+  // ── Men's Clothing ────────────────────────────────────────────
   'men-tops': {
-    bannerUrl: 'https://source.unsplash.com/1600x600/?mens,shirts,tops',
+    bannerUrl: 'https://picsum.photos/seed/men-tops/1600/600',
     description: 'Upgrade your daily rotation with tailored button-downs, casual tees, and versatile tops. Breathable fabrics made to layer or stand alone. Shop now.',
   },
   'men-bottoms': {
-    bannerUrl: 'https://source.unsplash.com/1600x600/?denim,jeans,trousers',
+    bannerUrl: 'https://picsum.photos/seed/men-bottoms/1600/600',
     description: 'Discover the perfect fit. Explore durable denim, tailored trousers, casual chinos, and everyday shorts built for versatile wear and effortless style.',
   },
   'men-outwear': {
-    bannerUrl: 'https://source.unsplash.com/1600x600/?trench,coat,parka',
+    bannerUrl: 'https://picsum.photos/seed/men-outwear/1600/600',
     description: 'Brave the elements in style. Shop functional trench coats, insulated parkas, and tailored overcoats crafted for dependable warmth and modern layering.',
   },
   'men-sets': {
-    bannerUrl: 'https://source.unsplash.com/1600x600/?matching,outfit,coord',
+    bannerUrl: 'https://picsum.photos/seed/men-sets/1600/600',
     description: 'Take the guesswork out of dressing with matching two-piece sets. Browse relaxed lounge duos, tailored co-ords, and effortless statement pairings today.',
   },
   'men-headgear': {
-    bannerUrl: 'https://source.unsplash.com/1600x600/?hats,caps,beanie',
+    bannerUrl: 'https://picsum.photos/seed/men-headgear/1600/600',
     description: 'Top off your fit with premium headwear. Shop structured baseball caps, warm knit beanies, and classic bucket hats designed for every season and style.',
   },
   'men-hoodies-jackets': {
-    bannerUrl: 'https://source.unsplash.com/1600x600/?hoodie,jacket,streetwear',
+    bannerUrl: 'https://picsum.photos/seed/men-hoodies-jackets/1600/600',
     description: 'Layer up with fleece hoodies, casual zip-ups, and lightweight transitional jackets. Premium comfort and street-ready style built for everyday wear.',
   },
   'men-loungewear': {
-    bannerUrl: 'https://source.unsplash.com/1600x600/?loungewear,sweatpants',
+    bannerUrl: 'https://picsum.photos/seed/men-loungewear/1600/600',
     description: 'Unwind in luxury. Explore ultra-soft sweatpants, breathable modal lounge tees, and cozy matching sleepwear engineered for premium off-duty comfort.',
   },
   'men-socks': {
-    bannerUrl: 'https://source.unsplash.com/1600x600/?socks,crew,cotton',
+    bannerUrl: 'https://picsum.photos/seed/men-socks/1600/600',
     description: 'Step into all-day support with breathable cotton crew socks, invisible no-shows, and cushioned everyday pairs made to stay in place. Order now.',
   },
   'men-accessories': {
-    bannerUrl: 'https://source.unsplash.com/1600x600/?mens,accessories,belt,wallet',
+    bannerUrl: 'https://picsum.photos/seed/men-accessories/1600/600',
     description: 'Complete every look with essential accessories. Browse genuine leather belts, functional everyday bags, sunglasses, and wallets built to last.',
+  },
+
+  // ── Women's Footwear ────────────────────────────────────────
+  'women-sneakers-athletic': {
+    bannerUrl: 'https://picsum.photos/seed/women-sneakers/1600/600',
+    description: 'Explore everyday sneakers, high-performance running shoes, and iconic court classics. Shop lightweight, durable kicks built for all-day comfort. Order today.',
+  },
+  'women-boots': {
+    bannerUrl: 'https://picsum.photos/seed/women-boots/1600/600',
+    description: 'Step out in premium leather and suede boots. From sleek Chelsea boots to heavy-duty outdoor and combat styles, discover durable footwear made to last. Shop now.',
+  },
+  'women-formal-dress': {
+    bannerUrl: 'https://picsum.photos/seed/women-formal/1600/600',
+    description: 'Elevate your wardrobe with handcrafted formal footwear. Browse classic leather Oxfords, brogues, and tailored dress loafers built for sharp, professional style.',
+  },
+  'women-heels': {
+    bannerUrl: 'https://picsum.photos/seed/women-heels/1600/600',
+    description: 'Find your perfect lift. Shop elegant pointed pumps, supportive block heels, and statement platforms designed for evening events and everyday sophistication.',
+  },
+  'women-sandals-slides': {
+    bannerUrl: 'https://picsum.photos/seed/women-sandals/1600/600',
+    description: 'Upgrade your warm-weather footwear. Browse breathable sandals, easy pool slides, and supportive footbed designs made for effortless casual wear. Explore now.',
+  },
+  'women-flats-casuals': {
+    bannerUrl: 'https://picsum.photos/seed/women-flats/1600/600',
+    description: 'Discover effortless daily comfort with our collection of ballet flats, leather driving moccasins, and slip-on loafers. Stylish, versatile, and made to move.',
+  },
+
+  // ── Women's Clothing ──────────────────────────────────────────
+  'women-tops': {
+    bannerUrl: 'https://picsum.photos/seed/women-tops/1600/600',
+    description: 'Upgrade your rotation with women\u2019s tops. Shop breezy linen blouses, soft knit tees, and elegant camis designed for effortless workday-to-weekend layering.',
+  },
+  'women-bottoms': {
+    bannerUrl: 'https://picsum.photos/seed/women-bottoms/1600/600',
+    description: 'Find your perfect fit with women\u2019s bottoms. Browse flattering high-rise jeans, tailored wide-leg trousers, and versatile everyday skirts made for movement.',
+  },
+  'women-outwear': {
+    bannerUrl: 'https://picsum.photos/seed/women-outwear/1600/600',
+    description: 'Stay chic in any forecast. Discover women\u2019s trench coats, warm wool overcoats, and tailored parkas crafted for effortless layering and cold-weather style.',
+  },
+  'women-sets': {
+    bannerUrl: 'https://picsum.photos/seed/women-sets/1600/600',
+    description: 'Look put-together instantly with women\u2019s matching sets. Explore chic knit duos, tailored two-piece blazers, and breezy linen co-ords for everyday elegance.',
+  },
+  'women-headgear': {
+    bannerUrl: 'https://picsum.photos/seed/women-headgear/1600/600',
+    description: 'Top off your look with women\u2019s headwear. Browse structured sun hats, ribbed knit beanies, and classic baseball caps designed for bad-hair-days and beyond.',
+  },
+  'women-hoodies-jackets': {
+    bannerUrl: 'https://picsum.photos/seed/women-hoodies-jackets/1600/600',
+    description: 'Layer up with cozy women\u2019s hoodies, cropped denim jackets, and lightweight zip layers. Effortless street-ready silhouettes built for all-day warmth.',
+  },
+  'women-loungewear': {
+    bannerUrl: 'https://picsum.photos/seed/women-loungewear/1600/600',
+    description: 'Unwind in luxury with soft women\u2019s loungewear. Shop plush modal robes, relaxed joggers, and matching cozy sweat sets designed for stylish downtime at home.',
+  },
+  'women-socks': {
+    bannerUrl: 'https://picsum.photos/seed/women-socks/1600/600',
+    description: 'Treat your feet with women\u2019s socks and hosiery. Explore ribbed crew socks, no-slip invisible liners, and breathable everyday cotton pairs that stay up.',
+  },
+  'women-accessories': {
+    bannerUrl: 'https://picsum.photos/seed/women-accessories/1600/600',
+    description: 'Add the finishing touch with chic women\u2019s accessories. Browse versatile leather crossbody bags, statement belts, jewelry, and UV sunglasses today.',
   },
 };
 

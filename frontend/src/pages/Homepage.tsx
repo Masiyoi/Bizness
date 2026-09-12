@@ -1,4 +1,4 @@
-// src/pages/Homepage.tsx
+﻿// src/pages/Homepage.tsx
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams }      from 'react-router-dom';
 import axios                                  from 'axios';
@@ -20,6 +20,11 @@ import WhatsAppLogo from '../assets/Whatsapplogo.jpg';
 import type { Product, HomepageReview, User } from '../constants/theme';
 
 const PRODUCTS_PER_PAGE = 8;
+interface CategoryNode { id: string; name: string; slug: string; sort_order?: number; }
+interface CategoryTree {
+  men:   { footwear: CategoryNode[]; clothing: CategoryNode[] };
+  women: { footwear: CategoryNode[]; clothing: CategoryNode[] };
+}
 
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
@@ -164,7 +169,7 @@ import securePayment from '../assets/securepayment.png';
 function StatsBar({ productCount }: { productCount: number }) {
   const items = [
     { line1: 'WORLDWIDE', line2: 'SHIPPING', img: worldwideShipping },
-    { line1: '2–3 DAY', line2: 'RETURN POLICY', img: returnArrow },
+    { line1: '2â€“3 DAY', line2: 'RETURN POLICY', img: returnArrow },
     { line1: 'OVER 25K', line2: 'CUSTOMERS', img: shopperIcon },
     { line1: 'SECURE', line2: 'PAYMENT', img: securePayment },
   ];
@@ -250,7 +255,7 @@ function Editorial({ onShop }: { onShop: (cat: string) => void }) {
       <div className="lp-editorial-copy">
         <p style={{ fontFamily:"var(--f-sans)", fontSize:10, fontWeight:800, letterSpacing:'3px', textTransform:'uppercase', color:'#0A0A0A', marginBottom:16 }}>Our Story</p>
         <h3>Born in Nairobi,<br/>Dressed for<br/>the World</h3>
-        <p>Luku Prime started with a simple belief — that every person in Kenya deserves access to authentic, premium fashion without compromise. From curated thrift finds to coveted designer pieces, we source with intention, deliver with care, and dress a generation that refuses to settle.</p>
+        <p>Luku Prime started with a simple belief â€” that every person in Kenya deserves access to authentic, premium fashion without compromise. From curated thrift finds to coveted designer pieces, we source with intention, deliver with care, and dress a generation that refuses to settle.</p>
         <button className="lp-btn-primary" onClick={() => navigate('/about')}>Read About Us</button>
       </div>
     </section>
@@ -286,7 +291,9 @@ export default function Homepage() {
   const [user, setUser]               = useState<User | null>(readUser);
   const [products, setProducts]       = useState<Product[]>([]);
   const [loading, setLoading]         = useState(true);
-  const [activeCategory, setCategory] = useState('All');
+  const [genderFilter, setGenderFilter] = useState<'men' | 'women'>('men');
+  const [categoryTree, setCategoryTree] = useState<CategoryTree | null>(null);
+  const [activeCategory, setCategory] = useState('all');
   const [search, setSearch]           = useState(searchParams.get('search') ?? '');
   const [currentPage, setPage]        = useState(1);
   const [cartIds, setCartIds]         = useState<number[]>([]);
@@ -298,7 +305,7 @@ export default function Homepage() {
   const [sortDrawerOpen, setSortDrawerOpen] = useState(false);
   const sortBtnRef                          = useRef<HTMLDivElement>(null);
   const [flashSaleMap, setFlashSaleMap] = useState<Record<number, number>>({});
-  // maps product_id → sale_price (used to hide flash items from main grid)
+  // maps product_id â†’ sale_price (used to hide flash items from main grid)
 
   const topVideo    = [VIDEO_TILES[0]];
   const bottomVideo = [VIDEO_TILES[1]];
@@ -357,7 +364,7 @@ export default function Homepage() {
     if (!user) { navigate('/login'); return; }
     const wasInCart = cartIds.includes(productId);
 
-    // Optimistic update — flip the UI instantly, reconcile with the server after
+    // Optimistic update â€” flip the UI instantly, reconcile with the server after
     if (wasInCart) {
       setCartIds(p => p.filter(id => id !== productId));
       setCartCount(p => Math.max(0, p - 1));
@@ -419,6 +426,7 @@ export default function Homepage() {
   if (sortBy === 'newest')     filtered = [...filtered].sort((a,b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
 
   useEffect(() => { setPage(1); }, [activeCategory, search]);
+  useEffect(() => { setCategory('all'); setPage(1); }, [genderFilter]);
 
   const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
   const pageStart  = (currentPage - 1) * PRODUCTS_PER_PAGE;
@@ -450,12 +458,12 @@ export default function Homepage() {
         cartCount={cartCount}
         wishlistCount={wishlist.length}
         onLogout={handleLogout}
-        categories={categories.filter(c => c !== 'All')}
+        categories={bannerCategories.filter(c => c.slug !== 'all').map(c => c.name)}
         activeCategory={activeCategory}
         onCategorySelect={selectCategory}
       />
 
-      <Hero onShop={(cat?: string) => selectCategory(cat ?? 'All')} />
+      <Hero onShop={(cat?: string) => selectCategory(cat ?? 'all')} />
       <StatsBar productCount={products.length} />
 
       <FlashSaleStrip
@@ -473,7 +481,7 @@ export default function Homepage() {
 
       <HeadwearSection
         products={products}
-        onExplore={() => selectCategory('Headgear')}
+        onExplore={() => selectCategory(`${genderFilter}-headgear`)}
         cartIds={cartIds}
         wishlist={wishlist}
         isAdmin={user?.role === 'admin'}
@@ -493,7 +501,7 @@ export default function Homepage() {
           <div style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
             {filtered.length > 0 && (
               <span className="lp-result-count" style={{ fontFamily:'var(--f-sans)', fontSize:11, color:'var(--mid)' }}>
-                {pageStart + 1}–{Math.min(pageStart + PRODUCTS_PER_PAGE, filtered.length)} of {filtered.length}
+                {pageStart + 1}â€“{Math.min(pageStart + PRODUCTS_PER_PAGE, filtered.length)} of {filtered.length}
               </span>
             )}
             <div ref={sortBtnRef} style={{ position: 'relative', display: 'inline-block' }}>
@@ -568,7 +576,7 @@ export default function Homepage() {
                     cursor: 'pointer',
                   }}
                 >
-                  <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'price_asc' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: sortBy === 'price_asc' ? 'var(--ink)' : 'var(--mid)' }}>Price: Low → High</span>
+                  <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'price_asc' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: sortBy === 'price_asc' ? 'var(--ink)' : 'var(--mid)' }}>Price: Low â†’ High</span>
                 </button>
                 <button
                   onClick={() => { setSortBy('price_desc'); setSortDrawerOpen(false); }}
@@ -581,7 +589,7 @@ export default function Homepage() {
                     cursor: 'pointer',
                   }}
                 >
-                  <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'price_desc' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: sortBy === 'price_desc' ? 'var(--ink)' : 'var(--mid)' }}>Price: High → Low</span>
+                  <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'price_desc' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: sortBy === 'price_desc' ? 'var(--ink)' : 'var(--mid)' }}>Price: High â†’ Low</span>
                 </button>
                 <button
                   onClick={() => { setSortBy('newest'); setSortDrawerOpen(false); }}
@@ -610,16 +618,16 @@ export default function Homepage() {
         />
 
         <div className="lp-search-wrap">
-          <span className="lp-search-icon">⌕</span>
+          <span className="lp-search-icon">âŒ•</span>
           <input
             className="lp-search"
-            placeholder="Search products…"
+            placeholder="Search productsâ€¦"
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
           />
           {search && (
             <span className="lp-result-count" style={{ cursor:'pointer', fontFamily:'var(--f-sans)', fontSize:11, color:'var(--mid)' }} onClick={() => setSearch('')}>
-              {filtered.length} result{filtered.length !== 1 ? 's' : ''} · clear ×
+              {filtered.length} result{filtered.length !== 1 ? 's' : ''} Â· clear Ã—
             </span>
           )}
         </div>
@@ -643,9 +651,9 @@ export default function Homepage() {
             <div className="lp-empty">
               <p className="lp-empty-title">Nothing found</p>
               <p className="lp-empty-sub">
-                {search ? `No results for "${search}" — try a different term` : `No products in ${activeCategory} yet — check back soon`}
+                {search ? `No results for "${search}" â€” try a different term` : `No products in ${activeCategory} yet â€” check back soon`}
               </p>
-              <button className="lp-btn-primary" onClick={() => { setCategory('All'); setSearch(''); }}>Browse All</button>
+              <button className="lp-btn-primary" onClick={() => { setCategory('all'); setSearch(''); }}>Browse All</button>
             </div>
           )}
 
@@ -667,13 +675,13 @@ export default function Homepage() {
 
               {totalPages > 1 && (
                 <div className="lp-page-wrap">
-                  <button className="lp-page-btn lp-page-arrow" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>← Prev</button>
+                  <button className="lp-page-btn lp-page-arrow" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>â† Prev</button>
                   {getPages().map((p, i) =>
                     p === '...'
-                      ? <span key={`e${i}`} style={{ padding:'0 6px', color:'var(--mid)', fontFamily:'var(--f-sans)', fontSize:12 }}>…</span>
+                      ? <span key={`e${i}`} style={{ padding:'0 6px', color:'var(--mid)', fontFamily:'var(--f-sans)', fontSize:12 }}>â€¦</span>
                       : <button key={p} className={`lp-page-btn ${p === currentPage ? 'active' : ''}`} onClick={() => goToPage(p as number)}>{p}</button>
                   )}
-                  <button className="lp-page-btn lp-page-arrow" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}>Next →</button>
+                  <button className="lp-page-btn lp-page-arrow" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}>Next â†’</button>
                 </div>
               )}
               {totalPages > 1 && (

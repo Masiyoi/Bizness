@@ -1,40 +1,55 @@
-// src/components/home/CategoryBanner.tsx
+﻿// src/components/home/CategoryBanner.tsx
 import { useEffect, useRef } from 'react';
-
+interface CategoryItem { slug: string; name: string; }
 interface CategoryBannerProps {
-  categories: string[];
-  activeCategory: string;
-  onSelect: (cat: string) => void;
+  categories: CategoryItem[];
+  activeCategory: string; // slug
+  onSelect: (slug: string) => void;
 }
-
+// Images keyed by SLUG. Recurring concepts across genders intentionally point
+// to the same URL so switching Men/Women doesn't change the thumbnail.
 // TODO: swap these for real category photography (Cloudinary or local assets).
-// Keeping the source dimensions small (300x170) keeps the payload light since
-// these only ever render as small sliding thumbnails.
-const PLACEHOLDER_IMAGES: Record<string, string> = {
-  All: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1784539195/20a56673b1d6e0ac73501a96c89cf766_xq85qz.jpg',
-  Tops: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1784539196/4de9b4a90efcb5157577bf12c5ab427f_ovfuko.jpg',
-  Bottoms: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1784539194/a23c134ebdc47581fa854c248633a8f5_lbczob.jpg',
-  Outwear: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1784540239/33d6728276446cbae1b1a8bf97c4e2cf_n3s4rg.jpg',
-  Heels: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1784539194/d5529e92dc508b75aa4cc39e20eb8130_nnbstq.jpg',
-  Accessories: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1784539193/6e11d85aef81c790f24f07434dd81daa_e1vrey.jpg',
-  Bags: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1784539192/d3182483e186654480f85bd869cebd5e_bghndr.jpg',
-  Footwear: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1784539193/cf17d512974994aac7122ddfe5cd2784_dkjxx4.jpg',
-  Sets: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1784539192/09957c8e9347b7497dc261c11f380628_cnsihh.jpg',
-  Headgear: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1784537952/c5cb3aea22541cd7df99b5fe5779cc8d_t3kmwe.jpg',
-  'Hoodies and jackets': 'https://res.cloudinary.com/dfiy43f01/image/upload/v1784539191/53d56ce8593569f9c04411baac082228_drwegs.jpg',
+const CATEGORY_IMAGES: Record<string, string> = {
+  all: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1784539195/20a56673b1d6e0ac73501a96c89cf766_xq85qz.jpg',
+  'men-tops':    'https://picsum.photos/seed/tops/300/170',
+  'women-tops':  'https://picsum.photos/seed/tops/300/170',
+  'men-bottoms':   'https://picsum.photos/seed/bottoms/300/170',
+  'women-bottoms': 'https://picsum.photos/seed/bottoms/300/170',
+  'men-outwear':   'https://picsum.photos/seed/outwear/300/170',
+  'women-outwear': 'https://picsum.photos/seed/outwear/300/170',
+  'men-sets':   'https://picsum.photos/seed/sets/300/170',
+  'women-sets': 'https://picsum.photos/seed/sets/300/170',
+  'men-headgear':   'https://picsum.photos/seed/headgear/300/170',
+  'women-headgear': 'https://picsum.photos/seed/headgear/300/170',
+  'men-hoodies-jackets':   'https://picsum.photos/seed/hoodies/300/170',
+  'women-hoodies-jackets': 'https://picsum.photos/seed/hoodies/300/170',
+  'men-loungewear':   'https://picsum.photos/seed/loungewear/300/170',
+  'women-loungewear': 'https://picsum.photos/seed/loungewear/300/170',
+  'men-socks':   'https://picsum.photos/seed/socks/300/170',
+  'women-socks': 'https://picsum.photos/seed/socks/300/170',
+  'men-accessories':   'https://picsum.photos/seed/accessories/300/170',
+  'women-accessories': 'https://picsum.photos/seed/accessories/300/170',
+  'men-sandals-slides':   'https://picsum.photos/seed/sandals/300/170',
+  'women-sandals-slides': 'https://picsum.photos/seed/sandals/300/170',
+  'men-boots':   'https://picsum.photos/seed/boots/300/170',
+  'women-boots': 'https://picsum.photos/seed/boots/300/170',
+  // Gender-exclusive / distinctly named categories get their own images:
+  'men-sneakers':            'https://picsum.photos/seed/mens-sneakers/300/170',
+  'women-sneakers-athletic': 'https://picsum.photos/seed/womens-sneakers/300/170',
+  'men-formal-shoes':        'https://picsum.photos/seed/mens-formal/300/170',
+  'women-formal-dress':      'https://picsum.photos/seed/womens-formal/300/170',
+  'women-heels':             'https://picsum.photos/seed/heels/300/170',
+  'women-flats-casuals':     'https://picsum.photos/seed/flats/300/170',
 };
-
-function getCategoryImage(cat: string): string {
-  return PLACEHOLDER_IMAGES[cat] ?? `https://picsum.photos/seed/luku-${encodeURIComponent(cat)}/300/170`;
+function getCategoryImage(slug: string): string {
+  return CATEGORY_IMAGES[slug] ?? `https://picsum.photos/seed/luku-${encodeURIComponent(slug)}/300/170`;
 }
-
 export default function CategoryBanner({ categories, activeCategory, onSelect }: CategoryBannerProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const pausedRef = useRef(false);
   const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Duplicate the list once so the strip can loop seamlessly.
   const loop = [...categories, ...categories];
-
   // Auto-advance via rAF-driven scrollLeft, so native user scrolling
   // (drag, wheel, touch, scrollbar) still works on the same element.
   useEffect(() => {
@@ -42,7 +57,6 @@ export default function CategoryBanner({ categories, activeCategory, onSelect }:
     if (!el) return;
     let raf: number;
     const speed = 0.5; // px per frame
-
     const step = () => {
       if (!pausedRef.current && el) {
         const half = el.scrollWidth / 2;
@@ -54,7 +68,6 @@ export default function CategoryBanner({ categories, activeCategory, onSelect }:
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [categories.length]);
-
   const pause = () => {
     pausedRef.current = true;
     if (resumeTimer.current) clearTimeout(resumeTimer.current);
@@ -63,7 +76,6 @@ export default function CategoryBanner({ categories, activeCategory, onSelect }:
     if (resumeTimer.current) clearTimeout(resumeTimer.current);
     resumeTimer.current = setTimeout(() => { pausedRef.current = false; }, delay);
   };
-
   return (
     <>
       <style>{`
@@ -143,14 +155,14 @@ export default function CategoryBanner({ categories, activeCategory, onSelect }:
         <div className="cb-track">
           {loop.map((cat, i) => (
             <button
-              key={`${cat}-${i}`}
-              className={`cb-item ${activeCategory === cat ? 'active' : ''}`}
-              onClick={() => onSelect(cat)}
-              aria-label={`Shop ${cat}`}
+              key={`${cat.slug}-${i}`}
+              className={`cb-item ${activeCategory === cat.slug ? 'active' : ''}`}
+              onClick={() => onSelect(cat.slug)}
+              aria-label={`Shop ${cat.name}`}
             >
               <img
-                src={getCategoryImage(cat)}
-                alt={cat}
+                src={getCategoryImage(cat.slug)}
+                alt={cat.name}
                 className="cb-img"
                 loading="lazy"
                 decoding="async"
@@ -158,7 +170,7 @@ export default function CategoryBanner({ categories, activeCategory, onSelect }:
                 height={96}
               />
               <span className="cb-overlay" />
-              <span className="cb-label">{cat}</span>
+              <span className="cb-label">{cat.name}</span>
             </button>
           ))}
         </div>

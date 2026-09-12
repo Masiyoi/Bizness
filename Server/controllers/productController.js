@@ -29,8 +29,13 @@ const RATING_JOIN = `
   LEFT JOIN LATERAL (
     SELECT ROUND(AVG(rating), 1) AS avg_rating, COUNT(*) AS review_count
     FROM reviews WHERE reviews.product_id = p.id
-  ) rv ON true`;
-const RATING_SELECT = `p.*, rv.avg_rating::float AS rating, COALESCE(rv.review_count, 0)::int AS review_count`;
+  ) rv ON true
+  LEFT JOIN categories c ON c.id = p.category_id`;
+
+const RATING_SELECT = `
+  p.*, rv.avg_rating::float AS rating, COALESCE(rv.review_count, 0)::int AS review_count,
+  c.gender AS category_gender, c.department AS category_department,
+  c.slug AS category_slug, c.name AS category_name`;
 
 // Ã¢â€â‚¬Ã¢â€â‚¬ GET /api/products  (public) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 exports.getProducts = async (req, res) => {
