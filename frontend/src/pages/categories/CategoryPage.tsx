@@ -25,21 +25,64 @@ interface CategoryTree {
 // back to a generic banner + auto-generated copy, so a brand-new category
 // created purely in the DB "just works" with zero frontend changes.
 const CATEGORY_META: Record<string, { bannerUrl?: string; description?: string; badge?: string; badgeStyle?: 'gold' | 'red' }> = {
+  // ── Footwear ──────────────────────────────────────────────
   'men-sandals-slides': {
-    bannerUrl: 'https://placehold.co/1600x600/2b2b2b/ffffff?text=Sandals+%26+Slides',
+    bannerUrl: 'https://source.unsplash.com/1600x600/?sandals,slides',
     description: 'Upgrade your warm weather footwear. Browse breathable sandals, easy pool slides, and supportive footbed designs made for effortless casual wear. Explore now.',
   },
   'men-sneakers': {
-    bannerUrl: 'https://placehold.co/1600x600/2b2b2b/ffffff?text=Sneakers',
+    bannerUrl: 'https://source.unsplash.com/1600x600/?sneakers,shoes',
     description: 'Explore everyday sneakers, high performance running shoes, and iconic court classics. Shop lightweight, durable kicks built for all day comfort. Order now.',
   },
   'men-boots': {
-    bannerUrl: 'https://placehold.co/1600x600/2b2b2b/ffffff?text=Boots',
+    bannerUrl: 'https://source.unsplash.com/1600x600/?leather,boots',
     description: 'Step out in premium leather and suede boots. From sleek chelsea boots to heavy duty outdoor and combat styles, discover durable footwear made to last. Shop now.',
   },
   'men-formal-shoes': {
-    bannerUrl: 'https://placehold.co/1600x600/2b2b2b/ffffff?text=Formal+Shoes',
+    bannerUrl: 'https://source.unsplash.com/1600x600/?formal,oxford,shoes',
     description: 'Elevate your wardrobe with handcrafted formal footwear. Browse classic leather oxfords, brogues, and tailored loafers built for sharp professional style. Shop now.',
+  },
+
+  // ── Clothing ──────────────────────────────────────────────
+  'men-clothing': {
+    bannerUrl: 'https://source.unsplash.com/1600x600/?mens,fashion,wardrobe',
+    description: 'Refresh your wardrobe with premium everyday clothing. Shop quality essentials, modern cuts, and versatile staples designed for all-day comfort and style.',
+  },
+  'men-tops': {
+    bannerUrl: 'https://source.unsplash.com/1600x600/?mens,shirts,tops',
+    description: 'Upgrade your daily rotation with tailored button-downs, casual tees, and versatile tops. Breathable fabrics made to layer or stand alone. Shop now.',
+  },
+  'men-bottoms': {
+    bannerUrl: 'https://source.unsplash.com/1600x600/?denim,jeans,trousers',
+    description: 'Discover the perfect fit. Explore durable denim, tailored trousers, casual chinos, and everyday shorts built for versatile wear and effortless style.',
+  },
+  'men-outwear': {
+    bannerUrl: 'https://source.unsplash.com/1600x600/?trench,coat,parka',
+    description: 'Brave the elements in style. Shop functional trench coats, insulated parkas, and tailored overcoats crafted for dependable warmth and modern layering.',
+  },
+  'men-sets': {
+    bannerUrl: 'https://source.unsplash.com/1600x600/?matching,outfit,coord',
+    description: 'Take the guesswork out of dressing with matching two-piece sets. Browse relaxed lounge duos, tailored co-ords, and effortless statement pairings today.',
+  },
+  'men-headgear': {
+    bannerUrl: 'https://source.unsplash.com/1600x600/?hats,caps,beanie',
+    description: 'Top off your fit with premium headwear. Shop structured baseball caps, warm knit beanies, and classic bucket hats designed for every season and style.',
+  },
+  'men-hoodies-jackets': {
+    bannerUrl: 'https://source.unsplash.com/1600x600/?hoodie,jacket,streetwear',
+    description: 'Layer up with fleece hoodies, casual zip-ups, and lightweight transitional jackets. Premium comfort and street-ready style built for everyday wear.',
+  },
+  'men-loungewear': {
+    bannerUrl: 'https://source.unsplash.com/1600x600/?loungewear,sweatpants',
+    description: 'Unwind in luxury. Explore ultra-soft sweatpants, breathable modal lounge tees, and cozy matching sleepwear engineered for premium off-duty comfort.',
+  },
+  'men-socks': {
+    bannerUrl: 'https://source.unsplash.com/1600x600/?socks,crew,cotton',
+    description: 'Step into all-day support with breathable cotton crew socks, invisible no-shows, and cushioned everyday pairs made to stay in place. Order now.',
+  },
+  'men-accessories': {
+    bannerUrl: 'https://source.unsplash.com/1600x600/?mens,accessories,belt,wallet',
+    description: 'Complete every look with essential accessories. Browse genuine leather belts, functional everyday bags, sunglasses, and wallets built to last.',
   },
 };
 
