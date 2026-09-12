@@ -335,29 +335,6 @@ export default function Homepage() {
   }, []);
 
   useEffect(() => {
-    axios.get('/api/categories')
-      .then(r => {
-        type CategoryRow = CategoryNode & { gender: 'men' | 'women'; department: 'footwear' | 'clothing' };
-        const rows: CategoryRow[] = r.data;
-        const tree: CategoryTree = {
-          men:   { footwear: [], clothing: [] },
-          women: { footwear: [], clothing: [] },
-        };
-        rows.forEach(row => {
-          const bucket = tree[row.gender]?.[row.department];
-          if (bucket) bucket.push({ id: row.id, name: row.name, slug: row.slug, sort_order: row.sort_order });
-        });
-        (Object.keys(tree) as Array<'men' | 'women'>).forEach(g => {
-          (Object.keys(tree[g]) as Array<'footwear' | 'clothing'>).forEach(d => {
-            tree[g][d].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
-          });
-        });
-        setCategoryTree(tree);
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
     const cat = searchParams.get('category');
     const q   = searchParams.get('search');
     if (cat) setCategory(decodeURIComponent(cat));
@@ -428,42 +405,20 @@ export default function Homepage() {
 
   const handleLogout = () => { setUser(null); setCartIds([]); setCartCount(0); setWishlist([]); };
 
-  const genderCategoryNodes = categoryTree
-    ? [...categoryTree[genderFilter].clothing, ...categoryTree[genderFilter].footwear]
-    : [];
-
-  // CategoryBanner needs { slug, name }; slugs are gender-prefixed to match
-  // the keys hardcoded in CategoryBanner.tsx's CATEGORY_IMAGES.
-  const categoryBannerItems: { slug: string; name: string }[] = [
-    { slug: 'all', name: 'All' },
-    ...genderCategoryNodes.map(c => ({ slug: `${genderFilter}-${c.slug}`, name: c.name })),
+  const categories = [
+    'All', 'Tops', 'Bottoms', 'Outwear', 'Heels', 'Accessories',
+    'Bags', 'Footwear', 'Sets', 'Headgear', 'Hoodies and jackets',
   ];
-
-  const activeCategoryName =
-    categoryBannerItems.find(c => c.slug === activeCategory)?.name ?? activeCategory;
-
-  // Navbar shows plain category names (not gender-specific slugs), deduped
-  // across both genders and departments.
-  const navCategoryNames = categoryTree
-    ? Array.from(new Set(
-        [
-          ...categoryTree.men.clothing, ...categoryTree.men.footwear,
-          ...categoryTree.women.clothing, ...categoryTree.women.footwear,
-        ].map(c => c.name)
-      ))
-    : [];
 
   const selectCategory = (cat: string) => {
     setCategory(cat); setSearch(''); setPage(1);
     gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const activeBaseSlug = activeCategory === 'all' ? null : activeCategory.slice(genderFilter.length + 1);
-
   let filtered = products
     .filter(p => !(p.id in flashSaleMap))
     .filter(p =>
-      (activeBaseSlug === null || (p.category_slug === activeBaseSlug && p.category_gender === genderFilter)) &&
+      (activeCategory === 'All' || p.category === activeCategory) &&
       p.name.toLowerCase().includes(search.toLowerCase())
     );
   if (sortBy === 'price_asc')  filtered = [...filtered].sort((a,b) => Number(a.price) - Number(b.price));
@@ -540,7 +495,7 @@ export default function Homepage() {
         <div className="lp-section-head">
           <div>
             <h2 className="lp-section-title">
-              {activeCategory === 'all' ? <>Featured <em>Fashion</em></> : activeCategoryName}
+              {activeCategory === 'All' ? <>Featured <em>Fashion</em></> : activeCategory}
             </h2>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
@@ -657,7 +612,7 @@ export default function Homepage() {
         </div>
 
         <CategoryBanner
-          categories={categoryBannerItems}
+          categories={categories}
           activeCategory={activeCategory}
           onSelect={selectCategory}
         />

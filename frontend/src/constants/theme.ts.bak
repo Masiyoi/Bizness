@@ -153,10 +153,6 @@ export interface Product {
   sale_price?:   number | null;
   sale_ends_at?: string | null;
   video_url: string | null;
-  category_gender?:     'men' | 'women' | null;
-  category_department?: 'footwear' | 'clothing' | null;
-  category_slug?:        string | null;
-  category_name?:        string | null;
 }
 
 export interface User {
