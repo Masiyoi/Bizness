@@ -94,6 +94,7 @@ const normaliseProduct = (p) => ({
   features:    Array.isArray(p.features) ? p.features : [],
   colors:      Array.isArray(p.colors)   ? p.colors   : [],
   sizes:       Array.isArray(p.sizes)    ? p.sizes    : [],
+  image_colors: Array.isArray(p.image_colors) ? p.image_colors : [],
   complete_the_look: Array.isArray(p.complete_the_look) ? p.complete_the_look : [],
   cost_price:  p.cost_price  ? parseFloat(p.cost_price)  : null,
   sale_price:  p.sale_price  ? parseFloat(p.sale_price)  : null,
@@ -186,6 +187,7 @@ exports.createProduct = async (req, res) => {
       complete_the_look = '[]',
       sale_price   = null,
       sale_ends_at = null,
+      imageColors  = '[]',
     } = req.body;
 
     if (!name || !price) return res.status(400).json({ msg: 'Name and price are required' });
@@ -215,10 +217,17 @@ exports.createProduct = async (req, res) => {
     const imagesJson   = JSON.stringify(imageUrls);
     const completeTheLookJson = toJsonString(complete_the_look);
 
+    let imageColorsArr = [];
+    try {
+      const parsed = typeof imageColors === 'string' ? JSON.parse(imageColors) : imageColors;
+      imageColorsArr = Array.isArray(parsed) ? parsed : [];
+    } catch { imageColorsArr = []; }
+    const imageColorsJson = JSON.stringify(imageUrls.map((_, i) => imageColorsArr[i] || ''));
+
     const result = await db.query(
       `INSERT INTO products
-         (name, price, cost_price, category_id, description, features, stock, images, image_url, colors, sizes, sale_price, sale_ends_at, complete_the_look, video_url)
-       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8::jsonb, $9, $10::jsonb, $11::jsonb, $12, $13, $14::jsonb, $15)
+         (name, price, cost_price, category_id, description, features, stock, images, image_url, colors, sizes, sale_price, sale_ends_at, complete_the_look, video_url, image_colors)
+       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8::jsonb, $9, $10::jsonb, $11::jsonb, $12, $13, $14::jsonb, $15, $16::jsonb)
        RETURNING *`,
       [
         name,
@@ -236,6 +245,7 @@ exports.createProduct = async (req, res) => {
         sale_ends_at || null,
         completeTheLookJson,
         videoUrl,
+        imageColorsJson,
       ]
     );
 
@@ -268,6 +278,8 @@ exports.updateProduct = async (req, res) => {
       sale_price     = null,
       sale_ends_at   = null,
       existingVideo  = '',
+      existingImageColors = '[]',
+      imageColors    = '[]',
     } = req.body;
 
     const productId = req.params.id;
@@ -288,6 +300,19 @@ exports.updateProduct = async (req, res) => {
     } catch { keptImages = []; }
 
     const allImgs = [...keptImages, ...newUrls];
+    let keptImgColors = [];
+    try {
+      const parsed = JSON.parse(existingImageColors);
+      keptImgColors = Array.isArray(parsed) ? parsed : [];
+    } catch { keptImgColors = []; }
+    let newImgColorsArr = [];
+    try {
+      const parsed = typeof imageColors === 'string' ? JSON.parse(imageColors) : imageColors;
+      newImgColorsArr = Array.isArray(parsed) ? parsed : [];
+    } catch { newImgColorsArr = []; }
+    const allImgColors = allImgs.map((_, i) =>
+      (i < keptImages.length ? keptImgColors[i] : newImgColorsArr[i - keptImages.length]) || ''
+    );
 
     // Video: new upload wins; otherwise keep existingVideo if still present, else cleared
     let videoUrl = existingVideo || null;
@@ -304,6 +329,7 @@ exports.updateProduct = async (req, res) => {
     const colorsJson   = toJsonString(colors);
     const sizesJson    = toJsonString(sizes);
     const imagesJson   = JSON.stringify(allImgs);
+    const imageColorsJson = JSON.stringify(allImgColors);
     const completeTheLookJson = toJsonString(complete_the_look);
 
     const result = await db.query(
@@ -323,6 +349,7 @@ exports.updateProduct = async (req, res) => {
            sale_ends_at = $13,
            complete_the_look = $14::jsonb,
            video_url    = $15,
+           image_colors = $17::jsonb,
            updated_at   = NOW()
        WHERE id = $16
        RETURNING *`,
@@ -343,6 +370,7 @@ exports.updateProduct = async (req, res) => {
         completeTheLookJson,
         videoUrl,
         productId,
+        imageColorsJson,
       ]
     );
 

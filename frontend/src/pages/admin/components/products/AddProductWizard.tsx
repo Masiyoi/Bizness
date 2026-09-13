@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import type { Product } from '../../types';
 import { T, lbl, inp } from '../../constants';
@@ -234,6 +234,8 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
   const [files,        setFiles]        = useState<File[]>([]);
   const [previews,     setPreviews]     = useState<string[]>([]);
   const [existingImgs, setExistingImgs] = useState<string[]>(editProduct?.images || []);
+  const [existingImgColors, setExistingImgColors] = useState<string[]>((editProduct as any)?.image_colors || []);
+  const [newImgColors, setNewImgColors] = useState<string[]>([]);
 
   // Video (optional single product video)
   const [videoFile,     setVideoFile]     = useState<File | null>(null);
@@ -323,7 +325,17 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
       return rows;
     });
   }, []);
-
+  // Auto-populate the Colours field (Step 2) from photo colour tags
+  useEffect(() => {
+    const tags = [...existingImgColors, ...newImgColors].map(c => c.trim()).filter(Boolean);
+    const uniqueNew = tags.filter(t => !colors.includes(t));
+    if (uniqueNew.length) {
+      const next = [...colors, ...uniqueNew];
+      setColors(next);
+      syncVariants(next, sizes);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingImgColors, newImgColors]);
   const addColor = () => {
     const val = colorInput.trim().replace(/,$/, '');
     if (!val || colors.includes(val)) { setColorInput(''); return; }
@@ -344,6 +356,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
   const addFiles = (newFiles: File[]) => {
     const valid = newFiles.filter(f => f.type.startsWith('image/'));
     setFiles(prev => [...prev, ...valid].slice(0, 8));
+    setNewImgColors(prev => [...prev, ...valid.map(() => '')].slice(0, 8));
     valid.forEach(f => {
       const r = new FileReader();
       r.onload = ev => setPreviews(prev => [...prev, ev.target!.result as string].slice(0, 8));
@@ -389,6 +402,8 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
       fd.append('variants',    JSON.stringify(variants.filter(v => v.stock > 0 || v.sku)));
       fd.append('complete_the_look', JSON.stringify(completeTheLook));
       if (editProduct) fd.append('existingImages', JSON.stringify(existingImgs));
+      if (editProduct) fd.append('existingImageColors', JSON.stringify(existingImgColors));
+      fd.append('imageColors', JSON.stringify(newImgColors));
       fd.append('sale_price',   isFlashSale && salePrice ? salePrice : '');
       fd.append('sale_ends_at', isFlashSale && saleEndsAt ? new Date(saleEndsAt).toISOString() : '');
       files.forEach(f => fd.append('images', f));
@@ -507,13 +522,13 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
                     {existingImgs.map((img, i) => (
                       <div key={`ex${i}`} style={{ position: 'relative', width: 68, height: 68 }}>
                         <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 9, border: i === 0 ? `2px solid ${T.black}` : `1px solid ${T.grey3}` }}/>
-                        <button onClick={() => setExistingImgs(imgs => imgs.filter((_, j) => j !== i))} style={{ position: 'absolute', top: -5, right: -5, width: 18, height: 18, borderRadius: '50%', background: '#DC2626', color: T.white, border: `2px solid ${T.white}`, cursor: 'pointer', fontSize: 8, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                        <button onClick={() => { setExistingImgs(imgs => imgs.filter((_, j) => j !== i)); setExistingImgColors(cs => cs.filter((_, j) => j !== i)); }} style={{ position: 'absolute', top: -5, right: -5, width: 18, height: 18, borderRadius: '50%', background: '#DC2626', color: T.white, border: `2px solid ${T.white}`, cursor: 'pointer', fontSize: 8, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
                       </div>
                     ))}
                     {previews.map((prev, i) => (
                       <div key={`nw${i}`} style={{ position: 'relative', width: 68, height: 68 }}>
                         <img src={prev} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 9, border: `2px solid #166534` }}/>
-                        <button onClick={() => { setFiles(f => f.filter((_, j) => j !== i)); setPreviews(p => p.filter((_, j) => j !== i)); }} style={{ position: 'absolute', top: -5, right: -5, width: 18, height: 18, borderRadius: '50%', background: '#DC2626', color: T.white, border: `2px solid ${T.white}`, cursor: 'pointer', fontSize: 8, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                        <button onClick={() => { setFiles(f => f.filter((_, j) => j !== i)); setPreviews(p => p.filter((_, j) => j !== i)); setNewImgColors(cs => cs.filter((_, j) => j !== i)); }} style={{ position: 'absolute', top: -5, right: -5, width: 18, height: 18, borderRadius: '50%', background: '#DC2626', color: T.white, border: `2px solid ${T.white}`, cursor: 'pointer', fontSize: 8, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
                         <div style={{ position: 'absolute', bottom: 3, left: 3, background: '#166534', color: T.white, fontSize: 7, fontWeight: 700, fontFamily: 'Jost,sans-serif', padding: '1px 4px', borderRadius: 3 }}>NEW</div>
                       </div>
                     ))}
@@ -523,6 +538,40 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
                         <span style={{ fontFamily: 'Jost,sans-serif', fontSize: 9, color: T.grey1, fontWeight: 600 }}>Add</span>
                       </div>
                     )}
+                  </div>
+                  {/* ── Tag each photo with its colour (optional) ── */}
+                  <div style={{ marginTop: 4, marginBottom: 4 }}>
+                    <label style={lbl}>Tag Colours <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: T.grey2, fontSize: 10, marginLeft: 4 }}>(optional — matches each photo to a colour swatch on the product page)</span></label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {existingImgs.map((img, i) => (
+                        <div key={`exc${i}`} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <img src={img} style={{ width: 34, height: 34, objectFit: 'cover', borderRadius: 6, flexShrink: 0, border: `1px solid ${T.grey3}` }}/>
+                          <input
+                            placeholder="e.g. Midnight Black"
+                            value={existingImgColors[i] || ''}
+                            onChange={e => setExistingImgColors(cs => { const next = [...cs]; next[i] = e.target.value; return next; })}
+                            style={{ ...inp, flex: 1, padding: '7px 10px', fontSize: 12 }}
+                          />
+                          {existingImgColors[i] && (
+                            <div style={{ width: 16, height: 16, borderRadius: '50%', background: existingImgColors[i], border: '1.5px solid rgba(0,0,0,0.12)', flexShrink: 0 }}/>
+                          )}
+                        </div>
+                      ))}
+                      {previews.map((prev, i) => (
+                        <div key={`nwc${i}`} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <img src={prev} style={{ width: 34, height: 34, objectFit: 'cover', borderRadius: 6, flexShrink: 0, border: '1px solid #166534' }}/>
+                          <input
+                            placeholder="e.g. Midnight Black"
+                            value={newImgColors[i] || ''}
+                            onChange={e => setNewImgColors(cs => { const next = [...cs]; next[i] = e.target.value; return next; })}
+                            style={{ ...inp, flex: 1, padding: '7px 10px', fontSize: 12 }}
+                          />
+                          {newImgColors[i] && (
+                            <div style={{ width: 16, height: 16, borderRadius: '50%', background: newImgColors[i], border: '1.5px solid rgba(0,0,0,0.12)', flexShrink: 0 }}/>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </>
               )}

@@ -43,6 +43,7 @@ interface Product {
   image_url:   string;
   colors:      string[];
   sizes:       string[];
+  image_colors: string[];
   variants:    Variant[];
   complete_the_look: number[];
   video_url:   string | null;
@@ -1045,6 +1046,8 @@ function normalizeProduct(raw: any): Product {
   if (!Array.isArray(p.colors)) p.colors = [];
   if (typeof p.sizes === 'string') p.sizes = JSON.parse(p.sizes || '[]');
   if (!Array.isArray(p.sizes)) p.sizes = [];
+  if (typeof p.image_colors === 'string') p.image_colors = JSON.parse(p.image_colors || '[]');
+  if (!Array.isArray(p.image_colors)) p.image_colors = [];
   if (typeof p.complete_the_look === 'string') p.complete_the_look = JSON.parse(p.complete_the_look || '[]');
   if (!Array.isArray(p.complete_the_look)) p.complete_the_look = [];
   return p;
@@ -1754,7 +1757,8 @@ export default function ProductDetail() {
                     const active     = selectedColor === color;
                     const soldOut    = isColorSoldOut(color);
                     const colorStock = getColorStock(color);
-                    const thumb      = product.images[i] || product.images[0] || product.image_url;
+                    const taggedIdx  = Array.isArray(product.image_colors) ? product.image_colors.indexOf(color) : -1;
+                    const thumb      = (taggedIdx !== -1 && product.images[taggedIdx]) || product.images[i] || product.images[0] || product.image_url;
                     return (
                       <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, width:46 }}>
                         <button

@@ -1,4 +1,4 @@
-﻿// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // Luku Prime Admin — TypeScript Types
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -17,6 +17,7 @@ export interface Product {
   image_url:   string;
   colors:      string[];
   sizes:       string[];
+  image_colors: string[];
   // Computed client-side from price + cost_price
   margin_pct?: number | null;    // e.g. 42.5 → "42.5%"
   profit_per_unit?: number | null;
