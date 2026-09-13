@@ -130,12 +130,21 @@ function Stars({ rating, size = 13 }: { rating: number; size?: number }) {
 // stock = -1 means "selection not made yet, hide overlays"
 // stock =  0 means "genuinely sold out, show overlay"
 // stock >  0 means show low-stock badge if <= 5
-function Slideshow({ media, productName, stock }: {
-  media:       { type: 'image' | 'video'; src: string }[];
-  productName: string;
-  stock:       number;
+function Slideshow({ media, productName, stock, jumpToIndex }: {
+  media:        { type: 'image' | 'video'; src: string }[];
+  productName:  string;
+  stock:        number;
+  jumpToIndex?: number;
 }) {
   const [active, setActive]         = useState(0);
+  // Jump the gallery to the photo tagged for the newly selected colour.
+  // jumpToIndex is -1 (or undefined) when no colour is selected or the
+  // colour has no tagged photo — in that case leave the slide as-is.
+  useEffect(() => {
+    if (jumpToIndex !== undefined && jumpToIndex !== -1 && jumpToIndex < media.length) {
+      setActive(jumpToIndex);
+    }
+  }, [jumpToIndex]);
   const [zoomLevels, setZoomLevels] = useState<Record<number, number>>({});
   const [zoomDir, setZoomDir]       = useState<Record<number, 1 | -1>>({});
   const [panOffsets, setPanOffsets] = useState<Record<number, { x: number; y: number }>>({});
@@ -1299,6 +1308,12 @@ export default function ProductDetail() {
     if (!selectionComplete) return -1;                 // pending — hide overlays
     return effectiveStock;                             // selection done — show real stock
   })();
+  // Index of the photo tagged with the currently selected colour, so the
+  // gallery can jump to it — -1 when no colour selected or no tag matches.
+  const selectedColorImageIdx: number = (() => {
+    if (!selectedColor || !Array.isArray(product?.image_colors)) return -1;
+    return product.image_colors.indexOf(selectedColor);
+  })();
 
   const isColorSoldOut = (color: string): boolean =>
     hasVariants && variants.filter(v => v.color === color).every(v => v.stock === 0);
@@ -1623,6 +1638,7 @@ export default function ProductDetail() {
               media={media}
               productName={product.name}
               stock={slideshowStock}
+              jumpToIndex={selectedColorImageIdx}
             />
           </div>
 
