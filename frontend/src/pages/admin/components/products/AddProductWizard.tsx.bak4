@@ -334,13 +334,6 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
     setColors(next);
     syncVariants(next, sizes);
   };
-  // Trim on blur so the stored image_colors value exactly matches the
-  // trimmed value pushed into `colors` — trailing/leading spaces caused
-  // silent swatch-matching failures on the product page.
-  const trimExistingImgColor = (i: number) =>
-    setExistingImgColors(cs => { const next = [...cs]; next[i] = (next[i] || '').trim(); return next; });
-  const trimNewImgColor = (i: number) =>
-    setNewImgColors(cs => { const next = [...cs]; next[i] = (next[i] || '').trim(); return next; });
   const addColor = () => {
     const val = colorInput.trim().replace(/,$/, '');
     if (!val || colors.includes(val)) { setColorInput(''); return; }
@@ -555,7 +548,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
                             placeholder="e.g. Midnight Black"
                             value={existingImgColors[i] || ''}
                             onChange={e => setExistingImgColors(cs => { const next = [...cs]; next[i] = e.target.value; return next; })}
-                            onBlur={e => { trimExistingImgColor(i); commitColorTag(e.target.value); }}
+                            onBlur={e => commitColorTag(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitColorTag((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).blur(); } }}
                             style={{ ...inp, flex: 1, padding: '7px 10px', fontSize: 12 }}
                           />
@@ -571,7 +564,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
                             placeholder="e.g. Midnight Black"
                             value={newImgColors[i] || ''}
                             onChange={e => setNewImgColors(cs => { const next = [...cs]; next[i] = e.target.value; return next; })}
-                            onBlur={e => { trimNewImgColor(i); commitColorTag(e.target.value); }}
+                            onBlur={e => commitColorTag(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitColorTag((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).blur(); } }}
                             style={{ ...inp, flex: 1, padding: '7px 10px', fontSize: 12 }}
                           />
