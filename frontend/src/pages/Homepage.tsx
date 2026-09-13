@@ -14,6 +14,7 @@ import VideoCarousel, { VIDEO_TILES } from '../components/home/VideoCarousel';
 import FlashSaleStrip from '../components/home/FlashSaleStrip';
 import CategoryBanner   from '../components/home/CategoryBanner';
 import HeadwearSection  from '../components/home/HeadwearSection';
+import FootwearSection  from '../components/home/FootwearSection';
 
 import { readUser, ANNOUNCEMENTS } from '../constants/theme';
 import WhatsAppLogo from '../assets/Whatsapplogo.jpg';
@@ -435,6 +436,12 @@ export default function Homepage() {
 
   const handleLogout = () => { setUser(null); setCartIds([]); setCartCount(0); setWishlist([]); };
 
+  const shopFootwear = (gender: 'men' | 'women') => {
+    setGenderFilter(gender);
+    setDepartmentFilter('footwear');
+    selectCategory('all');
+  };
+
   const genderCategoryNodes = categoryTree
     ? (departmentFilter === 'all'
         ? [...categoryTree[genderFilter].clothing, ...categoryTree[genderFilter].footwear]
@@ -533,6 +540,16 @@ export default function Homepage() {
       <div className="lp-video-wrap-top">
         <VideoCarousel tiles={topVideo} />
       </div>
+      <FootwearSection
+        products={products}
+        categoryTree={categoryTree}
+        cartIds={cartIds}
+        wishlist={wishlist}
+        isAdmin={user?.role === 'admin'}
+        onCartToggle={toggleCart}
+        onWishlistToggle={toggleWishlist}
+        onShopAll={shopFootwear}
+      />
       <BestSellersBanner />
 
       <HeadwearSection
