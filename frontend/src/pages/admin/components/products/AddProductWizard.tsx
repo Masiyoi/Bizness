@@ -325,17 +325,15 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
       return rows;
     });
   }, []);
-  // Auto-populate the Colours field (Step 2) from photo colour tags
-  useEffect(() => {
-    const tags = [...existingImgColors, ...newImgColors].map(c => c.trim()).filter(Boolean);
-    const uniqueNew = tags.filter(t => !colors.includes(t));
-    if (uniqueNew.length) {
-      const next = [...colors, ...uniqueNew];
-      setColors(next);
-      syncVariants(next, sizes);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [existingImgColors, newImgColors]);
+  // Commit a photo's colour tag into the Colours list — called on blur/Enter,
+  // never on every keystroke (avoids adding "w", "wh", "whi"... while typing)
+  const commitColorTag = (tag: string) => {
+    const val = tag.trim();
+    if (!val || colors.includes(val)) return;
+    const next = [...colors, val];
+    setColors(next);
+    syncVariants(next, sizes);
+  };
   const addColor = () => {
     const val = colorInput.trim().replace(/,$/, '');
     if (!val || colors.includes(val)) { setColorInput(''); return; }
@@ -550,6 +548,8 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
                             placeholder="e.g. Midnight Black"
                             value={existingImgColors[i] || ''}
                             onChange={e => setExistingImgColors(cs => { const next = [...cs]; next[i] = e.target.value; return next; })}
+                            onBlur={e => commitColorTag(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitColorTag((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).blur(); } }}
                             style={{ ...inp, flex: 1, padding: '7px 10px', fontSize: 12 }}
                           />
                           {existingImgColors[i] && (
@@ -564,6 +564,8 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
                             placeholder="e.g. Midnight Black"
                             value={newImgColors[i] || ''}
                             onChange={e => setNewImgColors(cs => { const next = [...cs]; next[i] = e.target.value; return next; })}
+                            onBlur={e => commitColorTag(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitColorTag((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).blur(); } }}
                             style={{ ...inp, flex: 1, padding: '7px 10px', fontSize: 12 }}
                           />
                           {newImgColors[i] && (
