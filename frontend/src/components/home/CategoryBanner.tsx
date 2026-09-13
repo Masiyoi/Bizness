@@ -11,7 +11,7 @@ interface CategoryBannerProps {
 // TODO: swap these for real category photography (Cloudinary or local assets).
 const CATEGORY_IMAGES: Record<string, string> = {
   all: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1784539195/20a56673b1d6e0ac73501a96c89cf766_xq85qz.jpg',
-  'men-tops':    'https://picsum.photos/seed/tops/300/170',
+  'men-tops':    'https://res.cloudinary.com/dfiy43f01/image/upload/v1789303696/menstop_vdgheb.jpg',
   'women-tops':  'https://picsum.photos/seed/tops/300/170',
   'men-bottoms':   'https://picsum.photos/seed/bottoms/300/170',
   'women-bottoms': 'https://picsum.photos/seed/bottoms/300/170',

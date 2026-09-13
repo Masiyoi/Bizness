@@ -76,9 +76,11 @@ export default function Navbar({
     return () => window.removeEventListener('scroll', onScroll);
   }, [transparentOnTop]);
 
-  // Transparent ONLY on homepage: prop enabled, on home route, not scrolled, no overlays open
-  const isOnHomepage = location.pathname === '/';
-  const isTransparent = transparentOnTop && isOnHomepage && !scrolled && !mobileMenuOpen && !showMenu;
+  // Transparent-at-top routes: homepage + category listing pages (/shop/:gender/:department/:slug)
+  const isOnHomepage       = location.pathname === '/';
+  const isCategoryPage     = /^\/shop\/[^/]+\/[^/]+\/[^/]+\/?$/.test(location.pathname);
+  const isTransparentRoute = isOnHomepage || isCategoryPage;
+  const isTransparent = transparentOnTop && isTransparentRoute && !scrolled && !mobileMenuOpen && !showMenu;
 
   // ── Outside-click closers ─────────────────────────────────────────────────
   useEffect(() => {
