@@ -20,6 +20,18 @@ interface CategoryTree {
   women: { footwear: CategoryNode[]; clothing: CategoryNode[] };
 }
 
+// Optional overrides for pages outside the gender/department/slug taxonomy
+// (New Arrivals, Best Sellers) â€” same component, a custom data source.
+interface CategoryPageOverrideProps {
+  categoryName?: string;
+  headline?:     string;
+  description?:  string;
+  bannerUrl?:    string;
+  badge?:        string;
+  badgeStyle?:   'gold' | 'red';
+  apiEndpoint?:  string;
+}
+
 // Optional per-slug overrides for the hero banner / copy / badge that your old
 // Bags.tsx, Heels.tsx, etc. used to hardcode. Anything not listed here falls
 // back to a generic banner + auto-generated copy, so a brand-new category
@@ -148,7 +160,15 @@ const CATEGORY_META: Record<string, { bannerUrl?: string; description?: string; 
 
 const DEFAULT_BANNER = '/banners/default.jpg';
 
-export default function CategoryPage() {
+export default function CategoryPage({
+  categoryName: nameOverride,
+  headline:     headlineOverride,
+  description:  descOverride,
+  bannerUrl:    bannerOverride,
+  badge:        badgeOverride,
+  badgeStyle:   badgeStyleOverride,
+  apiEndpoint,
+}: CategoryPageOverrideProps = {}) {
   const navigate = useNavigate();
   const { gender, department, slug } = useParams<{ gender: Gender; department: Department; slug: string }>();
 
@@ -160,6 +180,7 @@ export default function CategoryPage() {
   const [cartIds,    setCartIds]    = useState<number[]>([]);
   const [cartCount,  setCartCount]  = useState(0);
   const [wishlist,   setWishlist]   = useState<number[]>([]);
+  const [navSpacerHeight, setNavSpacerHeight] = useState(96);
 
   // ── Resolve display name from the same tree the navbar uses ─────
   useEffect(() => {
@@ -171,17 +192,29 @@ export default function CategoryPage() {
     : undefined;
 
   const fallbackName = (slug ?? '').replace(/-/g, ' ');
-  const categoryName = categoryNode?.name ?? fallbackName;
+  const categoryName = nameOverride ?? categoryNode?.name ?? fallbackName;
   const meta          = CATEGORY_META[slug ?? ''] ?? {};
-  const headline      = categoryNode?.name ?? categoryName;
-  const description   = meta.description ?? `Shop our full ${categoryName.toLowerCase()} collection.`;
-  const bannerUrl      = meta.bannerUrl ?? DEFAULT_BANNER;
+  const headline      = headlineOverride ?? categoryNode?.name ?? categoryName;
+  const description   = descOverride ?? meta.description ?? `Shop our full ${categoryName.toLowerCase()} collection.`;
+  const bannerUrl      = bannerOverride ?? meta.bannerUrl ?? DEFAULT_BANNER;
+  const badge          = badgeOverride ?? meta.badge;
+  const badgeStyle     = badgeStyleOverride ?? meta.badgeStyle;
 
   // ── Fetch products for this gender/department/slug ──────────────
   // Backend resolves `category` (the slug) to a category_id and filters by
   // gender + department too, so a stale/mismatched combination in the URL
   // just returns an empty set rather than someone else's products.
   useEffect(() => {
+    if (apiEndpoint) {
+      setLoading(true);
+      axios.get(apiEndpoint)
+        .then(res => {
+          setProducts(Array.isArray(res.data) ? res.data : []);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+      return;
+    }
     if (!gender || !department || !slug) return;
     setLoading(true);
     axios.get('/api/products', { params: { gender, department, category: slug } })
@@ -190,7 +223,7 @@ export default function CategoryPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [gender, department, slug]);
+  }, [gender, department, slug, apiEndpoint]);
 
   // ── Fetch cart ────────────────────────────────────────────────
   const fetchCart = useCallback(() => {
@@ -252,6 +285,17 @@ export default function CategoryPage() {
   };
 
   // ── Sort ─────────────────────────────────────────────────────
+  useEffect(() => {
+    const measure = () => {
+      const navEl = document.querySelector('nav');
+      if (navEl) setNavSpacerHeight(navEl.getBoundingClientRect().bottom);
+    };
+    measure();
+    const t = setTimeout(measure, 400);
+    window.addEventListener('resize', measure);
+    return () => { clearTimeout(t); window.removeEventListener('resize', measure); };
+  }, []);
+
   const sorted = [...products].sort((a, b) => {
     if (sortBy === 'price-asc')  return Number(a.price) - Number(b.price);
     if (sortBy === 'price-desc') return Number(b.price) - Number(a.price);
@@ -259,7 +303,7 @@ export default function CategoryPage() {
     return 0;
   });
 
-  if (!gender || !department || !slug) return null;
+  if (!apiEndpoint && (!gender || !department || !slug)) return null;
 
   return (
     <div className="font-serif bg-cream min-h-screen text-navy overflow-x-hidden">
@@ -270,15 +314,17 @@ export default function CategoryPage() {
         transparentOnTop={false}
       />
 
+      <div style={{ height: navSpacerHeight }} />
+
       {/* ── Hero Banner ── */}
       <div className="relative w-full h-[38vw] min-h-[200px] max-h-[420px] overflow-hidden">
         <img src={bannerUrl} alt={categoryName} className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(8,5,3,0.75) 0%, rgba(8,5,3,0.1) 60%)' }} />
-        {meta.badge && (
+        {badge && (
           <span className={`absolute top-4 right-4 z-10 font-sans text-[11px] font-bold px-3 py-1.5 rounded-full tracking-[0.5px] ${
-            meta.badgeStyle === 'red' ? 'bg-[#e8443a] text-white' : 'bg-gold text-navy'
+            badgeStyle === 'red' ? 'bg-[#e8443a] text-white' : 'bg-gold text-navy'
           }`}>
-            {meta.badge}
+            {badge}
           </span>
         )}
         <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-10 font-sans text-[12px] font-semibold text-white bg-black/30 hover:bg-black/50 transition-colors px-3 py-1.5 rounded-full backdrop-blur-sm">

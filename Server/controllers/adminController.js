@@ -465,16 +465,23 @@ exports.getOrders = async (req, res) => {
   }
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ PATCH /api/admin/orders/:id/status Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── PATCH /api/admin/orders/:id/status ──────────────────────────────────────
+const TERMINAL_STATUSES = ['delivered', 'cancelled'];
+
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status, tracking_status } = req.body;
+    const clearAutoDeliver = TERMINAL_STATUSES.includes(status);
+
     const result = await db.query(
       `UPDATE orders
-       SET status = $1, tracking_status = $2, auto_deliver_at = NULL, updated_at = NOW()
-       WHERE id = $3
+       SET status = $1,
+           tracking_status = $2,
+           auto_deliver_at = CASE WHEN $3 THEN NULL ELSE auto_deliver_at END,
+           updated_at = NOW()
+       WHERE id = $4
        RETURNING *`,
-      [status, tracking_status, req.params.id]
+      [status, tracking_status, clearAutoDeliver, req.params.id]
     );
     if (!result.rows.length) return res.status(404).json({ msg: 'Order not found' });
     res.json(result.rows[0]);
