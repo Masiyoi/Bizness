@@ -267,7 +267,7 @@ export default function CategoryPage() {
         cartCount={cartCount}
         wishlistCount={wishlist.length}
         onLogout={handleLogout}
-        transparentOnTop={true}
+        transparentOnTop={false}
       />
 
       {/* ── Hero Banner ── */}
@@ -275,13 +275,13 @@ export default function CategoryPage() {
         <img src={bannerUrl} alt={categoryName} className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(8,5,3,0.75) 0%, rgba(8,5,3,0.1) 60%)' }} />
         {meta.badge && (
-          <span className={`absolute top-[104px] right-4 z-10 font-sans text-[11px] font-bold px-3 py-1.5 rounded-full tracking-[0.5px] ${
+          <span className={`absolute top-4 right-4 z-10 font-sans text-[11px] font-bold px-3 py-1.5 rounded-full tracking-[0.5px] ${
             meta.badgeStyle === 'red' ? 'bg-[#e8443a] text-white' : 'bg-gold text-navy'
           }`}>
             {meta.badge}
           </span>
         )}
-        <button onClick={() => navigate(-1)} className="absolute top-[104px] left-4 z-10 font-sans text-[12px] font-semibold text-white bg-black/30 hover:bg-black/50 transition-colors px-3 py-1.5 rounded-full backdrop-blur-sm">
+        <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-10 font-sans text-[12px] font-semibold text-white bg-black/30 hover:bg-black/50 transition-colors px-3 py-1.5 rounded-full backdrop-blur-sm">
           ← Back
         </button>
         <div className="absolute bottom-0 left-0 p-6 md:p-10 z-10">

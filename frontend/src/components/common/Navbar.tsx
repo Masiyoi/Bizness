@@ -80,7 +80,7 @@ export default function Navbar({
   const isOnHomepage       = location.pathname === '/';
   const isCategoryPage     = /^\/shop\/[^/]+\/[^/]+\/[^/]+\/?$/.test(location.pathname);
   const isTransparentRoute = isOnHomepage || isCategoryPage;
-  const isTransparent = transparentOnTop && isTransparentRoute && !scrolled && !mobileMenuOpen && !showMenu;
+  const isTransparent = transparentOnTop && isOnHomepage && !scrolled && !mobileMenuOpen && !showMenu;
 
   // ── Outside-click closers ─────────────────────────────────────────────────
   useEffect(() => {
