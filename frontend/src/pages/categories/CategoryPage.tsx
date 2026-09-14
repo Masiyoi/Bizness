@@ -93,67 +93,67 @@ const CATEGORY_META: Record<string, { bannerUrl?: string; description?: string; 
     description: 'Complete every look with essential accessories. Browse genuine leather belts, functional everyday bags, sunglasses, and wallets built to last.',
   },
 
-  // ── Women's Footwear ────────────────────────────────────────
+   // ── Women's Footwear ────────────────────────────────────────
   'women-sneakers-athletic': {
-    bannerUrl: 'https://picsum.photos/seed/women-sneakers/1600/600',
+    bannerUrl: '/women/womensneakers.jpg',
     description: 'Explore everyday sneakers, high-performance running shoes, and iconic court classics. Shop lightweight, durable kicks built for all-day comfort. Order today.',
   },
   'women-boots': {
-    bannerUrl: 'https://picsum.photos/seed/women-boots/1600/600',
+    bannerUrl: '/women/womenboots.jpg',
     description: 'Step out in premium leather and suede boots. From sleek Chelsea boots to heavy-duty outdoor and combat styles, discover durable footwear made to last. Shop now.',
   },
   'women-formal-dress': {
-    bannerUrl: 'https://picsum.photos/seed/women-formal/1600/600',
+    bannerUrl: '/women/womenformal.jpg',
     description: 'Elevate your wardrobe with handcrafted formal footwear. Browse classic leather Oxfords, brogues, and tailored dress loafers built for sharp, professional style.',
   },
   'women-heels': {
-    bannerUrl: 'https://picsum.photos/seed/women-heels/1600/600',
+    bannerUrl: '/women/womenheels.jpg',
     description: 'Find your perfect lift. Shop elegant pointed pumps, supportive block heels, and statement platforms designed for evening events and everyday sophistication.',
   },
   'women-sandals-slides': {
-    bannerUrl: 'https://picsum.photos/seed/women-sandals/1600/600',
+    bannerUrl: '/women/womensandals.jpg',
     description: 'Upgrade your warm-weather footwear. Browse breathable sandals, easy pool slides, and supportive footbed designs made for effortless casual wear. Explore now.',
   },
   'women-flats-casuals': {
-    bannerUrl: 'https://picsum.photos/seed/women-flats/1600/600',
+    bannerUrl: '/women/womenflats.jpg',
     description: 'Discover effortless daily comfort with our collection of ballet flats, leather driving moccasins, and slip-on loafers. Stylish, versatile, and made to move.',
   },
 
   // ── Women's Clothing ──────────────────────────────────────────
   'women-tops': {
-    bannerUrl: 'https://picsum.photos/seed/women-tops/1600/600',
+    bannerUrl: '/women/womentops.jpg',
     description: 'Upgrade your rotation with women\u2019s tops. Shop breezy linen blouses, soft knit tees, and elegant camis designed for effortless workday-to-weekend layering.',
   },
   'women-bottoms': {
-    bannerUrl: 'https://picsum.photos/seed/women-bottoms/1600/600',
+    bannerUrl: '/women/womenbottoms.jpg',
     description: 'Find your perfect fit with women\u2019s bottoms. Browse flattering high-rise jeans, tailored wide-leg trousers, and versatile everyday skirts made for movement.',
   },
   'women-outwear': {
-    bannerUrl: 'https://picsum.photos/seed/women-outwear/1600/600',
+    bannerUrl: '/women/womenoutwear.jpg',
     description: 'Stay chic in any forecast. Discover women\u2019s trench coats, warm wool overcoats, and tailored parkas crafted for effortless layering and cold-weather style.',
   },
   'women-sets': {
-    bannerUrl: 'https://picsum.photos/seed/women-sets/1600/600',
+    bannerUrl: '/women/womensets.jpg',
     description: 'Look put-together instantly with women\u2019s matching sets. Explore chic knit duos, tailored two-piece blazers, and breezy linen co-ords for everyday elegance.',
   },
   'women-headgear': {
-    bannerUrl: 'https://picsum.photos/seed/women-headgear/1600/600',
+    bannerUrl: '/women/womenheadgear.jpg',
     description: 'Top off your look with women\u2019s headwear. Browse structured sun hats, ribbed knit beanies, and classic baseball caps designed for bad-hair-days and beyond.',
   },
   'women-hoodies-jackets': {
-    bannerUrl: 'https://picsum.photos/seed/women-hoodies-jackets/1600/600',
+    bannerUrl: '/women/womenhoodiesandjackets.jpg',
     description: 'Layer up with cozy women\u2019s hoodies, cropped denim jackets, and lightweight zip layers. Effortless street-ready silhouettes built for all-day warmth.',
   },
   'women-loungewear': {
-    bannerUrl: 'https://picsum.photos/seed/women-loungewear/1600/600',
+    bannerUrl: '/women/womenloungewear.jpg',
     description: 'Unwind in luxury with soft women\u2019s loungewear. Shop plush modal robes, relaxed joggers, and matching cozy sweat sets designed for stylish downtime at home.',
   },
   'women-socks': {
-    bannerUrl: 'https://picsum.photos/seed/women-socks/1600/600',
+    bannerUrl: '/women/womensocks.jpg',
     description: 'Treat your feet with women\u2019s socks and hosiery. Explore ribbed crew socks, no-slip invisible liners, and breathable everyday cotton pairs that stay up.',
   },
   'women-accessories': {
-    bannerUrl: 'https://picsum.photos/seed/women-accessories/1600/600',
+    bannerUrl: '/women/womenaccessories.jpg',
     description: 'Add the finishing touch with chic women\u2019s accessories. Browse versatile leather crossbody bags, statement belts, jewelry, and UV sunglasses today.',
   },
 };
