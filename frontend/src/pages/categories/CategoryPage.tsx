@@ -99,7 +99,7 @@ const CATEGORY_META: Record<string, { bannerUrl?: string; description?: string; 
     description: 'Explore everyday sneakers, high-performance running shoes, and iconic court classics. Shop lightweight, durable kicks built for all-day comfort. Order today.',
   },
   'women-boots': {
-    bannerUrl: '/women/womenboots.jpg',
+    bannerUrl: '/women/bootswoman.jpg',
     description: 'Step out in premium leather and suede boots. From sleek Chelsea boots to heavy-duty outdoor and combat styles, discover durable footwear made to last. Shop now.',
   },
   'women-formal-dress': {
@@ -107,7 +107,7 @@ const CATEGORY_META: Record<string, { bannerUrl?: string; description?: string; 
     description: 'Elevate your wardrobe with handcrafted formal footwear. Browse classic leather Oxfords, brogues, and tailored dress loafers built for sharp, professional style.',
   },
   'women-heels': {
-    bannerUrl: '/women/womenheels.jpg',
+    bannerUrl: '/women/heels.jpg',
     description: 'Find your perfect lift. Shop elegant pointed pumps, supportive block heels, and statement platforms designed for evening events and everyday sophistication.',
   },
   'women-sandals-slides': {
@@ -129,7 +129,7 @@ const CATEGORY_META: Record<string, { bannerUrl?: string; description?: string; 
     description: 'Find your perfect fit with women\u2019s bottoms. Browse flattering high-rise jeans, tailored wide-leg trousers, and versatile everyday skirts made for movement.',
   },
   'women-outwear': {
-    bannerUrl: '/women/womenoutwear.jpg',
+    bannerUrl: '/women/outwear.jpg',
     description: 'Stay chic in any forecast. Discover women\u2019s trench coats, warm wool overcoats, and tailored parkas crafted for effortless layering and cold-weather style.',
   },
   'women-sets': {
