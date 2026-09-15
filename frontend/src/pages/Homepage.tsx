@@ -450,11 +450,10 @@ export default function Homepage() {
 
   // CategoryBanner needs { slug, name }; slugs are gender-prefixed to match
   // the keys hardcoded in CategoryBanner.tsx's CATEGORY_IMAGES.
-  const categoryBannerItems: { slug: string; name: string }[] = [
-    { slug: 'all', name: 'All' },
-    ...genderCategoryNodes.map(c => ({ slug: `${genderFilter}-${c.slug}`, name: c.name })),
-  ];
-
+ const categoryBannerItems: { slug: string; name: string }[] = [
+  { slug: 'all', name: 'All' },
+  ...genderCategoryNodes.map(c => ({ slug: c.slug, name: c.name })),
+];
   const activeCategoryName =
     categoryBannerItems.find(c => c.slug === activeCategory)?.name ?? activeCategory;
 
