@@ -11,36 +11,44 @@ interface CategoryBannerProps {
 // TODO: swap these for real category photography (Cloudinary or local assets).
 const CATEGORY_IMAGES: Record<string, string> = {
   all: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1784539195/20a56673b1d6e0ac73501a96c89cf766_xq85qz.jpg',
-  'men-tops':    'https://res.cloudinary.com/dfiy43f01/image/upload/v1789303696/menstop_vdgheb.jpg',
-  'women-tops':  'https://picsum.photos/seed/tops/300/170',
-  'men-bottoms':   'https://picsum.photos/seed/bottoms/300/170',
-  'women-bottoms': 'https://picsum.photos/seed/bottoms/300/170',
-  'men-outwear':   'https://picsum.photos/seed/outwear/300/170',
-  'women-outwear': 'https://picsum.photos/seed/outwear/300/170',
-  'men-sets':   'https://picsum.photos/seed/sets/300/170',
-  'women-sets': 'https://picsum.photos/seed/sets/300/170',
-  'men-headgear':   'https://picsum.photos/seed/headgear/300/170',
-  'women-headgear': 'https://picsum.photos/seed/headgear/300/170',
-  'men-hoodies-jackets':   'https://picsum.photos/seed/hoodies/300/170',
-  'women-hoodies-jackets': 'https://picsum.photos/seed/hoodies/300/170',
-  'men-loungewear':   'https://picsum.photos/seed/loungewear/300/170',
-  'women-loungewear': 'https://picsum.photos/seed/loungewear/300/170',
-  'men-socks':   'https://picsum.photos/seed/socks/300/170',
-  'women-socks': 'https://picsum.photos/seed/socks/300/170',
-  'men-accessories':   'https://picsum.photos/seed/accessories/300/170',
-  'women-accessories': 'https://picsum.photos/seed/accessories/300/170',
-  'men-sandals-slides':   'https://picsum.photos/seed/sandals/300/170',
-  'women-sandals-slides': 'https://picsum.photos/seed/sandals/300/170',
-  'men-boots':   'https://picsum.photos/seed/boots/300/170',
-  'women-boots': 'https://picsum.photos/seed/boots/300/170',
-  // Gender-exclusive / distinctly named categories get their own images:
-  'men-sneakers':            'https://picsum.photos/seed/mens-sneakers/300/170',
-  'women-sneakers-athletic': 'https://picsum.photos/seed/womens-sneakers/300/170',
-  'men-formal-shoes':        'https://picsum.photos/seed/mens-formal/300/170',
-  'women-formal-dress':      'https://picsum.photos/seed/womens-formal/300/170',
-  'women-heels':             'https://picsum.photos/seed/heels/300/170',
-  'women-flats-casuals':     'https://picsum.photos/seed/flats/300/170',
+
+  // ── Men's Footwear ──────────────────────────────────────────
+  'men-sandals-slides': 'https://res.cloudinary.com/dfiy43f01/image/upload/v1789304424/sandals_av3aaw.jpg',
+  'men-sneakers':       'https://res.cloudinary.com/dfiy43f01/image/upload/v1789304787/Limited_Sneakers_uhx27z.jpg',
+  'men-boots':          'https://res.cloudinary.com/dfiy43f01/image/upload/v1789304951/boots_i0aaep.jpg',
+  'men-formal-shoes':   'https://res.cloudinary.com/dfiy43f01/image/upload/v1789305060/formal_ih2kyv.jpg',
+
+  // ── Men's Clothing ────────────────────────────────────────────
+  'men-tops':             'https://res.cloudinary.com/dfiy43f01/image/upload/v1789303696/menstop_vdgheb.jpg',
+  'men-bottoms':          'https://res.cloudinary.com/dfiy43f01/image/upload/v1789307802/jeans_eeyuc5.jpg',
+  'men-outwear':          'https://res.cloudinary.com/dfiy43f01/image/upload/v1789305465/outwearmen_gdaag8.jpg',
+  'men-sets':             'https://res.cloudinary.com/dfiy43f01/image/upload/v1789305598/Mensets_skpbk5.jpg',
+  'men-headgear':         'https://res.cloudinary.com/dfiy43f01/image/upload/v1789305720/mensheadwear_sqrtjk.jpg',
+  'men-hoodies-jackets':  'https://res.cloudinary.com/dfiy43f01/image/upload/v1789305868/hoodiesmen_vecgqw.jpg',
+  'men-loungewear':       'https://res.cloudinary.com/dfiy43f01/image/upload/v1789305980/mensloungewear_j44c28.jpg',
+  'men-socks':            'https://res.cloudinary.com/dfiy43f01/image/upload/v1789306080/menssocks_sho8gt.jpg',
+  'men-accessories':      'https://res.cloudinary.com/dfiy43f01/image/upload/v1789306195/mensaccessories_mzvmn9.jpg',
+
+  // ── Women's Footwear ────────────────────────────────────────
+  'women-sneakers-athletic': '/women/womensneakers.jpg',
+  'women-boots':             '/women/bootswoman.jpg',
+  'women-formal-dress':      '/women/womenformal.jpg',
+  'women-heels':             '/women/heels.jpg',
+  'women-sandals-slides':    '/women/womensandals.jpg',
+  'women-flats-casuals':     '/women/womenflats.jpg',
+
+  // ── Women's Clothing ──────────────────────────────────────────
+  'women-tops':            '/women/womentops.jpg',
+  'women-bottoms':         '/women/womenbottoms.jpg',
+  'women-outwear':         '/women/outwear.jpg',
+  'women-sets':            '/women/womensets.jpg',
+  'women-headgear':        '/women/womenheadgear.jpg',
+  'women-hoodies-jackets': '/women/womenhoodiesandjackets.jpg',
+  'women-loungewear':      '/women/womenloungewear.jpg',
+  'women-socks':           '/women/womensocks.jpg',
+  'women-accessories':     '/women/womenaccessories.jpg',
 };
+
 function getCategoryImage(slug: string): string {
   return CATEGORY_IMAGES[slug] ?? `https://picsum.photos/seed/luku-${encodeURIComponent(slug)}/300/170`;
 }
