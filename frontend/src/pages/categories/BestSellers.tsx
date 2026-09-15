@@ -6,9 +6,9 @@ export default function BestSellers() {
       categoryName="Best Sellers"
       headline="Best Sellers"
       description="The pieces our customers love most — ranked by orders."
-      bannerUrl="https://images.unsplash.com/photo-1445205170230-053b83016050?w=1200&q=80&fit=crop"
+      bannerUrl="https://res.cloudinary.com/dfiy43f01/image/upload/v1789506683/ny_bsfa2u.jpg"
       badge="★ Top Picks"
-      badgeStyle="gold"
+      badgeStyle="white"
       apiEndpoint="/api/products/best-sellers?limit=12"
     />
   );

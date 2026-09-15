@@ -274,7 +274,7 @@ function BestSellersBanner() {
   return (
     <section className="lp-bestsellers">
       <img
-        src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1600&q=80"
+        src="https://res.cloudinary.com/dfiy43f01/image/upload/v1789506683/ny_bsfa2u.jpg"
         alt="Best Sellers"
       />
       <div className="lp-bestsellers-content">

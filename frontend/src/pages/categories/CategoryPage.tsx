@@ -28,7 +28,7 @@ interface CategoryPageOverrideProps {
   description?:  string;
   bannerUrl?:    string;
   badge?:        string;
-  badgeStyle?:   'gold' | 'red';
+  badgeStyle?:   'white' | 'black' | 'white';
   apiEndpoint?:  string;
 }
 
@@ -321,12 +321,14 @@ export default function CategoryPage({
         <img src={bannerUrl} alt={categoryName} className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(8,5,3,0.75) 0%, rgba(8,5,3,0.1) 60%)' }} />
         {badge && (
-          <span className={`absolute top-4 right-4 z-10 font-sans text-[11px] font-bold px-3 py-1.5 rounded-full tracking-[0.5px] ${
-            badgeStyle === 'red' ? 'bg-[#e8443a] text-white' : 'bg-gold text-navy'
-          }`}>
-            {badge}
-          </span>
-        )}
+  <span className={`absolute top-4 right-4 z-10 font-sans text-[11px] font-bold px-3 py-1.5 rounded-full tracking-[0.5px] ${
+    badgeStyle === 'red'   ? 'bg-[#e8443a] text-white' :
+    badgeStyle === 'white' ? 'bg-white text-navy' :
+    'bg-gold text-navy'
+  }`}>
+    {badge}
+  </span>
+)}
         <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-10 font-sans text-[12px] font-semibold text-white bg-black/30 hover:bg-black/50 transition-colors px-3 py-1.5 rounded-full backdrop-blur-sm">
           ← Back
         </button>
