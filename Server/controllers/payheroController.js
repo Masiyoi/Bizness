@@ -148,7 +148,19 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
     [payment.user_id]
   );
 
-  await awardOrderPoints(payment.user_id, payment.amount);
+ await awardOrderPoints(payment.user_id, payment.amount);
+
+  sendMetaEvent({
+    eventName: 'Purchase',
+    eventId: `purchase-${reservedOrderNumber || newOrderId}`,
+    userData: { email: shipping.email, phone: shipping.phone || payment.phone },
+    customData: {
+      currency: 'KES',
+      value: Number(payment.amount),
+      content_ids: itemsArray.map(i => i.product_id),
+    },
+  }).catch(() => {});
+
   console.log(`✅ PayHero order fulfilled — user ${payment.user_id} — ref ${confirmationCode}`);
 };
 

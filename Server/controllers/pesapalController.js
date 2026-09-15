@@ -4,6 +4,7 @@ const { calculateFirstOrderDiscount } = require('./discountController');
 const { awardOrderPoints } = require('./membersController');
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
 const { decrementStockForItems } = require('../utils/stockDeduction');
+const { sendMetaEvent } = require('../services/metaCapi');
 
 // ── Pesapal base URLs ─────────────────────────────────────────────────────────
 const PESAPAL_BASE = process.env.PESAPAL_ENV === 'production'
@@ -184,7 +185,19 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
 
   // Award members-club points now that the order is confirmed and the
   // cart is cleared. No-op for non-members; never throws.
-  await awardOrderPoints(payment.user_id, payment.amount);
+await awardOrderPoints(payment.user_id, payment.amount);
+
+  sendMetaEvent({
+    eventName: 'Purchase',
+    eventId: `purchase-${reservedOrderNumber || newOrderId}`,
+    userData: { email: shipping.email, phone: shipping.phone || payment.phone },
+    customData: {
+      currency: 'KES',
+      value: Number(payment.amount),
+      content_ids: itemsArray.map(i => i.product_id),
+    },
+  }).catch(() => {}); // never let a tracking failure affect order fulfillment
+
   console.log(`✅ Pesapal order fulfilled — user ${payment.user_id} — ref ${confirmationCode}`);
 };
 

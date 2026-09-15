@@ -157,12 +157,19 @@ exports.getProductById = async (req, res) => {
       [req.params.id]
     );
 
-    product.variants = variantResult.rows;
+     product.variants = variantResult.rows;
 
     if (product.variants.length > 0) {
       product.colors = [...new Set(product.variants.map(v => v.color).filter(Boolean))];
       product.sizes  = [...new Set(product.variants.map(v => v.size).filter(Boolean))];
     }
+
+    sendMetaEvent({
+      eventName: 'ViewContent',
+      eventId: `view-${product.id}-${Date.now()}`,
+      req,
+      customData: { content_ids: [product.id], currency: 'KES', value: product.price },
+    }).catch(() => {});
 
     res.json(product);
   } catch (err) {
