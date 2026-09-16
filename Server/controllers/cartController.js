@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { sendMetaEvent } = require('../services/metaCapi');
 
 // ── Helper: get or create cart for user ──────────────────────────────────────
 const getOrCreateCart = async (userId) => {
@@ -70,6 +71,24 @@ exports.addToCart = async (req, res) => {
       [cartId, product_id, selected_color, selected_size]
     );
 
+    // ── Fetch product price for the AddToCart event value ──────────────────
+    // Needed regardless of the increment/insert branch below, so pulled once
+    // up front rather than duplicated in both.
+    const productRes = await db.query(
+      `SELECT name, price, sale_price, sale_ends_at
+       FROM products WHERE id = $1`,
+      [product_id]
+    );
+    const product = productRes.rows[0];
+    const effectivePrice = product && product.sale_price != null
+      && Number(product.sale_price) < Number(product.price)
+      && (!product.sale_ends_at || new Date(product.sale_ends_at) > new Date())
+      ? Number(product.sale_price)
+      : Number(product?.price || 0);
+
+    let responseRow;
+    let responseStatus;
+
     if (existing.rows.length > 0) {
       // Same variant already in cart — increment quantity
       const updated = await db.query(
@@ -79,18 +98,40 @@ exports.addToCart = async (req, res) => {
          RETURNING *`,
         [quantity, existing.rows[0].id]
       );
-      return res.status(200).json(updated.rows[0]);
+      responseRow = updated.rows[0];
+      responseStatus = 200;
+    } else {
+      // New variant — insert fresh row
+      const result = await db.query(
+        `INSERT INTO cart_items (cart_id, product_id, quantity, selected_color, selected_size)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING *`,
+        [cartId, product_id, quantity, selected_color, selected_size]
+      );
+      responseRow = result.rows[0];
+      responseStatus = 201;
     }
 
-    // New variant — insert fresh row
-    const result = await db.query(
-      `INSERT INTO cart_items (cart_id, product_id, quantity, selected_color, selected_size)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING *`,
-      [cartId, product_id, quantity, selected_color, selected_size]
-    );
+    // ── AddToCart CAPI event ────────────────────────────────────────────────
+    // Fire-and-forget — never let a Meta API hiccup block or fail the cart add.
+    sendMetaEvent({
+      eventName: 'AddToCart',
+      eventId: `atc-${req.user.id}-${product_id}-${Date.now()}`,
+      req,
+      userData: {
+        email: req.user.email,
+        phone: req.user.phone,
+      },
+      customData: {
+        currency: 'KES',
+        value: effectivePrice * Number(quantity),
+        content_ids: [product_id],
+        content_type: 'product',
+        content_name: product?.name,
+      },
+    }).catch(() => {});
 
-    res.status(201).json(result.rows[0]);
+    res.status(responseStatus).json(responseRow);
   } catch (err) {
     console.error('addToCart error:', err.message);
     res.status(500).json({ msg: 'Server error' });

@@ -4,6 +4,7 @@ const { calculateFirstOrderDiscount } = require('./discountController');
 const { awardOrderPoints } = require('./membersController');
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
 const { decrementStockForItems } = require('../utils/stockDeduction');
+const { sendMetaEvent } = require('../services/metaCapi');
 
 // ── PayHero base URL ──────────────────────────────────────────────────────────
 const PAYHERO_BASE = 'https://backend.payhero.co.ke/api/v2';
@@ -26,6 +27,15 @@ const formatPhone = (phone) => {
   const cleaned = phone.replace(/\s+/g, '').replace(/^0/, '254').replace(/^\+/, '');
   if (!/^254\d{9}$/.test(cleaned)) throw new Error('Invalid phone number format');
   return cleaned;
+};
+
+// Best-effort version for CAPI hashing — unlike formatPhone() above, this
+// must never throw (a malformed number should still let Purchase fire,
+// just without a perfectly-formatted phone match key) and falls back to
+// the raw value if it can't confidently normalize it.
+const safeFormatPhone = (phone) => {
+  if (!phone) return undefined;
+  try { return formatPhone(phone); } catch { return phone; }
 };
 
 // ── Shared: create the order + clear the cart for a completed PayHero payment ──
@@ -58,6 +68,12 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
   const discountType   = shippingMeta.discount_type || null;
   const reservedOrderNumber = shippingMeta.reserved_order_number || null;
   const affiliateCode  = shippingMeta.affiliate_code || null;
+  // Captured client-side when checkout started (see stkPush below) and
+  // carried through shipping_meta so it's available here even though this
+  // function runs from a server-to-server PayHero webhook with no browser
+  // cookies of its own.
+  const fbc = shippingMeta.fbc || null;
+  const fbp = shippingMeta.fbp || null;
 
   const cartRes = await db.query(
     `SELECT
@@ -150,10 +166,23 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
 
  await awardOrderPoints(payment.user_id, payment.amount);
 
+  // ── Purchase CAPI event ──────────────────────────────────────────────────
+  // No `req` here — this function runs from a server-to-server PayHero
+  // webhook, not a customer HTTP request, so there's no IP/user-agent/cookie
+  // context to attach automatically. fbc/fbp are instead passed explicitly,
+  // having been captured client-side at checkout and carried through
+  // shipping_meta (see stkPush below). Phone is normalized the same way the
+  // payment payload itself is (formatPhone/safeFormatPhone), since Meta
+  // matches on E.164-style digits, not however the customer typed it.
   sendMetaEvent({
     eventName: 'Purchase',
     eventId: `purchase-${reservedOrderNumber || newOrderId}`,
-    userData: { email: shipping.email, phone: shipping.phone || payment.phone },
+    userData: {
+      email: shipping.email,
+      phone: safeFormatPhone(shipping.phone || payment.phone),
+      fbc,
+      fbp,
+    },
     customData: {
       currency: 'KES',
       value: Number(payment.amount),
@@ -167,7 +196,15 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
 // ── POST /api/payments/payhero/stk-push ───────────────────────────────────────
 /**
  * Triggers an M-Pesa STK push via PayHero.
- * Body: { phone, delivery_zone, delivery_fee, shipping, selectedColors, selectedSizes }
+ * Body: { phone, delivery_zone, delivery_fee, shipping, selectedColors, selectedSizes,
+ *         fbc, fbp }
+ *
+ * fbc/fbp: the _fbc/_fbp cookies read client-side (set by the base Meta Pixel
+ * snippet) and sent here so they can be persisted into shipping_meta and
+ * later attached to the Purchase CAPI event in fulfillPayHeroPayment, which
+ * runs from a webhook with no cookies of its own. See Checkout.tsx for the
+ * client-side capture — read document.cookie for _fbc/_fbp and include them
+ * in this request body alongside phone/shipping/etc.
  */
 exports.stkPush = async (req, res) => {
   const {
@@ -179,6 +216,8 @@ exports.stkPush = async (req, res) => {
     selectedSizes  = {},
     reserved_order_number = null,
     affiliate_code = null,
+    fbc = null,
+    fbp = null,
   } = req.body;
   let validatedAffiliateCode = null;
   if (affiliate_code) {
@@ -296,6 +335,8 @@ exports.stkPush = async (req, res) => {
           reserved_order_number,
           external_reference: externalReference,
           affiliate_code: validatedAffiliateCode,
+          fbc,
+          fbp,
         }),
       ]
     );

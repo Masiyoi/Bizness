@@ -56,6 +56,16 @@ const DELIVERY_OPTIONS: { value: DeliveryZone; label: string; fee: number }[] = 
   { value:'county',   label:'Other Counties',      fee:400 },
 ];
 
+// Reads a raw (unencoded) cookie value by name. Used to pick up the _fbc/_fbp
+// cookies the base Meta Pixel snippet sets client-side, so they can be sent
+// to the backend and persisted for the server-side Purchase CAPI event later
+// (that event fires from a payment-provider webhook with no cookies of its
+// own — see fulfillPayHeroPayment in payheroController.js).
+const getCookie = (name: string): string | undefined => {
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : undefined;
+};
+
 export default function Checkout() {
   const navigate   = useNavigate();
   const location   = useLocation();
@@ -284,6 +294,11 @@ export default function Checkout() {
         selectedSizes:  passedSizes,
         reserved_order_number: reservedOrderNumber,
         affiliate_code: affiliateCode,
+        // Captured from the base Meta Pixel snippet's cookies so the backend
+        // can persist them and attach them to the Purchase CAPI event later,
+        // fired from a webhook with no browser cookies of its own.
+        fbc: getCookie('_fbc'),
+        fbp: getCookie('_fbp'),
       });
 
       setCheckoutRequestId(res.data.checkoutRequestId);
@@ -358,6 +373,13 @@ export default function Checkout() {
         selectedSizes:  passedSizes,
         reserved_order_number: reservedOrderNumber,
         affiliate_code: affiliateCode,
+        // Captured from the base Meta Pixel snippet's cookies so the backend
+        // can persist them into shipping_meta and attach them to the
+        // Purchase CAPI event later, fired from the PayHero webhook which
+        // has no browser cookies of its own. See fulfillPayHeroPayment in
+        // payheroController.js.
+        fbc: getCookie('_fbc'),
+        fbp: getCookie('_fbp'),
       });
 
       setPayHeroCheckoutRequestId(res.data.checkoutRequestId);
@@ -408,6 +430,13 @@ export default function Checkout() {
       // that's a separate file I haven't seen. If it trusts this client-sent amount,
       // it has the same spoofing hole stk-push had; apply the same
       // calculateFirstOrderDiscount()-based recomputation there before going live.
+      //
+      // Also apply the same Purchase-event fbc/fbp treatment there once you
+      // share that controller — unlike PayHero, Pesapal's flow does a full
+      // page redirect and back, so its fulfillment function runs with real
+      // req context available (see the note in Checkout.tsx.PATCH.md from
+      // the earlier round of fixes) and doesn't need this fbc/fbp-via-cookie
+      // plumbing at all — pass req directly to sendMetaEvent there instead.
       const res = await axios.post('/api/payments/pesapal/initiate', {
         amount:         total,
         delivery_zone:  deliveryZone,

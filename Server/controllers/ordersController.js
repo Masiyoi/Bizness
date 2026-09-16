@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { sendMetaEvent } = require('../services/metaCapi');
 
 // ── GET /api/orders/reserve-number  — reserve the next order number ─────────
 /**
@@ -9,16 +10,65 @@ const db = require('../config/db');
  * The reserved value is then threaded through stk-push / pesapal-initiate
  * and set explicitly on the eventual INSERT INTO orders — the trigger only
  * fires when order_number IS NULL, so it just no-ops there.
+ *
+ * Also fires the InitiateCheckout CAPI event, since this is the one place
+ * in the checkout flow guaranteed to run exactly once per checkout attempt,
+ * with full req context (IP, user-agent, _fbc/_fbp cookies) available.
  */
 exports.reserveOrderNumber = async (req, res) => {
+  let orderNumber;
   try {
     const result = await db.query(`SELECT nextval('orders_order_number_seq') AS n`);
-    const orderNumber = 'ON-' + String(result.rows[0].n).padStart(6, '0');
-    return res.json({ reserved_order_number: orderNumber });
+    orderNumber = 'ON-' + String(result.rows[0].n).padStart(6, '0');
   } catch (err) {
     console.error('reserveOrderNumber error:', err.message);
     return res.status(500).json({ msg: 'Failed to reserve order number' });
   }
+
+  // ── InitiateCheckout CAPI event ─────────────────────────────────────────
+  // Fire-and-forget, in its own try/catch — a Meta API hiccup or a bad cart
+  // query here must never fail the order-number reservation itself.
+  try {
+    const cartRes = await db.query(
+      `SELECT ci.quantity, ci.product_id,
+              CASE
+                WHEN p.sale_price IS NOT NULL
+                 AND p.sale_price < p.price
+                 AND (p.sale_ends_at IS NULL OR p.sale_ends_at > NOW())
+                THEN p.sale_price
+                ELSE p.price
+              END AS effective_price
+       FROM cart_items ci
+       JOIN carts c ON c.id = ci.cart_id
+       JOIN products p ON p.id = ci.product_id
+       WHERE c.user_id = $1`,
+      [req.user.id]
+    );
+
+    const value = cartRes.rows.reduce(
+      (sum, row) => sum + Number(row.effective_price) * row.quantity, 0
+    );
+
+    sendMetaEvent({
+      eventName: 'InitiateCheckout',
+      eventId: `ic-${orderNumber}`,
+      req,
+      userData: {
+        email: req.user.email,
+        phone: req.user.phone,
+      },
+      customData: {
+        currency: 'KES',
+        value,
+        content_ids: cartRes.rows.map(r => r.product_id),
+        num_items: cartRes.rows.reduce((n, r) => n + r.quantity, 0),
+      },
+    }).catch(() => {});
+  } catch (err) {
+    console.error('InitiateCheckout CAPI error:', err.message);
+  }
+
+  return res.json({ reserved_order_number: orderNumber });
 };
 
 // ── GET /api/orders  — all orders for the logged-in user ─────────────────────
@@ -43,7 +93,6 @@ exports.getOrders = async (req, res) => {
          p.phone,
          p.amount AS paid_amount,
          o.order_number,
-         o.order_number,
          ROW_NUMBER() OVER (
            PARTITION BY o.user_id
            ORDER BY o.created_at ASC
@@ -60,7 +109,6 @@ exports.getOrders = async (req, res) => {
       return {
         id:               row.id,
         order_number:     row.order_number,
-      order_number:      row.order_number,
         user_order_number: parseInt(row.user_order_number), // e.g. 1, 2, 3...
         created_at:       row.created_at,
         updated_at:       row.updated_at,
