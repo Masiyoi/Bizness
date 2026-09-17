@@ -1,8 +1,7 @@
 const db = require('../config/db');
 const { sendMetaEvent } = require('../services/metaCapi');
-const { logActivity } = require('../services/activityLogger');
 
-// â”€â”€ Helper: get or create cart for user â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Helper: get or create cart for user ──────────────────────────────────────
 const getOrCreateCart = async (userId) => {
   let result = await db.query('SELECT id FROM carts WHERE user_id = $1', [userId]);
   if (result.rows.length === 0) {
@@ -13,7 +12,7 @@ const getOrCreateCart = async (userId) => {
   return result.rows[0].id;
 };
 
-// GET /api/cart  â€” fetch all items in user's cart
+// GET /api/cart  — fetch all items in user's cart
 exports.getCart = async (req, res) => {
   try {
     const cartId = await getOrCreateCart(req.user.id);
@@ -48,7 +47,7 @@ exports.getCart = async (req, res) => {
   }
 };
 
-// POST /api/cart  â€” add item (with color + size awareness)
+// POST /api/cart  — add item (with color + size awareness)
 exports.addToCart = async (req, res) => {
   const {
     product_id,
@@ -72,7 +71,7 @@ exports.addToCart = async (req, res) => {
       [cartId, product_id, selected_color, selected_size]
     );
 
-    // â”€â”€ Fetch product price for the AddToCart event value â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Fetch product price for the AddToCart event value ──────────────────
     // Needed regardless of the increment/insert branch below, so pulled once
     // up front rather than duplicated in both.
     const productRes = await db.query(
@@ -91,7 +90,7 @@ exports.addToCart = async (req, res) => {
     let responseStatus;
 
     if (existing.rows.length > 0) {
-      // Same variant already in cart â€” increment quantity
+      // Same variant already in cart — increment quantity
       const updated = await db.query(
         `UPDATE cart_items
          SET quantity = quantity + $1
@@ -102,7 +101,7 @@ exports.addToCart = async (req, res) => {
       responseRow = updated.rows[0];
       responseStatus = 200;
     } else {
-      // New variant â€” insert fresh row
+      // New variant — insert fresh row
       const result = await db.query(
         `INSERT INTO cart_items (cart_id, product_id, quantity, selected_color, selected_size)
          VALUES ($1, $2, $3, $4, $5)
@@ -113,8 +112,8 @@ exports.addToCart = async (req, res) => {
       responseStatus = 201;
     }
 
-    // â”€â”€ AddToCart CAPI event â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    // Fire-and-forget â€” never let a Meta API hiccup block or fail the cart add.
+    // ── AddToCart CAPI event ────────────────────────────────────────────────
+    // Fire-and-forget — never let a Meta API hiccup block or fail the cart add.
     sendMetaEvent({
       eventName: 'AddToCart',
       eventId: `atc-${req.user.id}-${product_id}-${Date.now()}`,
@@ -132,12 +131,6 @@ exports.addToCart = async (req, res) => {
       },
     }).catch(() => {});
 
-    logActivity({
-      userId: req.user.id,
-      eventType: 'cart_add',
-      metadata: { product_id, quantity, selected_color, selected_size },
-      req,
-    }).catch(() => {});
     res.status(responseStatus).json(responseRow);
   } catch (err) {
     console.error('addToCart error:', err.message);
@@ -145,7 +138,7 @@ exports.addToCart = async (req, res) => {
   }
 };
 
-// PATCH /api/cart/:itemId  â€” update quantity, color, or size of a cart item
+// PATCH /api/cart/:itemId  — update quantity, color, or size of a cart item
 exports.updateCartItem = async (req, res) => {
   const { quantity, selected_color, selected_size } = req.body;
   const { itemId } = req.params;
@@ -179,7 +172,7 @@ exports.updateCartItem = async (req, res) => {
       return res.status(200).json({ merged: true, item: merged.rows[0] });
     }
 
-    // No collision â€” straightforward update
+    // No collision — straightforward update
     const result = await db.query(
       `UPDATE cart_items
        SET quantity = $1, selected_color = $2, selected_size = $3
@@ -196,7 +189,7 @@ exports.updateCartItem = async (req, res) => {
   }
 };
 
-// DELETE /api/cart/:itemId  â€” remove one item
+// DELETE /api/cart/:itemId  — remove one item
 exports.removeCartItem = async (req, res) => {
   const { itemId } = req.params;
   try {
@@ -212,7 +205,7 @@ exports.removeCartItem = async (req, res) => {
   }
 };
 
-// DELETE /api/cart  â€” clear entire cart
+// DELETE /api/cart  — clear entire cart
 exports.clearCart = async (req, res) => {
   try {
     const cartId = await getOrCreateCart(req.user.id);

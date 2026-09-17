@@ -1,4 +1,4 @@
-const db         = require('../config/db');
+﻿const db         = require('../config/db');
 const bcrypt     = require('bcryptjs');
 const jwt        = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
@@ -7,7 +7,6 @@ const { Resend } = require('resend');
 const crypto     = require('crypto');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const { registerMember } = require('./membersController');
-const { logActivity } = require('../services/activityLogger');
 // Render's free tier permanently blocks outbound SMTP ports (25/465/587),
 // so we send email over Resend's HTTPS API instead of Nodemailer/SMTP.
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -210,7 +209,6 @@ exports.registerBuyer = async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, FALSE, $6, $7)`,
       [full_name.trim(), email.toLowerCase(), password_hash, verToken, verExpiry, ownReferralCode, referredBy]
     );
-    logActivity({ userId: null, eventType: 'user_registered', metadata: { email: email.toLowerCase() } }).catch(() => {});
     return res.status(201).json({
       msg: `Verification link sent to ${email}. Check your inbox.`,
     });
@@ -273,7 +271,6 @@ exports.loginUser = async (req, res) => {
       });
     // â”€â”€ Success â€” clear failed attempts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     await clearFailedLogins(user.id);
-    logActivity({ userId: user.id, eventType: 'login', metadata: { method: 'password' }, req }).catch(() => {});
     const token = generateToken(user.id, user.role);
     res.cookie('token', token, {
       httpOnly: true,

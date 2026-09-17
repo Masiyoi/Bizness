@@ -1,11 +1,10 @@
-const axios = require('axios');
+﻿const axios = require('axios');
 const db    = require('../config/db');
 const { calculateFirstOrderDiscount } = require('./discountController');
 const { awardOrderPoints } = require('./membersController');
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
 const { decrementStockForItems } = require('../utils/stockDeduction');
 const { sendMetaEvent } = require('../services/metaCapi');
-const { logActivity } = require('../services/activityLogger');
 
 // ── PayHero base URL ──────────────────────────────────────────────────────────
 const PAYHERO_BASE = 'https://backend.payhero.co.ke/api/v2';
@@ -166,11 +165,6 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
   );
 
  await awardOrderPoints(payment.user_id, payment.amount);
-  logActivity({
-    userId: payment.user_id,
-    eventType: 'order_placed',
-    metadata: { order_id: newOrderId, amount: payment.amount },
-  }).catch(() => {});
 
   // ── Purchase CAPI event ──────────────────────────────────────────────────
   // No `req` here — this function runs from a server-to-server PayHero

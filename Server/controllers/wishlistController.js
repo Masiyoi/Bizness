@@ -1,12 +1,13 @@
 // controllers/wishlistController.js
-// Wishlist endpoints — mirrors your cart controller pattern.
+// Wishlist endpoints â€” mirrors your cart controller pattern.
 // Assumes: Express + pg (node-postgres) + JWT middleware that sets req.user = { id, ... }
 
 const db = require('../config/db');
+const { logActivity } = require('../services/activityLogger');
 // GET /api/wishlist
 // Returns all wishlist items for the logged-in user, joined with
 // product details so the frontend gets everything in one request.
-// ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const getWishlist = async (req, res) => {
   const userId = req.user.id;
   try {
@@ -34,12 +35,12 @@ const getWishlist = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // POST /api/wishlist
 // Body: { product_id: number }
 // Adds a product to the user's wishlist.
 // Uses ON CONFLICT DO NOTHING so double-tapping the heart is safe.
-// ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const addToWishlist = async (req, res) => {
   const userId = req.user.id;
   const { product_id } = req.body;
@@ -57,7 +58,10 @@ const addToWishlist = async (req, res) => {
       [userId, product_id]
     );
 
-    // If rows is empty the item was already in the wishlist — still a success
+    // If rows is empty the item was already in the wishlist â€” still a success
+    if (rows.length > 0) {
+      logActivity({ userId, eventType: 'wishlist_add', metadata: { product_id }, req }).catch(() => {});
+    }
     res.status(201).json(rows[0] ?? { message: 'Already in wishlist' });
   } catch (err) {
     console.error('addToWishlist error:', err);
@@ -69,12 +73,12 @@ const addToWishlist = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // DELETE /api/wishlist/:productId
 // Removes a single product from the user's wishlist.
 // Uses product_id (not wishlist row id) so the frontend doesn't
-// need to track the wishlist row id — same pattern as your cart.
-// ─────────────────────────────────────────────────────────────────
+// need to track the wishlist row id â€” same pattern as your cart.
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const removeFromWishlist = async (req, res) => {
   const userId    = req.user.id;
   const productId = parseInt(req.params.productId, 10);
@@ -94,6 +98,7 @@ const removeFromWishlist = async (req, res) => {
       return res.status(404).json({ error: 'Item not in wishlist' });
     }
 
+    logActivity({ userId, eventType: 'wishlist_remove', metadata: { product_id: productId }, req }).catch(() => {});
     res.json({ message: 'Removed from wishlist' });
   } catch (err) {
     console.error('removeFromWishlist error:', err);
@@ -101,11 +106,11 @@ const removeFromWishlist = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // DELETE /api/wishlist
 // Clears the entire wishlist for the logged-in user.
 // Called by the "Clear All" button on the wishlist page.
-// ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const clearWishlist = async (req, res) => {
   const userId = req.user.id;
   try {

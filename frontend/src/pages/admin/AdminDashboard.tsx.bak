@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -25,7 +25,6 @@ import { AdminReviews }     from './components/reviews/AdminReviews';
 import { AdminMembers }     from './components/members/AdminMembers';
 import { ReportsTab }       from './components/reports/ReportsTab';
 import { AffiliateManagement } from './components/affiliate/AffiliateManagement';
-import { ActivityLog } from './components/activity/ActivityLog';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -395,9 +394,6 @@ export default function AdminDashboard() {
                 <AffiliateManagement
                   showToast={(msg, type) => showToast(msg, type as 'ok' | 'err')}
                 />
-              )}
-              {tab === 'activity' && (
-                <ActivityLog />
               )}
             </>
           )}
