@@ -194,5 +194,5 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'members',    icon: '/admin/members.png',             label: 'Members'    },
   { id: 'reports',    icon: '/admin/reports.png',             label: 'Reports'    },
   { id: 'affiliate',  icon: '/admin/affiliate-marketing.png', label: 'Affiliate'  },
-  { id: 'activity',   icon: '/admin/reports.png',              label: 'Activity'   },
+  { id: 'activity',   icon: '/admin/activity-log.png',        label: 'Activity'   },
 ];
