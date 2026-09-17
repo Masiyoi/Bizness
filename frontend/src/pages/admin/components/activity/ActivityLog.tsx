@@ -1,4 +1,3 @@
-// components/admin/ActivityLog.tsx
 import { useState, useEffect } from 'react';
 import { DataTable } from '../shared/DataTable';
 import { DateRangePicker } from '../shared/DateRangePicker';
