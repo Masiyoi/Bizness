@@ -1,4 +1,5 @@
 const db          = require('../config/db');
+const { logActivity } = require('../services/activityLogger');
 const cloudinary  = require('cloudinary').v2;
 const streamifier = require('streamifier');
 
@@ -8,7 +9,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Upload helper Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── Upload helper ────────────────────────────────────────────────────────────
 const uploadToCloudinary = (buffer) =>
   new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -33,7 +34,7 @@ const uploadVideoToCloudinary = (buffer) =>
     streamifier.createReadStream(buffer).pipe(stream);
   });
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Save variants for a product (upsert all, delete removed) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── Save variants for a product (upsert all, delete removed) ────────────────
 const saveVariants = async (productId, variantsJson) => {
   let variants = [];
   try {
@@ -51,7 +52,7 @@ const saveVariants = async (productId, variantsJson) => {
     const color = v.color || null;
     const size  = v.size  || null;
     if (!color && !size) continue;
-    // zero-stock variants are valid Ã¢â‚¬â€ do not skip them
+    // zero-stock variants are valid — do not skip them
     await db.query(
       `INSERT INTO product_variants (product_id, color, size, stock, sku)
        VALUES ($1, $2, $3, $4, $5)`,
@@ -60,7 +61,7 @@ const saveVariants = async (productId, variantsJson) => {
   }
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Fetch variants for a product Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── Fetch variants for a product ─────────────────────────────────────────────
 const getVariants = async (productId) => {
   const result = await db.query(
     'SELECT * FROM product_variants WHERE product_id = $1 ORDER BY color, size',
@@ -69,11 +70,11 @@ const getVariants = async (productId) => {
   return result.rows;
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Compute total stock from variants Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── Compute total stock from variants ────────────────────────────────────────
 const sumVariantStock = (variants) =>
   variants.reduce((sum, v) => sum + (parseInt(v.stock) || 0), 0);
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Safely convert any value to a valid JSON array string Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── Safely convert any value to a valid JSON array string ───────────────────
 const toJsonString = (val) => {
   if (Array.isArray(val)) return JSON.stringify(val);
   if (typeof val === 'string' && val.trim() !== '') {
@@ -87,7 +88,7 @@ const toJsonString = (val) => {
   return '[]';
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Normalise a product row before sending to the client Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── Normalise a product row before sending to the client ────────────────────
 const normaliseProduct = (p) => ({
   ...p,
   images:      Array.isArray(p.images)   ? p.images   : [],
@@ -102,7 +103,7 @@ const normaliseProduct = (p) => ({
   video_url:   p.video_url ?? null,
 });
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ GET /api/products  (public) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── GET /api/products  (public) ──────────────────────────────────────────────
 exports.getProducts = async (req, res) => {
   try {
     const { category, gender, department, search, sort } = req.query;
@@ -136,7 +137,7 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ GET /api/products/:id  (public) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── GET /api/products/:id  (public) ─────────────────────────────────────────
 exports.getProductById = async (req, res) => {
   try {
     const result = await db.query(
@@ -178,7 +179,7 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ POST /api/admin/products Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── POST /api/admin/products ─────────────────────────────────────────────────
 exports.createProduct = async (req, res) => {
   try {
     const {
@@ -267,7 +268,7 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ PUT /api/admin/products/:id Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── PUT /api/admin/products/:id ──────────────────────────────────────────────
 exports.updateProduct = async (req, res) => {
   try {
     const {
@@ -394,7 +395,7 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ PATCH /api/admin/products/:id/stock Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── PATCH /api/admin/products/:id/stock ──────────────────────────────────────
 exports.updateStock = async (req, res) => {
   try {
     const { stock } = req.body;
@@ -413,7 +414,7 @@ exports.updateStock = async (req, res) => {
   }
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ PATCH /api/admin/products/:id/cost Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── PATCH /api/admin/products/:id/cost ───────────────────────────────────────
 exports.updateCostPrice = async (req, res) => {
   try {
     const { cost_price } = req.body;
@@ -433,7 +434,7 @@ exports.updateCostPrice = async (req, res) => {
   }
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ DELETE /api/admin/products/:id Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── DELETE /api/admin/products/:id ───────────────────────────────────────────
 exports.deleteProduct = async (req, res) => {
   try {
     const result = await db.query(
@@ -448,7 +449,7 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ GET /api/admin/orders Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── GET /api/admin/orders ────────────────────────────────────────────────────
 exports.getOrders = async (req, res) => {
   try {
     const result = await db.query(
@@ -472,7 +473,7 @@ exports.getOrders = async (req, res) => {
   }
 };
 
-// ── PATCH /api/admin/orders/:id/status ──────────────────────────────────────
+// ── PATCH /api/admin/orders/:id/status ───────────────────────────────────────
 const TERMINAL_STATUSES = ['delivered', 'cancelled'];
 
 exports.updateOrderStatus = async (req, res) => {
@@ -491,6 +492,12 @@ exports.updateOrderStatus = async (req, res) => {
       [status, tracking_status, clearAutoDeliver, req.params.id]
     );
     if (!result.rows.length) return res.status(404).json({ msg: 'Order not found' });
+    logActivity({
+      userId: req.user?.id ?? null,
+      eventType: 'order_status_change',
+      metadata: { order_id: req.params.id, status, tracking_status },
+      req,
+    }).catch(() => {});
     res.json(result.rows[0]);
   } catch (err) {
     console.error('updateOrderStatus error:', err.message);
@@ -498,12 +505,12 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ GET /api/admin/stats Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── GET /api/admin/stats ─────────────────────────────────────────────────────
 // Now supports ?from=YYYY-MM-DD&to=YYYY-MM-DD for date-ranged KPIs.
 // Falls back to last 7 days when params are absent (backwards-compatible).
 exports.getStats = async (req, res) => {
   try {
-    // Ã¢â€â‚¬Ã¢â€â‚¬ Date range Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // ── Date range ──────────────────────────────────────────────────────────
     const to   = req.query.to   ? new Date(req.query.to)   : new Date();
     const from = req.query.from ? new Date(req.query.from)  : new Date(Date.now() - 6 * 86400000);
     to.setHours(23, 59, 59, 999);
@@ -533,7 +540,7 @@ exports.getStats = async (req, res) => {
       ordersByStatusRes,
     ] = await Promise.all([
 
-      // Ã¢â€â‚¬Ã¢â€â‚¬ Current period: revenue + cost (for profit) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+      // ── Current period: revenue + cost (for profit) ─────────────────────
       db.query(`
         SELECT
           COALESCE(SUM(o.total::numeric), 0) AS revenue,
@@ -558,7 +565,7 @@ exports.getStats = async (req, res) => {
           AND o.status NOT IN ('cancelled', 'pending')
       `, [from.toISOString(), to.toISOString()]),
 
-      // Ã¢â€â‚¬Ã¢â€â‚¬ Previous period: revenue + orders for % comparison Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+      // ── Previous period: revenue + orders for % comparison ───────────────
       db.query(`
         SELECT
           COALESCE(SUM(total::numeric), 0) AS revenue,
@@ -600,7 +607,7 @@ exports.getStats = async (req, res) => {
         ORDER BY order_count DESC, p.created_at DESC LIMIT 5
       `),
 
-      // Low stock Ã¢â‚¬â€ prefer variant sum, fallback to products.stock
+      // Low stock — prefer variant sum, fallback to products.stock
       db.query(`
         SELECT
           p.id, p.name, p.image_url, p.price,
@@ -693,7 +700,7 @@ exports.getStats = async (req, res) => {
   }
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ GET /api/admin/customers Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── GET /api/admin/customers ─────────────────────────────────────────────────
 exports.getCustomers = async (req, res) => {
   try {
     const usersResult = await db.query(`
@@ -737,7 +744,48 @@ exports.getCustomers = async (req, res) => {
   }
 };
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ PATCH /api/admin/customers/:id/verify Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// ── GET /api/admin/activity-logs ─────────────────────────────────────────────
+exports.getActivityLogs = async (req, res) => {
+  try {
+    const { eventType, userId, from, to, page = 1, limit = 50 } = req.query;
+    const conditions = [];
+    const params = [];
+    if (eventType) { params.push(eventType); conditions.push(`al.event_type = $${params.length}`); }
+    if (userId)    { params.push(userId);    conditions.push(`al.user_id = $${params.length}`); }
+    if (from) {
+      const fromStart = new Date(from);
+      fromStart.setHours(0, 0, 0, 0);
+      params.push(fromStart.toISOString());
+      conditions.push(`al.created_at >= $${params.length}`);
+    }
+    if (to) {
+      // Include the entire "to" day — without this, a bare date like
+      // "2026-09-17" is parsed as midnight, silently excluding anything
+      // logged later that same day.
+      const toEnd = new Date(to);
+      toEnd.setHours(23, 59, 59, 999);
+      params.push(toEnd.toISOString());
+      conditions.push(`al.created_at <= $${params.length}`);
+    }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const offset = (page - 1) * limit;
+    const result = await db.query(
+      `SELECT al.*, u.email, u.full_name AS name
+       FROM activity_logs al
+       LEFT JOIN users u ON u.id = al.user_id
+       ${where}
+       ORDER BY al.created_at DESC
+       LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, limit, offset]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('getActivityLogs error:', err.message);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// ── PATCH /api/admin/customers/:id/verify ────────────────────────────────────
 exports.verifyCustomer = async (req, res) => {
   const { id } = req.params;
   try {

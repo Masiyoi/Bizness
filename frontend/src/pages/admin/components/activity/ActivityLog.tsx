@@ -21,17 +21,19 @@ interface ActivityLogRow {
   metadata: Record<string, any>;
   email?: string;
   name?: string;
+  product_name?: string;
   created_at: string;
 }
 
 function formatMetadata(row: ActivityLogRow): string {
   const m = row.metadata || {};
+  const productLabel = row.product_name ?? (m.product_id != null ? `Product #${m.product_id}` : '—');
   switch (row.event_type) {
     case 'wishlist_add':
     case 'wishlist_remove':
-      return m.product_id != null ? `Product #${m.product_id}` : '—';
+      return productLabel;
     case 'cart_add': {
-      const parts = [`Product #${m.product_id}`, `qty ${m.quantity ?? 1}`];
+      const parts = [productLabel, `qty ${m.quantity ?? 1}`];
       if (m.selected_color) parts.push(m.selected_color);
       if (m.selected_size) parts.push(`size ${m.selected_size}`);
       return parts.join(' · ');

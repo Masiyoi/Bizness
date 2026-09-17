@@ -1,4 +1,3 @@
-// components/admin/ActivityLog.tsx
 import { useState, useEffect } from 'react';
 import { DataTable } from '../shared/DataTable';
 import { DateRangePicker } from '../shared/DateRangePicker';
@@ -25,6 +24,34 @@ interface ActivityLogRow {
   created_at: string;
 }
 
+function formatMetadata(row: ActivityLogRow): string {
+  const m = row.metadata || {};
+  switch (row.event_type) {
+    case 'wishlist_add':
+    case 'wishlist_remove':
+      return m.product_id != null ? `Product #${m.product_id}` : '—';
+    case 'cart_add': {
+      const parts = [`Product #${m.product_id}`, `qty ${m.quantity ?? 1}`];
+      if (m.selected_color) parts.push(m.selected_color);
+      if (m.selected_size) parts.push(`size ${m.selected_size}`);
+      return parts.join(' · ');
+    }
+    case 'order_placed':
+      return m.order_id != null
+        ? `Order #${m.order_id} · KSh ${Number(m.amount ?? 0).toLocaleString()}`
+        : '—';
+    case 'order_status_change':
+      return m.order_id != null
+        ? `Order #${m.order_id} → ${m.status ?? m.tracking_status ?? '—'}`
+        : '—';
+    case 'user_registered':
+      return m.email ?? '—';
+    case 'login':
+      return m.method ? `via ${m.method}` : '—';
+    default:
+      return Object.keys(m).length ? JSON.stringify(m) : '—';
+  }
+}
 export function ActivityLog() {
   const [logs, setLogs] = useState<ActivityLogRow[]>([]);
   const [eventType, setEventType] = useState('');
@@ -43,7 +70,7 @@ export function ActivityLog() {
   const columns = [
     { key: 'user',     header: 'User',     render: (row: ActivityLogRow) => row.email ?? 'Guest' },
     { key: 'activity', header: 'Activity', render: (row: ActivityLogRow) => EVENT_LABELS[row.event_type] ?? row.event_type },
-    { key: 'details',  header: 'Details',  render: (row: ActivityLogRow) => JSON.stringify(row.metadata) },
+    { key: 'details',  header: 'Details',  render: (row: ActivityLogRow) => formatMetadata(row) },
     { key: 'time',     header: 'Time',     render: (row: ActivityLogRow) => new Date(row.created_at).toLocaleString() },
   ];
 

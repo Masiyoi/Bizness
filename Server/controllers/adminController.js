@@ -770,9 +770,12 @@ exports.getActivityLogs = async (req, res) => {
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     const offset = (page - 1) * limit;
     const result = await db.query(
-      `SELECT al.*, u.email, u.full_name AS name
+      `SELECT al.*, u.email, u.full_name AS name, p.name AS product_name
        FROM activity_logs al
        LEFT JOIN users u ON u.id = al.user_id
+       LEFT JOIN products p
+         ON al.metadata ? 'product_id'
+        AND p.id = (al.metadata->>'product_id')::int
        ${where}
        ORDER BY al.created_at DESC
        LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
