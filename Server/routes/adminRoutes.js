@@ -10,7 +10,8 @@ const {
   getStats,
   getCustomers, verifyCustomer,
   updateCostPrice,              // ← add this
-  getActivityLogs,\n} = require('../controllers/adminController');
+  getActivityLogs,
+} = require('../controllers/adminController');
 
 const upload = multer({
   storage: multer.memoryStorage(),
