@@ -18,11 +18,11 @@ export interface VideoTile {
 export const VIDEO_TILES: VideoTile[] = [
   {
     id: 1,
-    src: 'https://res.cloudinary.com/dfiy43f01/video/upload/v1780227245/Effortless_Bridal_Makeup_Looks_to_Refresh_Your_Routine_-_Pin-1145251380255199740_lsbslj.mp4',
+    src: 'https://res.cloudinary.com/dfiy43f01/video/upload/v1789767247/newdrop_vcgd2d.mp4',
     poster: '/images/street-style-01-poster.jpg',
     badge: 'New Drop',
-    headline: 'Streets Never Sleep',
-    sub: 'Fresh drip straight from the block — drop live now.',
+    headline: 'Shop Latest Apparel & Footwear',
+    sub: 'Fresh fits and new kicks just landed. Browse the latest apparel and footwear releases online now, with fast dispatch and easy returns',
     ctaLabel: 'Shop the Look',
     ctaHref: '/categories/new-arrivals',
     tileHref: '/categories/new-arrivals',
