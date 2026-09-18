@@ -219,6 +219,7 @@ export default function App() {
             headline="PW Essentials"
             description="Handpicked pieces, curated by us."
             apiEndpoint="/api/products?category=pw-essentials"
+            bannerUrl="/sew.jpg"
           />
         } />
 

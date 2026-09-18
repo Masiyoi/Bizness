@@ -20,9 +20,10 @@ exports.getCart = async (req, res) => {
     const result = await db.query(
       `SELECT ci.id, ci.quantity, ci.product_id, ci.selected_color, ci.selected_size,
               p.name, p.price, p.image_url, p.category,
-              p.colors, p.sizes
+              p.colors, p.sizes, c.slug AS category_slug
        FROM cart_items ci
        JOIN products p ON p.id = ci.product_id
+       LEFT JOIN categories c ON c.id = p.category_id
        WHERE ci.cart_id = $1
        ORDER BY ci.added_at DESC`,
       [cartId]

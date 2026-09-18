@@ -27,6 +27,7 @@ interface CartItem {
   quantity: number;
   selected_color?: string | null;
   selected_size?:  string | null;
+  category_slug?:  string | null;
 }
 
 type CheckoutStep = 'summary' | 'waiting' | 'success' | 'failed' | 'pesapal-redirect';
@@ -266,6 +267,32 @@ export default function Checkout() {
     const cleaned = val.replace(/\s+/g, '').replace(/^0/, '254').replace(/^\+/, '');
     if (!/^254\d{9}$/.test(cleaned)) return 'Enter a valid Safaricom number (07xxxxxxxx)';
     return '';
+  };
+  // ── PW Essentials — WhatsApp checkout ──────────────────────────────────
+  const hasEssentials = items.some(i => i.category_slug === 'pw-essentials');
+  const buildWhatsAppMessage = () => {
+    const lines: string[] = [];
+    lines.push(`New Order${reservedOrderNumber ? ' ' + reservedOrderNumber : ''}`);
+    items.forEach(item => {
+      const color = passedColors?.[item.id] ?? item.selected_color;
+      const size  = passedSizes?.[item.id]  ?? item.selected_size;
+      const variant = [color, size].filter(Boolean).join(', ');
+      lines.push(`- ${item.quantity}x ${item.name}${variant ? ` (${variant})` : ''}`);
+    });
+    lines.push(`Delivery: ${deliveryLabel}${deliveryFee > 0 ? ` (KSh ${deliveryFee})` : ' (FREE)'}`);
+    lines.push(`Total: KSh ${total.toLocaleString()}`);
+    if (passedShipping?.firstName) lines.push(`Name: ${passedShipping.firstName}`);
+    if (passedShipping?.phone) lines.push(`Phone: ${passedShipping.phone}`);
+    if (deliveryZone === 'pickup' && passedShipping?.pickupLocation) lines.push(`Pickup: ${passedShipping.pickupLocation}`);
+    if (deliveryZone !== 'pickup' && passedShipping?.county) lines.push(`County: ${passedShipping.county}`);
+    return lines.join('\n');
+  };
+  const handleWhatsAppCheckout = () => {
+    const message = buildWhatsAppMessage();
+    const url = `https://wa.me/254723831949?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+    axios.delete('/api/cart').catch(() => {});
+    navigate('/');
   };
 
   // ── M-Pesa payment (direct Daraja) ─────────────────────────────────────────
@@ -768,10 +795,16 @@ export default function Checkout() {
               <div className="ornament-diamond" /><div className="ornament-line" />
             </div>
             <p className="jost" style={{ color: T.muted, fontSize: 13, marginBottom: 18, fontWeight: 300 }}>
-              Choose how you'd like to pay
+              {hasEssentials ? 'Finish your order on WhatsApp' : "Choose how you'd like to pay"}
             </p>
 
             {/* Payment method — Pesapal or PayHero (M-Pesa STK push) */}
+            {hasEssentials ? (
+              <button className="cta-gold" onClick={handleWhatsAppCheckout} style={{ marginTop: 4, background: '#25D366' }}>
+                Complete Order on WhatsApp →
+              </button>
+            ) : (
+            <>
             <div className="pay-method-list">
               <button
                 type="button"
@@ -848,6 +881,8 @@ export default function Checkout() {
               <img src={secureBadge} alt="Secure payment" style={{ height: 16, objectFit: 'contain' }} />
               <span className="jost" style={{ fontSize: 11, color: T.muted }}>All payments are encrypted and secure</span>
             </div>
+            </>
+            )}
           </div>
           </div>
         )}
