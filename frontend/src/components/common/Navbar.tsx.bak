@@ -10,7 +10,6 @@ interface CategoryNode { id: string; name: string; slug: string; sort_order?: nu
 interface CategoryTree {
   men:   { footwear: CategoryNode[]; clothing: CategoryNode[] };
   women: { footwear: CategoryNode[]; clothing: CategoryNode[] };
-  essentials: CategoryNode[];
 }
 
 interface NavbarProps {
@@ -464,7 +463,6 @@ export default function Navbar({
                 )}
               </div>
 
-              <span className="nav-link" style={{ color: ink }} onClick={() => navigate('/pw-essentials')}>PW Essentials</span>
               {/* ── Members Club — last ── */}
               <span className="nav-link" style={{ color: ink }} onClick={() => navigate('/members-club')}>Members Club</span>
             </div>
@@ -678,7 +676,7 @@ export default function Navbar({
         <div style={{ background: 'rgba(255,255,255,0.28)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)' as any, borderBottom: '1px solid rgba(255,255,255,0.25)', padding: '16px 5% 28px', position: 'fixed', top: 96, left: 0, right: 0, bottom: 0, zIndex: 99, transition: 'top 0.3s ease', overflowY: 'auto', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' as any }}>
 
           {/* ── Top row: Home + Members Club side by side ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
             <button
               onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
               style={{
@@ -689,17 +687,6 @@ export default function Navbar({
               }}
             >
               Home
-            </button>
-            <button
-              onClick={() => { navigate('/pw-essentials'); setMobileMenuOpen(false); }}
-              style={{
-                fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 600,
-                letterSpacing: '2px', textTransform: 'uppercase',
-                padding: '13px 10px', background: 'transparent', color: '#111',
-                border: '1px solid rgba(0,0,0,0.2)', cursor: 'pointer', textAlign: 'center',
-              }}
-            >
-              Essentials
             </button>
             <button
               onClick={() => { navigate('/members-club'); setMobileMenuOpen(false); }}

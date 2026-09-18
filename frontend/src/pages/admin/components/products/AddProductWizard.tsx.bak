@@ -10,7 +10,6 @@ interface CategoryNode { id: string; name: string; slug: string; sort_order?: nu
 interface CategoryTree {
   men:   { footwear: CategoryNode[]; clothing: CategoryNode[] };
   women: { footwear: CategoryNode[]; clothing: CategoryNode[] };
-  essentials: CategoryNode[];
 }
 
 interface WizardProps {
@@ -257,7 +256,6 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
   const [gender,      setGender]      = useState<'men' | 'women'>('men');
   const [department,  setDepartment]  = useState<'footwear' | 'clothing'>('footwear');
   const [categoryId,  setCategoryId]  = useState<string>(editProduct?.category_id || '');
-  const [isEssentials, setIsEssentials] = useState<boolean>(false);
   const [description, setDescription] = useState(editProduct?.description || '');
 
   // Variants
@@ -272,11 +270,6 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
   useEffect(() => {
     const cid = editProduct?.category_id;
     if (!tree || !cid) return;
-    if (tree.essentials?.some(c => c.id === cid)) {
-      setIsEssentials(true);
-      setCategoryId(cid);
-      return;
-    }
     (['men', 'women'] as const).forEach(g => {
       (['footwear', 'clothing'] as const).forEach(d => {
         if (tree[g][d].some(c => c.id === cid)) {
@@ -669,41 +662,22 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
               {/* Category */}
               <div>
                 <label style={lbl}>Category</label>
-                <div style={{ display: 'flex', gap: 7, marginBottom: 8 }}>
-                  <button type="button" onClick={() => { setIsEssentials(false); setCategoryId(''); }}
-                    style={{ flex: 1, borderRadius: 8, border: `1.5px solid ${!isEssentials ? T.black : T.grey3}`, padding: '9px 0', background: !isEssentials ? T.black : T.grey5, color: !isEssentials ? T.white : T.grey1, fontFamily: 'Jost,sans-serif', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
-                    Standard Category
-                  </button>
-                  <button type="button" onClick={() => { setIsEssentials(true); setCategoryId(''); }}
-                    style={{ flex: 1, borderRadius: 8, border: `1.5px solid ${isEssentials ? T.black : T.grey3}`, padding: '9px 0', background: isEssentials ? T.black : T.grey5, color: isEssentials ? T.white : T.grey1, fontFamily: 'Jost,sans-serif', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
-                    PW Essentials
-                  </button>
-                </div>
-                {isEssentials ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7 }}>
+                  <select value={gender} onChange={e => { const g = e.target.value as 'men' | 'women'; setGender(g); setCategoryId(''); }} style={inp}>
+                    <option value="men">Men</option>
+                    <option value="women">Women</option>
+                  </select>
+                  <select value={department} onChange={e => { const d = e.target.value as 'footwear' | 'clothing'; setDepartment(d); setCategoryId(''); }} style={inp}>
+                    <option value="footwear">Footwear</option>
+                    <option value="clothing">Clothing</option>
+                  </select>
                   <select value={categoryId} onChange={e => setCategoryId(e.target.value)} style={inp}>
-                    <option value="">Select PW Essentials item</option>
-                    {(tree?.essentials ?? []).map(c => (
+                    <option value="">Select subcategory</option>
+                    {(tree?.[gender]?.[department] ?? []).map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </select>
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7 }}>
-                    <select value={gender} onChange={e => { const g = e.target.value as 'men' | 'women'; setGender(g); setCategoryId(''); }} style={inp}>
-                      <option value="men">Men</option>
-                      <option value="women">Women</option>
-                    </select>
-                    <select value={department} onChange={e => { const d = e.target.value as 'footwear' | 'clothing'; setDepartment(d); setCategoryId(''); }} style={inp}>
-                      <option value="footwear">Footwear</option>
-                      <option value="clothing">Clothing</option>
-                    </select>
-                    <select value={categoryId} onChange={e => setCategoryId(e.target.value)} style={inp}>
-                      <option value="">Select subcategory</option>
-                      {(tree?.[gender]?.[department] ?? []).map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                </div>
               </div>
 
               {/* Colours */}

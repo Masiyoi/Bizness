@@ -154,11 +154,11 @@ function Hero({ onShop }: { onShop: (cat?: string) => void }) {
         </div>
       </div>
       <div className="lp-hero-panel lp-fade-up lp-d2">
-        <img src="/i2.webp" alt="Most Wanted" className="lp-hero-panel-img" />
+        <img src="/i2.webp" alt="PW Essentials" className="lp-hero-panel-img" />
         <div className="lp-hero-panel-overlay" />
         <div className="lp-hero-panel-content">
           <p className="lp-hero-panel-eyebrow">Top Picks</p>
-          <h2 className="lp-hero-panel-title">Most<br/>Wanted</h2>
+          <h2 className="lp-hero-panel-title">PW<br/>Essentials</h2>
           <div className="lp-hero-panel-ctas">
             <button className="lp-hero-cta-primary" onClick={() => navigate('/categories/best-sellers')}>Shop Now</button>
           </div>

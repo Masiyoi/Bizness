@@ -160,7 +160,7 @@ function Hero({ onShop }: { onShop: (cat?: string) => void }) {
           <p className="lp-hero-panel-eyebrow">Top Picks</p>
           <h2 className="lp-hero-panel-title">PW<br/>Essentials</h2>
           <div className="lp-hero-panel-ctas">
-            <button className="lp-hero-cta-primary" onClick={() => navigate('/categories/best-sellers')}>Shop Now</button>
+            <button className="lp-hero-cta-primary" onClick={() => navigate('/pw-essentials')}>Shop Now</button>
           </div>
         </div>
       </div>

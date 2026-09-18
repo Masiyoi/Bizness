@@ -212,15 +212,6 @@ export default function App() {
         {/* Not part of the gender/department tree, so they keep their own routes */}
         <Route path="/categories/new-arrivals" element={<NewArrivals />} />
         <Route path="/categories/best-sellers" element={<BestSellers />} />
-        {/* PW Essentials — standalone category, no gender/department */}
-        <Route path="/pw-essentials" element={
-          <CategoryPage
-            categoryName="PW Essentials"
-            headline="PW Essentials"
-            description="Handpicked pieces, curated by us."
-            apiEndpoint="/api/products?category=pw-essentials"
-          />
-        } />
 
         {/* ── Support ─────────────────────────────────────────────────────────── */}
         <Route path="/track-order" element={<TrackOrder />} />
