@@ -8,7 +8,6 @@ import Footer          from '../components/common/Footer';
 import InstagramStrip  from '../components/common/InstagramStrip';
 import Gallery         from '../components/common/Gallery';
 import AuthPopup from '../components/common/AuthPopup';
-import NotificationBell from '../components/home/NotificationBell';
 import ProductCard     from '../components/home/ProductCard';
 import ReviewSection   from '../components/home/ReviewSection';
 import VideoCarousel, { VIDEO_TILES } from '../components/home/VideoCarousel';
@@ -806,7 +805,6 @@ export default function Homepage() {
         <img src={WhatsAppLogo} alt="WhatsApp" />
       </a>
       <span className="lp-wa-tooltip">Chat with us on WhatsApp</span>
-      {user && <NotificationBell userId={user.id} />}
     </div>
   );
 }

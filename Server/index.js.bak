@@ -89,7 +89,6 @@ app.use('/api/reviews/media', reviewMediaRoutes);
 app.use('/api/subscribers', subscribersRoutes);
 app.use('/api/instagram', instagramRoutes);
 app.use('/api/discount', discountRoutes);
-app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 // Protected routes (auth required)
 app.use('/api/orders', orderRoutes);
