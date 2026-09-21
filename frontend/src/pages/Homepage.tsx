@@ -135,11 +135,15 @@ const css = `
   .lp-toggle-btn:hover { border-color: var(--ink); color: var(--ink); }
   .lp-toggle-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
   @media(max-width:640px) { .lp-toggle-btn { padding: 8px 12px; font-size: 9px; letter-spacing: 1px; } }
-  .lp-chatbot-fab { position: fixed; bottom: 28px; left: 90px; right: 100px; z-index: 9999; display: flex; align-items: center; justify-content: center; gap: 12px; background: #E9E9E9; border: none; border-radius: 26px; padding: 10px 22px 10px 10px; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.14); transition: transform 0.2s, box-shadow 0.2s; }
-  .lp-chatbot-fab:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.18); }
+  .lp-chatbot-wrap { position: fixed; bottom: 28px; left: 90px; right: 100px; z-index: 9999; display: flex; justify-content: center; pointer-events: none; }
+  .lp-chatbot-fab { position: relative; pointer-events: auto; display: flex; align-items: center; justify-content: center; gap: 0; background: #E9E9E9; border: none; border-radius: 29px; padding: 0; width: 58px; height: 58px; overflow: hidden; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.14); transition: width 0.35s cubic-bezier(.22,.68,0,1.2), padding 0.35s, justify-content 0.35s, box-shadow 0.2s; }
+  .lp-chatbot-fab:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.18); }
+  .lp-chatbot-fab.open { width: 100%; padding: 10px 22px 10px 10px; gap: 12px; justify-content: flex-start; }
   .lp-chatbot-fab-img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; display: block; flex-shrink: 0; }
-  .lp-chatbot-fab-label { font-family: var(--f-sans); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #0A0A0A; white-space: nowrap; }
-  @media(max-width:640px) { .lp-chatbot-fab { bottom: 20px; left: 70px; right: 78px; padding: 8px 16px 8px 8px; gap: 8px; } .lp-chatbot-fab-img { width: 34px; height: 34px; } .lp-chatbot-fab-label { font-size: 9px; letter-spacing: 1px; } }
+  .lp-chatbot-fab-badge { position: absolute; top: 4px; right: 4px; width: 18px; height: 18px; border-radius: 50%; background: #0A0A0A; color: #fff; font-family: var(--f-sans); font-size: 13px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; }
+  .lp-chatbot-fab-label { font-family: var(--f-sans); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #0A0A0A; white-space: nowrap; opacity: 0; max-width: 0; overflow: hidden; transition: opacity 0.25s ease, max-width 0.35s ease; }
+  .lp-chatbot-fab.open .lp-chatbot-fab-label { opacity: 1; max-width: 200px; transition-delay: 0.1s; }
+  @media(max-width:640px) { .lp-chatbot-wrap { bottom: 20px; left: 70px; right: 78px; } .lp-chatbot-fab { width: 50px; height: 50px; } .lp-chatbot-fab.open { padding: 8px 16px 8px 8px; gap: 8px; } .lp-chatbot-fab-img { width: 34px; height: 34px; } .lp-chatbot-fab-badge { width: 16px; height: 16px; font-size: 11px; } .lp-chatbot-fab-label { font-size: 9px; letter-spacing: 1px; } }
 `;
 
 function Hero({ onShop }: { onShop: (cat?: string) => void }) {
@@ -317,6 +321,7 @@ export default function Homepage() {
   const [sortBy, setSortBy]           = useState('featured');
   const [sortDrawerOpen, setSortDrawerOpen] = useState(false);
   const sortBtnRef                          = useRef<HTMLDivElement>(null);
+  const [chatbotOpen, setChatbotOpen] = useState(false);
   const [flashSaleMap, setFlashSaleMap] = useState<Record<number, number>>({});
   // maps product_id → sale_price (used to hide flash items from main grid)
 
@@ -811,18 +816,23 @@ export default function Homepage() {
       </a>
       <span className="lp-wa-tooltip">Chat with us on WhatsApp</span>
 
-      <button
-        type="button"
-        className="lp-chatbot-fab"
-        aria-label="Ask the Plug"
-        onClick={() => {
-          // TODO: wire this up to your actual chatbot handler/route
-          navigate('/chat');
-        }}
-      >
-        <img className="lp-chatbot-fab-img" src="/chatbot.jpg" alt="" aria-hidden="true" draggable={false} />
-        <span className="lp-chatbot-fab-label">Ask the Plug</span>
-      </button>
+      <div className="lp-chatbot-wrap">
+        <button
+          type="button"
+          className={`lp-chatbot-fab${chatbotOpen ? ' open' : ''}`}
+          aria-label="Ask the Plug"
+          aria-expanded={chatbotOpen}
+          onClick={() => {
+            if (!chatbotOpen) { setChatbotOpen(true); return; }
+            // TODO: wire this up to your actual chatbot handler/route
+            navigate('/chat');
+          }}
+        >
+          <img className="lp-chatbot-fab-img" src="/chatbot.jpg" alt="" aria-hidden="true" draggable={false} />
+          {!chatbotOpen && <span className="lp-chatbot-fab-badge">+</span>}
+          <span className="lp-chatbot-fab-label">Ask the Plug</span>
+        </button>
+      </div>
 
       {user && <NotificationBell userId={user.id} />}
     </div>
