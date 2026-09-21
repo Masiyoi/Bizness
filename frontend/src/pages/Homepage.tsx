@@ -135,15 +135,18 @@ const css = `
   .lp-toggle-btn:hover { border-color: var(--ink); color: var(--ink); }
   .lp-toggle-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
   @media(max-width:640px) { .lp-toggle-btn { padding: 8px 12px; font-size: 9px; letter-spacing: 1px; } }
-  .lp-chatbot-wrap { position: fixed; bottom: 28px; left: 90px; right: 100px; z-index: 9999; display: flex; justify-content: center; pointer-events: none; }
-  .lp-chatbot-fab { position: relative; pointer-events: auto; display: flex; align-items: center; justify-content: center; gap: 0; background: #E9E9E9; border: none; border-radius: 29px; padding: 0; width: 58px; height: 58px; overflow: hidden; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.14); transition: width 0.35s cubic-bezier(.22,.68,0,1.2), padding 0.35s, justify-content 0.35s, box-shadow 0.2s; }
-  .lp-chatbot-fab:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.18); }
-  .lp-chatbot-fab.open { width: 100%; padding: 10px 22px 10px 10px; gap: 12px; justify-content: flex-start; }
-  .lp-chatbot-fab-img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; display: block; flex-shrink: 0; }
-  .lp-chatbot-fab-badge { position: absolute; top: 4px; right: 4px; width: 18px; height: 18px; border-radius: 50%; background: #0A0A0A; color: #fff; font-family: var(--f-sans); font-size: 13px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; }
-  .lp-chatbot-fab-label { font-family: var(--f-sans); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #0A0A0A; white-space: nowrap; opacity: 0; max-width: 0; overflow: hidden; transition: opacity 0.25s ease, max-width 0.35s ease; }
-  .lp-chatbot-fab.open .lp-chatbot-fab-label { opacity: 1; max-width: 200px; transition-delay: 0.1s; }
-  @media(max-width:640px) { .lp-chatbot-wrap { bottom: 20px; left: 70px; right: 78px; } .lp-chatbot-fab { width: 50px; height: 50px; } .lp-chatbot-fab.open { padding: 8px 16px 8px 8px; gap: 8px; } .lp-chatbot-fab-img { width: 34px; height: 34px; } .lp-chatbot-fab-badge { width: 16px; height: 16px; font-size: 11px; } .lp-chatbot-fab-label { font-size: 9px; letter-spacing: 1px; } }
+  .lp-chatbot-fab { position: fixed; right: 28px; bottom: 100px; z-index: 9999; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; transition: width 0.35s cubic-bezier(.22,.68,0,1.2), height 0.35s, border-radius 0.35s, background 0.35s, padding 0.35s, gap 0.35s, box-shadow 0.2s; }
+  .lp-chatbot-fab.open { left: 90px; right: 100px; bottom: 28px; width: auto; height: 60px; border-radius: 30px; background: #E9E9E9; padding: 8px 44px 8px 8px; gap: 12px; justify-content: flex-start; box-shadow: 0 4px 20px rgba(0,0,0,0.14); }
+  .lp-chatbot-main { position: relative; display: flex; align-items: center; gap: 12px; background: none; border: none; padding: 0; margin: 0; width: 100%; height: 100%; min-width: 0; cursor: grab; touch-action: none; }
+  .lp-chatbot-main:active { cursor: grabbing; }
+  .lp-chatbot-fab.open .lp-chatbot-main { width: auto; height: auto; cursor: pointer; touch-action: auto; }
+  .lp-chatbot-fab-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; flex-shrink: 0; box-shadow: 0 4px 16px rgba(0,0,0,0.28); transition: width 0.35s, height 0.35s; }
+  .lp-chatbot-fab.open .lp-chatbot-fab-img { width: 44px; height: 44px; }
+  .lp-chatbot-fab-badge { position: absolute; top: -2px; right: -2px; width: 20px; height: 20px; border-radius: 50%; background: #0A0A0A; color: #fff; font-family: var(--f-sans); font-size: 14px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.3); pointer-events: none; }
+  .lp-chatbot-fab-label { font-family: var(--f-sans); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #0A0A0A; white-space: nowrap; }
+  .lp-chatbot-minus { position: absolute; top: 50%; right: 8px; transform: translateY(-50%); width: 26px; height: 26px; border-radius: 50%; border: none; background: #0A0A0A; color: #fff; font-family: var(--f-sans); font-size: 16px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .lp-chatbot-minus:hover { background: #222; }
+  @media(max-width:640px) { .lp-chatbot-fab { right: 20px; bottom: 82px; width: 56px; height: 56px; } .lp-chatbot-fab.open { left: 70px; right: 78px; bottom: 20px; height: 54px; padding: 6px 40px 6px 6px; gap: 8px; } .lp-chatbot-fab.open .lp-chatbot-fab-img { width: 38px; height: 38px; } .lp-chatbot-fab-badge { width: 18px; height: 18px; font-size: 12px; } .lp-chatbot-fab-label { font-size: 9px; letter-spacing: 1px; } .lp-chatbot-minus { width: 22px; height: 22px; font-size: 14px; right: 6px; } }
 `;
 
 function Hero({ onShop }: { onShop: (cat?: string) => void }) {
@@ -322,6 +325,52 @@ export default function Homepage() {
   const [sortDrawerOpen, setSortDrawerOpen] = useState(false);
   const sortBtnRef                          = useRef<HTMLDivElement>(null);
   const [chatbotOpen, setChatbotOpen] = useState(false);
+  const chatbotRef  = useRef<HTMLDivElement>(null);
+  const [chatbotPos, setChatbotPos] = useState<{ x: number; y: number } | null>(null);
+  const chatbotDrag = useRef({ dragging: false, moved: false, startX: 0, startY: 0, origX: 0, origY: 0 });
+
+  const handleChatbotPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (chatbotOpen) return;
+    const el = chatbotRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    chatbotDrag.current = {
+      dragging: true,
+      moved: false,
+      startX: e.clientX,
+      startY: e.clientY,
+      origX: rect.left,
+      origY: rect.top,
+    };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handleChatbotPointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (!chatbotDrag.current.dragging) return;
+    const dx = e.clientX - chatbotDrag.current.startX;
+    const dy = e.clientY - chatbotDrag.current.startY;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) chatbotDrag.current.moved = true;
+    const size = chatbotRef.current?.offsetWidth ?? 64;
+    const maxX = window.innerWidth - size;
+    const maxY = window.innerHeight - size;
+    const newX = Math.min(Math.max(0, chatbotDrag.current.origX + dx), maxX);
+    const newY = Math.min(Math.max(0, chatbotDrag.current.origY + dy), maxY);
+    setChatbotPos({ x: newX, y: newY });
+  };
+
+  const handleChatbotPointerUp = () => {
+    chatbotDrag.current.dragging = false;
+  };
+
+  const handleChatbotClick = () => {
+    if (chatbotDrag.current.moved) { chatbotDrag.current.moved = false; return; }
+    if (!chatbotOpen) {
+      setChatbotOpen(true);
+    } else {
+      // TODO: wire this up to your actual chatbot handler/route
+      navigate('/chat');
+    }
+  };
   const [flashSaleMap, setFlashSaleMap] = useState<Record<number, number>>({});
   // maps product_id → sale_price (used to hide flash items from main grid)
 
@@ -816,22 +865,35 @@ export default function Homepage() {
       </a>
       <span className="lp-wa-tooltip">Chat with us on WhatsApp</span>
 
-      <div className="lp-chatbot-wrap">
+      <div
+        ref={chatbotRef}
+        className={`lp-chatbot-fab${chatbotOpen ? ' open' : ''}`}
+        style={!chatbotOpen && chatbotPos ? { left: chatbotPos.x, top: chatbotPos.y, right: 'auto', bottom: 'auto' } : undefined}
+      >
         <button
           type="button"
-          className={`lp-chatbot-fab${chatbotOpen ? ' open' : ''}`}
+          className="lp-chatbot-main"
           aria-label="Ask the Plug"
           aria-expanded={chatbotOpen}
-          onClick={() => {
-            if (!chatbotOpen) { setChatbotOpen(true); return; }
-            // TODO: wire this up to your actual chatbot handler/route
-            navigate('/chat');
-          }}
+          onPointerDown={handleChatbotPointerDown}
+          onPointerMove={handleChatbotPointerMove}
+          onPointerUp={handleChatbotPointerUp}
+          onClick={handleChatbotClick}
         >
           <img className="lp-chatbot-fab-img" src="/chatbot.jpg" alt="" aria-hidden="true" draggable={false} />
           {!chatbotOpen && <span className="lp-chatbot-fab-badge">+</span>}
-          <span className="lp-chatbot-fab-label">Ask the Plug</span>
+          {chatbotOpen && <span className="lp-chatbot-fab-label">Ask the Plug</span>}
         </button>
+        {chatbotOpen && (
+          <button
+            type="button"
+            className="lp-chatbot-minus"
+            aria-label="Minimize chat button"
+            onClick={() => setChatbotOpen(false)}
+          >
+            −
+          </button>
+        )}
       </div>
 
       {user && <NotificationBell userId={user.id} />}
