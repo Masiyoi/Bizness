@@ -135,11 +135,11 @@ const css = `
   .lp-toggle-btn:hover { border-color: var(--ink); color: var(--ink); }
   .lp-toggle-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
   @media(max-width:640px) { .lp-toggle-btn { padding: 8px 12px; font-size: 9px; letter-spacing: 1px; } }
-  .lp-chatbot-fab { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; align-items: center; gap: 10px; background: #0A0A0A; border: none; border-radius: 12px; padding: 8px 20px 8px 8px; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.18); transition: transform 0.2s, box-shadow 0.2s; }
-  .lp-chatbot-fab:hover { transform: translateX(-50%) translateY(-3px) scale(1.03); box-shadow: 0 8px 28px rgba(0,0,0,0.22); }
-  .lp-chatbot-fab-img { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; display: block; flex-shrink: 0; }
-  .lp-chatbot-fab-label { font-family: var(--f-sans); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #fff; white-space: nowrap; }
-  @media(max-width:640px) { .lp-chatbot-fab { bottom: 20px; padding: 6px 14px 6px 6px; gap: 8px; } .lp-chatbot-fab-img { width: 34px; height: 34px; } .lp-chatbot-fab-label { font-size: 9px; letter-spacing: 1px; } }
+  .lp-chatbot-fab { position: fixed; bottom: 28px; left: 90px; right: 100px; z-index: 9999; display: flex; align-items: center; justify-content: center; gap: 12px; background: #E9E9E9; border: none; border-radius: 26px; padding: 10px 22px 10px 10px; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.14); transition: transform 0.2s, box-shadow 0.2s; }
+  .lp-chatbot-fab:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.18); }
+  .lp-chatbot-fab-img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; display: block; flex-shrink: 0; }
+  .lp-chatbot-fab-label { font-family: var(--f-sans); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #0A0A0A; white-space: nowrap; }
+  @media(max-width:640px) { .lp-chatbot-fab { bottom: 20px; left: 70px; right: 78px; padding: 8px 16px 8px 8px; gap: 8px; } .lp-chatbot-fab-img { width: 34px; height: 34px; } .lp-chatbot-fab-label { font-size: 9px; letter-spacing: 1px; } }
 `;
 
 function Hero({ onShop }: { onShop: (cat?: string) => void }) {
