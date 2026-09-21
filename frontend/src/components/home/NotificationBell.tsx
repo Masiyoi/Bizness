@@ -2,15 +2,15 @@
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../../hooks/useNotifications';
 const css = `
-  .lp-notif-fab { position: fixed; bottom: 28px; left: 28px; z-index: 9999; width: 58px; height: 58px; border-radius: 50%; border: none; background: transparent; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: none; transition: transform 0.2s; padding: 0; box-sizing: border-box; }
+  .lp-notif-fab { position: fixed; bottom: 35px; left: 28px; z-index: 9999; width: 44px; height: 44px; border-radius: 50%; border: none; background: transparent; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: none; transition: transform 0.2s; padding: 0; box-sizing: border-box; }
   .lp-notif-fab:hover { transform: translateY(-3px) scale(1.06); }
   .lp-notif-icon { width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; user-select: none; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.25)); }
-  .lp-notif-badge { position: absolute; top: -3px; right: -3px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 11px; background: #D93025; color: #fff; border: 2px solid #FAFAFA; box-sizing: border-box; font-family: 'DM Sans', system-ui, sans-serif; font-size: 10px; font-weight: 700; line-height: 18px; text-align: center; }
+  .lp-notif-badge { position: absolute; top: -3px; right: -3px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: #D93025; color: #fff; border: 2px solid #FAFAFA; box-sizing: border-box; font-family: 'DM Sans', system-ui, sans-serif; font-size: 9px; font-weight: 700; line-height: 14px; text-align: center; }
   @keyframes lpNotifRing { 0%,50%,100% { transform: rotate(0) } 10%,30% { transform: rotate(-14deg) } 20%,40% { transform: rotate(14deg) } }
   .lp-notif-fab.has-unread img { transform-origin: 50% 10%; animation: lpNotifRing 2.4s ease 1s 2; }
-  .lp-notif-tooltip { position: fixed; bottom: 96px; left: 28px; z-index: 9999; background: #0a0a0a; color: #fff; font-family: 'DM Sans', system-ui, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 1px; padding: 7px 14px; border-radius: 4px; white-space: nowrap; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity 0.18s, transform 0.18s; }
+  .lp-notif-tooltip { position: fixed; bottom: 88px; left: 28px; z-index: 9999; background: #0a0a0a; color: #fff; font-family: 'DM Sans', system-ui, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 1px; padding: 7px 14px; border-radius: 4px; white-space: nowrap; pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity 0.18s, transform 0.18s; }
   .lp-notif-fab:hover + .lp-notif-tooltip, .lp-notif-fab:focus-visible + .lp-notif-tooltip { opacity: 1; transform: translateY(0); }
-  @media (max-width: 640px) { .lp-notif-fab { width: 50px; height: 50px; bottom: 20px; left: 20px; } .lp-notif-tooltip { display: none; } }
+  @media (max-width: 640px) { .lp-notif-fab { width: 38px; height: 38px; bottom: 26px; left: 20px; } .lp-notif-tooltip { display: none; } }
 `;
 export default function NotificationBell({ userId }: { userId: number | string }) {
   const navigate = useNavigate();
