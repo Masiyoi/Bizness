@@ -801,7 +801,7 @@ export default function Homepage() {
       <ReviewSection reviews={reviews} loading={reviewsLoading} isAdmin={user?.role === 'admin'} />
       <Footer />
 
-      <a href="https://wa.me/254707099935" target="_blank" rel="noopener noreferrer" className="lp-wa-fab" aria-label="Chat with us on WhatsApp">
+      <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" className="lp-wa-fab" aria-label="Chat with us on WhatsApp">
         <img src="/whatsappbusiness.webp" alt="WhatsApp" />
       </a>
       <span className="lp-wa-tooltip">Chat with us on WhatsApp</span>

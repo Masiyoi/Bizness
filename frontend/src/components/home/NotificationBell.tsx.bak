@@ -2,9 +2,9 @@
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../../hooks/useNotifications';
 const css = `
-  .lp-notif-fab { position: fixed; bottom: 28px; left: 28px; z-index: 9999; width: 58px; height: 58px; border-radius: 50%; border: none; background: transparent; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: none; transition: transform 0.2s; padding: 0; box-sizing: border-box; }
-  .lp-notif-fab:hover { transform: translateY(-3px) scale(1.06); }
-  .lp-notif-icon { width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; user-select: none; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.25)); }
+  .lp-notif-fab { position: fixed; bottom: 28px; left: 28px; z-index: 9999; width: 58px; height: 58px; border-radius: 50%; border: none; background: #0A0A0A; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0,0,0,0.18); transition: transform 0.2s, box-shadow 0.2s; padding: 11px; box-sizing: border-box; }
+  .lp-notif-fab:hover { transform: translateY(-3px) scale(1.06); box-shadow: 0 8px 28px rgba(0,0,0,0.22); }
+  .lp-notif-icon { width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; user-select: none; }
   .lp-notif-badge { position: absolute; top: -3px; right: -3px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 11px; background: #D93025; color: #fff; border: 2px solid #FAFAFA; box-sizing: border-box; font-family: 'DM Sans', system-ui, sans-serif; font-size: 10px; font-weight: 700; line-height: 18px; text-align: center; }
   @keyframes lpNotifRing { 0%,50%,100% { transform: rotate(0) } 10%,30% { transform: rotate(-14deg) } 20%,40% { transform: rotate(14deg) } }
   .lp-notif-fab.has-unread img { transform-origin: 50% 10%; animation: lpNotifRing 2.4s ease 1s 2; }
