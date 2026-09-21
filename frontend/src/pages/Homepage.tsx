@@ -1,4 +1,4 @@
-﻿// src/pages/Homepage.tsx
+// src/pages/Homepage.tsx
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams }      from 'react-router-dom';
 import axios                                  from 'axios';
@@ -135,6 +135,11 @@ const css = `
   .lp-toggle-btn:hover { border-color: var(--ink); color: var(--ink); }
   .lp-toggle-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
   @media(max-width:640px) { .lp-toggle-btn { padding: 8px 12px; font-size: 9px; letter-spacing: 1px; } }
+  .lp-chatbot-fab { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; align-items: center; gap: 10px; background: #0A0A0A; border: none; border-radius: 12px; padding: 8px 20px 8px 8px; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.18); transition: transform 0.2s, box-shadow 0.2s; }
+  .lp-chatbot-fab:hover { transform: translateX(-50%) translateY(-3px) scale(1.03); box-shadow: 0 8px 28px rgba(0,0,0,0.22); }
+  .lp-chatbot-fab-img { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; display: block; flex-shrink: 0; }
+  .lp-chatbot-fab-label { font-family: var(--f-sans); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #fff; white-space: nowrap; }
+  @media(max-width:640px) { .lp-chatbot-fab { bottom: 20px; padding: 6px 14px 6px 6px; gap: 8px; } .lp-chatbot-fab-img { width: 34px; height: 34px; } .lp-chatbot-fab-label { font-size: 9px; letter-spacing: 1px; } }
 `;
 
 function Hero({ onShop }: { onShop: (cat?: string) => void }) {
@@ -805,6 +810,20 @@ export default function Homepage() {
         <img src="/whatsappbusiness.webp" alt="WhatsApp" />
       </a>
       <span className="lp-wa-tooltip">Chat with us on WhatsApp</span>
+
+      <button
+        type="button"
+        className="lp-chatbot-fab"
+        aria-label="Ask the Plug"
+        onClick={() => {
+          // TODO: wire this up to your actual chatbot handler/route
+          navigate('/chat');
+        }}
+      >
+        <img className="lp-chatbot-fab-img" src="/chatbot.jpg" alt="" aria-hidden="true" draggable={false} />
+        <span className="lp-chatbot-fab-label">Ask the Plug</span>
+      </button>
+
       {user && <NotificationBell userId={user.id} />}
     </div>
   );
