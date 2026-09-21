@@ -135,7 +135,7 @@ const css = `
   .lp-toggle-btn:hover { border-color: var(--ink); color: var(--ink); }
   .lp-toggle-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
   @media(max-width:640px) { .lp-toggle-btn { padding: 8px 12px; font-size: 9px; letter-spacing: 1px; } }
-  .lp-chatbot-fab { position: fixed; right: 28px; bottom: 100px; z-index: 9999; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; transition: width 0.35s cubic-bezier(.22,.68,0,1.2), height 0.35s, border-radius 0.35s, background 0.35s, padding 0.35s, gap 0.35s, box-shadow 0.2s; }
+  .lp-chatbot-fab { position: fixed; right: 28px; bottom: 94px; z-index: 9999; width: 58px; height: 58px; display: flex; align-items: center; justify-content: center; transition: width 0.35s cubic-bezier(.22,.68,0,1.2), height 0.35s, border-radius 0.35s, background 0.35s, padding 0.35s, gap 0.35s, box-shadow 0.2s; }
   .lp-chatbot-fab.open { left: 90px; right: 100px; bottom: 28px; width: auto; height: 60px; border-radius: 30px; background: #E9E9E9; padding: 8px 44px 8px 8px; gap: 12px; justify-content: flex-start; box-shadow: 0 4px 20px rgba(0,0,0,0.14); }
   .lp-chatbot-main { position: relative; display: flex; align-items: center; gap: 12px; background: none; border: none; padding: 0; margin: 0; width: 100%; height: 100%; min-width: 0; cursor: grab; touch-action: none; }
   .lp-chatbot-main:active { cursor: grabbing; }
@@ -146,7 +146,7 @@ const css = `
   .lp-chatbot-fab-label { font-family: var(--f-sans); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #0A0A0A; white-space: nowrap; }
   .lp-chatbot-minus { position: absolute; top: 50%; right: 8px; transform: translateY(-50%); width: 26px; height: 26px; border-radius: 50%; border: none; background: #0A0A0A; color: #fff; font-family: var(--f-sans); font-size: 16px; font-weight: 700; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
   .lp-chatbot-minus:hover { background: #222; }
-  @media(max-width:640px) { .lp-chatbot-fab { right: 20px; bottom: 82px; width: 56px; height: 56px; } .lp-chatbot-fab.open { left: 70px; right: 78px; bottom: 20px; height: 54px; padding: 6px 40px 6px 6px; gap: 8px; } .lp-chatbot-fab.open .lp-chatbot-fab-img { width: 38px; height: 38px; } .lp-chatbot-fab-badge { width: 18px; height: 18px; font-size: 12px; } .lp-chatbot-fab-label { font-size: 9px; letter-spacing: 1px; } .lp-chatbot-minus { width: 22px; height: 22px; font-size: 14px; right: 6px; } }
+  @media(max-width:640px) { .lp-chatbot-fab { right: 20px; bottom: 76px; width: 50px; height: 50px; } .lp-chatbot-fab.open { left: 70px; right: 78px; bottom: 20px; height: 54px; padding: 6px 40px 6px 6px; gap: 8px; } .lp-chatbot-fab.open .lp-chatbot-fab-img { width: 38px; height: 38px; } .lp-chatbot-fab-badge { width: 18px; height: 18px; font-size: 12px; } .lp-chatbot-fab-label { font-size: 9px; letter-spacing: 1px; } .lp-chatbot-minus { width: 22px; height: 22px; font-size: 14px; right: 6px; } }
 `;
 
 function Hero({ onShop }: { onShop: (cat?: string) => void }) {
@@ -350,7 +350,7 @@ export default function Homepage() {
     const dx = e.clientX - chatbotDrag.current.startX;
     const dy = e.clientY - chatbotDrag.current.startY;
     if (Math.abs(dx) > 4 || Math.abs(dy) > 4) chatbotDrag.current.moved = true;
-    const size = chatbotRef.current?.offsetWidth ?? 64;
+    const size = chatbotRef.current?.offsetWidth ?? 58;
     const maxX = window.innerWidth - size;
     const maxY = window.innerHeight - size;
     const newX = Math.min(Math.max(0, chatbotDrag.current.origX + dx), maxX);
