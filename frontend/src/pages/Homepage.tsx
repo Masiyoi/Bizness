@@ -18,7 +18,6 @@ import HeadwearSection  from '../components/home/HeadwearSection';
 import FootwearSection  from '../components/home/FootwearSection';
 
 import { readUser, ANNOUNCEMENTS } from '../constants/theme';
-import WhatsAppLogo from '../assets/Whatsapplogo.jpg';
 import type { Product, HomepageReview, User } from '../constants/theme';
 
 const PRODUCTS_PER_PAGE = 8;
@@ -803,7 +802,7 @@ export default function Homepage() {
       <Footer />
 
       <a href="https://wa.me/254707099935" target="_blank" rel="noopener noreferrer" className="lp-wa-fab" aria-label="Chat with us on WhatsApp">
-        <img src={WhatsAppLogo} alt="WhatsApp" />
+        <img src="/whatsappbusiness.webp" alt="WhatsApp" />
       </a>
       <span className="lp-wa-tooltip">Chat with us on WhatsApp</span>
       {user && <NotificationBell userId={user.id} />}
