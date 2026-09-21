@@ -66,7 +66,7 @@ const TIERS = [
     bg:       'rgba(106,127,168,0.08)',
     border:   'rgba(106,127,168,0.28)',
     lottie:   '/animations/Red_Diamond.lottie',
-    perks:    ['All Gold perks', 'Free shipping on every order', 'Exclusive early drops', 'Complete 3 orders to get 10% off your 4th drop', 'Personal stylist access', 'VIP event invites'],
+    perks:    ['All Gold perks', 'Free shipping on every order', 'Exclusive early drops', 'Personal stylist access', 'VIP event invites'],
   },
 ];
 const EARN_WAYS = [

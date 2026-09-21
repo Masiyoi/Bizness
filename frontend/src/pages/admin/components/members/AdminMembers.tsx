@@ -27,7 +27,7 @@ const TIER_THEME: Record<Member['tier'], { grad: string; color: string; border: 
     grad:   'linear-gradient(135deg, #9BB0DE 0%, #6A7FA8 100%)',
     color:  '#6A7FA8',
     border: 'rgba(106,127,168,0.35)',
-    perks:  ['All Gold perks', 'Free shipping every order', 'Exclusive early drops', 'Complete 3 orders to get 10% off your 4th drop', 'Personal stylist access', 'VIP event invites'],
+    perks:  ['All Gold perks', 'Free shipping every order', 'Exclusive early drops', 'Personal stylist access', 'VIP event invites'],
   },
 };
 const fmtDate = (iso: string) =>

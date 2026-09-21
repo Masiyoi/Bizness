@@ -176,7 +176,7 @@ export default function Navbar({
   // first-order offer (already redeemed it, or are an already-converted user).
   const REGULAR_BANNERS = [
     'Free shipping on orders above KSh 5,000',
-    'Complete 3 orders to get 10% off your 4th drop',
+    'Complete 3 orders to get 10% off your 4th',
     'Earn points by referring friends',
   ];
 
