@@ -56,7 +56,7 @@ const TIERS = [
     bg:       'rgba(184,150,12,0.08)',
     border:   'rgba(184,150,12,0.28)',
     lottie:   '/animations/Gold_Coin.lottie',
-    perks:    ['All Bronze perks', 'Free shipping on orders over KSh 3,000', '10% discount code monthly', 'Priority customer support'],
+    perks:    ['All Bronze perks', 'Free shipping on orders over KSh 5,000', '10% discount code monthly', 'Priority customer support'],
   },
   {
     name:     'Diamond' as const,
@@ -66,7 +66,7 @@ const TIERS = [
     bg:       'rgba(106,127,168,0.08)',
     border:   'rgba(106,127,168,0.28)',
     lottie:   '/animations/Red_Diamond.lottie',
-    perks:    ['All Gold perks', 'Free shipping on every order', 'Exclusive early drops','Get 10% off after 10 orders', 'Personal stylist access', 'VIP event invites'],
+    perks:    ['All Gold perks', 'Free shipping on every order', 'Exclusive early drops', 'Complete 3 orders to get 10% off your 4th drop', 'Personal stylist access', 'VIP event invites'],
   },
 ];
 const EARN_WAYS = [

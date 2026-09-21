@@ -175,8 +175,8 @@ export default function Navbar({
   // Rotating marketing banner shown to customers who no longer see the
   // first-order offer (already redeemed it, or are an already-converted user).
   const REGULAR_BANNERS = [
-    'Free shipping on orders above KSh 3,000',
-    'Get 10% off after 10 orders',
+    'Free shipping on orders above KSh 5,000',
+    'Complete 3 orders to get 10% off your 4th drop',
     'Earn points by referring friends',
   ];
 

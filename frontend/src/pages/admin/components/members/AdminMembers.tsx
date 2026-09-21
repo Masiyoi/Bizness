@@ -21,13 +21,13 @@ const TIER_THEME: Record<Member['tier'], { grad: string; color: string; border: 
     grad:   'linear-gradient(135deg, #E8C64A 0%, #B8960C 100%)',
     color:  '#B8960C',
     border: 'rgba(184,150,12,0.35)',
-    perks:  ['All Bronze perks', 'Free shipping over KSh 3,000', '10% discount code monthly', 'Priority support'],
+    perks:  ['All Bronze perks', 'Free shipping over KSh 5,000', '10% discount code monthly', 'Priority support'],
   },
   Diamond: {
     grad:   'linear-gradient(135deg, #9BB0DE 0%, #6A7FA8 100%)',
     color:  '#6A7FA8',
     border: 'rgba(106,127,168,0.35)',
-    perks:  ['All Gold perks', 'Free shipping every order', 'Exclusive early drops', '10% off after 10 orders', 'Personal stylist access', 'VIP event invites'],
+    perks:  ['All Gold perks', 'Free shipping every order', 'Exclusive early drops', 'Complete 3 orders to get 10% off your 4th drop', 'Personal stylist access', 'VIP event invites'],
   },
 };
 const fmtDate = (iso: string) =>
