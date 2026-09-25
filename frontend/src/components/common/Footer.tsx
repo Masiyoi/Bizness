@@ -282,8 +282,11 @@ export default function Footer() {
 
           {/* Tagline */}
           <p className="ft-tagline">
-            Kenya's premier fashion destination — authentic drops, fast delivery,
-            and style that speaks before you do.
+            Kenya's premier online Footwear and Streetwear Apparel destination-authentic drops , fast delivery & easy returns.
+          </p>
+
+          <p className="ft-tagline">
+            Do It For The Experience.
           </p>
 
 

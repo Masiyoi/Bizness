@@ -2,7 +2,7 @@
 
 export default function AppDownload() {
   return (
-    <section style={{ background: '#fff', borderTop: '1px solid rgba(0,0,0,0.10)', borderBottom: '1px solid rgba(0,0,0,0.10)' }}>
+    <section style={{ background: '#fff' }}>
       <style>{`
         .ad-wrap {
           max-width: 1100px;
@@ -73,8 +73,12 @@ export default function AppDownload() {
           display: block;
           object-fit: cover;
         }
+        .ad-badge-apple {
+          height: 68px;
+        }
         @media (max-width: 480px) {
           .ad-badge { height: 46px; }
+          .ad-badge-apple { height: 58px; }
         }
       `}</style>
 
@@ -82,11 +86,11 @@ export default function AppDownload() {
         <p className="ad-kicker">Shop On The Go</p>
         <h2 className="ad-title">Get the <em>App</em></h2>
         <p className="ad-desc">
-          Shop Luku Prime anywhere, anytime. Download our app for exclusive drops, faster checkout, and order tracking on the move.
+          Get plugged in anywhere, anytime. Download our app for exclusive drops, faster checkout, and order tracking on the move.
         </p>
       </div>
       <div className="ad-badges">
-        <a href="#" target="_blank" rel="noopener noreferrer" className="ad-badge" aria-label="Download on the App Store">
+        <a href="#" target="_blank" rel="noopener noreferrer" className="ad-badge ad-badge-apple" aria-label="Download on the App Store">
           <img src="/applestore.jpg" alt="Download on the App Store" />
         </a>
         <a href="#" target="_blank" rel="noopener noreferrer" className="ad-badge" aria-label="Get it on Google Play">
