@@ -275,7 +275,7 @@ export default function Footer() {
         <div className="ft-bottom-strip">
 
           {/* Giant wordmark */}
-          <div className="ft-wordmark">𝓟𝓵𝓾𝓰 𝓦𝓪𝓵𝓴</div>
+          <img src="/pgwalk.jpg" alt="Plug Walk" className="ft-wordmark-img" />
 
           {/* Socials */}
           <div style={{ marginBottom: 24 }}>{SOCIAL_ICONS}</div>
@@ -430,16 +430,12 @@ const css = `
     padding: 48px 0 32px;
   }
 
-  .ft-wordmark {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: clamp(44px, 8vw, 100px);
-    font-weight: 400;
-    letter-spacing: 0;
-    line-height: 1.1;
-    color: #111;
-    margin-bottom: 24px;
-    text-transform: none;
-  }
+.ft-wordmark-img {
+  display: block;
+  width: clamp(180px, 22vw, 320px);
+  height: auto;
+  margin-bottom: 24px;
+}
 
   .ft-tagline {
     font-size: 14px;

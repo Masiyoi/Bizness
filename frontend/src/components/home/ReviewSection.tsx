@@ -109,7 +109,7 @@ function ScrollingColumn({
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const pausedRef = useRef(false);
-  const resumeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     const el = scrollRef.current;
     if (!el || reviews.length === 0) return;
@@ -130,28 +130,16 @@ function ScrollingColumn({
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [speed, reviews.length]);
-  const pause = () => { pausedRef.current = true; };
-  const scheduleResume = (delay = 1200) => {
-    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
-    resumeTimeoutRef.current = setTimeout(() => { pausedRef.current = false; }, delay);
-  };
-  useEffect(() => {
-    return () => {
-      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
-    };
-  }, []);
+
   if (reviews.length === 0) return null;
   const doubled = [...reviews, ...reviews];
+
   return (
     <div
       ref={scrollRef}
-      className="lp-review-col flex-1 min-w-0 overflow-y-auto overscroll-contain"
-      style={{ scrollbarWidth: 'none' }}
-      onMouseEnter={pause}
-      onMouseLeave={() => scheduleResume(0)}
-      onTouchStart={pause}
-      onTouchEnd={() => scheduleResume()}
-      onWheel={() => { pause(); scheduleResume(); }}
+      className="lp-review-col flex-1 min-w-0 overflow-hidden"
+      onMouseEnter={() => { pausedRef.current = true; }}
+      onMouseLeave={() => { pausedRef.current = false; }}
     >
       <div className="flex flex-col gap-3 pb-3">
         {doubled.map((review, idx) => (

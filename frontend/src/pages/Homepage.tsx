@@ -16,6 +16,7 @@ import FlashSaleStrip from '../components/home/FlashSaleStrip';
 import CategoryBanner   from '../components/home/CategoryBanner';
 import HeadwearSection  from '../components/home/HeadwearSection';
 import FootwearSection  from '../components/home/FootwearSection';
+import StoreLocator from '../components/home/StoreLocator';
 
 import { readUser, ANNOUNCEMENTS } from '../constants/theme';
 import type { Product, HomepageReview, User } from '../constants/theme';
@@ -858,6 +859,7 @@ export default function Homepage() {
 
       <InstagramStrip handle="@lukuprime" profileUrl="https://instagram.com/lukuprime" limit={12} />
       <ReviewSection reviews={reviews} loading={reviewsLoading} isAdmin={user?.role === 'admin'} />
+      <StoreLocator />
       <Footer />
 
       <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" className="lp-wa-fab" aria-label="Chat with us on WhatsApp">
