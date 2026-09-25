@@ -442,7 +442,7 @@ const css = `
 
   .ft-tagline {
     font-size: 14px;
-    color: #777;
+    color: #333;
     line-height: 1.7;
     max-width: 480px;
     margin: 0 0 32px;
