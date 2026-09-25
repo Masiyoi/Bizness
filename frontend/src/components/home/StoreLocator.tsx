@@ -38,7 +38,7 @@ export default function StoreLocator() {
           font-weight: 800;
           letter-spacing: 1.5px;
           text-transform: uppercase;
-          color: #888;
+          color: #0A0A0A;
           margin-bottom: 3px;
         }
         .sl-info-value {
@@ -75,8 +75,7 @@ export default function StoreLocator() {
 
       <div className="sl-wrap">
         <div style={{ marginBottom: 'clamp(20px,3vw,32px)' }}>
-          <p className="lp-section-kicker">Find Us</p>
-          <h2 className="lp-section-title">Store <em>Locator</em></h2>
+          <h2 className="lp-section-title">Plug Radar</h2>
         </div>
 
         <div className="sl-info-grid">
@@ -91,7 +90,7 @@ export default function StoreLocator() {
             <img src={telephoneIcon} alt="" className="sl-info-icon" />
             <div>
               <div className="sl-info-label">Phone</div>
-              <a href="tel:+254707099935" className="sl-info-value">+254 707 099 935</a>
+              <a href="tel:+254723831949" className="sl-info-value">+254 723 831 949</a>
             </div>
           </div>
           <div className="sl-info-card">

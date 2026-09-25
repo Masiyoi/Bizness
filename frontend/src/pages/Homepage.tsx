@@ -17,6 +17,7 @@ import CategoryBanner   from '../components/home/CategoryBanner';
 import HeadwearSection  from '../components/home/HeadwearSection';
 import FootwearSection  from '../components/home/FootwearSection';
 import StoreLocator from '../components/home/StoreLocator';
+import AppDownload from '../components/home/AppDownload';
 
 import { readUser, ANNOUNCEMENTS } from '../constants/theme';
 import type { Product, HomepageReview, User } from '../constants/theme';
@@ -858,6 +859,7 @@ export default function Homepage() {
       <div style={{ marginTop: 32 }}><Gallery/></div>
 
       <InstagramStrip handle="@lukuprime" profileUrl="https://instagram.com/lukuprime" limit={12} />
+      <AppDownload />
       <ReviewSection reviews={reviews} loading={reviewsLoading} isAdmin={user?.role === 'admin'} />
       <StoreLocator />
       <Footer />
