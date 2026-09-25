@@ -35,7 +35,7 @@ const PAYMENT_LOGOS = [
 // ── Nav columns ──────────────────────────────────────────────────
 const COLUMNS = [
   {
-    heading: 'Luku Prime',
+    heading: 'Company',
     links: [
       { label: 'About Us',      path: '/about?tab=about'   },
       { label: 'Careers',       path: '/about?tab=careers' },
