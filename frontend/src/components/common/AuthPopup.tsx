@@ -436,9 +436,9 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
                 muted
                 loop
                 playsInline
-                aria-label="Luku Prime"
+                aria-label="Plug Walk"
               />
-              <div className="ap-modal-img-label">Luku ni Prime<br/>Siku Zote</div>
+              <div className="ap-modal-img-label">Plug Walk<br/>Siku Zote</div>
               {/* Mobile-only promo overlay */}
               <div className="ap-mobile-promo">
                 <div className="ap-mobile-promo-badge">Limited Offer</div>
@@ -487,7 +487,7 @@ export default function AuthPopup({ onAuthSuccess }: AuthPopupProps) {
                   <p className="ap-sub">
                     {mode === 'signin'
                       ? 'Access your orders, wishlist, and saved details.'
-                      : 'Join Luku Prime for faster checkout and exclusive drops.'}
+                      : 'Join Plug Walk Members Club for faster checkout and exclusive drops.'}
                   </p>
                   <div className="ap-tabs">
                     <button className={`ap-tab ${mode === 'signin' ? 'active' : ''}`} onClick={() => switchMode('signin')} disabled={loading}>Sign In</button>

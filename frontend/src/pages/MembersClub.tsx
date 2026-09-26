@@ -356,8 +356,8 @@ useEffect(() => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Join Luku Prime',
-          text: 'Shop with me on Luku Prime and we both earn points!',
+          title: 'Join Plug Walk Members Club',
+          text: 'Shop with me on Plug Walk and we both earn points!',
           url: referral.referral_url,
         });
       } catch {
@@ -422,7 +422,7 @@ useEffect(() => {
             fontFamily: "'Jost', sans-serif", fontWeight: 300, fontSize: 'clamp(13px,1.5vw,15px)',
             color: 'rgba(255,255,255,0.82)', lineHeight: 1.8, maxWidth: 440, margin: '0 auto 32px',
           }}>
-            Join Luku Prime Members Club and get rewarded while you shop.
+            Join Plug Walk Members Club and get rewarded while you shop.
           </p>
           {!user && (
             <div className="mc-fade mc-d3" style={{ display: 'flex', gap: 0, justifyContent: 'center', flexWrap: 'wrap' }}>

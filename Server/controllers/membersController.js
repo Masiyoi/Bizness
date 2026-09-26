@@ -1,4 +1,4 @@
-﻿// src/controllers/membersController.js
+// src/controllers/membersController.js
 //
 // Assumes a shared pg Pool exported from ../db, e.g.:
 //   const { Pool } = require('pg');
@@ -289,7 +289,7 @@ async function getReferralLink(req, res) {
       }
       if (!code) throw new Error('Could not generate a unique referral code');
     }
-    const baseUrl = process.env.FRONTEND_URL || 'https://lukuprime.shop';
+    const baseUrl = process.env.FRONTEND_URL || 'https://plugwalk.co';
     res.json({
       referral_code: code,
       referral_url: `${baseUrl}/#/register?ref=${code}`,
