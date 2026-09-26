@@ -1,7 +1,7 @@
 const axios = require('axios');
 const db    = require('../config/db');
 const { calculateFirstOrderDiscount, calculateOrderDiscount } = require('./discountController');
-const { awardOrderPoints } = require('./membersController');
+const { awardOrderPoints, getShippingOverride, markGoldDiscountCodeUsed } = require('./membersController');
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
 const { decrementStockForItems } = require('../utils/stockDeduction');
 const { sendMetaEvent } = require('../services/metaCapi');
@@ -69,6 +69,7 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
   const discountType   = shippingMeta.discount_type || null;
   const reservedOrderNumber = shippingMeta.reserved_order_number || null;
   const affiliateCode  = shippingMeta.affiliate_code || null;
+  const discountCodeId = shippingMeta.discount_code_id || null;
   // Captured client-side when checkout started (see stkPush below) and
   // carried through shipping_meta so it's available here even though this
   // function runs from a server-to-server PayHero webhook with no browser
@@ -166,6 +167,7 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
   );
 
  await awardOrderPoints(payment.user_id, payment.amount);
+  await markGoldDiscountCodeUsed(discountCodeId);
   logActivity({
     userId: payment.user_id,
     eventType: 'order_placed',
@@ -222,6 +224,7 @@ exports.stkPush = async (req, res) => {
     selectedSizes  = {},
     reserved_order_number = null,
     affiliate_code = null,
+    discount_code = null,
     fbc = null,
     fbp = null,
   } = req.body;
@@ -281,8 +284,9 @@ exports.stkPush = async (req, res) => {
       (sum, row) => sum + Number(row.effective_price) * row.quantity, 0
     );
 
-    discountInfo = await calculateOrderDiscount(userId, subtotal);
-    const total  = discountInfo.discountedSubtotal + Number(delivery_fee || 0);
+    discountInfo = await calculateOrderDiscount(userId, subtotal, discount_code);
+    const deliveryOverride = await getShippingOverride(userId, subtotal, delivery_fee);
+    const total  = discountInfo.discountedSubtotal + deliveryOverride.deliveryFee;
     roundedAmount = Math.ceil(total);
   } catch (err) {
     console.error('Order total calculation error:', err.message);
@@ -333,11 +337,12 @@ exports.stkPush = async (req, res) => {
         roundedAmount,
         formattedPhone,
         delivery_zone || 'cbd',
-        delivery_fee  || 0,
+        deliveryOverride.deliveryFee,
         JSON.stringify({
-          shipping, selectedColors, selectedSizes, delivery_zone, delivery_fee,
+          shipping, selectedColors, selectedSizes, delivery_zone, delivery_fee: deliveryOverride.deliveryFee,
           discount_amount: discountInfo.discountAmount,
           discount_type: discountInfo.discountType,
+          discount_code_id: discountInfo.discountCodeId,
           reserved_order_number,
           external_reference: externalReference,
           affiliate_code: validatedAffiliateCode,

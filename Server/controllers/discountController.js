@@ -2,6 +2,32 @@ const db = require('../config/db');
 const FIRST_ORDER_DISCOUNT_RATE = 0.10; // 10%
 const LOYALTY_DISCOUNT_RATE = 0.10; // 10%
 const LOYALTY_CYCLE = 4; // every 4th confirmed order is discounted
+const GOLD_CODE_DISCOUNT_RATE = 0.10; // 10% -- keep in sync with the Gold tier perk in MembersClub.tsx
+// -- Internal: validate a Gold-tier monthly code for this user/subtotal ------
+// Never throws -- a missing/expired/already-used code just falls through to
+// "no discount" rather than blocking checkout, matching the fail-safe style
+// of getShippingOverride in membersController.js.
+const validateGoldDiscountCode = async (userId, subtotal, code) => {
+  const invalid = {
+    valid: false, discountAmount: 0,
+    discountedSubtotal: Math.round(subtotal * 100) / 100, codeId: null,
+  };
+  if (!code || !(subtotal > 0)) return invalid;
+  try {
+    const result = await db.query(
+      `SELECT id FROM gold_discount_codes
+       WHERE user_id = $1 AND code = $2 AND used_at IS NULL AND expires_at > NOW()`,
+      [userId, String(code).trim().toUpperCase()]
+    );
+    if (result.rows.length === 0) return invalid;
+    const discountAmount = Math.round(subtotal * GOLD_CODE_DISCOUNT_RATE * 100) / 100;
+    const discountedSubtotal = Math.round((subtotal - discountAmount) * 100) / 100;
+    return { valid: true, discountAmount, discountedSubtotal, codeId: result.rows[0].id };
+  } catch (err) {
+    console.error('validateGoldDiscountCode error:', err.message);
+    return invalid;
+  }
+};
 // ── Internal: has this user ever completed (paid) an order? ──────────────────
 const isEligibleForFirstOrderDiscount = async (userId) => {
   const result = await db.query(
@@ -50,26 +76,37 @@ const getLoyaltyStatus = async (userId) => {
 // First-order discount only ever fires on order #1, so it never actually
 // competes with loyalty (which starts at order #4) — kept explicit in case
 // that ever changes.
-const calculateOrderDiscount = async (userId, subtotal) => {
+const calculateOrderDiscount = async (userId, subtotal, discountCode = null) => {
   if (!(subtotal > 0)) {
     return {
       discountType: null, eligible: false, discountAmount: 0,
-      discountedSubtotal: Math.round(subtotal * 100) / 100,
+      discountedSubtotal: Math.round(subtotal * 100) / 100, discountCodeId: null,
     };
   }
   const firstOrder = await calculateFirstOrderDiscount(userId, subtotal);
   if (firstOrder.eligible) {
-    return { discountType: 'first_order', ...firstOrder };
+    return { discountType: 'first_order', discountCodeId: null, ...firstOrder };
+  }
+  if (discountCode) {
+    const goldCode = await validateGoldDiscountCode(userId, subtotal, discountCode);
+    if (goldCode.valid) {
+      return {
+        discountType: 'gold_code', eligible: true,
+        discountAmount: goldCode.discountAmount,
+        discountedSubtotal: goldCode.discountedSubtotal,
+        discountCodeId: goldCode.codeId,
+      };
+    }
   }
   const loyalty = await getLoyaltyStatus(userId);
   if (loyalty.eligible) {
     const discountAmount = Math.round(subtotal * LOYALTY_DISCOUNT_RATE * 100) / 100;
     const discountedSubtotal = Math.round((subtotal - discountAmount) * 100) / 100;
-    return { discountType: 'loyalty', eligible: true, discountAmount, discountedSubtotal };
+    return { discountType: 'loyalty', eligible: true, discountAmount, discountedSubtotal, discountCodeId: null };
   }
   return {
     discountType: null, eligible: false, discountAmount: 0,
-    discountedSubtotal: Math.round(subtotal * 100) / 100,
+    discountedSubtotal: Math.round(subtotal * 100) / 100, discountCodeId: null,
   };
 };
 // ── GET /api/discount/preview — called from cart page & checkout page ────────
@@ -94,7 +131,7 @@ exports.getDiscountPreview = async (req, res) => {
     const subtotal = cartRes.rows.reduce(
       (sum, row) => sum + Number(row.effective_price) * row.quantity, 0
     );
-    const discount = await calculateOrderDiscount(userId, subtotal);
+    const discount = await calculateOrderDiscount(userId, subtotal, req.query.discount_code || null);
     const loyalty  = await getLoyaltyStatus(userId);
     return res.json({
       eligible: discount.eligible,
@@ -104,6 +141,7 @@ exports.getDiscountPreview = async (req, res) => {
       discountedSubtotal: discount.discountedSubtotal,
       discountLabel:
         discount.discountType === 'first_order' ? '10% off your first order' :
+        discount.discountType === 'gold_code'   ? '10% off — Gold member code applied' :
         discount.discountType === 'loyalty'     ? '10% off — loyalty reward unlocked' :
         null,
       loyalty: { eligible: loyalty.eligible, ordersUntilNext: loyalty.ordersUntilNext },

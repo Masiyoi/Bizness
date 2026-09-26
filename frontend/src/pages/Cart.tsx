@@ -101,6 +101,7 @@ export default function Cart() {
   const [deliveryZone,   setDeliveryZone]   = useState<DeliveryZone>('cbd');
   const [shipping,       setShipping]       = useState<ShippingInfo>(EMPTY_SHIPPING);
   const [couponCode,     setCouponCode]     = useState('');
+  const [discountCode,   setDiscountCode]   = useState('');
   const [formErrors,     setFormErrors]     = useState<Partial<ShippingInfo>>({});
   const [formTouched,    setFormTouched]    = useState<Partial<Record<keyof ShippingInfo, boolean>>>({});
   const [selectedColors, setSelectedColors] = useState<Record<number, string>>({});
@@ -122,6 +123,8 @@ export default function Cart() {
       if (savedZone) setDeliveryZone(savedZone);
       const savedCoupon = sessionStorage.getItem('luku_coupon');
       if (savedCoupon) setCouponCode(savedCoupon);
+      const savedDiscountCode = sessionStorage.getItem('luku_discount_code');
+      if (savedDiscountCode) setDiscountCode(savedDiscountCode);
     } catch {}
 
     axios.get('/api/products/flash-sales?limit=100')
@@ -134,7 +137,9 @@ export default function Cart() {
       })
       .catch(() => {});
 
-    axios.get('/api/discount/preview')
+    let initialDiscountCode = '';
+    try { initialDiscountCode = sessionStorage.getItem('luku_discount_code') || ''; } catch {}
+    axios.get('/api/discount/preview' + (initialDiscountCode ? ('?discount_code=' + encodeURIComponent(initialDiscountCode)) : ''))
       .then(r => setDiscount({
         eligible: r.data.eligible,
         discountAmount: Number(r.data.discountAmount) || 0,
@@ -146,6 +151,15 @@ export default function Cart() {
   // Returns the active price for an item — sale price if flash-sale, else regular price
   const getEffectivePrice = (item: CartItem): number =>
     flashSaleMap[item.product_id] ?? Number(item.price);
+  const refreshDiscountPreview = (code: string) => {
+    axios.get('/api/discount/preview' + (code ? ('?discount_code=' + encodeURIComponent(code)) : ''))
+      .then(r => setDiscount({
+        eligible: r.data.eligible,
+        discountAmount: Number(r.data.discountAmount) || 0,
+        discountLabel: r.data.discountLabel,
+      }))
+      .catch(() => {});
+  };
 
   // ✅ Listen for cartUpdated events fired by ProductDetail when color/size changes there
   useEffect(() => {
@@ -369,7 +383,7 @@ export default function Cart() {
     sessionStorage.setItem('luku_zone',     deliveryZone);
     sessionStorage.setItem('luku_colors',   JSON.stringify(selectedColors));
     sessionStorage.setItem('luku_sizes',    JSON.stringify(selectedSizes));
-    navigate('/checkout', { state: { deliveryZone, shipping, selectedColors, selectedSizes, couponCode } });
+    navigate('/checkout', { state: { deliveryZone, shipping, selectedColors, selectedSizes, couponCode, discountCode } });
   };
 
   const inputStyle = (field: keyof ShippingInfo): React.CSSProperties => ({
@@ -795,6 +809,33 @@ export default function Cart() {
                       setCouponCode(upper);
                       sessionStorage.setItem('luku_coupon', upper);
                     }}
+                    style={{
+                      width: '100%',
+                      fontFamily: "'DM Sans',sans-serif",
+                      fontSize: 14,
+                      color: T.navy,
+                      background: '#fff',
+                      border: `1.5px solid ${T.creamDeep}`,
+                      borderRadius: 10,
+                      padding: '12px 14px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  />
+                </div>                <div className="form-field">
+                  <label className="field-label">Gold Discount Code <span style={{ color: T.muted, fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 11 }}>(optional)</span></label>
+                  <input
+                    type="text"
+                    placeholder="Enter your monthly Gold code"
+                    value={discountCode}
+                    onChange={e => {
+                      const upper = e.target.value.toUpperCase();
+                      setDiscountCode(upper);
+                      sessionStorage.setItem('luku_discount_code', upper);
+                    }}
+                    onBlur={() => refreshDiscountPreview(discountCode)}
                     style={{
                       width: '100%',
                       fontFamily: "'DM Sans',sans-serif",

@@ -29,7 +29,7 @@ const auth = require('./middleware/auth');
 const adminOnly = require('./middleware/adminOnly');
 
 // Controllers
-const { awardBirthdayBonuses } = require('./controllers/membersController');
+const { awardBirthdayBonuses, generateMonthlyGoldCodes } = require('./controllers/membersController');
 const { processAutoDeliveries } = require('./utils/deliveryAutomation');
 
 const app = express();
@@ -120,6 +120,36 @@ cron.schedule(
       console.log(`[CRON] Birthday bonus: awarded ${awarded} member(s)`);
     } catch (err) {
       console.error('[CRON] Birthday bonus error:', err.message);
+    }
+  },
+  { timezone: 'Africa/Nairobi' }
+);
+cron.schedule(
+  '5 0 1 * *',
+  async () => {
+    try {
+      const { processed, created } = await generateMonthlyGoldCodes();
+      console.log('[CRON] Gold codes: ' + created + '/' + processed + ' member(s)');
+    } catch (err) {
+      console.error('[CRON] Gold codes error:', err.message);
+    }
+  },
+  { timezone: 'Africa/Nairobi' }
+);
+/**
+ * Gold Discount Codes Cron Job
+ * Runs once a month, 00:05 on the 1st, Africa/Nairobi.
+ * Generates each Gold-tier club member's 10% code for the new month
+ * (gold_discount_codes table -- idempotent per user/month).
+ */
+cron.schedule(
+  '5 0 1 * *',
+  async () => {
+    try {
+      const { processed, created } = await generateMonthlyGoldCodes();
+      console.log(`[CRON] Gold codes: ${created}/${processed} member(s)`);
+    } catch (err) {
+      console.error('[CRON] Gold codes error:', err.message);
     }
   },
   { timezone: 'Africa/Nairobi' }

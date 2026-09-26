@@ -1,7 +1,7 @@
-﻿const axios = require('axios');
+const axios = require('axios');
 const db    = require('../config/db');
 const { calculateFirstOrderDiscount, calculateOrderDiscount } = require('./discountController');
-const { awardOrderPoints } = require('./membersController');
+const { awardOrderPoints, getShippingOverride, markGoldDiscountCodeUsed } = require('./membersController');
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
 const { decrementStockForItems } = require('../utils/stockDeduction');
 const { sendMetaEvent } = require('../services/metaCapi');
@@ -90,6 +90,7 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
   const discountType   = shippingMeta.discount_type || null;
   const reservedOrderNumber = shippingMeta.reserved_order_number || null;
   const affiliateCode = shippingMeta.affiliate_code || null;
+  const discountCodeId = shippingMeta.discount_code_id || null;
 
   // NOTE: mirrors the same sale-price CASE WHEN used in initiatePayment's
   // total calculation, so the snapshot stores what was actually charged
@@ -186,6 +187,7 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
   // Award members-club points now that the order is confirmed and the
   // cart is cleared. No-op for non-members; never throws.
 await awardOrderPoints(payment.user_id, payment.amount);
+  await markGoldDiscountCodeUsed(discountCodeId);
 
   sendMetaEvent({
     eventName: 'Purchase',
@@ -217,6 +219,7 @@ exports.initiatePayment = async (req, res) => {
     selectedSizes  = {},
     reserved_order_number = null,
     affiliate_code = null,
+    discount_code = null,
   } = req.body;
   const userId = req.user.id;
 
@@ -250,8 +253,9 @@ exports.initiatePayment = async (req, res) => {
       (sum, row) => sum + Number(row.effective_price) * row.quantity, 0
     );
 
-    discountInfo = await calculateOrderDiscount(userId, subtotal);
-    const total  = discountInfo.discountedSubtotal + Number(delivery_fee || 0);
+    discountInfo = await calculateOrderDiscount(userId, subtotal, discount_code);
+    const deliveryOverride = await getShippingOverride(userId, subtotal, delivery_fee);
+    const total  = discountInfo.discountedSubtotal + deliveryOverride.deliveryFee;
     roundedAmount = Math.ceil(total);
   } catch (err) {
     console.error('Order total calculation error:', err.message);
@@ -340,11 +344,14 @@ exports.initiatePayment = async (req, res) => {
         roundedAmount,
         shipping.phone || '',
         delivery_zone  || 'cbd',
-        delivery_fee   || 0,
+        deliveryOverride.deliveryFee,
         JSON.stringify({
-          shipping, selectedColors, selectedSizes, delivery_zone, delivery_fee,
+          shipping, selectedColors, selectedSizes, delivery_zone,
+          delivery_fee: deliveryOverride.deliveryFee,
+          free_shipping_reason: deliveryOverride.reason,
           discount_amount: discountInfo.discountAmount,
           discount_type: discountInfo.discountType,
+          discount_code_id: discountInfo.discountCodeId,
           reserved_order_number,
           affiliate_code: validatedAffiliateCode,
         }),

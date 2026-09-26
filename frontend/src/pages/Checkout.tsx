@@ -127,6 +127,8 @@ export default function Checkout() {
   const passedZone = (location.state as { deliveryZone?: DeliveryZone } | null)?.deliveryZone;
   const passedCoupon = (location.state as any)?.couponCode as string | undefined;
   const affiliateCode = (passedCoupon || sessionStorage.getItem('luku_coupon') || '').trim().toUpperCase() || undefined;
+  const passedDiscountCode = (location.state as any)?.discountCode as string | undefined;
+  const discountCode = (passedDiscountCode || sessionStorage.getItem('luku_discount_code') || '').trim().toUpperCase() || undefined;
   const deliveryZone: DeliveryZone = resolvedZone ?? passedZone ?? 'cbd';
   const passedShipping = (location.state as any)?.shipping as
     { firstName?: string; phone?: string; county?: string; pickupLocation?: string; additionalInfo?: string } | undefined;
@@ -178,7 +180,7 @@ export default function Checkout() {
       })
       .catch(() => {});
 
-    axios.get('/api/discount/preview')
+    axios.get('/api/discount/preview' + (discountCode ? ('?discount_code=' + encodeURIComponent(discountCode)) : ''))
       .then(r => setDiscount({
         eligible: r.data.eligible,
         discountAmount: Number(r.data.discountAmount) || 0,
@@ -400,6 +402,7 @@ export default function Checkout() {
         selectedSizes:  passedSizes,
         reserved_order_number: reservedOrderNumber,
         affiliate_code: affiliateCode,
+        discount_code:  discountCode,
         // Captured from the base Meta Pixel snippet's cookies so the backend
         // can persist them into shipping_meta and attach them to the
         // Purchase CAPI event later, fired from the PayHero webhook which
@@ -473,6 +476,7 @@ export default function Checkout() {
         selectedSizes:  passedSizes,
         reserved_order_number: reservedOrderNumber,
         affiliate_code: affiliateCode,
+        discount_code:  discountCode,
       });
 
       // Save tracking ID in case user comes back via callback URL

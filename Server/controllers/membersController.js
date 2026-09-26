@@ -1,4 +1,4 @@
-// src/controllers/membersController.js
+﻿// src/controllers/membersController.js
 //
 // Assumes a shared pg Pool exported from ../db, e.g.:
 //   const { Pool } = require('pg');
@@ -21,6 +21,103 @@ const SIGNUP_BONUS = 150; // awarded once, when the account/member record is cre
 const JOIN_BONUS    = 20;  // awarded once, when the user explicitly joins the club
 function tierFor(points) {
   return TIERS.find(t => points >= t.min && points <= t.max) ?? TIERS[0];
+}
+// â”€â”€ Free shipping perk (Gold: over KSh 5,000, Diamond: always) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// The client's delivery_fee is a display value computed from the checkout
+// page's zone picker -- never the authoritative charge. Call this wherever
+// the order total is actually built (stkPush / initiatePayment) and use its
+// deliveryFee instead of trusting what the client sent.
+const FREE_SHIPPING_GOLD_THRESHOLD = 5000;
+
+async function getShippingOverride(userId, subtotal, clientDeliveryFee) {
+  const fallback = { deliveryFee: Number(clientDeliveryFee) || 0, waived: false, reason: null };
+  try {
+    const { rows: [member] } = await pool.query(
+      'SELECT tier, club_joined FROM members WHERE user_id = $1',
+      [userId]
+    );
+    if (!member || !member.club_joined) return fallback;
+    if (member.tier === 'Diamond') {
+      return { deliveryFee: 0, waived: true, reason: 'diamond_free_shipping' };
+    }
+    if (member.tier === 'Gold' && Number(subtotal) > FREE_SHIPPING_GOLD_THRESHOLD) {
+      return { deliveryFee: 0, waived: true, reason: 'gold_free_shipping_threshold' };
+    }
+    return fallback;
+  } catch (err) {
+    console.error('getShippingOverride error:', err.message);
+    return fallback;
+  }
+}
+// -- Gold tier: monthly 10% discount code -------------------------------------
+// One code per Gold member per calendar month (gold_discount_codes table).
+// Validated in discountController.calculateOrderDiscount; marked used only
+// on order fulfillment (markGoldDiscountCodeUsed below) so an abandoned
+// payment never burns the member's code. A code keeps working until its
+// own expiry even if the member later drops out of Gold -- intentional,
+// so nothing already shown to the member gets pulled out from under them.
+function generateGoldDiscountCode() {
+  return 'GOLD-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+}
+// Run monthly (1st of the month), alongside the existing birthday-bonus
+// cron. Idempotent per member per month via the (user_id, month_key)
+// UNIQUE constraint -- safe to re-run if the cron fires more than once.
+async function generateMonthlyGoldCodes() {
+  const now = new Date();
+  const monthKey  = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const expiresAt = new Date(now.getFullYear(), now.getMonth() + 1, 1); // start of next month
+  try {
+    const { rows: goldMembers } = await pool.query(
+      "SELECT user_id FROM members WHERE tier = 'Gold' AND club_joined = true"
+    );
+    let created = 0;
+    for (const { user_id } of goldMembers) {
+      try {
+        const res = await pool.query(
+          `INSERT INTO gold_discount_codes (user_id, code, month_key, expires_at)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (user_id, month_key) DO NOTHING`,
+          [user_id, generateGoldDiscountCode(), monthKey, expiresAt]
+        );
+        if (res.rowCount > 0) created++;
+      } catch (err) {
+        console.error(`generateMonthlyGoldCodes error for user ${user_id}:`, err.message);
+      }
+    }
+    return { processed: goldMembers.length, created };
+  } catch (err) {
+    console.error('generateMonthlyGoldCodes error:', err.message);
+    return { processed: 0, created: 0, error: err.message };
+  }
+}
+// This user's current unused, unexpired Gold code, for display on the
+// Members Club profile page. Returns null for everyone else. Never throws.
+async function getActiveGoldCode(userId) {
+  try {
+    const { rows: [code] } = await pool.query(
+      `SELECT code, expires_at FROM gold_discount_codes
+       WHERE user_id = $1 AND used_at IS NULL AND expires_at > NOW()
+       ORDER BY created_at DESC LIMIT 1`,
+      [userId]
+    );
+    return code || null;
+  } catch (err) {
+    console.error('getActiveGoldCode error:', err.message);
+    return null;
+  }
+}
+// Called from paymentController (PayHero/Pesapal) on successful order
+// fulfillment only -- never at STK-push/initiate time. Never throws.
+async function markGoldDiscountCodeUsed(codeId) {
+  if (!codeId) return;
+  try {
+    await pool.query(
+      'UPDATE gold_discount_codes SET used_at = NOW() WHERE id = $1 AND used_at IS NULL',
+      [codeId]
+    );
+  } catch (err) {
+    console.error('markGoldDiscountCodeUsed error:', err.message);
+  }
 }
 /**
  * Adds points to a member's balance and logs the activity. If the new
@@ -141,6 +238,8 @@ async function getProfile(req, res) {
       'SELECT id, description, points, created_at FROM member_activities WHERE member_id = $1 ORDER BY created_at DESC LIMIT 20',
       [member.id]
     );
+    // Gold tier perk -- null for non-Gold, and null once used or expired.
+    const goldCode = await getActiveGoldCode(userId);
     res.json({
       points: member.points,
       tier: member.tier,
@@ -149,6 +248,9 @@ async function getProfile(req, res) {
       referral_code: member.referral_code,
       total_points_earned: total_earned,
       activities,
+      gold_discount_code: goldCode
+        ? { code: goldCode.code, expires_at: goldCode.expires_at }
+        : null,
     });
   } catch (err) {
     console.error('getProfile error:', err);
@@ -334,7 +436,7 @@ async function getTotalPointsRewarded(req, res) {
 }
 // GET /api/members/count
 // Total number of club members (club_joined = true). Any authenticated
-// user can see this — it's just a headline stat, not sensitive.
+// user can see this â€” it's just a headline stat, not sensitive.
 async function getMemberCount(req, res) {
   try {
     const { rows: [{ total }] } = await pool.query(
@@ -348,7 +450,7 @@ async function getMemberCount(req, res) {
 }
 // GET /api/members/admin/all
 // Admin-only. Every club member with tier, current points, lifetime
-// points earned, and join date — used by the Admin > Members tab.
+// points earned, and join date â€” used by the Admin > Members tab.
 async function getAllMembers(req, res) {
   try {
     const { rows } = await pool.query(
@@ -368,4 +470,4 @@ async function getAllMembers(req, res) {
     res.status(500).json({ error: 'Could not load members' });
   }
 }
-module.exports = { registerMember, joinClub, getProfile, addPoints, awardOrderPoints, awardReferralBonus, awardBirthdayBonuses, getReferralLink, getMemberCount, tierFor, TIERS, TIER_BONUS, getTotalPointsRewarded, getAllMembers };
+module.exports = { registerMember, joinClub, getProfile, addPoints, awardOrderPoints, awardReferralBonus, awardBirthdayBonuses, getReferralLink, getMemberCount, tierFor, TIERS, TIER_BONUS, getTotalPointsRewarded, getAllMembers, getShippingOverride, generateMonthlyGoldCodes, markGoldDiscountCodeUsed };
