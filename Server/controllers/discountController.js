@@ -1,5 +1,7 @@
 const db = require('../config/db');
 const FIRST_ORDER_DISCOUNT_RATE = 0.10; // 10%
+const LOYALTY_DISCOUNT_RATE = 0.10; // 10%
+const LOYALTY_CYCLE = 4; // every 4th confirmed order is discounted
 // ── Internal: has this user ever completed (paid) an order? ──────────────────
 const isEligibleForFirstOrderDiscount = async (userId) => {
   const result = await db.query(
@@ -24,6 +26,52 @@ const calculateFirstOrderDiscount = async (userId, subtotal) => {
   const discountedSubtotal = Math.round((subtotal - discountAmount) * 100) / 100;
   return { eligible: true, discountAmount, discountedSubtotal };
 };
+// ── Internal: how many confirmed orders has this user completed? ─────────────
+// Mirrors the exact definition isEligibleForFirstOrderDiscount uses, so a
+// "completed order" means the same thing everywhere in this file.
+const getConfirmedOrderCount = async (userId) => {
+  const result = await db.query(
+    `SELECT COUNT(*)::int AS n FROM orders WHERE user_id = $1 AND status = 'confirmed'`,
+    [userId]
+  );
+  return result.rows[0].n;
+};
+// ── Internal: is the user's NEXT order the 4th/8th/12th... confirmed order? ──
+const getLoyaltyStatus = async (userId) => {
+  const confirmedOrders = await getConfirmedOrderCount(userId);
+  const nextOrderNumber = confirmedOrders + 1;
+  const eligible = nextOrderNumber % LOYALTY_CYCLE === 0;
+  const ordersUntilNext = eligible
+    ? 0
+    : (LOYALTY_CYCLE - (nextOrderNumber % LOYALTY_CYCLE)) % LOYALTY_CYCLE;
+  return { confirmedOrders, nextOrderNumber, eligible, ordersUntilNext };
+};
+// ── Internal: which discount (if any) applies to the order about to be placed.
+// First-order discount only ever fires on order #1, so it never actually
+// competes with loyalty (which starts at order #4) — kept explicit in case
+// that ever changes.
+const calculateOrderDiscount = async (userId, subtotal) => {
+  if (!(subtotal > 0)) {
+    return {
+      discountType: null, eligible: false, discountAmount: 0,
+      discountedSubtotal: Math.round(subtotal * 100) / 100,
+    };
+  }
+  const firstOrder = await calculateFirstOrderDiscount(userId, subtotal);
+  if (firstOrder.eligible) {
+    return { discountType: 'first_order', ...firstOrder };
+  }
+  const loyalty = await getLoyaltyStatus(userId);
+  if (loyalty.eligible) {
+    const discountAmount = Math.round(subtotal * LOYALTY_DISCOUNT_RATE * 100) / 100;
+    const discountedSubtotal = Math.round((subtotal - discountAmount) * 100) / 100;
+    return { discountType: 'loyalty', eligible: true, discountAmount, discountedSubtotal };
+  }
+  return {
+    discountType: null, eligible: false, discountAmount: 0,
+    discountedSubtotal: Math.round(subtotal * 100) / 100,
+  };
+};
 // ── GET /api/discount/preview — called from cart page & checkout page ────────
 exports.getDiscountPreview = async (req, res) => {
   const userId = req.user.id;
@@ -46,14 +94,19 @@ exports.getDiscountPreview = async (req, res) => {
     const subtotal = cartRes.rows.reduce(
       (sum, row) => sum + Number(row.effective_price) * row.quantity, 0
     );
-    const { eligible, discountAmount, discountedSubtotal } =
-      await calculateFirstOrderDiscount(userId, subtotal);
+    const discount = await calculateOrderDiscount(userId, subtotal);
+    const loyalty  = await getLoyaltyStatus(userId);
     return res.json({
-      eligible,
+      eligible: discount.eligible,
+      discountType: discount.discountType,
       subtotal: Math.round(subtotal * 100) / 100,
-      discountAmount,
-      discountedSubtotal,
-      discountLabel: eligible ? '10% off your first order' : null,
+      discountAmount: discount.discountAmount,
+      discountedSubtotal: discount.discountedSubtotal,
+      discountLabel:
+        discount.discountType === 'first_order' ? '10% off your first order' :
+        discount.discountType === 'loyalty'     ? '10% off — loyalty reward unlocked' :
+        null,
+      loyalty: { eligible: loyalty.eligible, ordersUntilNext: loyalty.ordersUntilNext },
     });
   } catch (err) {
     console.error('getDiscountPreview error:', err.message);
@@ -151,3 +204,5 @@ exports.getAdminDiscountSummary = async (req, res) => {
 // when actually charging the customer, never the frontend-displayed value.
 exports.calculateFirstOrderDiscount     = calculateFirstOrderDiscount;
 exports.isEligibleForFirstOrderDiscount = isEligibleForFirstOrderDiscount;
+exports.calculateOrderDiscount          = calculateOrderDiscount;
+exports.getLoyaltyStatus                = getLoyaltyStatus;

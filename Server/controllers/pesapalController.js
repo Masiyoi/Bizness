@@ -1,6 +1,6 @@
 ﻿const axios = require('axios');
 const db    = require('../config/db');
-const { calculateFirstOrderDiscount } = require('./discountController');
+const { calculateFirstOrderDiscount, calculateOrderDiscount } = require('./discountController');
 const { awardOrderPoints } = require('./membersController');
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
 const { decrementStockForItems } = require('../utils/stockDeduction');
@@ -250,7 +250,7 @@ exports.initiatePayment = async (req, res) => {
       (sum, row) => sum + Number(row.effective_price) * row.quantity, 0
     );
 
-    discountInfo = await calculateFirstOrderDiscount(userId, subtotal);
+    discountInfo = await calculateOrderDiscount(userId, subtotal);
     const total  = discountInfo.discountedSubtotal + Number(delivery_fee || 0);
     roundedAmount = Math.ceil(total);
   } catch (err) {
@@ -344,7 +344,7 @@ exports.initiatePayment = async (req, res) => {
         JSON.stringify({
           shipping, selectedColors, selectedSizes, delivery_zone, delivery_fee,
           discount_amount: discountInfo.discountAmount,
-          discount_type: discountInfo.eligible ? 'first_order' : null,
+          discount_type: discountInfo.discountType,
           reserved_order_number,
           affiliate_code: validatedAffiliateCode,
         }),

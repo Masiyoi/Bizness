@@ -65,6 +65,8 @@ export default function Navbar({
   // Defaults true (guests are always potential first-time buyers) — flips to
   // false only once we confirm a logged-in user has already used the discount.
   const [firstOrderEligible, setFirstOrderEligible] = useState(true);
+  const [loyaltyEligible, setLoyaltyEligible] = useState(false);
+  const [loyaltyOrdersUntilNext, setLoyaltyOrdersUntilNext] = useState<number | null>(null);
   const [regularBannerIndex, setRegularBannerIndex] = useState(0);
   const langRef          = useRef<HTMLDivElement>(null);
 
@@ -168,7 +170,11 @@ export default function Navbar({
   useEffect(() => {
     if (!user || user.role === 'admin') { setFirstOrderEligible(!!user ? false : true); return; }
     axios.get('/api/discount/preview')
-      .then(r => setFirstOrderEligible(!!r.data.eligible))
+      .then(r => {
+        setFirstOrderEligible(r.data.discountType === 'first_order');
+        setLoyaltyEligible(!!r.data.loyalty?.eligible);
+        setLoyaltyOrdersUntilNext(r.data.loyalty?.ordersUntilNext ?? null);
+      })
       .catch(() => {}); // fine to fail silently — banner just stays as-is
   }, [user?.id]);
 
@@ -176,7 +182,9 @@ export default function Navbar({
   // first-order offer (already redeemed it, or are an already-converted user).
   const REGULAR_BANNERS = [
     'Free shipping on orders above KSh 5,000',
-    'Complete 3 orders to get 10% off your 4th',
+    loyaltyOrdersUntilNext != null
+      ? `Complete ${loyaltyOrdersUntilNext} more order${loyaltyOrdersUntilNext === 1 ? '' : 's'} to get 10% off your next`
+      : 'Complete 3 orders to get 10% off your 4th',
     'Earn points by referring friends',
   ];
 
@@ -364,10 +372,14 @@ export default function Navbar({
       {/* ── Announcement marquee — first-order offer for new/guest visitors, rotating perks for returning customers ── */}
       <div style={{ background: '#000', height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 101 }}>
         <span
-          key={firstOrderEligible ? 'first-order' : regularBannerIndex}
+          key={firstOrderEligible ? 'first-order' : loyaltyEligible ? 'loyalty' : regularBannerIndex}
           style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: '3px', color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', animation: 'fadeInDown 0.4s ease' }}
         >
-          {firstOrderEligible ? 'Get 10% off on your first order' : REGULAR_BANNERS[regularBannerIndex]}
+          {firstOrderEligible
+            ? 'Get 10% off on your first order'
+            : loyaltyEligible
+              ? 'Your next order gets 10% off — loyalty reward unlocked'
+              : REGULAR_BANNERS[regularBannerIndex]}
         </span>
       </div>
 
