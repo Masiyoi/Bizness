@@ -25,6 +25,7 @@ interface MemberProfile {
   activities:    Activity[];
   joined_at:     string;
   total_points_earned: number;
+  gold_discount_code: { code: string; expires_at: string } | null;
 }
 interface Activity {
   id:          number;
@@ -351,6 +352,15 @@ useEffect(() => {
       showToast('Could not copy — please copy it manually.');
     }
   };
+  const handleCopyGoldCode = async () => {
+    if (!profile?.gold_discount_code) return;
+    try {
+      await navigator.clipboard.writeText(profile.gold_discount_code.code);
+      showToast('✓ Gold discount code copied!');
+    } catch {
+      showToast('Could not copy — please copy it manually.');
+    }
+  };
   const handleShareReferral = async () => {
     if (!referral) return;
     if (navigator.share) {
@@ -648,6 +658,28 @@ useEffect(() => {
               )}
             </div>
           </div>
+          {/* Gold discount code — Gold tier only */}
+          {tier.name === 'Gold' && profile.gold_discount_code && (
+            <div className="mc-fade mc-d2" style={{ marginBottom: 48 }}>
+              <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: tier.color, marginBottom: 20 }}>
+                Your Gold Discount Code — 10% Off
+              </p>
+              <div style={{ background: '#fff', border: `1px solid ${tier.border}`, padding: 'clamp(20px,3vw,32px)' }}>
+                <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 13, color: '#333', lineHeight: 1.7, marginBottom: 4 }}>
+                  Use this code at checkout for 10% off. A new code is generated every month.
+                </p>
+                <div className="referral-box">
+                  <span className="referral-link-text" style={{ fontWeight: 700, letterSpacing: '1px' }}>
+                    {profile.gold_discount_code.code}
+                  </span>
+                  <button className="referral-copy-btn" onClick={handleCopyGoldCode}>Copy Code</button>
+                </div>
+                <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, color: '#888', marginTop: 12 }}>
+                  Expires {fmtDate(profile.gold_discount_code.expires_at)}
+                </p>
+              </div>
+            </div>
+          )}
           {/* Tier perks */}
           <div className="mc-fade mc-d2" style={{ marginBottom: 48 }}>
             <p style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: tier.color, marginBottom: 20 }}>

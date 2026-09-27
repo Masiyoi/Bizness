@@ -108,6 +108,7 @@ export default function Cart() {
   const [selectedSizes,  setSelectedSizes]  = useState<Record<number, string>>({});
   const [flashSaleMap,   setFlashSaleMap]   = useState<Record<number, number>>({});
   const [openDropdown,   setOpenDropdown]   = useState<string | null>(null);
+  const [memberTier,     setMemberTier]     = useState<'Bronze' | 'Gold' | 'Diamond' | null>(null);
 
   // First-order discount (server is the source of truth — this is display only)
   const [discount, setDiscount] = useState<{ eligible: boolean; discountAmount: number; discountLabel: string | null }>({
@@ -148,6 +149,14 @@ export default function Cart() {
       .catch(() => {}); // fine to fail silently — preview is display-only
   }, []);
 
+  // Fetch the member's tier (display-only) so free-shipping messaging for
+  // Gold (>KSh 5,000) / Diamond members can show here, mirroring the
+  // authoritative getShippingOverride check the server applies at payment time.
+  useEffect(() => {
+    axios.get('/api/members/profile')
+      .then(r => setMemberTier(r.data.club_joined ? r.data.tier : null))
+      .catch(() => {}); // not a member / not logged in — no free-shipping badge
+  }, []);
   // Returns the active price for an item — sale price if flash-sale, else regular price
   const getEffectivePrice = (item: CartItem): number =>
     flashSaleMap[item.product_id] ?? Number(item.price);
@@ -325,8 +334,14 @@ export default function Cart() {
 
   const subtotal          = items.reduce((sum, i) => sum + getEffectivePrice(i) * i.quantity, 0);
   const deliveryFee        = DELIVERY_OPTIONS.find(o => o.value === deliveryZone)!.fee;
+  // Mirrors getShippingOverride in membersController.js: Diamond members
+  // always get free shipping, Gold members get it once subtotal exceeds
+  // KSh 5,000 — regardless of delivery zone. Display-only; the server
+  // recomputes this authoritatively at payment time.
+  const freeShipping       = memberTier === 'Diamond' || (memberTier === 'Gold' && subtotal > 5000);
+  const displayDeliveryFee = freeShipping ? 0 : deliveryFee;
   const discountedSubtotal = Math.max(subtotal - discount.discountAmount, 0);
-  const total              = discountedSubtotal + deliveryFee;
+  const total              = discountedSubtotal + displayDeliveryFee;
 
   const setField = (field: keyof ShippingInfo, value: string) => {
     const updated = { ...shipping, [field]: value };
@@ -1026,10 +1041,20 @@ export default function Cart() {
                     </span>
                   </div>
                 )}
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span className="jost" style={{ fontSize: 13, color: T.muted }}>Delivery</span>
-                  <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: deliveryFee === 0 ? '#2D6A2D' : '#000' }}>
-                    {deliveryFee === 0
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <span className="jost" style={{ fontSize: 13, color: T.muted }}>
+                    Delivery
+                    {freeShipping && deliveryFee > 0 && (
+                      <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: memberTier === 'Diamond' ? '#6A7FA8' : '#B8960C' }}>
+                        {memberTier} Perk
+                      </span>
+                    )}
+                  </span>
+                  <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: displayDeliveryFee === 0 ? '#2D6A2D' : '#000', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    {freeShipping && deliveryFee > 0 && (
+                      <span style={{ textDecoration: 'line-through', color: T.muted, fontWeight: 400 }}>KSh {deliveryFee}</span>
+                    )}
+                    {displayDeliveryFee === 0
                       ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>FREE <img src={freeIcon} alt="" style={{ width: 16, height: 16, objectFit: 'contain' }} /></span>
                       : `KSh ${deliveryFee}`}
                   </span>

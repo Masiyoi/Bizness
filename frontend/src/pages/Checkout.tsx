@@ -123,6 +123,7 @@ export default function Checkout() {
   const [discount, setDiscount] = useState<{ eligible: boolean; discountAmount: number; discountLabel: string | null }>({
     eligible: false, discountAmount: 0, discountLabel: null,
   });
+  const [memberTier, setMemberTier] = useState<'Bronze' | 'Gold' | 'Diamond' | null>(null);
   
   const passedZone = (location.state as { deliveryZone?: DeliveryZone } | null)?.deliveryZone;
   const passedCoupon = (location.state as any)?.couponCode as string | undefined;
@@ -187,6 +188,14 @@ export default function Checkout() {
         discountLabel: r.data.discountLabel,
       }))
       .catch(() => {}); // fine to fail silently — preview is display-only
+    // Member tier (display-only) so free-shipping messaging for Gold
+    // (>KSh 5,000) / Diamond members shows here too, mirroring the
+    // authoritative getShippingOverride check the server applies at
+    // payment time. Skipped on the Pesapal-return branch above since it
+    // returns early — resolvedDeliveryFee from the server takes over there.
+    axios.get('/api/members/profile')
+      .then(r => setMemberTier(r.data.club_joined ? r.data.tier : null))
+      .catch(() => {});
   }, []);
 
   // Prefill the PayHero phone field from shipping details once they're known
@@ -262,8 +271,14 @@ export default function Checkout() {
   }, [step]);
 
   const subtotal          = items.reduce((s, i) => s + getEffectivePrice(i) * i.quantity, 0);
+  // Mirrors getShippingOverride in membersController.js: Diamond members
+  // always get free shipping, Gold members get it once subtotal exceeds
+  // KSh 5,000 — regardless of delivery zone. Display-only once serverAmount
+  // is set (post-payment-initiation), since that value is authoritative.
+  const freeShipping       = !resolvedDeliveryFee && (memberTier === 'Diamond' || (memberTier === 'Gold' && subtotal > 5000));
+  const displayDeliveryFee = freeShipping ? 0 : deliveryFee;
   const discountedSubtotal = Math.max(subtotal - discount.discountAmount, 0);
-  const total              = serverAmount ?? (discountedSubtotal + deliveryFee);
+  const total              = serverAmount ?? (discountedSubtotal + displayDeliveryFee);
 
   const validatePhone = (val: string) => {
     const cleaned = val.replace(/\s+/g, '').replace(/^0/, '254').replace(/^\+/, '');
@@ -770,10 +785,20 @@ export default function Checkout() {
                   </span>
                 </div>
               )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span className="jost" style={{ fontSize: 13, color: T.muted }}>Delivery · <span style={{ color: '#000' }}>{deliveryLabel}</span></span>
-                <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: deliveryFee === 0 ? '#5A8A5A' : T.navy }}>
-                  {deliveryFee === 0
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <span className="jost" style={{ fontSize: 13, color: T.muted }}>
+                  Delivery · <span style={{ color: '#000' }}>{deliveryLabel}</span>
+                  {freeShipping && deliveryFee > 0 && (
+                    <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: memberTier === 'Diamond' ? '#6A7FA8' : '#B8960C' }}>
+                      {memberTier} Perk
+                    </span>
+                  )}
+                </span>
+                <span className="jost" style={{ fontSize: 13, fontWeight: 600, color: displayDeliveryFee === 0 ? '#5A8A5A' : T.navy, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  {freeShipping && deliveryFee > 0 && (
+                    <span style={{ textDecoration: 'line-through', color: T.muted, fontWeight: 400 }}>KSh {deliveryFee}</span>
+                  )}
+                  {displayDeliveryFee === 0
                     ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>FREE <img src={freeIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /></span>
                     : `KSh ${deliveryFee}`}
                 </span>
