@@ -5,8 +5,10 @@ import Footer from '../components/common/Footer';
 import { readUser } from '../constants/theme';
 import type { User } from '../constants/theme';
 import { useNotifications, seenBaseline } from '../hooks/useNotifications';
-import type { NotificationType } from '../hooks/useNotifications';
+import type { AppNotification, NotificationType } from '../hooks/useNotifications';
+
 type Group = 'all' | 'orders' | 'offers' | 'rewards' | 'affiliate';
+
 const META: Record<NotificationType, { label: string; group: Exclude<Group, 'all'>; color: string }> = {
   order_confirmed: { label: 'Order confirmed',   group: 'orders',    color: '#1A7F4B' },
   order_delivered: { label: 'Delivered',         group: 'orders',    color: '#1A7F4B' },
@@ -19,6 +21,24 @@ const META: Record<NotificationType, { label: string; group: Exclude<Group, 'all
   commission:      { label: 'Commission earned', group: 'affiliate', color: '#0B6E99' },
   payout:          { label: 'Payout',            group: 'affiliate', color: '#0B6E99' },
 };
+
+// Where each notification type should send the user, overriding whatever
+// `link` came back from the API for that notification. Any type NOT listed
+// here (order_confirmed, order_delivered, flash_sale, tier_upgrade, payout)
+// keeps using n.link exactly as before — e.g. orders still go to that
+// specific order/product.
+//
+// ⚠️ PLEASE VERIFY these four paths against your actual router — I inferred
+// them from your file tree (MembersClub.tsx, Reviews.tsx, profile/Affiliate.tsx,
+// profile/Discounts.tsx) but haven't seen App.tsx / your route definitions.
+const ROUTE_OVERRIDE: Partial<Record<NotificationType, string>> = {
+  points: '/members-club',
+  review_reminder: '/reviews',
+  new_arrival: '/new-arrivals',
+  commission: '/profile/affiliate',
+  discount: '/profile/discounts',
+};
+
 const TABS: { key: Group; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'orders', label: 'Orders' },
@@ -26,6 +46,7 @@ const TABS: { key: Group; label: string }[] = [
   { key: 'rewards', label: 'Rewards' },
   { key: 'affiliate', label: 'Affiliate' },
 ];
+
 const timeAgo = (iso: string) => {
   const s = Math.max(0, Math.floor((Date.now() - Date.parse(iso)) / 1000));
   if (s < 60) return 'Just now';
@@ -34,6 +55,28 @@ const timeAgo = (iso: string) => {
   const d = Math.floor(h / 24); if (d < 7) return `${d}d ago`;
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 };
+
+// Finds a currency amount like "KSh 1,250" or "KSh 1250.50" inside a
+// commission notification's message and re-renders it with a leading "+"
+// in green. Falls back to the plain message if no amount is found, and
+// leaves every other notification type untouched.
+const AMOUNT_RE = /(KSh\s?[\d,]+(?:\.\d{1,2})?)/i;
+function renderMessage(n: AppNotification) {
+  if (n.type !== 'commission') return n.message;
+  const match = n.message.match(AMOUNT_RE);
+  if (!match || match.index === undefined) return n.message;
+  const amount = match[0];
+  const before = n.message.slice(0, match.index);
+  const after = n.message.slice(match.index + amount.length);
+  return (
+    <>
+      {before}
+      <span style={{ color: '#1A7F4B', fontWeight: 700 }}>+{amount}</span>
+      {after}
+    </>
+  );
+}
+
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=DM+Sans:wght@300;400;500;700&display=swap');
   @keyframes ntPulse { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
@@ -68,21 +111,26 @@ const css = `
   .nt-btn { font-family: var(--f-sans); font-size: 11px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; background: var(--ink); color: #fff; border: none; padding: 14px 32px; cursor: pointer; }
   .nt-skel { height: 76px; margin: 14px 0; background: linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%); animation: ntPulse 1.4s ease infinite; }
 `;
+
 export default function Notifications() {
   const navigate = useNavigate();
   const [user] = useState<User | null>(readUser);
   const { notifications, loading, error, markAllRead, refresh } = useNotifications(user?.id);
   const [seenAtEntry] = useState(() => seenBaseline(user?.id)); // keeps "new" highlights during this visit
   const [group, setGroup] = useState<Group>('all');
+
   useEffect(() => { if (!user) navigate('/login'); }, [user, navigate]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (!loading && !error) markAllRead(); }, [loading]);
+
   const counts = useMemo(() => {
     const c: Record<Group, number> = { all: notifications.length, orders: 0, offers: 0, rewards: 0, affiliate: 0 };
     notifications.forEach(n => { const g = META[n.type]?.group; if (g) c[g] += 1; });
     return c;
   }, [notifications]);
+
   const visible = group === 'all' ? notifications : notifications.filter(n => META[n.type]?.group === group);
+
   return (
     <div className="nt-page">
       <style>{css}</style>
@@ -118,18 +166,19 @@ export default function Notifications() {
         {!loading && !error && visible.map(n => {
           const meta = META[n.type];
           const unread = Date.parse(n.created_at) > seenAtEntry;
+          const target = ROUTE_OVERRIDE[n.type] ?? n.link;
           return (
             <button
               key={n.id}
               type="button"
-              className={`nt-item${n.link ? ' link' : ''}${unread ? ' unread' : ''}`}
-              onClick={() => { if (n.link) navigate(n.link); }}
+              className={`nt-item${target ? ' link' : ''}${unread ? ' unread' : ''}`}
+              onClick={() => { if (target) navigate(target); }}
             >
               {n.image && <img className="nt-thumb" src={n.image} alt="" loading="lazy" />}
               <span className="nt-body">
                 <span className="nt-kick" style={{ color: meta?.color ?? '#0A0A0A' }}>{meta?.label ?? n.type}</span>
                 <span className="nt-item-title">{n.title}</span>
-                <span className="nt-msg">{n.message}</span>
+                <span className="nt-msg">{renderMessage(n)}</span>
                 <span className="nt-time">{timeAgo(n.created_at)}</span>
               </span>
             </button>
