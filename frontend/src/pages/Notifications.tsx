@@ -11,7 +11,7 @@ type Group = 'all' | 'orders' | 'offers' | 'rewards' | 'affiliate';
 
 const META: Record<NotificationType, { label: string; group: Exclude<Group, 'all'>; color: string }> = {
   order_confirmed: { label: 'Order confirmed',   group: 'orders',    color: '#1A7F4B' },
-  order_delivered: { label: 'Delivered',         group: 'orders',    color: '#1A7F4B' },
+  order_delivered: { label: 'Delivered',         group: 'orders',    color: '#3c63c7' },
   review_reminder: { label: 'Leave a review',    group: 'orders',    color: '#B7791F' },
   new_arrival:     { label: 'New arrival',       group: 'offers',    color: '#0A0A0A' },
   flash_sale:      { label: 'Flash sale',        group: 'offers',    color: '#D93025' },
