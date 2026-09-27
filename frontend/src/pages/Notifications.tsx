@@ -34,6 +34,7 @@ const ROUTE_OVERRIDE: Partial<Record<NotificationType, string>> = {
   new_arrival: '/categories/new-arrivals',
   commission: '/profile/affiliate',
   discount: '/profile/discounts',
+  payout: '/profile/affiliate',
 };
 
 const TABS: { key: Group; label: string }[] = [
@@ -54,22 +55,28 @@ const timeAgo = (iso: string) => {
 };
 
 // Finds a currency amount like "KSh 1,250" or "KSh 1250.50" inside a
-// commission notification's TITLE (e.g. "Commission earned: KSh 1,250" —
-// that's where the backend puts the amount, not in `message`) and
-// re-renders it with a leading "+" in green. Falls back to the plain
-// title if no amount is found, and leaves every other type untouched.
+// notification's TITLE (that's where the backend puts amounts — e.g.
+// "Commission earned: KSh 1,250", "Commission paid: KSh 1,250",
+// "You saved KSh 1,250" — never in `message`) and re-renders it in green.
+// commission/payout are money received, so they get a leading "+"; discount
+// is money saved, not received, so it's colored but left without the "+".
+// Falls back to the plain title if no amount is found, and leaves every
+// other type untouched.
+const PLUS_TYPES: NotificationType[] = ['commission', 'payout'];
+const AMOUNT_TYPES: NotificationType[] = [...PLUS_TYPES, 'discount'];
 const AMOUNT_RE = /(KSh\s?[\d,]+(?:\.\d{1,2})?)/i;
 function renderTitle(n: AppNotification) {
-  if (n.type !== 'commission') return n.title;
+  if (!AMOUNT_TYPES.includes(n.type)) return n.title;
   const match = n.title.match(AMOUNT_RE);
   if (!match || match.index === undefined) return n.title;
   const amount = match[0];
+  const prefix = PLUS_TYPES.includes(n.type) ? '+' : '';
   const before = n.title.slice(0, match.index);
   const after = n.title.slice(match.index + amount.length);
   return (
     <>
       {before}
-      <span style={{ color: '#1A7F4B', fontWeight: 700 }}>+{amount}</span>
+      <span style={{ color: '#1A7F4B', fontWeight: 700 }}>{prefix}{amount}</span>
       {after}
     </>
   );
