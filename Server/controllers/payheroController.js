@@ -258,7 +258,7 @@ exports.stkPush = async (req, res) => {
   // ── Compute the authoritative order total server-side ──────────────────────
   // Same pattern as stkPush (M-Pesa) / initiatePayment (Pesapal) — never
   // trust a client-supplied amount.
-  let roundedAmount, discountInfo;
+  let roundedAmount, discountInfo, deliveryOverride;
   try {
     const cartRes = await db.query(
       `SELECT ci.quantity,
@@ -285,7 +285,7 @@ exports.stkPush = async (req, res) => {
     );
 
     discountInfo = await calculateOrderDiscount(userId, subtotal, discount_code);
-    const deliveryOverride = await getShippingOverride(userId, subtotal, delivery_fee);
+    deliveryOverride = await getShippingOverride(userId, subtotal, delivery_fee);
     const total  = discountInfo.discountedSubtotal + deliveryOverride.deliveryFee;
     roundedAmount = Math.ceil(total);
   } catch (err) {
