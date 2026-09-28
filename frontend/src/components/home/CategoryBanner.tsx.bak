@@ -1,16 +1,10 @@
-// src/components/home/CategoryBanner.tsx
+﻿// src/components/home/CategoryBanner.tsx
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-interface CategoryItem {
-  slug: string;
-  name: string;
-  gender?: 'men' | 'women';
-  department?: 'footwear' | 'clothing';
-}
+interface CategoryItem { slug: string; name: string; }
 interface CategoryBannerProps {
   categories: CategoryItem[];
-  activeCategory?: string; // slug
-  onSelect?: (slug: string) => void;
+  activeCategory: string; // slug
+  onSelect: (slug: string) => void;
 }
 // Images keyed by SLUG. Recurring concepts across genders intentionally point
 // to the same URL so switching Men/Women doesn't change the thumbnail.
@@ -58,27 +52,7 @@ const CATEGORY_IMAGES: Record<string, string> = {
 function getCategoryImage(slug: string): string {
   return CATEGORY_IMAGES[slug] ?? `https://picsum.photos/seed/luku-${encodeURIComponent(slug)}/300/170`;
 }
-// Only needed as a fallback when the category item doesn't carry `department`.
-const FOOTWEAR_SLUGS = new Set([
-  'men-sandals-slides', 'men-sneakers', 'men-boots', 'men-formal-shoes',
-  'women-sneakers-athletic', 'women-boots', 'women-formal-dress',
-  'women-heels', 'women-sandals-slides', 'women-flats-casuals',
-]);
-function getCategoryPath(cat: CategoryItem): string | null {
-  const gender =
-    cat.gender ??
-    (cat.slug.startsWith('women-') ? 'women' : cat.slug.startsWith('men-') ? 'men' : null);
-  if (!gender) return null; // e.g. the "all" tile
-  const department = cat.department ?? (FOOTWEAR_SLUGS.has(cat.slug) ? 'footwear' : 'clothing');
-  return `/shop/${gender}/${department}/${cat.slug}`;
-}
 export default function CategoryBanner({ categories, activeCategory, onSelect }: CategoryBannerProps) {
-  const navigate = useNavigate();
-  const handleClick = (cat: CategoryItem) => {
-    const path = getCategoryPath(cat);
-    if (path) navigate(path);
-    else onSelect?.(cat.slug); // "all" tile or unknown slug keeps the old behaviour
-  };
   const wrapRef = useRef<HTMLDivElement>(null);
   const pausedRef = useRef(false);
   const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -191,7 +165,7 @@ export default function CategoryBanner({ categories, activeCategory, onSelect }:
             <button
               key={`${cat.slug}-${i}`}
               className={`cb-item ${activeCategory === cat.slug ? 'active' : ''}`}
-              onClick={() => handleClick(cat)}
+              onClick={() => onSelect(cat.slug)}
               aria-label={`Shop ${cat.name}`}
             >
               <img

@@ -1,4 +1,4 @@
-// src/App.tsx
+﻿// src/App.tsx
 import { HashRouter as Router, Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
@@ -40,7 +40,6 @@ import CategoryPage   from './pages/categories/CategoryPage';
 import ShopGenderPage from './pages/categories/ShopGenderPage';
 import NewArrivals    from './pages/categories/NewArrivals';
 import BestSellers    from './pages/categories/BestSellers';
-import Headgear       from './pages/categories/Headgear';
 
 // ── Components ─────────────────────────────────────────────────────────────────
 import FloatingCart from './components/common/FloatingCart';
@@ -214,7 +213,6 @@ export default function App() {
         {/* Not part of the gender/department tree, so they keep their own routes */}
         <Route path="/categories/new-arrivals" element={<NewArrivals />} />
         <Route path="/categories/best-sellers" element={<BestSellers />} />
-        <Route path="/categories/headgear" element={<Headgear />} />
         {/* PW Essentials — standalone category, no gender/department */}
         <Route path="/pw-essentials" element={
           <CategoryPage

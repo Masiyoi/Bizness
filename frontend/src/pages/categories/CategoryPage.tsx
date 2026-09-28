@@ -15,6 +15,11 @@ type Gender = 'men' | 'women';
 type Department = 'footwear' | 'clothing';
 type BadgeStyle = 'gold' | 'red' | 'white' | 'black';
 
+// A tab shown above the product grid. Each tab can hit one or more endpoints;
+// results are merged (e.g. "All" = men's + women's headgear).
+export interface FilterRequest { url: string; params?: Record<string, string>; }
+export interface CategoryFilter { label: string; requests: FilterRequest[]; }
+
 interface CategoryNode { id: string; name: string; slug: string; sort_order?: number; }
 interface CategoryTree {
   men:   { footwear: CategoryNode[]; clothing: CategoryNode[] };
@@ -32,6 +37,7 @@ interface CategoryPageOverrideProps {
   badge?:          string;
   badgeStyle?:     BadgeStyle;
   apiEndpoint?:    string;
+  filters?:        CategoryFilter[];
 }
 
 // Optional per-slug overrides for the hero banner / copy / badge that your old
@@ -178,6 +184,7 @@ export default function CategoryPage({
   badge:        badgeOverride,
   badgeStyle:   badgeStyleOverride,
   apiEndpoint,
+  filters,
 }: CategoryPageOverrideProps = {}) {
   const navigate = useNavigate();
   const { gender, department, slug } = useParams<{ gender: Gender; department: Department; slug: string }>();
@@ -191,6 +198,7 @@ export default function CategoryPage({
   const [cartCount,  setCartCount]  = useState(0);
   const [wishlist,   setWishlist]   = useState<number[]>([]);
   const [navSpacerHeight, setNavSpacerHeight] = useState(96);
+  const [activeFilter, setActiveFilter] = useState(0);
 
   // ── Resolve display name from the same tree the navbar uses ─────
   useEffect(() => {
@@ -214,7 +222,31 @@ export default function CategoryPage({
   // Backend resolves `category` (the slug) to a category_id and filters by
   // gender + department too, so a stale/mismatched combination in the URL
   // just returns an empty set rather than someone else's products.
+  // Filter tabs (e.g. Headgear: All / Men / Women). `filters` must be a stable
+  // reference (define it at module level, not inline in JSX).
   useEffect(() => {
+    if (!filters?.length) return undefined;
+    const active = filters[Math.min(activeFilter, filters.length - 1)];
+    let cancelled = false;
+    setLoading(true);
+    Promise.all(
+      active.requests.map(r =>
+        axios.get(r.url, { params: r.params })
+          .then(res => (Array.isArray(res.data) ? (res.data as Product[]) : []))
+          .catch(() => [] as Product[])
+      )
+    ).then(lists => {
+      if (cancelled) return;
+      const merged = new Map<number, Product>();
+      lists.flat().forEach(p => merged.set(p.id, p));
+      setProducts([...merged.values()]);
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [filters, activeFilter]);
+
+  useEffect(() => {
+    if (filters?.length) return;
     if (apiEndpoint) {
       setLoading(true);
       axios.get(apiEndpoint)
@@ -233,7 +265,7 @@ export default function CategoryPage({
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [gender, department, slug, apiEndpoint]);
+  }, [gender, department, slug, apiEndpoint, filters]);
 
   // ── Fetch cart ────────────────────────────────────────────────
   const fetchCart = useCallback(() => {
@@ -314,7 +346,7 @@ export default function CategoryPage({
     return 0;
   });
 
-  if (!apiEndpoint && (!gender || !department || !slug)) return null;
+  if (!apiEndpoint && !filters?.length && (!gender || !department || !slug)) return null;
 
   return (
     <div className="font-serif bg-cream min-h-screen text-navy overflow-x-hidden">
@@ -328,8 +360,8 @@ export default function CategoryPage({
       <div style={{ height: navSpacerHeight }} />
 
       {/* ── Hero Banner ──
-          With a video, the banner takes the video's natural height so nothing
-          is cropped. Without one, it keeps the fixed-height image banner. */}
+          With a video, it is fitted (uncropped) inside a fixed-height frame.
+          Without one, it keeps the fixed-height image banner. */}
       <div
         className={`relative w-full overflow-hidden bg-black ${
           bannerVideoUrl ? 'h-[45vh] min-h-[260px] max-h-[420px]' : 'h-[38vw] min-h-[200px] max-h-[420px]'
@@ -380,6 +412,25 @@ export default function CategoryPage({
           <p className="font-sans text-white/70 text-[13px] mt-1 max-w-md">{description}</p>
         </div>
       </div>
+
+      {/* ── Filter tabs ── */}
+      {filters && filters.length > 1 && (
+        <div className="px-[5%] pt-5 flex gap-2 overflow-x-auto">
+          {filters.map((f, i) => (
+            <button
+              key={f.label}
+              onClick={() => setActiveFilter(i)}
+              className={`font-sans text-[11px] font-semibold tracking-[2px] uppercase px-5 py-2 rounded-full border transition-colors whitespace-nowrap ${
+                i === activeFilter
+                  ? 'bg-black text-white border-black'
+                  : 'bg-white text-navy border-cream-deep hover:border-black'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* ── Toolbar ── */}
       <div className="px-[5%] py-4 flex justify-between items-center border-b border-cream-deep">

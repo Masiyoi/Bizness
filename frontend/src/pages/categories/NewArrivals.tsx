@@ -6,7 +6,7 @@ export default function NewArrivals() {
     <CategoryPage
       categoryName="New Arrivals"
       headline="New Arrivals"
-      description="Fresh drops added in the last 3 weeks — be the first to shop."
+      description="Check out our newest arrivals.Discover fresh drops , trending essentials and exclusive styles before they sell out.Find your favorite look from the Plug."
       bannerUrl="/newArrival.jpg"
       badge="New In"
       badgeStyle="red"
