@@ -13,6 +13,7 @@ import type { Product, User } from '../../constants/theme';
 
 type Gender = 'men' | 'women';
 type Department = 'footwear' | 'clothing';
+type BadgeStyle = 'gold' | 'red' | 'white' | 'black';
 
 interface CategoryNode { id: string; name: string; slug: string; sort_order?: number; }
 interface CategoryTree {
@@ -21,22 +22,23 @@ interface CategoryTree {
 }
 
 // Optional overrides for pages outside the gender/department/slug taxonomy
-// (New Arrivals, Best Sellers) â€” same component, a custom data source.
+// (New Arrivals, Best Sellers) — same component, a custom data source.
 interface CategoryPageOverrideProps {
-  categoryName?: string;
-  headline?:     string;
-  description?:  string;
-  bannerUrl?:    string;
-  badge?:        string;
-  badgeStyle?:   'white' | 'black' | 'white';
-  apiEndpoint?:  string;
+  categoryName?:   string;
+  headline?:       string;
+  description?:    string;
+  bannerUrl?:      string;
+  bannerVideoUrl?: string;
+  badge?:          string;
+  badgeStyle?:     BadgeStyle;
+  apiEndpoint?:    string;
 }
 
 // Optional per-slug overrides for the hero banner / copy / badge that your old
 // Bags.tsx, Heels.tsx, etc. used to hardcode. Anything not listed here falls
 // back to a generic banner + auto-generated copy, so a brand-new category
 // created purely in the DB "just works" with zero frontend changes.
-const CATEGORY_META: Record<string, { bannerUrl?: string; description?: string; badge?: string; badgeStyle?: 'gold' | 'red' }> = {
+const CATEGORY_META: Record<string, { bannerUrl?: string; description?: string; badge?: string; badgeStyle?: BadgeStyle }> = {
   // ── Men's Footwear ──────────────────────────────────────────
   'men-sandals-slides': {
     bannerUrl: 'https://res.cloudinary.com/dfiy43f01/image/upload/v1789304424/sandals_av3aaw.jpg',
@@ -93,7 +95,7 @@ const CATEGORY_META: Record<string, { bannerUrl?: string; description?: string; 
     description: 'Complete every look with essential accessories. Browse genuine leather belts, functional everyday bags, sunglasses, and wallets built to last.',
   },
 
-   // ── Women's Footwear ────────────────────────────────────────
+  // ── Women's Footwear ────────────────────────────────────────
   'women-sneakers-athletic': {
     bannerUrl: '/women/womensneakers.jpg',
     description: 'Explore everyday sneakers, high-performance running shoes, and iconic court classics. Shop lightweight, durable kicks built for all-day comfort. Order today.',
@@ -160,11 +162,19 @@ const CATEGORY_META: Record<string, { bannerUrl?: string; description?: string; 
 
 const DEFAULT_BANNER = '/banners/default.jpg';
 
+const BADGE_CLASSES: Record<BadgeStyle, string> = {
+  red:   'bg-[#e8443a] text-white',
+  white: 'bg-white text-navy',
+  black: 'bg-black text-white',
+  gold:  'bg-gold text-navy',
+};
+
 export default function CategoryPage({
   categoryName: nameOverride,
   headline:     headlineOverride,
   description:  descOverride,
   bannerUrl:    bannerOverride,
+  bannerVideoUrl,
   badge:        badgeOverride,
   badgeStyle:   badgeStyleOverride,
   apiEndpoint,
@@ -198,7 +208,7 @@ export default function CategoryPage({
   const description   = descOverride ?? meta.description ?? `Shop our full ${categoryName.toLowerCase()} collection.`;
   const bannerUrl      = bannerOverride ?? meta.bannerUrl ?? DEFAULT_BANNER;
   const badge          = badgeOverride ?? meta.badge;
-  const badgeStyle     = badgeStyleOverride ?? meta.badgeStyle;
+  const badgeStyle: BadgeStyle = badgeStyleOverride ?? meta.badgeStyle ?? 'gold';
 
   // ── Fetch products for this gender/department/slug ──────────────
   // Backend resolves `category` (the slug) to a category_id and filters by
@@ -284,7 +294,7 @@ export default function CategoryPage({
     setUser(null); setCartIds([]); setCartCount(0); setWishlist([]);
   };
 
-  // ── Sort ─────────────────────────────────────────────────────
+  // ── Measure navbar so the spacer matches its height ──────────
   useEffect(() => {
     const measure = () => {
       const navEl = document.querySelector('nav');
@@ -296,6 +306,7 @@ export default function CategoryPage({
     return () => { clearTimeout(t); window.removeEventListener('resize', measure); };
   }, []);
 
+  // ── Sort ─────────────────────────────────────────────────────
   const sorted = [...products].sort((a, b) => {
     if (sortBy === 'price-asc')  return Number(a.price) - Number(b.price);
     if (sortBy === 'price-desc') return Number(b.price) - Number(a.price);
@@ -316,25 +327,54 @@ export default function CategoryPage({
 
       <div style={{ height: navSpacerHeight }} />
 
-      {/* ── Hero Banner ── */}
-      <div className="relative w-full h-[38vw] min-h-[200px] max-h-[420px] overflow-hidden">
-        <img src={bannerUrl} alt={categoryName} className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(8,5,3,0.75) 0%, rgba(8,5,3,0.1) 60%)' }} />
+      {/* ── Hero Banner ──
+          With a video, the banner takes the video's natural height so nothing
+          is cropped. Without one, it keeps the fixed-height image banner. */}
+      <div
+        className={`relative w-full overflow-hidden bg-black ${
+          bannerVideoUrl ? '' : 'h-[38vw] min-h-[200px] max-h-[420px]'
+        }`}
+      >
+        {bannerVideoUrl ? (
+          <video
+            src={bannerVideoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            className="block w-full h-auto"
+          />
+        ) : (
+          <img src={bannerUrl} alt={categoryName} className="absolute inset-0 w-full h-full object-cover" />
+        )}
+
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(to top, rgba(8,5,3,0.75) 0%, rgba(8,5,3,0.1) 60%)' }}
+        />
+
         {badge && (
-  <span className={`absolute top-4 right-4 z-10 font-sans text-[11px] font-bold px-3 py-1.5 rounded-full tracking-[0.5px] ${
-    badgeStyle === 'red'   ? 'bg-[#e8443a] text-white' :
-    badgeStyle === 'white' ? 'bg-white text-navy' :
-    'bg-gold text-navy'
-  }`}>
-    {badge}
-  </span>
-)}
-        <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-10 font-sans text-[12px] font-semibold text-white bg-black/30 hover:bg-black/50 transition-colors px-3 py-1.5 rounded-full backdrop-blur-sm">
+          <span
+            className={`absolute top-4 right-4 z-10 font-sans text-[11px] font-bold px-3 py-1.5 rounded-full tracking-[0.5px] ${BADGE_CLASSES[badgeStyle]}`}
+          >
+            {badge}
+          </span>
+        )}
+
+        <button
+          onClick={() => navigate(-1)}
+          className="absolute top-4 left-4 z-10 font-sans text-[12px] font-semibold text-white bg-black/30 hover:bg-black/50 transition-colors px-3 py-1.5 rounded-full backdrop-blur-sm"
+        >
           ← Back
         </button>
+
         <div className="absolute bottom-0 left-0 p-6 md:p-10 z-10">
           <Ornament label={categoryName} />
-          <h1 className="font-serif font-bold text-white mt-1" style={{ fontSize: 'clamp(24px, 5vw, 48px)', textShadow: '0 2px 16px rgba(0,0,0,0.5)' }}>
+          <h1
+            className="font-serif font-bold text-white mt-1"
+            style={{ fontSize: 'clamp(24px, 5vw, 48px)', textShadow: '0 2px 16px rgba(0,0,0,0.5)' }}
+          >
             {headline}
           </h1>
           <p className="font-sans text-white/70 text-[13px] mt-1 max-w-md">{description}</p>
@@ -346,7 +386,11 @@ export default function CategoryPage({
         <span className="font-sans text-[12px] text-muted">
           {loading ? 'Loading...' : `${sorted.length} product${sorted.length !== 1 ? 's' : ''}`}
         </span>
-        <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="font-sans border border-cream-deep rounded-md px-3 py-1.5 text-[11px] text-navy bg-white cursor-pointer outline-none">
+        <select
+          value={sortBy}
+          onChange={e => setSortBy(e.target.value)}
+          className="font-sans border border-cream-deep rounded-md px-3 py-1.5 text-[11px] text-navy bg-white cursor-pointer outline-none"
+        >
           <option value="featured">Featured</option>
           <option value="price-asc">Price: Low → High</option>
           <option value="price-desc">Price: High → Low</option>
@@ -378,7 +422,10 @@ export default function CategoryPage({
             <p className="font-sans text-[13px] text-muted mb-6">
               We're stocking up {categoryName} — check back soon!
             </p>
-            <button onClick={() => navigate('/')} className="font-sans text-[11px] font-semibold tracking-[2px] uppercase bg-black text-white px-8 py-3.5 hover:bg-[#222] transition-colors">
+            <button
+              onClick={() => navigate('/')}
+              className="font-sans text-[11px] font-semibold tracking-[2px] uppercase bg-black text-white px-8 py-3.5 hover:bg-[#222] transition-colors"
+            >
               Back to Home →
             </button>
           </div>

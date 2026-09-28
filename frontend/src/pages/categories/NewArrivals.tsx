@@ -7,9 +7,9 @@ export default function NewArrivals() {
       categoryName="New Arrivals"
       headline="New Arrivals"
       description="Fresh drops added in the last 3 weeks — be the first to shop."
-      bannerUrl="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=1200&q=80&fit=crop"
+      bannerVideoUrl="/newvideo.mp4"
       badge="New In"
-      badgeStyle="black"
+      badgeStyle="red"
       apiEndpoint="/api/products/new-arrivals?limit=40"
     />
   );
