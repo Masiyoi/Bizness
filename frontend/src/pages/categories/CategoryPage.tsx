@@ -332,7 +332,7 @@ export default function CategoryPage({
           is cropped. Without one, it keeps the fixed-height image banner. */}
       <div
         className={`relative w-full overflow-hidden bg-black ${
-          bannerVideoUrl ? '' : 'h-[38vw] min-h-[200px] max-h-[420px]'
+          bannerVideoUrl ? 'h-[45vh] min-h-[260px] max-h-[420px]' : 'h-[38vw] min-h-[200px] max-h-[420px]'
         }`}
       >
         {bannerVideoUrl ? (
@@ -343,7 +343,7 @@ export default function CategoryPage({
             loop
             playsInline
             preload="auto"
-            className="block w-full h-auto"
+            className="absolute inset-0 w-full h-full object-contain"
           />
         ) : (
           <img src={bannerUrl} alt={categoryName} className="absolute inset-0 w-full h-full object-cover" />
