@@ -76,7 +76,7 @@ const EARN_WAYS = [
   { label: 'Every KSh 100 spent',     points: 1,   icon: paymentIcon },
   { label: 'Write a product review',  points: 20,  icon: satisfactionIcon },
   { label: 'Refer a friend',          points: 150, icon: referIcon },
-  { label: 'Follow us on Instagram',  points: 30,  icon: igColouredIcon, link: 'https://www.instagram.com/lukuprime?igsh=MWxmazlvM2JseWNzeQ==' },
+  { label: 'Follow us on Instagram',  points: 30,  icon: igColouredIcon, link: 'https://www.instagram.com/plugwalkstudio?stkn=MXE5bHNucTNraHY0OA==' },
   { label: 'Birthday month bonus',    points: 50,  icon: fireworksIcon },
 ];
 // ── Member-only carousel content — swap these paths for real assets in /public/updates/ ──

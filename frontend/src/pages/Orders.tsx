@@ -581,8 +581,8 @@ export default function Orders() {
       </div>
 
        <InstagramStrip
-        handle="@lukuprime"
-        profileUrl="https://instagram.com/lukuprime"
+        handle="@plugwalkstudio"
+        profileUrl="https://www.instagram.com/plugwalkstudio?stkn=MXE5bHNucTNraHY0OA=="
         limit={12}
             />
 

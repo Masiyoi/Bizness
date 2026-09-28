@@ -67,7 +67,7 @@ const COLUMNS = [
 // ── Social icons (used in both desktop nav and mobile) ───────────────────────
 const SOCIAL_ICONS = (
   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
-    <a href="https://www.instagram.com/lukuprime?igsh=MWxmazlvM2JseWNzeQ==" target="_blank" rel="noopener noreferrer"
+    <a href="https://www.instagram.com/plugwalkstudio?stkn=MXE5bHNucTNraHY0OA==" target="_blank" rel="noopener noreferrer"
       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'transform 0.2s, opacity 0.2s' }}
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.opacity = '0.6'; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.opacity = '1'; }}
@@ -81,14 +81,14 @@ const SOCIAL_ICONS = (
     >
       <img src={tiktokIcon} alt="TikTok" style={{ width: 20, height: 20, objectFit: 'contain', display: 'block' }} />
     </a>
-    <a href="https://www.youtube.com/@Lukuprime254" target="_blank" rel="noopener noreferrer"
+    <a href="https://youtube.com/@plugwalk254?si=OA_YFWWzHM25xOxC" target="_blank" rel="noopener noreferrer"
       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'transform 0.2s, opacity 0.2s' }}
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.opacity = '0.6'; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.opacity = '1'; }}
     >
       <img src={youtubeIcon} alt="YouTube" style={{ width: 20, height: 20, objectFit: 'contain', display: 'block' }} />
     </a>
-    <a href="https://www.facebook.com/lukuprimeshoesthriftbags" target="_blank" rel="noopener noreferrer"
+    <a href="https://www.facebook.com/plugwalkstudio" target="_blank" rel="noopener noreferrer"
       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'transform 0.2s, opacity 0.2s' }}
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.opacity = '0.6'; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.opacity = '1'; }}
@@ -102,14 +102,14 @@ const SOCIAL_ICONS = (
     >
       <img src={pinterestIcon} alt="Pinterest" style={{ width: 20, height: 20, objectFit: 'contain', display: 'block' }} />
     </a>
-    <a href="https://wa.me/254707099935" target="_blank" rel="noopener noreferrer"
+    <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer"
       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'transform 0.2s, opacity 0.2s' }}
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.opacity = '0.6'; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.opacity = '1'; }}
     >
       <img src={whatsappIcon} alt="WhatsApp" style={{ width: 20, height: 20, objectFit: 'contain', display: 'block' }} />
     </a>
-    <a href="mailto:lukuprime254@gmail.com"
+    <a href="mailto:plugwalkstudio@gmail.com"
       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'transform 0.2s, opacity 0.2s' }}
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.opacity = '0.6'; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.opacity = '1'; }}

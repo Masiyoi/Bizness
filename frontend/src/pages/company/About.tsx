@@ -239,7 +239,7 @@ function TabPress() {
           { icon: deliveryIcon,   label: 'Delivery',   value: 'Nationwide Kenya'        },
           { icon: channelsIcon,   label: 'Channels',   value: (
             <span style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              <a href="https://www.instagram.com/lukuprimeshoesbagsthrift?igsh=MWxmazlvM2JseWNzeQ==" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>Instagram</a>,
+              <a href="https://www.instagram.com/plugwalkstudio?stkn=MXE5bHNucTNraHY0OA==" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>Instagram</a>,
               <a href="https://tiktok.com/@lifewith_heels_bags" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>TikTok</a>,
               <a href="https://www.youtube.com/@Lukuprime254" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>YouTube</a>,
               <a href="https://wa.me/254707099935" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>WhatsApp</a>

@@ -2014,7 +2014,7 @@ export default function ProductDetail() {
       </div>
 
       <Gallery/>
-      <InstagramStrip handle="@lukuprime" profileUrl="https://instagram.com/lukuprime" limit={12}/>
+      <InstagramStrip handle="@plugwalkstudio" profileUrl="https://www.instagram.com/plugwalkstudio?stkn=MXE5bHNucTNraHY0OA==" limit={12}/>
       <Footer/>
     </div>
   );

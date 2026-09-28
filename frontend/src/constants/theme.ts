@@ -71,8 +71,8 @@ export const ANNOUNCEMENTS = [
 export const SOCIAL_LINKS = [
   {
     name:    'Instagram',
-    url:     'https://www.instagram.com/lukuprimeshoesbagsthrift?igsh=MWxmazlvM2JseWNzeQ==',
-    label:   '@lukuprimeshoesbagsthrift',
+    url:     'https://www.instagram.com/plugwalkstudio?stkn=MXE5bHNucTNraHY0OA==',
+    label:   '@plugwalkstudio',
     color:   '#000000',
     hoverBg: 'rgba(0,0,0,0.08)',
   },
