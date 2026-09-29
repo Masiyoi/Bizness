@@ -33,7 +33,7 @@ const ROUTE_OVERRIDE = {
   flash_sale: '/notifications',
 };
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://lukuprime.com';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://plugwalk.co';
 
 function urlFor(type) {
   const path = ROUTE_OVERRIDE[type] || '/notifications';
