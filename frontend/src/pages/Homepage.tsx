@@ -858,7 +858,7 @@ export default function Homepage() {
 
       <div style={{ marginTop: 32 }}><Gallery/></div>
 
-      <InstagramStrip handle="@plugwalk.apparrel" profileUrl="https://www.instagram.com/plugwalkstudio?stkn=MXE5bHNucTNraHY0OA==" limit={12} />
+      <InstagramStrip handle="@plugwalk.apparel" profileUrl="https://www.instagram.com/plugwalkstudio?stkn=MXE5bHNucTNraHY0OA==" limit={12} />
       <AppDownload />
       <ReviewSection reviews={reviews} loading={reviewsLoading} isAdmin={user?.role === 'admin'} />
       <StoreLocator />
