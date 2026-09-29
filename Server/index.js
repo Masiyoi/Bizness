@@ -23,6 +23,7 @@ const membersRoutes = require('./routes/membersRoutes');
 const usersRoutes = require('./routes/usersRoutes');
 const affiliateRoutes = require('./routes/affiliateRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const pushRoutes = require('./routes/pushRoutes');
 
 // Middleware
 const auth = require('./middleware/auth');
@@ -96,6 +97,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/members', membersRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/affiliate', affiliateRoutes);
+app.use('/api/push', pushRoutes);
 
 // Admin-only routes
 app.use('/api', adminRoutes);

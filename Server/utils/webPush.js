@@ -4,8 +4,8 @@
 //   npm install web-push
 //   npx web-push generate-vapid-keys   (run once, save both keys)
 // .env:
-//   VAPID_PUBLIC_KEY=...
-//   VAPID_PRIVATE_KEY=...
+//   VAPID_PUBLIC_KEY=BKzyX7tfGxVfDULg0jYTJsuIi42XGl9UyVAkV1QO_als_5i-JMxVopkc0WFAUPrdwo2zmY7q0GO92u64mwOt-sE
+//   VAPID_PRIVATE_KEY=uA4VN_H0mh0MWPNdSxfS3HPEXyNF9oZ8Ylq4WNniRfY
 //   VAPID_SUBJECT=mailto:you@lukuprime.com
 //   FRONTEND_URL=https://lukuprime.com   (no trailing slash, no #)
 const webpush = require('web-push');

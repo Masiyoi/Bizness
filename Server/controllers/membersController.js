@@ -1,4 +1,4 @@
-// src/controllers/membersController.js
+﻿// src/controllers/membersController.js
 //
 // Assumes a shared pg Pool exported from ../db, e.g.:
 //   const { Pool } = require('pg');
@@ -6,6 +6,7 @@
 // Adjust the import below to match your project's actual db module.
 const pool = require('../config/db');
 const crypto = require('crypto');
+const { sendPush } = require('../utils/webPush');
 // Tier thresholds - keep these in sync with TIERS in src/pages/MembersClub.tsx
 const TIERS = [
   { name: 'Bronze',  min: 0,    max: 499 },
@@ -22,7 +23,7 @@ const JOIN_BONUS    = 20;  // awarded once, when the user explicitly joins the c
 function tierFor(points) {
   return TIERS.find(t => points >= t.min && points <= t.max) ?? TIERS[0];
 }
-// â”€â”€ Free shipping perk (Gold: over KSh 5,000, Diamond: always) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Free shipping perk (Gold: over KSh 5,000, Diamond: always) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // The client's delivery_fee is a display value computed from the checkout
 // page's zone picker -- never the authoritative charge. Call this wherever
 // the order total is actually built (stkPush / initiatePayment) and use its
@@ -134,7 +135,7 @@ async function addPoints(memberId, points, description) {
   try {
     await client.query('BEGIN');
     const { rows: [before] } = await client.query(
-      'SELECT points FROM members WHERE id = $1 FOR UPDATE',
+      'SELECT points, user_id FROM members WHERE id = $1 FOR UPDATE',
       [memberId]
     );
     if (!before) throw new Error('Member not found');
@@ -161,6 +162,18 @@ async function addPoints(memberId, points, description) {
       tierBonusAwarded = { tier: afterTier.name, bonus };
     }
     await client.query('COMMIT');
+    sendPush(before.user_id, {
+      type: 'points',
+      title: points >= 0 ? `+${points} points` : `${points} points`,
+      body: description,
+    }).catch(() => {});
+    if (tierBonusAwarded) {
+      sendPush(before.user_id, {
+        type: 'tier_upgrade',
+        title: `You've reached ${tierBonusAwarded.tier} tier`,
+        body: `Congratulations! A bonus of ${tierBonusAwarded.bonus} points was added to your balance.`,
+      }).catch(() => {});
+    }
     return { tierChanged: afterTier.name !== beforeTier.name, tierBonusAwarded };
   } catch (err) {
     await client.query('ROLLBACK');
@@ -436,7 +449,7 @@ async function getTotalPointsRewarded(req, res) {
 }
 // GET /api/members/count
 // Total number of club members (club_joined = true). Any authenticated
-// user can see this â€” it's just a headline stat, not sensitive.
+// user can see this Ã¢â‚¬â€ it's just a headline stat, not sensitive.
 async function getMemberCount(req, res) {
   try {
     const { rows: [{ total }] } = await pool.query(
@@ -450,7 +463,7 @@ async function getMemberCount(req, res) {
 }
 // GET /api/members/admin/all
 // Admin-only. Every club member with tier, current points, lifetime
-// points earned, and join date â€” used by the Admin > Members tab.
+// points earned, and join date Ã¢â‚¬â€ used by the Admin > Members tab.
 async function getAllMembers(req, res) {
   try {
     const { rows } = await pool.query(

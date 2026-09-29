@@ -1,20 +1,21 @@
-const axios = require('axios');
+﻿const axios = require('axios');
 const db    = require('../config/db');
 const { calculateFirstOrderDiscount, calculateOrderDiscount } = require('./discountController');
 const { awardOrderPoints, getShippingOverride, markGoldDiscountCodeUsed } = require('./membersController');
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
 const { decrementStockForItems } = require('../utils/stockDeduction');
 const { sendMetaEvent } = require('../services/metaCapi');
+const { sendPush } = require('../utils/webPush');
 const { logActivity } = require('../services/activityLogger');
 
-// ── PayHero base URL ──────────────────────────────────────────────────────────
+// â”€â”€ PayHero base URL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PAYHERO_BASE = 'https://backend.payhero.co.ke/api/v2';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
- * PayHero uses HTTP Basic Auth — base64("username:password") from the
- * API Keys page in your dashboard (app.payhero.co.ke → API Keys).
+ * PayHero uses HTTP Basic Auth â€” base64("username:password") from the
+ * API Keys page in your dashboard (app.payhero.co.ke â†’ API Keys).
  * Set PAYHERO_API_USERNAME / PAYHERO_API_PASSWORD in your .env.
  */
 const getAuthHeader = () => {
@@ -30,7 +31,7 @@ const formatPhone = (phone) => {
   return cleaned;
 };
 
-// Best-effort version for CAPI hashing — unlike formatPhone() above, this
+// Best-effort version for CAPI hashing â€” unlike formatPhone() above, this
 // must never throw (a malformed number should still let Purchase fire,
 // just without a perfectly-formatted phone match key) and falls back to
 // the raw value if it can't confidently normalize it.
@@ -39,8 +40,8 @@ const safeFormatPhone = (phone) => {
   try { return formatPhone(phone); } catch { return phone; }
 };
 
-// ── Shared: create the order + clear the cart for a completed PayHero payment ──
-// Mirrors fulfillPesapalPayment — idempotent, safe to call from the callback
+// â”€â”€ Shared: create the order + clear the cart for a completed PayHero payment â”€â”€
+// Mirrors fulfillPesapalPayment â€” idempotent, safe to call from the callback
 // and (if you add one later) any live-status-check fallback.
 const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
   const existing = await db.query(
@@ -138,10 +139,24 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
   );
   const newOrderId = orderInsertRes.rows[0]?.id;
 
+  sendPush(payment.user_id, {
+    type: 'order_confirmed',
+    title: 'Order confirmed',
+    body: `Your order ${reservedOrderNumber || '#' + newOrderId} (KSh ${payment.amount}) has been confirmed.`,
+  }).catch(() => {});
+
+  if (discountAmount > 0) {
+    sendPush(payment.user_id, {
+      type: 'discount',
+      title: `You saved KSh ${discountAmount}`,
+      body: `A discount was applied to order ${reservedOrderNumber || '#' + newOrderId}.`,
+    }).catch(() => {});
+  }
+
   if (affiliateCode && newOrderId) {
     try {
       const spRes = await db.query(
-        `SELECT id, commission_pct FROM salespersons WHERE coupon_code = $1 AND status = 'active'`,
+        `SELECT id, user_id, commission_pct FROM salespersons WHERE coupon_code = $1 AND status = 'active'`,
         [affiliateCode]
       );
       if (spRes.rows.length > 0) {
@@ -152,6 +167,11 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
            VALUES ($1, $2, $3, $4)`,
           [sp.id, newOrderId, payment.amount, commissionAmount]
         );
+        sendPush(sp.user_id, {
+          type: 'commission',
+          title: `Commission earned: KSh ${commissionAmount.toFixed(2)}`,
+          body: `Order ${reservedOrderNumber || '#' + newOrderId} was placed with your coupon code.`,
+        }).catch(() => {});
       }
     } catch (commErr) {
       console.error('Affiliate commission recording error:', commErr.message);
@@ -174,8 +194,8 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
     metadata: { order_id: newOrderId, amount: payment.amount },
   }).catch(() => {});
 
-  // ── Purchase CAPI event ──────────────────────────────────────────────────
-  // No `req` here — this function runs from a server-to-server PayHero
+  // â”€â”€ Purchase CAPI event â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // No `req` here â€” this function runs from a server-to-server PayHero
   // webhook, not a customer HTTP request, so there's no IP/user-agent/cookie
   // context to attach automatically. fbc/fbp are instead passed explicitly,
   // having been captured client-side at checkout and carried through
@@ -198,10 +218,10 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
     },
   }).catch(() => {});
 
-  console.log(`✅ PayHero order fulfilled — user ${payment.user_id} — ref ${confirmationCode}`);
+  console.log(`âœ… PayHero order fulfilled â€” user ${payment.user_id} â€” ref ${confirmationCode}`);
 };
 
-// ── POST /api/payments/payhero/stk-push ───────────────────────────────────────
+// â”€â”€ POST /api/payments/payhero/stk-push â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 /**
  * Triggers an M-Pesa STK push via PayHero.
  * Body: { phone, delivery_zone, delivery_fee, shipping, selectedColors, selectedSizes,
@@ -211,7 +231,7 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
  * snippet) and sent here so they can be persisted into shipping_meta and
  * later attached to the Purchase CAPI event in fulfillPayHeroPayment, which
  * runs from a webhook with no cookies of its own. See Checkout.tsx for the
- * client-side capture — read document.cookie for _fbc/_fbp and include them
+ * client-side capture â€” read document.cookie for _fbc/_fbp and include them
  * in this request body alongside phone/shipping/etc.
  */
 exports.stkPush = async (req, res) => {
@@ -255,8 +275,8 @@ exports.stkPush = async (req, res) => {
     return res.status(400).json({ msg: err.message });
   }
 
-  // ── Compute the authoritative order total server-side ──────────────────────
-  // Same pattern as stkPush (M-Pesa) / initiatePayment (Pesapal) — never
+  // â”€â”€ Compute the authoritative order total server-side â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Same pattern as stkPush (M-Pesa) / initiatePayment (Pesapal) â€” never
   // trust a client-supplied amount.
   let roundedAmount, discountInfo, deliveryOverride;
   try {
@@ -302,7 +322,7 @@ exports.stkPush = async (req, res) => {
     const payload = {
       amount:              roundedAmount,
       phone_number:        formattedPhone,
-      channel_id:          Number(process.env.PAYHERO_CHANNEL_ID), // from Payment Channels → My Payment Channels
+      channel_id:          Number(process.env.PAYHERO_CHANNEL_ID), // from Payment Channels â†’ My Payment Channels
       provider:             'm-pesa',
       external_reference:   externalReference,
       customer_name:        shipping.firstName || 'Customer',
@@ -323,7 +343,7 @@ exports.stkPush = async (req, res) => {
       return res.status(400).json({ msg: 'Failed to initiate PayHero STK push' });
     }
 
-    // Persist a pending payment row — same shape as your Pesapal/M-Pesa rows
+    // Persist a pending payment row â€” same shape as your Pesapal/M-Pesa rows
     await db.query(
       `INSERT INTO payments
          (user_id, checkout_request_id, merchant_request_id, amount, phone,
@@ -365,13 +385,13 @@ exports.stkPush = async (req, res) => {
   }
 };
 
-// ── POST /api/payments/payhero/callback  (called by PayHero servers) ─────────
+// â”€â”€ POST /api/payments/payhero/callback  (called by PayHero servers) â”€â”€â”€â”€â”€â”€â”€â”€â”€
 /**
  * PayHero posts the transaction result here once M-Pesa responds.
  * NOTE: PayHero's public docs confirm this wrapper shape for their withdraw
  * callback ({ forward_url, response: {...}, status }); the payments callback
  * has not been independently confirmed to use identical field names, so this
- * handler logs the full raw body on first hit — check your logs after your
+ * handler logs the full raw body on first hit â€” check your logs after your
  * first real test payment and adjust the field names below if needed.
  */
 exports.payHeroCallback = async (req, res) => {
@@ -405,16 +425,16 @@ exports.payHeroCallback = async (req, res) => {
       );
 
       await fulfillPayHeroPayment(CheckoutRequestID, MpesaReceiptNumber);
-      console.log(`✅ PayHero callback processed — ref ${MpesaReceiptNumber} — KSh ${Amount}`);
+      console.log(`âœ… PayHero callback processed â€” ref ${MpesaReceiptNumber} â€” KSh ${Amount}`);
     } else {
       await db.query(
         `UPDATE payments SET status = 'failed', result_desc = $1, updated_at = NOW()
          WHERE checkout_request_id = $2`,
         [ResultDesc || 'Payment failed', CheckoutRequestID]
       );
-      console.log(`❌ PayHero payment failed: ${CheckoutRequestID} — ${ResultDesc}`);
+      console.log(`âŒ PayHero payment failed: ${CheckoutRequestID} â€” ${ResultDesc}`);
 
-      // Create a 'cancelled' order record, same pattern as Pesapal/M-Pesa —
+      // Create a 'cancelled' order record, same pattern as Pesapal/M-Pesa â€”
       // cart intentionally left intact so the customer can retry.
       try {
         const paymentRes = await db.query(
@@ -482,7 +502,7 @@ exports.payHeroCallback = async (req, res) => {
             ]
           );
 
-          console.log(`📋 Cancelled-order record created for user ${payment.user_id}`);
+          console.log(`ðŸ“‹ Cancelled-order record created for user ${payment.user_id}`);
         }
       } catch (orderErr) {
         console.error('Failed to create cancelled-order record:', orderErr.message);
@@ -493,11 +513,11 @@ exports.payHeroCallback = async (req, res) => {
   }
 };
 
-// ── GET /api/payments/payhero/status/:checkoutRequestId  (polled by frontend) ─
+// â”€â”€ GET /api/payments/payhero/status/:checkoutRequestId  (polled by frontend) â”€
 /**
  * Mirrors getPaymentStatus / getPesapalStatus. Reads from our own DB, which
  * the callback above keeps up to date. (PayHero also exposes a live
- * "Get Transaction Status" query endpoint per their docs — add a live
+ * "Get Transaction Status" query endpoint per their docs â€” add a live
  * fallback here the same way getPesapalStatus does, once you've confirmed
  * its exact path/params against your dashboard, in case the callback is
  * ever delayed or missed.)

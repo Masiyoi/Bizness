@@ -19,6 +19,7 @@ import { useOutletContext, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import type { User } from '../../constants/theme';
 import { useProfileTheme } from './ProfileThemeContext';
+import { enablePushNotifications, disablePushNotifications, isPushEnabled, isPushSupported } from '../../utils/push';
 
 interface OutletCtx { user: User; }
 
@@ -44,6 +45,34 @@ export default function Settings() {
   const [confirmPw, setConfirmPw] = useState('');
   const [pwError, setPwError]     = useState<string | null>(null);
   const [pwSaving, setPwSaving]   = useState(false);
+
+  const [pushOn, setPushOn]           = useState(false);
+  const [pushBusy, setPushBusy]       = useState(false);
+  const [pushSupported, setPushSupported] = useState(true);
+
+  useEffect(() => {
+    setPushSupported(isPushSupported());
+    isPushEnabled().then(setPushOn).catch(() => setPushOn(false));
+  }, []);
+
+  const togglePush = async () => {
+    setPushBusy(true);
+    try {
+      if (pushOn) {
+        await disablePushNotifications();
+        setPushOn(false);
+        flash('Notifications turned off');
+      } else {
+        const ok = await enablePushNotifications();
+        setPushOn(ok);
+        flash(ok ? 'Notifications enabled' : 'Permission was denied — check your browser settings');
+      }
+    } catch {
+      flash('Could not update notification settings — try again');
+    } finally {
+      setPushBusy(false);
+    }
+  };
 
   useEffect(() => {
     axios.get('/api/users/me')
@@ -116,6 +145,28 @@ export default function Settings() {
             <p className="pf-row-desc">Switch between light and dark for your account pages.</p>
           </div>
           <button className={`pf-toggle ${theme === 'dark' ? 'on' : ''}`} onClick={toggle} aria-label="Toggle dark mode">
+            <span className="pf-toggle-knob" />
+          </button>
+        </div>
+      </div>
+
+      {/* ── Push notifications ── */}
+      <div className="pf-card">
+        <div className="pf-row">
+          <div>
+            <p className="pf-row-label">Push Notifications</p>
+            <p className="pf-row-desc">
+              {pushSupported
+                ? 'Get order, commission, and rewards updates on your phone.'
+                : 'Not supported on this browser/device.'}
+            </p>
+          </div>
+          <button
+            className={`pf-toggle ${pushOn ? 'on' : ''}`}
+            onClick={togglePush}
+            disabled={!pushSupported || pushBusy}
+            aria-label="Toggle push notifications"
+          >
             <span className="pf-toggle-knob" />
           </button>
         </div>

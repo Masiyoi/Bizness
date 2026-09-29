@@ -1,5 +1,6 @@
-const db = require('../config/db');
+﻿const db = require('../config/db');
 const { generateUniqueCouponCode } = require('../utils/generateCouponCode');
+const { sendPush } = require('../utils/webPush');
 
 // POST /api/affiliate/salespersons
 // Create a new affiliate salesperson (admin only)
@@ -188,7 +189,7 @@ exports.markPaid = async (req, res) => {
   try {
     // Verify salesperson exists
     const { rows: ownerCheck } = await db.query(
-      `SELECT id FROM salespersons WHERE id = $1`,
+      `SELECT id, user_id FROM salespersons WHERE id = $1`,
       [id]
     );
     if (!ownerCheck[0]) {
@@ -196,12 +197,23 @@ exports.markPaid = async (req, res) => {
     }
 
     // Mark all pending earnings as paid
-    const { rowCount } = await db.query(
+    const { rows: paidRows } = await db.query(
       `UPDATE affiliate_earnings 
        SET payout_status = 'paid', paid_at = now()
-       WHERE salesperson_id = $1 AND payout_status = 'pending'`,
+       WHERE salesperson_id = $1 AND payout_status = 'pending'
+       RETURNING commission_amount`,
       [id]
     );
+    const rowCount  = paidRows.length;
+    const totalPaid = paidRows.reduce((sum, r) => sum + Number(r.commission_amount), 0);
+
+    if (rowCount > 0) {
+      sendPush(ownerCheck[0].user_id, {
+        type: 'payout',
+        title: `Commission paid: KSh ${totalPaid.toFixed(2)}`,
+        body: `Your payout covering ${rowCount} order${rowCount > 1 ? 's' : ''} has been sent.`,
+      }).catch(() => {});
+    }
 
     res.json({
       message: `Marked ${rowCount} earnings record(s) as paid`,

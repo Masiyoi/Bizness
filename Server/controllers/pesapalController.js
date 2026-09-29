@@ -1,21 +1,22 @@
-const axios = require('axios');
+﻿const axios = require('axios');
 const db    = require('../config/db');
 const { calculateFirstOrderDiscount, calculateOrderDiscount } = require('./discountController');
 const { awardOrderPoints, getShippingOverride, markGoldDiscountCodeUsed } = require('./membersController');
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
 const { decrementStockForItems } = require('../utils/stockDeduction');
 const { sendMetaEvent } = require('../services/metaCapi');
+const { sendPush } = require('../utils/webPush');
 
-// ── Pesapal base URLs ─────────────────────────────────────────────────────────
+// â”€â”€ Pesapal base URLs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PESAPAL_BASE = process.env.PESAPAL_ENV === 'production'
   ? 'https://pay.pesapal.com/v3'
   : 'https://cybqa.pesapal.com/pesapalv3';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * Authenticate with Pesapal and return a Bearer token.
- * Tokens are valid for 5 minutes — fetch fresh on every request (simple & safe).
+ * Tokens are valid for 5 minutes â€” fetch fresh on every request (simple & safe).
  */
 const getPesapalToken = async () => {
   const res = await axios.post(
@@ -56,13 +57,13 @@ const registerIPN = async (token) => {
   return res.data.ipn_id;
 };
 
-// ── Shared: create the order + clear the cart for a completed Pesapal payment ──
-// Idempotent — safe to call from both the IPN webhook and the frontend's
+// â”€â”€ Shared: create the order + clear the cart for a completed Pesapal payment â”€â”€
+// Idempotent â€” safe to call from both the IPN webhook and the frontend's
 // live-status-check fallback, whichever gets to "completed" first. Without
 // this, only the IPN path created the order and cleared the cart; if the
 // live check learned about completion first (or the IPN was delayed/never
 // arrived), the payment got marked completed but the cart was left
-// untouched — which is why items stayed in cart after a successful payment.
+// untouched â€” which is why items stayed in cart after a successful payment.
 const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
   const existing = await db.query(
     `SELECT o.id FROM orders o
@@ -70,7 +71,7 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
      WHERE p.checkout_request_id = $1`,
     [orderTrackingId]
   );
-  if (existing.rows.length > 0) return; // already fulfilled — IPN and live-check raced
+  if (existing.rows.length > 0) return; // already fulfilled â€” IPN and live-check raced
 
   const paymentRes = await db.query(
     `SELECT id, user_id, amount, phone, delivery_zone, delivery_fee, shipping_meta
@@ -156,10 +157,24 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
   );
   const newOrderId = orderInsertRes.rows[0]?.id;
 
+  sendPush(payment.user_id, {
+    type: 'order_confirmed',
+    title: 'Order confirmed',
+    body: `Your order ${reservedOrderNumber || '#' + newOrderId} (KSh ${payment.amount}) has been confirmed.`,
+  }).catch(() => {});
+
+  if (discountAmount > 0) {
+    sendPush(payment.user_id, {
+      type: 'discount',
+      title: `You saved KSh ${discountAmount}`,
+      body: `A discount was applied to order ${reservedOrderNumber || '#' + newOrderId}.`,
+    }).catch(() => {});
+  }
+
   if (affiliateCode && newOrderId) {
     try {
       const spRes = await db.query(
-        `SELECT id, commission_pct FROM salespersons WHERE coupon_code = $1 AND status = 'active'`,
+        `SELECT id, user_id, commission_pct FROM salespersons WHERE coupon_code = $1 AND status = 'active'`,
         [affiliateCode]
       );
       if (spRes.rows.length > 0) {
@@ -170,6 +185,11 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
            VALUES ($1, $2, $3, $4)`,
           [sp.id, newOrderId, payment.amount, commissionAmount]
         );
+        sendPush(sp.user_id, {
+          type: 'commission',
+          title: `Commission earned: KSh ${commissionAmount.toFixed(2)}`,
+          body: `Order ${reservedOrderNumber || '#' + newOrderId} was placed with your coupon code.`,
+        }).catch(() => {});
       }
     } catch (commErr) {
       console.error('Affiliate commission recording error:', commErr.message);
@@ -200,10 +220,10 @@ await awardOrderPoints(payment.user_id, payment.amount);
     },
   }).catch(() => {}); // never let a tracking failure affect order fulfillment
 
-  console.log(`✅ Pesapal order fulfilled — user ${payment.user_id} — ref ${confirmationCode}`);
+  console.log(`âœ… Pesapal order fulfilled â€” user ${payment.user_id} â€” ref ${confirmationCode}`);
 };
 
-// ── POST /api/payments/pesapal/initiate ───────────────────────────────────────
+// â”€â”€ POST /api/payments/pesapal/initiate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 /**
  * Creates a Pesapal order and returns a redirect_url.
  * The frontend redirects the customer there (or embeds it in an iframe).
@@ -223,8 +243,8 @@ exports.initiatePayment = async (req, res) => {
   } = req.body;
   const userId = req.user.id;
 
-  // ── Compute the authoritative order total server-side ──────────────────────
-  // Never trust a client-supplied amount — recompute the subtotal from the DB
+  // â”€â”€ Compute the authoritative order total server-side â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Never trust a client-supplied amount â€” recompute the subtotal from the DB
   // cart (using flash-sale price where active) and apply the first-order
   // discount (if eligible) here, mirroring stkPush.
   let roundedAmount, discountInfo;
@@ -278,7 +298,7 @@ exports.initiatePayment = async (req, res) => {
   }
 
   // Generate a unique merchant reference for this order
-  // Show the human-readable order number on Pesapal's hosted page — kept
+  // Show the human-readable order number on Pesapal's hosted page â€” kept
   // unique per submission attempt (a timestamp suffix) since Pesapal
   // requires each order id to be unique, even on a retried payment.
   const merchantReference = reserved_order_number
@@ -330,7 +350,7 @@ exports.initiatePayment = async (req, res) => {
       return res.status(400).json({ msg: error?.message || 'Failed to create Pesapal order' });
     }
 
-    // Persist a pending payment row — mirrors your M-Pesa pattern
+    // Persist a pending payment row â€” mirrors your M-Pesa pattern
     await db.query(
       `INSERT INTO payments
          (user_id, checkout_request_id, merchant_request_id, amount, phone,
@@ -370,7 +390,7 @@ exports.initiatePayment = async (req, res) => {
   }
 };
 
-// ── POST /api/payments/pesapal/ipn  (called by Pesapal servers) ───────────────
+// â”€â”€ POST /api/payments/pesapal/ipn  (called by Pesapal servers) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 /**
  * Pesapal posts here whenever a transaction status changes.
  * We MUST respond 200 immediately, then verify and fulfil the order.
@@ -408,10 +428,10 @@ exports.pesapalIPN = async (req, res) => {
         [confirmation_code, payment_status_description, OrderTrackingId]
       );
 
-      // 2-5. Create the order + clear the cart (idempotent — safe even if
+      // 2-5. Create the order + clear the cart (idempotent â€” safe even if
       // the frontend's live-status-check fallback already did this first).
       await fulfillPesapalPayment(OrderTrackingId, confirmation_code);
-      console.log(`✅ Pesapal IPN processed — ref ${confirmation_code} — KSh ${amount}`);
+      console.log(`âœ… Pesapal IPN processed â€” ref ${confirmation_code} â€” KSh ${amount}`);
 
     } else if (status === 'failed' || status === 'invalid') {
       await db.query(
@@ -419,7 +439,7 @@ exports.pesapalIPN = async (req, res) => {
          WHERE checkout_request_id = $2`,
         [payment_status_description, OrderTrackingId]
       );
-      console.log(`❌ Pesapal payment ${status}: ${OrderTrackingId}`);
+      console.log(`âŒ Pesapal payment ${status}: ${OrderTrackingId}`);
 
       // Create a 'cancelled' order so the customer sees the failed attempt.
       // Cart is intentionally left intact so they can retry checkout.
@@ -489,20 +509,20 @@ exports.pesapalIPN = async (req, res) => {
             ]
           );
 
-          console.log(`📋 Cancelled-order record created for user ${payment.user_id}`);
+          console.log(`ðŸ“‹ Cancelled-order record created for user ${payment.user_id}`);
         }
       } catch (orderErr) {
         console.error('Failed to create cancelled-order record:', orderErr.message);
       }
     }
-    // 'pending' — do nothing, wait for next IPN
+    // 'pending' â€” do nothing, wait for next IPN
 
   } catch (err) {
     console.error('Pesapal IPN error:', err.response?.data || err.message);
   }
 };
 
-// ── GET /api/payments/pesapal/status/:orderTrackingId  (polled by frontend) ───
+// â”€â”€ GET /api/payments/pesapal/status/:orderTrackingId  (polled by frontend) â”€â”€â”€
 /**
  * Frontend polls this after the customer is redirected back from Pesapal.
  * Mirrors your existing /status/:checkoutRequestId endpoint.
@@ -589,7 +609,7 @@ exports.getPesapalStatus = async (req, res) => {
         }
       } catch (liveErr) {
         console.error('Live Pesapal status check failed:', liveErr.message);
-        // Return whatever we have in DB — frontend will retry
+        // Return whatever we have in DB â€” frontend will retry
       }
     }
 
