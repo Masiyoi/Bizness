@@ -172,7 +172,7 @@ export default function ChatbotWidget() {
             <img className="cp-head-img" src="/chatbot.jpg" alt="" aria-hidden="true" />
             <div>
               <div className="cp-head-title">Ask the Plug</div>
-              <div className="cp-head-sub">PW assistant</div>
+              <div className="cp-head-sub">Luku Prime assistant</div>
             </div>
             <button type="button" className="cp-close" aria-label="Close chat" onClick={() => setOpen(false)}>×</button>
           </div>
