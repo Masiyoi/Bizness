@@ -33,6 +33,38 @@ setInterval(() => {
   }
 }, WINDOW_MS).unref();
 
+const RETRY_STATUS = new Set([429, 500, 502, 503, 504]);
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const urlFor = model => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+
+async function callGemini(model, key, payload) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  try {
+    return await fetch(urlFor(model), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+      signal: ctrl.signal,
+      body: JSON.stringify(payload),
+    });
+  }
+}
+
+// Retries temporary errors (overload, rate limit) with backoff, then tries GEMINI_FALLBACK_MODEL if set
+async function generate(key, payload) {
+  const models = [...new Set([MODEL, process.env.GEMINI_FALLBACK_MODEL].filter(Boolean))];
+  let r;
+  for (const model of models) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      r = await callGemini(model, key, payload);
+      if (r.ok || !RETRY_STATUS.has(r.status)) return r;
+      console.warn(`[chat] ${model} returned ${r.status} (attempt ${attempt + 1}/3)`);
+      await sleep(500 * 2 ** attempt);
+    }
+  }
+  return r;
+}
+
 router.post('/', async (req, res) => {
   const key = process.env.GEMINI_API_KEY;
   if (!key) {
@@ -60,19 +92,11 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Please type a question.' });
   }
 
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
-
   try {
-    const r = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-      signal: ctrl.signal,
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-        contents,
-        generationConfig: { temperature: 0.4, maxOutputTokens: 1024 },
-      }),
+    const r = await generate(key, {
+      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+      contents,
+      generationConfig: { temperature: 0.4, maxOutputTokens: 1024 },
     });
 
     if (!r.ok) {
