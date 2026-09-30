@@ -18,6 +18,7 @@ import HeadwearSection  from '../components/home/HeadwearSection';
 import FootwearSection  from '../components/home/FootwearSection';
 import StoreLocator from '../components/home/StoreLocator';
 import AppDownload from '../components/home/AppDownload';
+import ChatbotWidget from '../components/home/ChatbotWidget';
 
 import { readUser, ANNOUNCEMENTS } from '../constants/theme';
 import type { Product, HomepageReview, User } from '../constants/theme';
@@ -326,53 +327,6 @@ export default function Homepage() {
   const [sortBy, setSortBy]           = useState('featured');
   const [sortDrawerOpen, setSortDrawerOpen] = useState(false);
   const sortBtnRef                          = useRef<HTMLDivElement>(null);
-  const [chatbotOpen, setChatbotOpen] = useState(false);
-  const chatbotRef  = useRef<HTMLDivElement>(null);
-  const [chatbotPos, setChatbotPos] = useState<{ x: number; y: number } | null>(null);
-  const chatbotDrag = useRef({ dragging: false, moved: false, startX: 0, startY: 0, origX: 0, origY: 0 });
-
-  const handleChatbotPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
-    if (chatbotOpen) return;
-    const el = chatbotRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    chatbotDrag.current = {
-      dragging: true,
-      moved: false,
-      startX: e.clientX,
-      startY: e.clientY,
-      origX: rect.left,
-      origY: rect.top,
-    };
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  };
-
-  const handleChatbotPointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
-    if (!chatbotDrag.current.dragging) return;
-    const dx = e.clientX - chatbotDrag.current.startX;
-    const dy = e.clientY - chatbotDrag.current.startY;
-    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) chatbotDrag.current.moved = true;
-    const size = chatbotRef.current?.offsetWidth ?? 58;
-    const maxX = window.innerWidth - size;
-    const maxY = window.innerHeight - size;
-    const newX = Math.min(Math.max(0, chatbotDrag.current.origX + dx), maxX);
-    const newY = Math.min(Math.max(0, chatbotDrag.current.origY + dy), maxY);
-    setChatbotPos({ x: newX, y: newY });
-  };
-
-  const handleChatbotPointerUp = () => {
-    chatbotDrag.current.dragging = false;
-  };
-
-  const handleChatbotClick = () => {
-    if (chatbotDrag.current.moved) { chatbotDrag.current.moved = false; return; }
-    if (!chatbotOpen) {
-      setChatbotOpen(true);
-    } else {
-      // TODO: wire this up to your actual chatbot handler/route
-      navigate('/chat');
-    }
-  };
   const [flashSaleMap, setFlashSaleMap] = useState<Record<number, number>>({});
   // maps product_id → sale_price (used to hide flash items from main grid)
 
@@ -869,36 +823,7 @@ export default function Homepage() {
       </a>
       <span className="lp-wa-tooltip">Chat with us on WhatsApp</span>
 
-      <div
-        ref={chatbotRef}
-        className={`lp-chatbot-fab${chatbotOpen ? ' open' : ''}`}
-        style={!chatbotOpen && chatbotPos ? { left: chatbotPos.x, top: chatbotPos.y, right: 'auto', bottom: 'auto' } : undefined}
-      >
-        <button
-          type="button"
-          className="lp-chatbot-main"
-          aria-label="Ask the Plug"
-          aria-expanded={chatbotOpen}
-          onPointerDown={handleChatbotPointerDown}
-          onPointerMove={handleChatbotPointerMove}
-          onPointerUp={handleChatbotPointerUp}
-          onClick={handleChatbotClick}
-        >
-          <img className="lp-chatbot-fab-img" src="/chatbot.jpg" alt="" aria-hidden="true" draggable={false} />
-          {!chatbotOpen && <span className="lp-chatbot-fab-badge">+</span>}
-          {chatbotOpen && <span className="lp-chatbot-fab-label">Ask the Plug</span>}
-        </button>
-        {chatbotOpen && (
-          <button
-            type="button"
-            className="lp-chatbot-minus"
-            aria-label="Minimize chat button"
-            onClick={() => setChatbotOpen(false)}
-          >
-            −
-          </button>
-        )}
-      </div>
+      <ChatbotWidget />
 
       {user && <NotificationBell userId={user.id} />}
     </div>
