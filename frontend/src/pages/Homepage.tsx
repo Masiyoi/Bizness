@@ -266,6 +266,45 @@ function StatsBar({ productCount }: { productCount: number }) {
   );
 }
 
+function Tagline() {
+  return (
+    <>
+      <style>{`
+        .lp-tagline {
+          background: #FFFFFF;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: clamp(8px,1.2vw,16px);
+          padding: clamp(28px,4vw,56px) 20px 0;
+        }
+        .lp-tagline-text {
+          font-family: var(--f-display);
+          font-style: italic;
+          font-weight: 400;
+          font-size: clamp(22px,3.2vw,44px);
+          letter-spacing: 1px;
+          color: var(--ink);
+          line-height: 1.1;
+        }
+        .lp-tagline-icon {
+          width: clamp(26px,3.2vw,44px);
+          height: clamp(26px,3.2vw,44px);
+          object-fit: contain;
+          flex-shrink: 0;
+        }
+        @media (max-width: 640px) {
+          .lp-tagline { padding: 24px 16px 0; }
+        }
+      `}</style>
+      <section className="lp-tagline">
+        <p className="lp-tagline-text">Do it for the experience</p>
+        <img src="/diamond.png" alt="" className="lp-tagline-icon" />
+      </section>
+    </>
+  );
+}
+
 function Editorial({ onShop }: { onShop: (cat: string) => void }) {
   const navigate = useNavigate();
   return (
@@ -277,7 +316,7 @@ function Editorial({ onShop }: { onShop: (cat: string) => void }) {
       <div className="lp-editorial-copy">
         <p style={{ fontFamily:"var(--f-sans)", fontSize:10, fontWeight:800, letterSpacing:'3px', textTransform:'uppercase', color:'#0A0A0A', marginBottom:16 }}>Our Story</p>
         <h3>Born in Nairobi,<br/>Dressed for<br/>the World</h3>
-        <p>Plug Walk Studio started with a simple belief — that every person in Kenya deserves access to authentic, premium fashion without compromise. From curated thrift finds to coveted designer pieces, we source with intention, deliver with care, and dress a generation that refuses to settle.</p>
+        <p>Plug Walk Studios started with a simple belief — that every person in Kenya deserves access to authentic, premium fashion without compromise. From curated thrift finds to coveted designer pieces, we source with intention, deliver with care, and dress a generation that refuses to settle.</p>
         <button className="lp-btn-primary" onClick={() => navigate('/about')}>Read About Us</button>
       </div>
     </section>
@@ -541,6 +580,7 @@ export default function Homepage() {
       />
 
       <Hero onShop={(cat?: string) => selectCategory(cat ?? 'all')} />
+      <Tagline />
       <StatsBar productCount={products.length} />
 
       <FlashSaleStrip
