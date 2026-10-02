@@ -79,7 +79,7 @@ const css = `
   .lp-section-head { display: flex; align-items: flex-end; justify-content: space-between; padding: clamp(32px,5vw,72px) clamp(20px,5%,80px) 24px; flex-wrap: wrap; gap: 12px; }
   .lp-section-kicker { font-family: var(--f-sans); font-size: 10px; font-weight: 500; letter-spacing: 3.5px; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
   .lp-section-title { font-family: var(--f-display); font-weight: 300; font-size: clamp(24px,4vw,48px); color: var(--ink); letter-spacing: -1px; line-height: 1.05; }
-  .lp-section-title em { font-style: inherit; font-weight: inherit; color: inherit }
+  .lp-section-title em { font-style: italic; color: var(--mid) }
   .lp-cats { display: flex; overflow-x: auto; gap: 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .lp-cats::-webkit-scrollbar { display: none }
   .lp-cat-btn { flex-shrink: 0; padding: 16px 20px; font-family: var(--f-sans); font-size: 11px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: var(--mid); background: none; border: none; cursor: pointer; transition: all 0.18s; white-space: nowrap; position: relative; }
@@ -315,8 +315,8 @@ function Editorial({ onShop }: { onShop: (cat: string) => void }) {
       </div>
       <div className="lp-editorial-copy">
         <p style={{ fontFamily:"var(--f-sans)", fontSize:10, fontWeight:800, letterSpacing:'3px', textTransform:'uppercase', color:'#0A0A0A', marginBottom:16 }}>Our Story</p>
-        <h3>Born in Nairobi,<br/>Dressed for<br/>the World</h3>
-        <p>Plug Walk Studios started with a simple belief — that every person in Kenya deserves access to authentic, premium fashion without compromise. From curated thrift finds to coveted designer pieces, we source with intention, deliver with care, and dress a generation that refuses to settle.</p>
+        <h3>Rooted in the City,<br/>Built for<br/>the Culture</h3>
+        <p>Karibu Plug Walk Studios-your ultimate Plug for the freshest kicks and street ready drip hapa 254. Our customer is the real main character-everything you drop is curated with you at the center.Satisfaction yako ndio Standard yetu, hakuna stories mob only geniuine care na premium service.Our mission is to Elevate individual style, with the vision of becoming the definitive heartbeat of kenya's urban drip culture. </p>
         <button className="lp-btn-primary" onClick={() => navigate('/about')}>Read About Us</button>
       </div>
     </section>
@@ -852,7 +852,7 @@ export default function Homepage() {
 
       <div style={{ marginTop: 32 }}><Gallery/></div>
 
-      <InstagramStrip handle="@plugwalk.apparel" profileUrl="https://www.instagram.com/plugwalkstudio?stkn=MXE5bHNucTNraHY0OA==" limit={12} />
+      <InstagramStrip handle="@plugwalk.studios" profileUrl="https://www.instagram.com/plugwalk.studio?stkn=MXE5bHNucTNraHY0OA==" limit={12} />
       <AppDownload />
       <ReviewSection reviews={reviews} loading={reviewsLoading} isAdmin={user?.role === 'admin'} />
       <StoreLocator />
