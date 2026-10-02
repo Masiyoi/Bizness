@@ -286,8 +286,7 @@ export default function Footer() {
           </p>
 
           <p className="ft-tagline">
-            Do It For The Experience
-            <img src="/diamond.png" alt="" className="ft-tagline-icon" />
+            Do It For The Experience.
           </p>
 
 
@@ -447,15 +446,6 @@ const css = `
     line-height: 1.7;
     max-width: 480px;
     margin: 0 0 32px;
-  }
-
-  .ft-tagline-icon {
-    width: 16px;
-    height: 16px;
-    object-fit: contain;
-    display: inline-block;
-    vertical-align: -3px;
-    margin-left: 6px;
   }
 
   /* Newsletter */

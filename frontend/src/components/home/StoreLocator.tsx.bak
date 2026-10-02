@@ -68,8 +68,7 @@ export default function StoreLocator() {
           padding: 18px 22px;
           font-family: var(--f-sans, 'DM Sans', sans-serif);
           font-size: 13px;
-          font-weight: 600;
-          color: #0A0A0A;
+          color: #555;
           line-height: 1.75;
         }
       `}</style>
