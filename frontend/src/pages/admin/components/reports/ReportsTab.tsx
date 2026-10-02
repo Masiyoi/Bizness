@@ -85,7 +85,7 @@ function ReportHeader({ title, subtitle, dateRange }: { title: string; subtitle?
         }}>L</div>
         <div>
           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 22, color: T.black }}>
-            Luku Prime — {title}
+            P — {title}
           </div>
           {subtitle && (
             <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.grey1 }}>{subtitle}</div>
@@ -134,7 +134,7 @@ function SalesReportView() {
     if (!el) return;
     const w = window.open('', '_blank')!;
     w.document.write(`
-      <html><head><title>Sales Report — Luku Prime</title>
+      <html><head><title>Sales Report — Plug Walk</title>
       <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Jost', 'Helvetica Neue', sans-serif; font-size: 12px; color: #0A0A0A; padding: 32px; }
@@ -268,7 +268,7 @@ function InventoryReportView() {
     const el = printRef.current;
     if (!el) return;
     const w = window.open('', '_blank')!;
-    w.document.write(`<html><head><title>Inventory Report — Luku Prime</title>
+    w.document.write(`<html><head><title>Inventory Report — Plug Walk</title>
       <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Helvetica Neue', sans-serif; font-size: 12px; color: #0A0A0A; padding: 32px; }
@@ -380,7 +380,7 @@ function ProfitReportView() {
     const el = printRef.current;
     if (!el) return;
     const w = window.open('', '_blank')!;
-    w.document.write(`<html><head><title>Profit Report — Luku Prime</title>
+    w.document.write(`<html><head><title>Profit Report — Plug Walk</title>
       <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Helvetica Neue', sans-serif; font-size: 12px; color: #0A0A0A; padding: 32px; }

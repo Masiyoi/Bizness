@@ -472,7 +472,7 @@ export default function ReviewPage() {
           </div>
           <h1 className="jost" style={{ fontWeight:800, fontSize:'clamp(26px,4vw,40px)', color:T.text, marginBottom:8, letterSpacing:'0.5px' }}>Reviews & Ratings</h1>
           <p className="jost" style={{ fontSize:13, color:'#222222', fontWeight:400, maxWidth:500, lineHeight:1.8 }}>
-            Your honest feedback shapes the Luku Prime community.
+            Your honest feedback shapes the Plug Walk community.
           </p>
           {reviews.length > 0 && (
             <div className="stats-row" style={{ display:'flex', gap:32, marginTop:28 }}>

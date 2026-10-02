@@ -325,7 +325,7 @@ export default function Footer() {
                 </span>
               ))}
             </div>
-            <div className="ft-copy">© 2025 Luku Prime · Made by Masiyoi</div>
+            <div className="ft-copy">© 2026 Plug Walk Studios.All rights reserved. Designed and built by The Plug Walk Team</div>
           </div>
 
         </div>

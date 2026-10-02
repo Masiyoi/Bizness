@@ -21,7 +21,7 @@ export function ReportHeader({ title, subtitle, dateRange }: {
         }}>L</div>
         <div>
           <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 22, color: T.black }}>
-            Luku Prime — {title}
+            Plug Walk Studios — {title}
           </div>
           {subtitle && (
             <div style={{ fontFamily: 'Jost,sans-serif', fontSize: 12, color: T.grey1 }}>{subtitle}</div>

@@ -20,7 +20,7 @@ export default function Careers() {
   return (
     <PageShell
       badge="Company"
-      title="Careers at Luku Prime"
+      title="Careers at Plug Walk Studios"
       subtitle="Join a team that's redefining fashion in Kenya. We're growing fast and looking for passionate people."
     >
       <Section title="Open Positions">
@@ -71,7 +71,7 @@ export default function Careers() {
       </Section>
 
       <AccentCard>
-        <strong>Don't see your role?</strong> We're always interested in talented people. Send your CV and a short note about what you'd bring to Luku Prime to <strong>masiyoiisaac@gmail.com</strong> with the subject line "Open Application."
+        <strong>Don't see your role?</strong> We're always interested in talented people. Send your CV and a short note about what you'd bring to Plug Walk Studios to <strong>masiyoiisaac@gmail.com</strong> with the subject line "Open Application."
       </AccentCard>
     </PageShell>
   );

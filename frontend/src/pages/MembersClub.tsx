@@ -335,7 +335,7 @@ useEffect(() => {
     setJoining(true);
     try {
       await axios.post('/api/members/join');
-      showToast('✦ Welcome to Luku Prime Members Club!');
+      showToast('✦ Welcome to Plug Walk Members Club!');
       fetchProfile();
     } catch {
       showToast('Could not join — please try again.');

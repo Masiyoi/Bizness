@@ -34,7 +34,7 @@ type CheckoutStep = 'summary' | 'waiting' | 'success' | 'failed' | 'pesapal-redi
 type DeliveryZone = 'pickup' | 'cbd' | 'environs' | 'county';
 type PaymentMethod = 'mpesa' | 'pesapal' | 'payhero';
 
-// ─── Luku Prime Design Tokens ──────────────────────────────────────────────
+// ─── Plug Walk Design Tokens ──────────────────────────────────────────────
 const T = {
   navy:     '#000000',
   navyMid:  '#111111',
@@ -1015,7 +1015,7 @@ export default function Checkout() {
             </div>
             <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 26, color: T.navy, marginBottom: 8 }}>Payment Successful!</h2>
             <p style={{ fontFamily: "'Cormorant Garamond',serif", color: T.navy, fontSize: 14, fontWeight: 600, marginBottom: 24, lineHeight: 1.7 }}>
-              Your order has been placed.<br />Thank you for shopping with Luku Prime!
+              Your order has been placed.<br />Thank you for shopping from number one Plug in Kenya!
             </p>
 
             <div style={{ marginBottom: 20, textAlign: 'left' }}>

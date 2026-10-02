@@ -8,9 +8,9 @@ export default function Press() {
       title="Press & Media"
       subtitle="For press enquiries, brand partnerships, and media kit requests — we'd love to hear from you."
     >
-      <Section title="About Luku Prime">
+      <Section title="About Plug Walk Studios">
         <Prose>
-          <p>Luku Prime is Kenya's premier online fashion destination, offering curated streetwear, designer pieces, shoes, bags, and more — delivered fast across the country. Launched in Nairobi, we've quickly become the go-to platform for fashion-forward Kenyans who demand quality, authenticity, and speed.</p>
+          <p>Plug Walk Studios is Kenya's premier online fashion destination, offering curated streetwear, designer pieces, shoes, bags, and more — delivered fast across the country. Launched in Nairobi, we've quickly become the go-to platform for fashion-forward Kenyans who demand quality, authenticity, and speed.</p>
         </Prose>
       </Section>
 

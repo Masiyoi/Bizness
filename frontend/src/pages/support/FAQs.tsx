@@ -50,7 +50,7 @@ export default function FAQs() {
       </Section>
 
       <Section title="Products">
-        <FAQItem q="Are your products authentic?" a="Yes. Every item on Luku Prime is carefully sourced and verified. We have a zero-tolerance policy for counterfeit goods." />
+        <FAQItem q="Are your products authentic?" a="Yes. Every item on Plug Walk Studios is carefully sourced and verified. We have a zero-tolerance policy for counterfeit goods." />
         <FAQItem q="How do I know if an item will fit me?" a="Check our Size Guide page for detailed measurements, or WhatsApp us with your measurements and we'll recommend the right size." />
         <FAQItem q="Do you restock sold-out items?" a="Some items restock, others don't — especially limited drops. Subscribe to our newsletter to be first to know about restocks." />
       </Section>

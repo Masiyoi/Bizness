@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Luku Prime Admin — Design Tokens (Black & White theme)
+//  Admin — Design Tokens (Black & White theme)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const T = {

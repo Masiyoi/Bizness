@@ -1,6 +1,6 @@
 // src/constants/theme.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// Single source of truth for Luku Prime brand tokens.
+// Single source of truth for Plug Walk brand tokens.
 // Use these for any inline styles that can't be expressed with Tailwind classes
 // (e.g. dynamic gradient strings, rgba() values in JS, canvas drawing, etc.)
 //

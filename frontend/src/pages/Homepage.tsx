@@ -277,7 +277,7 @@ function Editorial({ onShop }: { onShop: (cat: string) => void }) {
       <div className="lp-editorial-copy">
         <p style={{ fontFamily:"var(--f-sans)", fontSize:10, fontWeight:800, letterSpacing:'3px', textTransform:'uppercase', color:'#0A0A0A', marginBottom:16 }}>Our Story</p>
         <h3>Born in Nairobi,<br/>Dressed for<br/>the World</h3>
-        <p>Luku Prime started with a simple belief — that every person in Kenya deserves access to authentic, premium fashion without compromise. From curated thrift finds to coveted designer pieces, we source with intention, deliver with care, and dress a generation that refuses to settle.</p>
+        <p>Plug Walk Studio started with a simple belief — that every person in Kenya deserves access to authentic, premium fashion without compromise. From curated thrift finds to coveted designer pieces, we source with intention, deliver with care, and dress a generation that refuses to settle.</p>
         <button className="lp-btn-primary" onClick={() => navigate('/about')}>Read About Us</button>
       </div>
     </section>

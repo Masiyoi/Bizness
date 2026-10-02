@@ -36,13 +36,13 @@ const generateToken = (userId, role) =>
 const sendPasswordResetEmail = async (email, fullName, token) => {
   const resetUrl = `${process.env.CLIENT_URL}/#/reset-password/${token}`;
   await resend.emails.send({
-    from:    `Luku Prime <${process.env.EMAIL_FROM}>`,
+    from:    `Plug Walk Studios <${process.env.EMAIL_FROM}>`,
     to:      email,
-    subject: 'Reset your Luku Prime password',
+    subject: 'Reset your Plug Walk Studios password',
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:auto;background:#0D1B3E;border-radius:12px;overflow:hidden;">
         <div style="padding:28px 36px;text-align:center;">
-          <h1 style="color:#C8A951;margin:0;font-size:24px;font-family:'Georgia',serif;">Luku Prime</h1>
+          <h1 style="color:#C8A951;margin:0;font-size:24px;font-family:'Georgia',serif;">Plug Walk Studios</h1>
         </div>
         <div style="padding:32px 36px;background:#fff;">
           <h2 style="color:#0D1B3E;margin:0 0 12px;font-size:20px;">Hi ${fullName} ðŸ‘‹</h2>
@@ -65,7 +65,7 @@ const sendPasswordResetEmail = async (email, fullName, token) => {
           </p>
         </div>
         <div style="background:#152348;padding:16px 36px;text-align:center;">
-          <p style="color:rgba(255,255,255,0.35);font-size:11px;margin:0;">Â© 2025 Luku Prime Â· Kenya's Premium Store</p>
+          <p style="color:rgba(255,255,255,0.35);font-size:11px;margin:0;">@ 2026 Plug Walk Studios Â· Kenya's Premium Store</p>
         </div>
       </div>
     `,
@@ -133,13 +133,13 @@ const isAccountLocked = (user) => {
 const sendVerificationEmail = async (email, fullName, token) => {
   const verifyUrl = `${process.env.CLIENT_URL}/#/verify-email/${token}`;
   await resend.emails.send({
-    from:    `Luku Prime <${process.env.EMAIL_FROM}>`,
+    from:    `Plug Walk Studios <${process.env.EMAIL_FROM}>`,
     to:      email,
-    subject: 'Verify your Luku Prime account',
+    subject: 'Verify your Plug Walk Studios account',
     html: `
       <div style="font-family:sans-serif;max-width:560px;margin:auto;background:#0D1B3E;border-radius:12px;overflow:hidden;">
         <div style="padding:28px 36px;text-align:center;">
-          <h1 style="color:#C8A951;margin:0;font-size:24px;">Luku Prime</h1>
+          <h1 style="color:#C8A951;margin:0;font-size:24px;">Plug Walk Studios</h1>
         </div>
         <div style="padding:32px 36px;background:#fff;">
           <h2 style="color:#0D1B3E;margin:0 0 12px;">Hi ${fullName} ðŸ‘‹</h2>

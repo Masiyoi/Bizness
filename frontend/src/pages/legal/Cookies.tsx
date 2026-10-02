@@ -12,7 +12,7 @@ export default function Cookies() {
     <PageShell
       badge="Legal"
       title="Cookie Policy"
-      subtitle="We use cookies to make your experience on Luku Prime smooth, personalised, and secure. Last updated: January 2025."
+      subtitle="We use cookies to make your experience on Plug Walk Studios smooth, personalised, and secure. Last updated: January 2025."
     >
       <Section title="What Are Cookies">
         <Prose>
@@ -54,7 +54,7 @@ export default function Cookies() {
 
       <Section title="Third-Party Cookies">
         <Prose>
-          <p>Some of our partners — such as analytics providers and payment processors — may also set cookies when you use Luku Prime. These are governed by those third parties' own privacy and cookie policies.</p>
+          <p>Some of our partners — such as analytics providers and payment processors — may also set cookies when you use Plug Walk Studios. These are governed by those third parties' own privacy and cookie policies.</p>
         </Prose>
       </Section>
 

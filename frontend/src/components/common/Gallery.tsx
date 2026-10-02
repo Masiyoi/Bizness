@@ -37,7 +37,7 @@ export default function Gallery() {
           <div key={i} style={{ aspectRatio: '3/4', overflow: 'hidden', background: '#f2f2f2' }}>
             <img
               src={src}
-              alt={`Luku Prime styled look ${i + 1}`}
+              alt={`Plug Walk styled look ${i + 1}`}
               loading="lazy"
               style={{
                 width: '100%', height: '100%', objectFit: 'cover', display: 'block',

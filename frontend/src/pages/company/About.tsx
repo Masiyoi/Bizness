@@ -146,7 +146,7 @@ function TabAbout() {
     <>
       <Section title="Our Story">
         <Prose>
-          <p>Luku Prime was born on the streets of Nairobi — a city where fashion is identity, where what you wear tells your story before you open your mouth. We started with a simple mission: bring authentic, curated streetwear and premium fashion to Kenya, without the premium price tag or the hassle.</p>
+          <p>Plug Walk was born on the streets of Nairobi — a city where fashion is identity, where what you wear tells your story before you open your mouth. We started with a simple mission: bring authentic, curated streetwear and premium fashion to Kenya, without the premium price tag or the hassle.</p>
           <p style={{ marginTop: 14 }}>What began as a passion for finding the freshest drops has grown into a full platform connecting thousands of fashion-forward Kenyans with styles they love — from classic streetwear to luxury pieces, everyday fits to special occasion looks.</p>
         </Prose>
       </Section>
@@ -156,7 +156,7 @@ function TabAbout() {
             { icon: authenticityIcon, title: 'Authenticity', desc: 'Every item is verified. Zero tolerance for counterfeits — your trust is non-negotiable.' },
             { icon: speedIcon,        title: 'Speed',        desc: 'Same-day delivery within Nairobi CBD. Because fashion waits for no one.' },
             { icon: curationIcon,     title: 'Curation',     desc: "We don't carry everything — we carry the right things. Handpicked drops that actually hit." },
-            { icon: communityIcon,    title: 'Community',    desc: "Luku Prime is for the culture. We're building more than a store — we're building a movement." },
+            { icon: communityIcon,    title: 'Community',    desc: "Plug Walk is for the culture. We're building more than a store — we're building a movement." },
           ].map(v => (
             <div key={v.title} style={{ background: '#fff', borderRadius: 12, padding: '18px 20px' }}>
               <img src={v.icon} alt={v.title} style={{ width: 36, height: 36, objectFit: 'contain', marginBottom: 10, display: 'block' }} />
@@ -175,7 +175,7 @@ function TabAbout() {
         ]} />
       </Section>
       <AccentCard style={{ background: '#fff' }}>
-        <strong>Based in Nairobi, built for Kenya.</strong> We understand local fashion, local needs, and local taste. That's what makes Luku Prime different — we're not a global retailer trying to fit into the Kenyan market. We are the Kenyan market.
+        <strong>Based in Nairobi, built for Kenya.</strong> We understand local fashion, local needs, and local taste. That's what makes Plug Walk different — we're not a global retailer trying to fit into the Kenyan market. We are the Kenyan market.
       </AccentCard>
     </>
   );
@@ -229,8 +229,8 @@ function TabCareers() {
 function TabPress() {
   return (
     <>
-      <Section title="About Luku Prime">
-        <Prose><p>Luku Prime is Kenya's premier online fashion destination, offering curated streetwear, designer pieces, shoes, bags, and more — delivered fast across the country. Launched in Nairobi, we've quickly become the go-to platform for fashion-forward Kenyans who demand quality, authenticity, and speed.</p></Prose>
+      <Section title="About Plug Walk Studios">
+        <Prose><p>Plug Walk is Kenya's premier online fashion destination, offering curated streetwear, designer pieces, shoes, bags, and more — delivered fast across the country. Launched in Nairobi, we've quickly become the go-to platform for fashion-forward Kenyans who demand quality, authenticity, and speed.</p></Prose>
       </Section>
       <Section title="Key Facts">
         <InfoGrid items={[
@@ -267,7 +267,7 @@ function TabStores() {
     <>
       <Section title="Our Location">
         <div style={{ background: 'transparent', padding: 0, marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 12 }}>Luku Prime — Nairobi</div>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 12 }}>Plug Walk Studios — Nairobi</div>
           <div style={{ fontSize: 14, color: '#000', lineHeight: 2 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={coverageIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <strong style={{ color: '#000' }}>Nairobi CBD, Kenya</strong></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={telephoneIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <a href="tel:+254707099935" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 707 099 935</a></div>
@@ -313,9 +313,9 @@ function TabFAQs() {
       </Section>
       <Section title="Returns & Products">
         <FAQItem q="What is your return policy?" a="We offer 30-day returns on eligible items in original condition with tags attached." />
-        <FAQItem q="Are your products authentic?" a="Yes. Every item on Luku Prime is carefully sourced and verified. We have a zero-tolerance policy for counterfeit goods." />
+        <FAQItem q="Are your products authentic?" a="Yes. Every item on Plug Walk Studios is carefully sourced and verified. We have a zero-tolerance policy for counterfeit goods." />
       </Section>
-      <AccentCard style={{ background: '#fff', color: '#000' }}>Still have a question? Reach us on WhatsApp at <a href="https://wa.me/254707099935" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 707 099 935</a> or email <a href="mailto:lukuprime254@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>lukuprime254@gmail.com</a>.</AccentCard>
+      <AccentCard style={{ background: '#fff', color: '#000' }}>Still have a question? Reach us on WhatsApp at <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 707 099 935</a> or email <a href="mailto:plugwalkstudios@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</a>.</AccentCard>
     </>
   );
 }
@@ -481,7 +481,7 @@ function TabOrders() {
     { icon: doubleCheckIcon,   label:'Quality Check',    desc:'Every item is inspected before dispatch.'            },
     { icon: deliveryIcon,      label:'Dispatched',       desc:'Your order is handed to our delivery partner.'       },
     { icon: deliveryTruckIcon, label:'Out for Delivery', desc:'Your rider is on the way.'                           },
-    { icon: approvedIcon,      label:'Delivered',         desc:'Enjoy your Luku Prime order!'                        },
+    { icon: approvedIcon,      label:'Delivered',         desc:'Enjoy your Plug Walk Studios order!'                        },
   ];
   return (
     <>
@@ -515,7 +515,7 @@ function TabOrders() {
 function TabPrivacy() {
   return (
     <>
-      <Section title="Information We Collect"><Prose><p>When you use Luku Prime, we collect information you provide directly — name, email, phone number, delivery address, and payment details. We also collect usage data such as pages visited, items viewed, and purchase history to improve your experience.</p></Prose></Section>
+      <Section title="Information We Collect"><Prose><p>When you use Plug Walk Studios, we collect information you provide directly — name, email, phone number, delivery address, and payment details. We also collect usage data such as pages visited, items viewed, and purchase history to improve your experience.</p></Prose></Section>
       <Section title="How We Use Your Information"><Prose><p>We use your data to process orders, arrange delivery, send order updates, and handle returns. With your consent, we may send you promotional emails or SMS. We never sell your personal data to third parties.</p></Prose></Section>
       <Section title="Data Sharing"><Prose><p>We share your information only with trusted partners — delivery companies, payment processors, and email/SMS services. All partners are contractually bound to protect your data.</p></Prose></Section>
       <Section title="Your Rights"><Prose><p>You have the right to access, correct, or delete your personal data. Opt out of marketing at any time by clicking "Unsubscribe" or replying STOP to any SMS. For data requests, email <a href="mailto:masiyoiisaac@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>masiyoiisaac@gmail.com</a>.</p></Prose></Section>
@@ -525,17 +525,17 @@ function TabPrivacy() {
 
 function TabTerms() {
   const sections = [
-    ['1. Acceptance of Terms', 'By accessing or using the Luku Prime website and services, you agree to be bound by these Terms & Conditions. If you do not agree, please do not use our platform.'],
-    ['2. Use of the Platform', 'You may use Luku Prime for lawful personal shopping purposes only. We reserve the right to suspend accounts that violate these rules.'],
+    ['1. Acceptance of Terms', 'By accessing or using the Plug Walk Studios website and services, you agree to be bound by these Terms & Conditions. If you do not agree, please do not use our platform.'],
+    ['2. Use of the Platform', 'You may use Plug Walk Studios for lawful personal shopping purposes only. We reserve the right to suspend accounts that violate these rules.'],
     ['3. Orders & Pricing', 'All prices are in Kenyan Shillings (KSh). We reserve the right to cancel any order in the event of pricing errors, with full refunds issued.'],
     ['4. Payments', 'Payment must be completed before dispatch. We accept M-Pesa, Visa/Mastercard, and cash on delivery (Nairobi only).'],
     ['5. Returns & Refunds', 'Returns are accepted within 30 days of delivery on eligible items. Refunds are processed within 3–5 business days of return approval.'],
-    ['6. Intellectual Property', 'All content on this platform is the property of Luku Prime or our content partners. Do not reproduce without written permission.'],
+    ['6. Intellectual Property', 'All content on this platform is the property of Plug Walk Studios or our content partners. Do not reproduce without written permission.'],
   ];
   return (
     <>
       {sections.map(([title, body]) => <Section key={title} title={title}><Prose><p>{body}</p></Prose></Section>)}
-      <AccentCard style={{ background: '#fff', color: '#000' }}>Questions? Email <a href="mailto:lukuprime254@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>lukuprime254@gmail.com</a> or call <a href="tel:+254707099935" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 707 099 935</a>.</AccentCard>
+      <AccentCard style={{ background: '#fff', color: '#000' }}>Questions? Email <a href="mailto:plugwalkstudios@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</a> or call <a href="tel:+254723831949" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 723 831 949</a>.</AccentCard>
     </>
   );
 }
@@ -583,8 +583,8 @@ const TAB_CONTENT: Record<string, React.ReactNode> = {
 };
 
 const TAB_META: Record<string, { badge: string; title: string; subtitle: string }> = {
-  about:      { badge: 'Company', title: 'About Luku Prime',         subtitle: "Kenya's premier fashion destination — built for those who know that style speaks before words do." },
-  careers:    { badge: 'Company', title: 'Careers at Luku Prime',    subtitle: "Join a team that's redefining fashion in Kenya. We're growing fast and looking for passionate people." },
+  about:      { badge: 'Company', title: 'About Plug Walk Studios',         subtitle: "Kenya's premier fashion destination — built for those who know that style speaks before words do." },
+  careers:    { badge: 'Company', title: 'Careers at Plug Walk Studios',    subtitle: "Join a team that's redefining fashion in Kenya. We're growing fast and looking for passionate people." },
   press:      { badge: 'Company', title: 'Press & Media',            subtitle: 'For press enquiries, brand partnerships, and media kit requests.' },
   stores:     { badge: 'Company', title: 'Store Locator',            subtitle: 'Find us in Nairobi CBD — or shop the full catalogue online from anywhere in Kenya.' },
   faqs:       { badge: 'Support', title: 'Frequently Asked Questions', subtitle: 'Everything you need to know about ordering, delivery, returns, and more.' },
@@ -594,7 +594,7 @@ const TAB_META: Record<string, { badge: string; title: string; subtitle: string 
   'size-guide':{ badge: 'Support',title: 'Size Guide',               subtitle: 'Find your perfect fit. All measurements are in centimetres unless stated.' },
   orders:     { badge: 'Support', title: 'Track My Order',           subtitle: 'Stay up-to-date on every step of your delivery journey.' },
   privacy:    { badge: 'Legal',   title: 'Privacy Policy',           subtitle: 'We respect your privacy. Last updated: January 2025.' },
-  terms:      { badge: 'Legal',   title: 'Terms & Conditions',       subtitle: 'By using Luku Prime, you agree to these terms. Last updated: January 2025.' },
+  terms:      { badge: 'Legal',   title: 'Terms & Conditions',       subtitle: 'By using Plug Walk Studios, you agree to these terms. Last updated: January 2025.' },
   cookies:    { badge: 'Legal',   title: 'Cookie Policy',            subtitle: 'We use cookies to make your experience smooth and secure. Last updated: January 2025.' },
 };
 

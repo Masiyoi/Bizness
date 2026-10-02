@@ -171,7 +171,7 @@ export default function Register() {
           <div style={{ marginBottom: 22 }}>
             <div style={s.tag}>New Member</div>
             <h1 style={s.heading}>Create Account</h1>
-            <p style={s.sub}>Join thousands of Luku Prime shoppers</p>
+            <p style={s.sub}>Join thousands of Plug Walk shoppers</p>
           </div>
           {referralCode && (
             <div style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 6, padding: "10px 16px", marginBottom: 18, fontFamily: "'DM Sans',sans-serif", fontSize: 12, color: "#bbf7d0" }}>

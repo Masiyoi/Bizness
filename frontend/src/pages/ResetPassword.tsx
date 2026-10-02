@@ -157,7 +157,7 @@ export default function ResetPassword() {
             <div style={s.tag}>New Password</div>
             <h1 style={s.heading}>Reset Password</h1>
             <p style={{ ...s.sub, lineHeight: 1.7, marginTop: 8 }}>
-              Choose a strong password for your Luku Prime account.
+              Choose a strong password for your Plug Walk account.
             </p>
           </div>
 

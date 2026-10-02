@@ -1,5 +1,5 @@
 ﻿// ─────────────────────────────────────────────────────────────
-//  reviewController.js  ·  Luku Prime Reviews API
+//  reviewController.js  ·  Reviews API
 //  Mount in your router:  app.use('/api/reviews', reviewRouter)
 // ─────────────────────────────────────────────────────────────
 

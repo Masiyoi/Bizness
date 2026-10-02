@@ -10,7 +10,7 @@ const STEPS = [
   { icon: '🔍', label: 'Quality Check',   desc: 'Every item is inspected before dispatch.' },
   { icon: '🚚', label: 'Dispatched',      desc: 'Your order is handed to our delivery partner.' },
   { icon: '📍', label: 'Out for Delivery',desc: 'Your rider is on the way.' },
-  { icon: '✅', label: 'Delivered',        desc: 'Enjoy your Luku Prime order!' },
+  { icon: '✅', label: 'Delivered',        desc: 'Enjoy your Plug Walk Studios order!' },
 ];
 
 export default function TrackOrder() {

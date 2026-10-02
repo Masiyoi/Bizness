@@ -38,7 +38,7 @@ export default function Affiliate() {
     return () => { cancelled = true; };
   }, [navigate]);
 
-  const applyMailto = `mailto:lukuprime254@gmail.com?subject=${encodeURIComponent('Application for Salesperson')}&body=${encodeURIComponent('Hi Luku Prime team,\n\nI\'d like to apply to become a salesperson and get a coupon code.\n\nName:\nInstagram/TikTok/Audience:\nPhone number:\n')}`;
+  const applyMailto = `mailto:plugwalkstudios@gmail.com?subject=${encodeURIComponent('Application for Salesperson')}&body=${encodeURIComponent('Hi Plug Walk  team,\n\nI\'d like to apply to become a salesperson and get a coupon code.\n\nName:\nInstagram/TikTok/Audience:\nPhone number:\n')}`;
 
   if (checking) {
     return (

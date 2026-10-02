@@ -4,10 +4,10 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch {
-    data = { title: 'Luku Prime', body: event.data ? event.data.text() : '' };
+    data = { title: 'Plug Walk', body: event.data ? event.data.text() : '' };
   }
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Luku Prime', {
+    self.registration.showNotification(data.title || 'Plug Walk', {
       body: data.body || '',
       icon: '/icon-192.png',
       badge: '/badge-72.png',

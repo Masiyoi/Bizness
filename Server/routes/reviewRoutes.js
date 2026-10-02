@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────
-//  routes/reviewRoutes.js  ·  Luku Prime
+//  routes/reviewRoutes.js  ·  Reviews API
 // ─────────────────────────────────────────────────────────────
 const express = require('express');
 const router  = express.Router();

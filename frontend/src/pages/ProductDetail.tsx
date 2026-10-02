@@ -1967,7 +1967,7 @@ export default function ProductDetail() {
               {
                 key: 'description',
                 label: 'Description',
-                content: product.description || 'Premium quality product. Carefully sourced and curated by Luku Prime.',
+                content: product.description || 'Premium quality product. Carefully sourced and curated by the Plug.',
               },
               {
                 key: 'care',

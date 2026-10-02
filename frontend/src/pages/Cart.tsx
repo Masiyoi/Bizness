@@ -72,7 +72,7 @@ const KENYA_COUNTIES = [
   'Turkana','Uasin Gishu','Vihiga','Wajir','West Pokot',
 ];
 
-const PICKUP_LOCATION_FIXED = 'Luku Prime — Nairobi CBD (Moi Avenue)';
+const PICKUP_LOCATION_FIXED = 'The Plug Walk Studio — Nairobi CBD (Moi Avenue)';
 
 const EMPTY_SHIPPING: ShippingInfo = {
   firstName: '', phone: '',
@@ -874,7 +874,7 @@ export default function Cart() {
                     <div style={{ background: T.cream, border: '1px solid rgba(0,0,0,0.1)', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
                       <img src={locationIcon} alt="" style={{ width: 20, height: 20, objectFit: 'contain', flexShrink: 0 }} />
                       <div>
-                        <div className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy }}>Luku Prime — Nairobi CBD</div>
+                        <div className="jost" style={{ fontSize: 13, fontWeight: 700, color: T.navy }}>The Plug Walk Studio — Nairobi CBD</div>
                         <div className="jost" style={{ fontSize: 11, color: T.muted }}>Moi Avenue</div>
                       </div>
                     </div>

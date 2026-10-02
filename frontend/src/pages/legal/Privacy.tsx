@@ -10,7 +10,7 @@ export default function Privacy() {
     >
       <Section title="Information We Collect">
         <Prose>
-          <p>When you use Luku Prime, we collect information you provide directly — such as your name, email address, phone number, delivery address, and payment details. We also collect usage data such as pages visited, items viewed, and purchase history to improve your experience.</p>
+          <p>When you use Plug Walk Studios, we collect information you provide directly — such as your name, email address, phone number, delivery address, and payment details. We also collect usage data such as pages visited, items viewed, and purchase history to improve your experience.</p>
         </Prose>
       </Section>
 
