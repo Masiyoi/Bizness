@@ -192,7 +192,7 @@ function StatsBar({ productCount }: { productCount: number }) {
   const items = [
     { line1: 'WORLDWIDE', line2: 'SHIPPING', img: worldwideShipping },
     { line1: '2–3 DAY', line2: 'RETURN POLICY', img: returnArrow },
-    { line1: 'OVER 25K', line2: 'CUSTOMERS', img: shopperIcon },
+    { line1: 'OVER 10K', line2: 'CUSTOMERS', img: shopperIcon },
     { line1: 'SECURE', line2: 'PAYMENT', img: securePayment },
   ];
   return (
