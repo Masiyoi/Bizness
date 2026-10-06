@@ -57,7 +57,7 @@ export default function Navbar({
   const [lang, setLang] = useState(() => {
     const match = document.cookie.match(/googtrans=\/en\/([^;]+)/);
     if (!match) return 'EN';
-    const LANGS_MAP: Record<string,string> = { sw:'SW', fr:'FR', ar:'AR', 'zh-CN':'ZH' };
+    const LANGS_MAP: Record<string,string> = { sw:'SW', fr:'FR', ar:'AR', 'zh-CN':'ZH', es:'ES', de:'DE', pt:'PT', hi:'HI' };
     return LANGS_MAP[match[1]] || 'EN';
   });
   const [showLang,       setShowLang]       = useState(false);
@@ -260,6 +260,10 @@ export default function Navbar({
     { code: 'FR', label: 'Français',  gtCode: 'fr',    flag: '🇫🇷' },
     { code: 'AR', label: 'العربية',   gtCode: 'ar',    flag: '🇸🇦' },
     { code: 'ZH', label: '中文',       gtCode: 'zh-CN', flag: '🇨🇳' },
+    { code: 'ES', label: 'Español',   gtCode: 'es',    flag: '🇪🇸' },
+    { code: 'DE', label: 'Deutsch',   gtCode: 'de',    flag: '🇩🇪' },
+    { code: 'PT', label: 'Português', gtCode: 'pt',    flag: '🇵🇹' },
+    { code: 'HI', label: 'हिन्दी',      gtCode: 'hi',    flag: '🇮🇳' },
   ];
 
   const applyLang = (gtCode: string, code: string) => {
