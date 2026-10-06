@@ -34,7 +34,7 @@ import cashOnDeliveryIcon  from '../../assets/about/cash-on-delivery.png';
 import orderingIcon        from '../../assets/track/ordering.png';
 import doubleCheckIcon     from '../../assets/track/double-check.png';
 import deliveryTruckIcon   from '../../assets/track/delivery-truck.png';
-import deliveryIcon        from '../../assets/about/delivery.png';
+import deliveryIcon from '../../assets/delivery.png';
 import approvedIcon        from '../../assets/track/approved.png';
 
 // ── Shared sub-components ─────────────────────────────────────────
