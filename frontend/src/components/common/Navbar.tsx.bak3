@@ -364,8 +364,8 @@ export default function Navbar({
           .nav-right { gap: 8px !important; }
           .nav-join-btn { padding: 7px 12px !important; letter-spacing: 1.5px !important; }
           .navbar-brand-mobile { display: none !important; }
-          .navbar-brand-center { gap: 6px !important; justify-self: start !important; padding-left: 6px !important; min-width: 0 !important; }
-          .navbar-brand-center img { width: 32px !important; height: 32px !important; flex-shrink: 0 !important; }
+          .navbar-brand-center { gap: 6px !important; }
+          .navbar-brand-center img { width: 28px !important; height: 28px !important; }
           .navbar-brand-center .brand-logo { font-size: 16px !important; letter-spacing: 0.5px !important; }
           .navbar-brand-mobile img { width: 30px !important; height: 30px !important; }
           .navbar-brand-mobile .brand-logo { font-size: 15px !important; overflow: visible !important; text-overflow: clip !important; }
@@ -373,7 +373,7 @@ export default function Navbar({
             display: flex !important;
           }
           .nav-grid {
-            grid-template-columns: auto minmax(0, 1fr) auto !important;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
             padding: 0 4% !important;
           }
         }
@@ -502,7 +502,42 @@ export default function Navbar({
               </button>
             </div>
 
-              
+              {/* Mobile lang picker — after hamburger */}
+              <div ref={langRef} style={{ position: 'relative' }}>
+                <button
+                  className="nav-icon-btn"
+                  style={{ color: ink, fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '2px', display: 'flex', alignItems: 'center', gap: 3, padding: '4px 6px' }}
+                  onClick={() => setShowLang(x => !x)}
+                >
+                  <span style={{ fontSize: 16, lineHeight: 1 }}>{LANGS.find(l => l.code === lang)?.flag ?? '🌐'}</span>
+                  <svg width="6" height="4" viewBox="0 0 6 4" fill="none">
+                    <path d="M1 1l2 2 2-2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                {showLang && (
+                  <div style={{ position: 'absolute', top: 'calc(100% + 10px)', left: 0, background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 10, padding: 6, minWidth: 148, boxShadow: '0 8px 28px rgba(0,0,0,0.11)', zIndex: 300, animation: 'fadeInDown 0.15s ease' }}>
+                    {LANGS.map(l => (
+                      <button key={l.code} className="mitem" style={{ fontWeight: lang === l.code ? 600 : undefined, fontSize: 12 }} onClick={() => applyLang(l.gtCode, l.code)}>
+                        <span style={{ fontSize: 18, lineHeight: 1, minWidth: 24 }}>{l.flag}</span>
+                        {l.label}
+                        {lang === l.code && <span style={{ marginLeft: 'auto', fontSize: 10, color: 'rgba(0,0,0,0.3)' }}>✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile: brand logo + title — right after the language flag */}
+              <div
+                className="navbar-brand-mobile"
+                onClick={() => navigate('/')}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', userSelect: 'none', minWidth: 0, overflow: 'hidden' }}
+              >
+                <img src="/plugwalk.jpg" alt="Plug Walk" style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: '50%', display: 'block', mixBlendMode: 'multiply', flexShrink: 0 }} />
+                <span className="brand-logo" style={{ color: ink, fontSize: 18, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  𝓟𝓵𝓾𝓰 𝓦𝓪𝓵𝓴
+                </span>
+              </div>
             </div>
           </div>
 
@@ -699,17 +734,6 @@ export default function Navbar({
             >
               Members Club
             </button>
-          </div>
-
-          {/* ── Language — only visible inside the mobile menu ── */}
-          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-            <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 800, letterSpacing: '2.5px', textTransform: 'uppercase', color: '#111', marginRight: 4 }}>Language</span>
-            {LANGS.map(l => (
-              <button key={l.code} title={l.label} onClick={() => applyLang(l.gtCode, l.code)}
-                style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: lang === l.code ? 700 : 500, letterSpacing: '1px', padding: '6px 10px', borderRadius: 999, cursor: 'pointer', background: lang === l.code ? '#111' : 'rgba(255,255,255,0.6)', color: lang === l.code ? '#fff' : '#111', border: lang === l.code ? '1px solid #111' : '1px solid rgba(0,0,0,0.15)' }}>
-                <span style={{ fontSize: 14, lineHeight: 1 }}>{l.flag}</span>{l.code}
-              </button>
-            ))}
           </div>
 
           {/* ── Categories label ── */}          <div style={{ marginBottom: 6 }}>
