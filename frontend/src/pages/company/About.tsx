@@ -24,7 +24,6 @@ import supportIcon    from '../../assets/careers/support.png';
 // ── Press-page icon assets ─────────────────────────────────────────
 import foundedIcon    from '../../assets/press/founded.png';
 import categoriesIcon from '../../assets/press/categories.png';
-import deliveryIcon   from '../../assets/press/delivery.png';
 import channelsIcon   from '../../assets/press/channels.png';
 import productsIcon        from '../../assets/about/products.png';
 import telephoneIcon       from '../../assets/about/telephone.png';
@@ -35,6 +34,7 @@ import cashOnDeliveryIcon  from '../../assets/about/cash-on-delivery.png';
 import orderingIcon        from '../../assets/track/ordering.png';
 import doubleCheckIcon     from '../../assets/track/double-check.png';
 import deliveryTruckIcon   from '../../assets/track/delivery-truck.png';
+import deliveryIcon        from '../../assets/about/delivery.png';
 import approvedIcon        from '../../assets/track/approved.png';
 
 // ── Shared sub-components ─────────────────────────────────────────
@@ -146,8 +146,10 @@ function TabAbout() {
     <>
       <Section title="Our Story">
         <Prose>
-          <p>Plug Walk was born on the streets of Nairobi — a city where fashion is identity, where what you wear tells your story before you open your mouth. We started with a simple mission: bring authentic, curated streetwear and premium fashion to Kenya, without the premium price tag or the hassle.</p>
-          <p style={{ marginTop: 14 }}>What began as a passion for finding the freshest drops has grown into a full platform connecting thousands of fashion-forward Kenyans with styles they love — from classic streetwear to luxury pieces, everyday fits to special occasion looks.</p>
+          <p>A journey of a thousand steps starts with a single step.What began as a passion for finding the freshest drops has grown into a full platform connecting thousands of fashion-forward Kenyans with styles they love — from classic streetwear to luxury pieces, everyday fits to special occasion looks.</p>
+          <p style={{ marginTop: 14 }}>Every action has a reaction,we value our customers trust,time,urgency and conveniency by providing premium services with fast delivery and easy returns</p>
+          <p style={{ marginTop: 14}}>Mission yetu ni kuwa Plug the latest fashion trends and classy looks that makes you confident.</p>
+          <p style={{ marginTop: 14}}>In a culture where <b>change is the only constant</b> ,our vision is to stand as the definitive destination where street style meets flawless execution-empowering you to step out with bold confidence,own every transition and <b>truly do it for the experience</b>.</p>
         </Prose>
       </Section>
       <Section title="What We Stand For">
@@ -198,7 +200,7 @@ function TabCareers() {
               <div style={{ fontSize: 11, fontWeight: 700, color: '#000', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 8 }}>{role.type}</div>
               <div style={{ fontSize: 13, color: '#000', lineHeight: 1.6 }}>{role.desc}</div>
             </div>
-            <a href={`mailto:masiyoiisaac@gmail.com?subject=Application: ${role.title}`} style={{ background: '#000', color: '#fff', border: '1.5px solid #000', borderRadius: 8, padding: '10px 20px', fontSize: 11, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase', textDecoration: 'none', whiteSpace: 'nowrap', alignSelf: 'flex-start', marginTop: 4 }}>Apply →</a>
+            <a href={`mailto:plugwalkstudio@gmail.com?subject=Application: ${role.title}`} style={{ background: '#000', color: '#fff', border: '1.5px solid #000', borderRadius: 8, padding: '10px 20px', fontSize: 11, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase', textDecoration: 'none', whiteSpace: 'nowrap', alignSelf: 'flex-start', marginTop: 4 }}>Apply →</a>
           </div>
         ))}
       </Section>
@@ -220,7 +222,7 @@ function TabCareers() {
         </div>
       </Section>
       <AccentCard style={{ background: '#fff', color: '#000' }}>
-        <strong style={{ color: '#000' }}>Don't see your role?</strong> Send your CV to <strong style={{ color: '#000' }}>masiyoiisaac@gmail.com</strong> with the subject "Open Application."
+        <strong style={{ color: '#000' }}>Don't see your role?</strong> Send your CV to <strong style={{ color: '#000' }}>plugwalkstudio@gmail.com</strong> with the subject "Open Application."
       </AccentCard>
     </>
   );
@@ -230,19 +232,19 @@ function TabPress() {
   return (
     <>
       <Section title="About Plug Walk Studios">
-        <Prose><p>Plug Walk is Kenya's premier online fashion destination, offering curated streetwear, designer pieces, shoes, bags, and more — delivered fast across the country. Launched in Nairobi, we've quickly become the go-to platform for fashion-forward Kenyans who demand quality, authenticity, and speed.</p></Prose>
+        <Prose><p>Launched in Nairobi, we've quickly become the go-to platform for fashion-forward Kenyans who demand quality, authenticity, and speed.</p></Prose>
       </Section>
       <Section title="Key Facts">
         <InfoGrid items={[
-          { icon: foundedIcon,    label: 'Founded',    value: '2026, Nairobi Kenya'     },
-          { icon: categoriesIcon, label: 'Categories', value: '8+ fashion categories'   },
+          { icon: foundedIcon,    label: 'Founded',    value: '2025, Nairobi Kenya'     },
+          { icon: categoriesIcon, label: 'Categories', value: '10+ fashion categories'   },
           { icon: deliveryIcon,   label: 'Delivery',   value: 'Nationwide Kenya'        },
           { icon: channelsIcon,   label: 'Channels',   value: (
             <span style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               <a href="https://www.instagram.com/plugwalkstudio?stkn=MXE5bHNucTNraHY0OA==" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>Instagram</a>,
-              <a href="https://tiktok.com/@lifewith_heels_bags" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>TikTok</a>,
-              <a href="https://www.youtube.com/@Lukuprime254" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>YouTube</a>,
-              <a href="https://wa.me/254707099935" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>WhatsApp</a>
+              <a href="https://tiktok.com/@plugwalkstudio" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>TikTok</a>,
+              <a href="https://youtube.com/@plugwalk254?si=OA_YFWWzHM25xOxC" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>YouTube</a>,
+              <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>WhatsApp</a>
             </span>
           ) },
         ]} />
@@ -251,8 +253,8 @@ function TabPress() {
         <div style={{ background: 'transparent', padding: 0 }}>
           <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 12 }}>Media Enquiries</div>
           <div style={{ fontSize: 14, color: '#000', lineHeight: 2 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={emailIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <a href="mailto:lukuprime254@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>lukuprime254@gmail.com</a></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={telephoneIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <a href="tel:+254707099935" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 707 099 935</a></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={emailIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <a href="mailto:plugwalkstudio@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudio@gmail.com</a></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={telephoneIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <a href="tel:+254723831949" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 723 831 949</a></div>
             <div style={{ marginTop: 8, fontSize: 12, color: '#000' }}>Use subject line <em>"Press Enquiry — [Topic]"</em> for faster response.</div>
           </div>
         </div>
@@ -270,7 +272,7 @@ function TabStores() {
           <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 12 }}>Plug Walk Studios — Nairobi</div>
           <div style={{ fontSize: 14, color: '#000', lineHeight: 2 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={coverageIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <strong style={{ color: '#000' }}>Nairobi CBD, Kenya</strong></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={telephoneIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <a href="tel:+254707099935" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 707 099 935</a></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={telephoneIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <a href="tel:+254723831949" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 723 831 949</a></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={timeIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <strong style={{ color: '#000' }}>Mon–Sat, 9am–6pm EAT</strong></div>
           </div>
         </div>
@@ -299,7 +301,7 @@ function TabFAQs() {
     <>
       <Section title="Ordering">
         <FAQItem q="How do I place an order?" a="Browse our categories, add items to your cart, and proceed to checkout. You can pay via M-Pesa, card, or cash on delivery for Nairobi orders." />
-        <FAQItem q="Can I modify my order after placing it?" a="Contact us within 1 hour of placing the order via WhatsApp (+254 707 099 935) and we'll do our best to accommodate changes before dispatch." />
+        <FAQItem q="Can I modify my order after placing it?" a="Contact us within 1 hour of placing the order via WhatsApp (+254 723 831 949) and we'll do our best to accommodate changes before dispatch." />
         <FAQItem q="Do you offer gift wrapping?" a="Yes! Add a note at checkout requesting gift wrapping and we'll package your order beautifully at no extra charge." />
       </Section>
       <Section title="Payments">
@@ -315,7 +317,7 @@ function TabFAQs() {
         <FAQItem q="What is your return policy?" a="We offer 30-day returns on eligible items in original condition with tags attached." />
         <FAQItem q="Are your products authentic?" a="Yes. Every item on Plug Walk Studios is carefully sourced and verified. We have a zero-tolerance policy for counterfeit goods." />
       </Section>
-      <AccentCard style={{ background: '#fff', color: '#000' }}>Still have a question? Reach us on WhatsApp at <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 707 099 935</a> or email <a href="mailto:plugwalkstudios@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</a>.</AccentCard>
+      <AccentCard style={{ background: '#fff', color: '#000' }}>Still have a question? Reach us on WhatsApp at <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 723 831 949</a> or email <a href="mailto:plugwalkstudios@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</a>.</AccentCard>
     </>
   );
 }
@@ -330,13 +332,13 @@ function TabContact() {
     <>
       <Section title="Get in Touch">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12, marginBottom: 8 }}>
-          <a href="https://wa.me/254707099935" target="_blank" rel="noopener noreferrer" style={card}>
+          <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" style={card}>
             <img src={telephoneIcon} alt="" style={{ width: 22, height: 22, objectFit: 'contain', flexShrink: 0 }} />
-            <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 4 }}>Phone / WhatsApp</div><div style={{ fontSize: 13, color: '#000', fontWeight: 700, marginBottom: 2, textDecoration: 'underline' }}>+254 707 099 935</div><div style={{ fontSize: 11, color: '#000' }}>Tap to open WhatsApp</div></div>
+            <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 4 }}>Phone / WhatsApp</div><div style={{ fontSize: 13, color: '#000', fontWeight: 700, marginBottom: 2, textDecoration: 'underline' }}>+254 723 831 949</div><div style={{ fontSize: 11, color: '#000' }}>Tap to open WhatsApp</div></div>
           </a>
-          <a href="mailto:lukuprime254@gmail.com" style={card}>
+          <a href="mailto:plugwalkstudios@gmail.com" style={card}>
             <img src={emailIcon} alt="" style={{ width: 22, height: 22, objectFit: 'contain', flexShrink: 0 }} />
-            <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 4 }}>Email</div><div style={{ fontSize: 13, color: '#000', fontWeight: 700, marginBottom: 2, textDecoration: 'underline' }}>lukuprime254@gmail.com</div><div style={{ fontSize: 11, color: '#000' }}>Tap to send email</div></div>
+            <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 4 }}>Email</div><div style={{ fontSize: 13, color: '#000', fontWeight: 700, marginBottom: 2, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</div><div style={{ fontSize: 11, color: '#000' }}>Tap to send email</div></div>
           </a>
           <a href="https://www.google.com/maps/search/Nairobi+CBD+Kenya" target="_blank" rel="noopener noreferrer" style={card}>
             <img src={coverageIcon} alt="" style={{ width: 22, height: 22, objectFit: 'contain', flexShrink: 0 }} />
@@ -369,7 +371,7 @@ function TabContact() {
           </div>
         )}
       </Section>
-      <AccentCard style={{ background: '#fff', color: '#000' }}><strong style={{ color: '#000' }}>Fastest response:</strong> WhatsApp us at <a href="https://wa.me/254707099935" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 707 099 935</a> — we typically reply within minutes during business hours.</AccentCard>
+      <AccentCard style={{ background: '#fff', color: '#000' }}><strong style={{ color: '#000' }}>Fastest response:</strong> WhatsApp us at <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 723 831 949</a> — we typically reply within minutes during business hours.</AccentCard>
     </>
   );
 }
@@ -377,11 +379,11 @@ function TabContact() {
 function TabDelivery() {
   const ZONES = [
     { zone: 'Nairobi CBD',     time: 'Same day / Next day',   cost: 'From KSh 100' },
-    { zone: 'Nairobi Suburbs', time: '1–2 business days',     cost: 'From KSh 150' },
-    { zone: 'Mombasa',         time: '2–3 business days',     cost: 'From KSh 350' },
-    { zone: 'Kisumu',          time: '2–3 business days',     cost: 'From KSh 350' },
-    { zone: 'Other Towns',     time: '3–5 business days',     cost: 'From KSh 400' },
-    { zone: 'Rest of Kenya',   time: '4–7 business days',     cost: 'Calculated at checkout' },
+    { zone: 'Nairobi Suburbs', time: 'Same day / Next day',   cost: 'From KSh 350' },
+    { zone: 'Mombasa',         time: '24 hours delivery',     cost: 'From KSh 450' },
+    { zone: 'Kisumu',          time: '24 hours delivery',     cost: 'From KSh 450' },
+    { zone: 'Other Towns',     time: '24 hours delivery',     cost: 'From KSh 300' },
+    { zone: 'Rest of Kenya',   time: '1-2 days delivery',     cost: 'Calculated at checkout' },
   ];
   return (
     <>
@@ -398,7 +400,7 @@ function TabDelivery() {
           { icon: processingIcon,     label: 'Processing Time',  value: 'Same day (orders before 12pm)' },
           { icon: deliveryIcon,       label: 'Fastest Delivery', value: 'Nairobi CBD — same day'         },
           { icon: cashOnDeliveryIcon, label: 'Pay on Delivery',  value: 'Available for Nairobi orders'  },
-          { icon: telephoneIcon,      label: 'Delivery Support', value: <a href="tel:+254707099935" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>+254 707 099 935</a> },
+          { icon: telephoneIcon,      label: 'Delivery Support', value: <a href="tel:+254723831949" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>+254 723 831 949</a> },
         ]} />
       </Section>
       <AccentCard style={{ background: '#fff', color: '#000' }}><strong style={{ color: '#000' }}>Free delivery</strong> on orders above <strong style={{ color: '#000' }}>KSh 5,000</strong> within Nairobi. Sign up to our newsletter for free-shipping promo codes!</AccentCard>
@@ -412,7 +414,7 @@ function TabReturns() {
   return (
     <>
       <Section title="Our 30-Day Return Policy">
-        <Prose><p>You have <strong>30 days from delivery</strong> to request a return or exchange. Items must be unworn, unwashed, with all tags attached and in original packaging.</p></Prose>
+        <Prose><p>You have <strong>2–3 days from delivery</strong> to request a return or exchange. Items must be unworn, unwashed, with all tags attached and in original packaging.</p></Prose>
       </Section>
       <Section title="What Can Be Returned">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -439,7 +441,7 @@ function TabReturns() {
           </div>
         ))}
       </Section>
-      <AccentCard style={{ background: '#fff', color: '#000' }}><strong style={{ color: '#000' }}>Exchange faster:</strong> WhatsApp us at <a href="https://wa.me/254707099935" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 707 099 935</a> — we often process same-day exchanges for Nairobi CBD customers.</AccentCard>
+      <AccentCard style={{ background: '#fff', color: '#000' }}><strong style={{ color: '#000' }}>Exchange faster:</strong> WhatsApp us at <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 723 831 949</a> — we often process same-day exchanges for Nairobi CBD customers.</AccentCard>
     </>
   );
 }
@@ -470,7 +472,7 @@ function TabSizeGuide() {
       <Section title="Shoe Sizes">
         <SizeTable headers={['EU','UK','US','Length (cm)']} rows={SHOE_SIZES.map(r => [r.eu,r.uk,r.us,r.cm])} />
       </Section>
-      <AccentCard style={{ background: '#fff', color: '#000' }}><strong style={{ color: '#000' }}>Between sizes?</strong> WhatsApp us at <a href="https://wa.me/254714022882" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 714 022 882</a> with the item name and your measurements — we'll advise personally.</AccentCard>
+      <AccentCard style={{ background: '#fff', color: '#000' }}><strong style={{ color: '#000' }}>Between sizes?</strong> WhatsApp us at <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 723 831 949</a> with the item name and your measurements — we'll advise personally.</AccentCard>
     </>
   );
 }
@@ -501,8 +503,8 @@ function TabOrders() {
       </Section>
       <Section title="Contact to Track">
         <InfoGrid items={[
-          { icon: telephoneIcon, label:'Call / WhatsApp', value: <a href="https://wa.me/254707099935" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>+254 707 099 935</a> },
-          { icon: emailIcon,     label:'Email',           value: <a href="mailto:lukuprime254@gmail.com" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>lukuprime254@gmail.com</a> },
+          { icon: telephoneIcon, label:'Call / WhatsApp', value: <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>+254 723 831 949</a> },
+          { icon: emailIcon,     label:'Email',           value: <a href="mailto:plugwalkstudios@gmail.com" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</a> },
           { icon: timeIcon,      label:'Support Hours',   value:'Mon–Sat, 9am–6pm'    },
           { icon: coverageIcon,  label:'Location',        value:'Nairobi CBD, Kenya'   },
         ]} />
@@ -518,7 +520,7 @@ function TabPrivacy() {
       <Section title="Information We Collect"><Prose><p>When you use Plug Walk Studios, we collect information you provide directly — name, email, phone number, delivery address, and payment details. We also collect usage data such as pages visited, items viewed, and purchase history to improve your experience.</p></Prose></Section>
       <Section title="How We Use Your Information"><Prose><p>We use your data to process orders, arrange delivery, send order updates, and handle returns. With your consent, we may send you promotional emails or SMS. We never sell your personal data to third parties.</p></Prose></Section>
       <Section title="Data Sharing"><Prose><p>We share your information only with trusted partners — delivery companies, payment processors, and email/SMS services. All partners are contractually bound to protect your data.</p></Prose></Section>
-      <Section title="Your Rights"><Prose><p>You have the right to access, correct, or delete your personal data. Opt out of marketing at any time by clicking "Unsubscribe" or replying STOP to any SMS. For data requests, email <a href="mailto:masiyoiisaac@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>masiyoiisaac@gmail.com</a>.</p></Prose></Section>
+      <Section title="Your Rights"><Prose><p>You have the right to access, correct, or delete your personal data. Opt out of marketing at any time by clicking "Unsubscribe" or replying STOP to any SMS. For data requests, email <a href="mailto:plugwalkstudios@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</a>.</p></Prose></Section>
     </>
   );
 }
@@ -529,7 +531,7 @@ function TabTerms() {
     ['2. Use of the Platform', 'You may use Plug Walk Studios for lawful personal shopping purposes only. We reserve the right to suspend accounts that violate these rules.'],
     ['3. Orders & Pricing', 'All prices are in Kenyan Shillings (KSh). We reserve the right to cancel any order in the event of pricing errors, with full refunds issued.'],
     ['4. Payments', 'Payment must be completed before dispatch. We accept M-Pesa, Visa/Mastercard, and cash on delivery (Nairobi only).'],
-    ['5. Returns & Refunds', 'Returns are accepted within 30 days of delivery on eligible items. Refunds are processed within 3–5 business days of return approval.'],
+    ['5. Returns & Refunds', 'Returns are accepted within 2–3 days of delivery on eligible items. Refunds are processed within 3–5 business days of return approval.'],
     ['6. Intellectual Property', 'All content on this platform is the property of Plug Walk Studios or our content partners. Do not reproduce without written permission.'],
   ];
   return (
@@ -560,7 +562,7 @@ function TabCookies() {
           </div>
         ))}
       </Section>
-      <AccentCard style={{ background: '#fff', color: '#000' }}>Questions about cookies? Email <a href="mailto:masiyoiisaac@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>masiyoiisaac@gmail.com</a>.</AccentCard>
+      <AccentCard style={{ background: '#fff', color: '#000' }}>Questions about cookies? Email <a href="mailto:plugwalkstudios@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</a>.</AccentCard>
     </>
   );
 }

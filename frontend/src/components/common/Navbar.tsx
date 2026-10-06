@@ -359,6 +359,13 @@ export default function Navbar({
         }
 
         @media (max-width: 767px) {
+          .nav-announce { padding: 0 12px !important; }
+          .nav-announce-text { font-size: 9px !important; letter-spacing: 1px !important; line-height: 1.25 !important; text-align: center !important; white-space: normal !important; }
+          .nav-right { gap: 8px !important; }
+          .nav-join-btn { padding: 7px 12px !important; letter-spacing: 1.5px !important; }
+          .navbar-brand-mobile { gap: 4px !important; overflow: visible !important; }
+          .navbar-brand-mobile img { width: 30px !important; height: 30px !important; }
+          .navbar-brand-mobile .brand-logo { font-size: 15px !important; overflow: visible !important; text-overflow: clip !important; }
           .navbar-brand-center {
             display: none !important;
           }
@@ -370,10 +377,10 @@ export default function Navbar({
       `}</style>
 
       {/* ── Announcement marquee — first-order offer for new/guest visitors, rotating perks for returning customers ── */}
-      <div style={{ background: '#000', height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 101 }}>
+      <div className="nav-announce" style={{ background: '#000', height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 101 }}>
         <span
           key={firstOrderEligible ? 'first-order' : loyaltyEligible ? 'loyalty' : regularBannerIndex}
-          style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: '3px', color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', animation: 'fadeInDown 0.4s ease' }}
+          className="nav-announce-text" style={{ fontFamily: "'Jost', sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: '3px', color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', animation: 'fadeInDown 0.4s ease' }}
         >
           {firstOrderEligible
             ? 'Get 10% off on your first order'
@@ -541,7 +548,7 @@ export default function Navbar({
           </div>
 
           {/* ── RIGHT ── */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
+          <div className="nav-right" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}>
 
             {/* ── Language picker ── */}
             <div ref={langRef} className="hidden md:block" style={{ position: 'relative' }}>
@@ -673,7 +680,7 @@ export default function Navbar({
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span className="nav-link hidden md:block" style={{ color: ink }} onClick={() => navigate('/login')}>Sign In</span>
-                <button onClick={() => navigate('/register')}
+                <button className="nav-join-btn" onClick={() => navigate('/register')}
                   style={{ fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 500, letterSpacing: '2px', textTransform: 'uppercase', padding: '8px 16px', background: isTransparent ? 'rgba(255,255,255,0.15)' : '#111', color: '#fff', border: isTransparent ? '1px solid rgba(255,255,255,0.4)' : 'none', cursor: 'pointer', transition: 'opacity 0.2s, background 0.3s', backdropFilter: isTransparent ? 'blur(4px)' : 'none' }}
                   onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
                   onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
