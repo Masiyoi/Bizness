@@ -707,7 +707,7 @@ export default function Navbar({
 
           {/* ── Language — only visible inside the mobile menu ── */}
           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-            <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 800, letterSpacing: '2.5px', textTransform: 'uppercase', color: '#111', marginRight: 4 }}>Language</span>
+            <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 800, letterSpacing: '2.5px', textTransform: 'uppercase', color: '#111', width: '100%' }}>Language</span>
             {LANGS.map(l => (
               <button key={l.code} title={l.label} onClick={() => applyLang(l.gtCode, l.code)}
                 style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: lang === l.code ? 700 : 500, letterSpacing: '1px', padding: '6px 10px', borderRadius: 999, cursor: 'pointer', background: lang === l.code ? '#111' : 'rgba(255,255,255,0.6)', color: lang === l.code ? '#fff' : '#111', border: lang === l.code ? '1px solid #111' : '1px solid rgba(0,0,0,0.15)' }}>
