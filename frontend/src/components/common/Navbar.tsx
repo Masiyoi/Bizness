@@ -363,14 +363,17 @@ export default function Navbar({
           .nav-announce-text { font-size: 9px !important; letter-spacing: 1px !important; line-height: 1.25 !important; text-align: center !important; white-space: normal !important; }
           .nav-right { gap: 8px !important; }
           .nav-join-btn { padding: 7px 12px !important; letter-spacing: 1.5px !important; }
-          .navbar-brand-mobile { gap: 4px !important; overflow: visible !important; }
+          .navbar-brand-mobile { display: none !important; }
+          .navbar-brand-center { gap: 6px !important; }
+          .navbar-brand-center img { width: 28px !important; height: 28px !important; }
+          .navbar-brand-center .brand-logo { font-size: 16px !important; letter-spacing: 0.5px !important; }
           .navbar-brand-mobile img { width: 30px !important; height: 30px !important; }
           .navbar-brand-mobile .brand-logo { font-size: 15px !important; overflow: visible !important; text-overflow: clip !important; }
           .navbar-brand-center {
-            display: none !important;
+            display: flex !important;
           }
           .nav-grid {
-            grid-template-columns: auto 1fr auto !important;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
             padding: 0 4% !important;
           }
         }

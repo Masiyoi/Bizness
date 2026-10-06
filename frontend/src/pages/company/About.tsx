@@ -585,7 +585,7 @@ const TAB_CONTENT: Record<string, React.ReactNode> = {
 };
 
 const TAB_META: Record<string, { badge: string; title: string; subtitle: string }> = {
-  about:      { badge: 'Company', title: 'About Plug Walk Studios',         subtitle: "Kenya's premier fashion destination — built for those who know that style speaks before words do." },
+  about:      { badge: 'Company', title: 'About Plug Walk Studios',         subtitle: "Plug Walk Studios-curated Footwear and Apparel." },
   careers:    { badge: 'Company', title: 'Careers at Plug Walk Studios',    subtitle: "Join a team that's redefining fashion in Kenya. We're growing fast and looking for passionate people." },
   press:      { badge: 'Company', title: 'Press & Media',            subtitle: 'For press enquiries, brand partnerships, and media kit requests.' },
   stores:     { badge: 'Company', title: 'Store Locator',            subtitle: 'Find us in Nairobi CBD — or shop the full catalogue online from anywhere in Kenya.' },

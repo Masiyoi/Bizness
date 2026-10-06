@@ -311,7 +311,7 @@ function Editorial({ onShop }: { onShop: (cat: string) => void }) {
     <section id="editorial" className="lp-editorial">
       <div className="lp-editorial-img">
         <img src="https://res.cloudinary.com/dfiy43f01/image/upload/v1785022537/IMG-20260726-WA0000_tlhkhh.jpg" alt="Our Story" />
-        <div className="lp-editorial-badge">Est. 2026 Nairobi, Kenya</div>
+        <div className="lp-editorial-badge">Est. 2025 Nairobi, Kenya</div>
       </div>
       <div className="lp-editorial-copy">
         <p style={{ fontFamily:"var(--f-sans)", fontSize:10, fontWeight:800, letterSpacing:'3px', textTransform:'uppercase', color:'#0A0A0A', marginBottom:16 }}>Our Story</p>
