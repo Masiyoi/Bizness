@@ -364,7 +364,7 @@ export default function Navbar({
           .nav-right { gap: 8px !important; }
           .nav-join-btn { padding: 7px 12px !important; letter-spacing: 1.5px !important; }
           .navbar-brand-mobile { display: none !important; }
-          .navbar-brand-center { gap: 6px !important; justify-self: start !important; padding-left: 6px !important; min-width: 0 !important; }
+          .navbar-brand-center { gap: 6px !important; justify-self: center !important; min-width: 0 !important; }
           .navbar-brand-center img { width: 32px !important; height: 32px !important; flex-shrink: 0 !important; }
           .navbar-brand-center .brand-logo { font-size: 16px !important; letter-spacing: 0.5px !important; }
           .navbar-brand-mobile img { width: 30px !important; height: 30px !important; }
