@@ -241,7 +241,7 @@ function TabPress() {
           { icon: deliveryIcon,   label: 'Delivery',   value: 'Nationwide Kenya'        },
           { icon: channelsIcon,   label: 'Channels',   value: (
             <span style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              <a href="https://www.instagram.com/plugwalkstudio?stkn=MXE5bHNucTNraHY0OA==" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>Instagram</a>,
+              <a href="https://www.instagram.com/plugwalk.studio?stkn=MXE5bHNucTNraHY0OA==" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>Instagram</a>,
               <a href="https://tiktok.com/@plugwalkstudio" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>TikTok</a>,
               <a href="https://youtube.com/@plugwalk254?si=OA_YFWWzHM25xOxC" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>YouTube</a>,
               <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>WhatsApp</a>
@@ -359,7 +359,7 @@ function TabContact() {
           </div>
         ) : (
           <div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 14px' }}>
+            <div className="ab-form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 14px' }}>
               <div><label style={lbl}>Name *</label><input style={inp} placeholder="Your full name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
               <div><label style={lbl}>Email *</label><input style={inp} type="email" placeholder="your@email.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
             </div>
@@ -417,7 +417,7 @@ function TabReturns() {
         <Prose><p>You have <strong>2–3 days from delivery</strong> to request a return or exchange. Items must be unworn, unwashed, with all tags attached and in original packaging.</p></Prose>
       </Section>
       <Section title="What Can Be Returned">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+        <div className="ab-two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <div style={{ background: 'transparent', padding: '16px 0' }}>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#16a34a', textTransform: 'uppercase', marginBottom: 12 }}>✓ Eligible</div>
             {ELIGIBLE.map(item => <div key={item} style={{ fontSize: 13, color: '#16a34a', marginBottom: 8, display: 'flex', gap: 8 }}><span style={{ color: '#16a34a', flexShrink: 0 }}>✓</span>{item}</div>)}
@@ -633,7 +633,9 @@ export default function About() {
         @media (max-width: 700px) {
           .ab-sidebar { display: none !important; }
           .ab-mobile-tabs { display: flex !important; }
-          .ab-layout { grid-template-columns: 1fr !important; }
+          .ab-layout { grid-template-columns: minmax(0, 1fr) !important; }
+          .ab-content { min-width: 0; }
+          .ab-form-row, .ab-two-col { grid-template-columns: 1fr !important; }
         }
         @media (min-width: 701px) {
           .ab-mobile-tabs { display: none !important; }
@@ -643,7 +645,7 @@ export default function About() {
       <Navbar cartCount={0} wishlistCount={0} onLogout={() => {}} />
 
       {/* ── Hero header ── */}
-      <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.08)', padding: 'clamp(32px,5vw,64px) clamp(20px,6%,80px) clamp(24px,4vw,48px)' }}>
+      <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.08)', padding: 'calc(112px + clamp(8px,3vw,40px)) clamp(20px,6%,80px) clamp(24px,4vw,48px)' }}>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: '#C8A951', marginBottom: 10 }}>{meta.badge}</div>
         <h1 style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 800, fontSize: 'clamp(28px,5vw,52px)', color: '#0A0A0A', lineHeight: 1.1, marginBottom: 12 }}>{meta.title}</h1>
         <p style={{ fontSize: 'clamp(13px,1.4vw,15px)', color: '#777', lineHeight: 1.75, maxWidth: 560 }}>{meta.subtitle}</p>
@@ -662,7 +664,7 @@ export default function About() {
       <div className="ab-layout" style={{ display: 'grid', gridTemplateColumns: '220px 1fr', maxWidth: 1100, margin: '0 auto', padding: 'clamp(24px,4vw,48px) clamp(16px,5%,48px)', gap: 'clamp(24px,4vw,48px)', alignItems: 'start' }}>
 
         {/* Sidebar */}
-        <div className="ab-sidebar" style={{ position: 'sticky', top: 80 }}>
+        <div className="ab-sidebar" style={{ position: 'sticky', top: 112 }}>
           {GROUPS.map((group, gi) => (
             <div key={group.label} style={{ marginBottom: gi < GROUPS.length - 1 ? 24 : 0 }}>
               <div className="ab-tab-group-label">{group.label}</div>

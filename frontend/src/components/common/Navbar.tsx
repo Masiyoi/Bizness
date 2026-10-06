@@ -363,7 +363,7 @@ export default function Navbar({
           .nav-announce-text { font-size: 9px !important; letter-spacing: 1px !important; line-height: 1.25 !important; text-align: center !important; white-space: normal !important; }
           .nav-right { gap: 8px !important; }
           .nav-join-btn { padding: 7px 12px !important; letter-spacing: 1.5px !important; }
-          .navbar-brand-mobile { display: none !important; }
+          .navbar-brand-mobile { display: flex !important; }
           .navbar-brand-center { gap: 6px !important; }
           .navbar-brand-center img { width: 28px !important; height: 28px !important; }
           .navbar-brand-center .brand-logo { font-size: 16px !important; letter-spacing: 0.5px !important; }
