@@ -124,6 +124,12 @@ export default function Checkout() {
     eligible: false, discountAmount: 0, discountLabel: null,
   });
   const [memberTier, setMemberTier] = useState<'Bronze' | 'Gold' | 'Diamond' | null>(null);
+  // Top banner — mirrors Navbar: first-order offer until the first order is
+  // made, then loyalty / rotating perk banners. null = preview not loaded yet.
+  const [firstOrderEligible, setFirstOrderEligible] = useState<boolean | null>(null);
+  const [loyaltyEligible, setLoyaltyEligible] = useState(false);
+  const [loyaltyOrdersUntilNext, setLoyaltyOrdersUntilNext] = useState<number | null>(null);
+  const [regularBannerIndex, setRegularBannerIndex] = useState(0);
   
   const passedZone = (location.state as { deliveryZone?: DeliveryZone } | null)?.deliveryZone;
   const passedCoupon = (location.state as any)?.couponCode as string | undefined;
@@ -197,6 +203,41 @@ export default function Checkout() {
       .then(r => setMemberTier(r.data.club_joined ? r.data.tier : null))
       .catch(() => {});
   }, []);
+
+  const REGULAR_BANNERS = [
+    'Free shipping on orders above KSh 5,000',
+    loyaltyOrdersUntilNext != null
+      ? `Complete ${loyaltyOrdersUntilNext} more order${loyaltyOrdersUntilNext === 1 ? '' : 's'} to get 10% off your next`
+      : 'Complete 3 orders to get 10% off your 4th',
+    'Earn points by referring friends',
+  ];
+
+  // Banner eligibility — separate from the discount preview above so it also
+  // works on the Pesapal-return branch and ignores any discount code.
+  useEffect(() => {
+    if (!user) return;
+    axios.get('/api/discount/preview')
+      .then(r => {
+        setFirstOrderEligible(r.data.discountType === 'first_order');
+        setLoyaltyEligible(!!r.data.loyalty?.eligible);
+        setLoyaltyOrdersUntilNext(r.data.loyalty?.ordersUntilNext ?? null);
+      })
+      .catch(() => setFirstOrderEligible(false)); // on failure show the regular banners, never a wrong offer
+  }, []);
+
+  useEffect(() => {
+    if (firstOrderEligible !== false) return;
+    const id = setInterval(() => {
+      setRegularBannerIndex(i => (i + 1) % REGULAR_BANNERS.length);
+    }, 4000);
+    return () => clearInterval(id);
+  }, [firstOrderEligible]);
+
+  const bannerText =
+    firstOrderEligible === null ? ''
+    : firstOrderEligible ? 'Get 10% off on your first order'
+    : loyaltyEligible ? 'Your next order gets 10% off — loyalty reward unlocked'
+    : REGULAR_BANNERS[regularBannerIndex];
 
   // Prefill the PayHero phone field from shipping details once they're known
   useEffect(() => {
@@ -649,6 +690,7 @@ export default function Checkout() {
         @keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         @keyframes checkPop{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
         .fade-in{animation:fadeIn 0.35s ease forwards}
+        @keyframes bannerIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
         .check-pop{animation:checkPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards}
         .pulse-anim{animation:pulse 1.6s ease-in-out infinite}
       `}</style>
@@ -657,8 +699,8 @@ export default function Checkout() {
       <div style={{ position: 'sticky', top: 0, zIndex: 101, background: '#000' }}>
         {/* Topbar */}
         <div style={{ height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="jost" style={{ fontSize: 10, fontWeight: 600, letterSpacing: '2px', color: 'rgba(255,255,255,0.7)' }}>
-            ✦ GET 10% OFF ON YOUR FIRST ORDER
+          <span key={firstOrderEligible === null ? 'loading' : firstOrderEligible ? 'first-order' : loyaltyEligible ? 'loyalty' : String(regularBannerIndex)} className="jost" style={{ fontSize: 10, fontWeight: 600, letterSpacing: '2px', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', animation: 'bannerIn 0.4s ease' }}>
+            {bannerText}
           </span>
         </div>
         {/* Navbar */}
