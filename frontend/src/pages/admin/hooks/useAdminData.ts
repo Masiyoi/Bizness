@@ -21,7 +21,7 @@ export function useAdminData() {
   }, []);
 
   const fetchAll = useCallback(async (range?: DateRange) => {
-    const r = range ?? dateRange;
+    const r = range && 'from' in range && 'to' in range ? range : dateRange;
     setLoading(true);
     try {
       const params = `?from=${r.from}&to=${r.to}`;

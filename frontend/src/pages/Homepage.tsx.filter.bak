@@ -372,8 +372,6 @@ export default function Homepage() {
   const [reviewsLoading, setRLoading] = useState(true);
   const [sortBy, setSortBy]           = useState('featured');
   const [sortDrawerOpen, setSortDrawerOpen] = useState(false);
-  const [selectedSizes, setSelectedSizes]   = useState<string[]>([]);
-  const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const sortBtnRef                          = useRef<HTMLDivElement>(null);
   const [flashSaleMap, setFlashSaleMap] = useState<Record<number, number>>({});
   // maps product_id → sale_price (used to hide flash items from main grid)
@@ -546,61 +544,12 @@ export default function Homepage() {
       (departmentFilter === 'all' || p.category_department === departmentFilter) &&
       p.name.toLowerCase().includes(search.toLowerCase())
     );
-
-  // ── Size / colour filters ─────────────────────────────────────
-  // Options come from the products currently in view (gender, department,
-  // category and search already applied), so only relevant values show.
-  const SIZE_ORDER = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
-  const optionsOf = (key: 'sizes' | 'colors', selected: string[]) => {
-    const seen = new Map<string, string>();
-    [...filtered.map(p => (p as any)[key]), selected].forEach(arr => {
-      if (!Array.isArray(arr)) return;
-      arr.forEach((v: unknown) => {
-        const t = String(v ?? '').trim();
-        if (t && !seen.has(t.toLowerCase())) seen.set(t.toLowerCase(), t);
-      });
-    });
-    return Array.from(seen.values());
-  };
-  const sizeOptions = optionsOf('sizes', selectedSizes).sort((a, b) => {
-    const ia = SIZE_ORDER.indexOf(a.toUpperCase()), ib = SIZE_ORDER.indexOf(b.toUpperCase());
-    if (ia > -1 && ib > -1) return ia - ib;
-    const na = parseFloat(a), nb = parseFloat(b);
-    if (!isNaN(na) && !isNaN(nb)) return na - nb;
-    return a.localeCompare(b);
-  });
-  const colorOptions = optionsOf('colors', selectedColors).sort((a, b) => a.localeCompare(b));
-  const matchesAny = (p: any, key: 'sizes' | 'colors', selected: string[]) =>
-    selected.length === 0 ||
-    (Array.isArray(p[key]) && p[key].some((v: unknown) =>
-      selected.some(s => s.toLowerCase() === String(v ?? '').trim().toLowerCase())));
-  if (selectedSizes.length || selectedColors.length) {
-    filtered = filtered.filter(p =>
-      matchesAny(p, 'sizes', selectedSizes) && matchesAny(p, 'colors', selectedColors));
-  }
-  const activeFilterCount = selectedSizes.length + selectedColors.length;
-  const toggleOption = (setter: React.Dispatch<React.SetStateAction<string[]>>, value: string) =>
-    setter(prev => prev.some(x => x.toLowerCase() === value.toLowerCase())
-      ? prev.filter(x => x.toLowerCase() !== value.toLowerCase())
-      : [...prev, value]);
-  const clearFilters = () => { setSelectedSizes([]); setSelectedColors([]); };
-  const filterLabelStyle: React.CSSProperties = {
-    fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: 700, letterSpacing: '2px',
-    textTransform: 'uppercase', color: 'var(--ink)', margin: '0 0 8px',
-  };
-  const chipStyle = (on: boolean): React.CSSProperties => ({
-    display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 36, justifyContent: 'center',
-    padding: '7px 10px', fontFamily: 'var(--f-sans)', fontSize: 11, fontWeight: 600,
-    border: on ? '1px solid var(--ink)' : '1px solid rgba(0,0,0,0.15)',
-    background: on ? 'var(--ink)' : '#fff', color: on ? '#fff' : 'var(--ink)', cursor: 'pointer',
-  });
-
   if (sortBy === 'price_asc')  filtered = [...filtered].sort((a,b) => Number(a.price) - Number(b.price));
   if (sortBy === 'price_desc') filtered = [...filtered].sort((a,b) => Number(b.price) - Number(a.price));
   if (sortBy === 'newest')     filtered = [...filtered].sort((a,b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
 
-  useEffect(() => { setPage(1); }, [activeCategory, search, selectedSizes, selectedColors]);
-  useEffect(() => { setCategory('all'); setPage(1); setSelectedSizes([]); setSelectedColors([]); }, [genderFilter, departmentFilter]);
+  useEffect(() => { setPage(1); }, [activeCategory, search]);
+  useEffect(() => { setCategory('all'); setPage(1); }, [genderFilter, departmentFilter]);
 
   const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
   const pageStart  = (currentPage - 1) * PRODUCTS_PER_PAGE;
@@ -710,12 +659,6 @@ export default function Homepage() {
                   <circle cx="4" cy="12" r="2" fill="#fff" stroke="currentColor" strokeWidth="1.5"/>
                 </svg>
                 Filter
-                {activeFilterCount > 0 && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 16, height: 16, padding: '0 4px', borderRadius: 8, background: 'var(--ink)', color: '#fff', fontSize: 9, fontWeight: 700, letterSpacing: 0 }}>
-                    {activeFilterCount}
-                  </span>
-                )}
-
               </button>
 
               {sortDrawerOpen && (
@@ -726,13 +669,13 @@ export default function Homepage() {
                       position: 'absolute',
                       top: 'calc(100% + 8px)',
                       right: 0,
-                      width: 280, maxHeight: '70vh',
+                      width: 200,
                       background: '#fff',
                       border: '1px solid rgba(0,0,0,0.10)',
                       borderRadius: 10,
                       boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
                       zIndex: 999,
-                      overflowX: 'hidden', overflowY: 'auto',
+                      overflow: 'hidden',
                       animation: 'popupFadeUp 0.18s cubic-bezier(0.22,0.68,0,1.2) both',
                     }}
                   >
@@ -795,45 +738,6 @@ export default function Homepage() {
                 >
                   <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'newest' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: sortBy === 'newest' ? 'var(--ink)' : 'var(--mid)' }}>Newest First</span>
                 </button>
-
-                    {sizeOptions.length > 0 && (
-                      <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-                        <p style={filterLabelStyle}>Size</p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                          {sizeOptions.map(s => {
-                            const on = selectedSizes.some(x => x.toLowerCase() === s.toLowerCase());
-                            return (
-                              <button key={s} onClick={() => toggleOption(setSelectedSizes, s)} style={chipStyle(on)}>{s}</button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                    {colorOptions.length > 0 && (
-                      <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-                        <p style={filterLabelStyle}>Colour</p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                          {colorOptions.map(c => {
-                            const on = selectedColors.some(x => x.toLowerCase() === c.toLowerCase());
-                            return (
-                              <button key={c} onClick={() => toggleOption(setSelectedColors, c)} style={chipStyle(on)}>
-                                <span style={{ width: 10, height: 10, borderRadius: '50%', background: c, border: '1px solid rgba(0,0,0,0.25)', display: 'inline-block', flexShrink: 0 }} />
-                                {c}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                    {activeFilterCount > 0 && (
-                      <button
-                        onClick={clearFilters}
-                        style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', borderTop: '1px solid rgba(0,0,0,0.06)', cursor: 'pointer', fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink)', textAlign: 'center' }}
-                      >
-                        Clear filters ({activeFilterCount})
-                      </button>
-                    )}
-
                   </div>
                 </>
               )}
@@ -908,7 +812,7 @@ export default function Homepage() {
               <p className="lp-empty-sub">
                 {search ? `No results for "${search}" — try a different term` : `No products in ${activeCategory} yet — check back soon`}
               </p>
-              <button className="lp-btn-primary" onClick={() => { setCategory('all'); setSearch(''); clearFilters(); }}>Browse All</button>
+              <button className="lp-btn-primary" onClick={() => { setCategory('all'); setSearch(''); }}>Browse All</button>
             </div>
           )}
 

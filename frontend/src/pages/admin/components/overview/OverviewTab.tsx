@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   ResponsiveContainer,
   AreaChart, Area,
@@ -6,7 +6,7 @@ import {
   Tooltip, Legend,
 } from 'recharts';
 import type { Stats } from '../../types';
-import { T, SC, defaultDateRange } from '../../constants';
+import { T, SC } from '../../constants';
 import type { DateRange } from '../../constants';
 import { StatCard }       from '../shared/StatCard';
 import { DateRangePicker } from '../shared/DateRangePicker';
@@ -324,10 +324,11 @@ interface OverviewTabProps {
   onGoToOrders:    () => void;
   onGoToProducts:  () => void;
   onGoToCustomers: () => void;
+  dateRange:         DateRange;
+  onDateRangeChange: (r: DateRange) => void;
 }
 
-export function OverviewTab({ stats, onGoToOrders, onGoToProducts, onGoToCustomers }: OverviewTabProps) {
-  const [dateRange, setDateRange] = useState<DateRange>(defaultDateRange());
+export function OverviewTab({ stats, onGoToOrders, onGoToProducts, onGoToCustomers, dateRange, onDateRangeChange }: OverviewTabProps) {
 
   // KPI cards config
   const KPI_ROWS = [
@@ -366,7 +367,7 @@ export function OverviewTab({ stats, onGoToOrders, onGoToProducts, onGoToCustome
       {
         label:   'Total Orders',
         value:   stats.totalOrders,
-        sub:     'All time',
+        sub:     'In selected period',
         trend:   stats.ordersVsPrev ?? null,
         accent:  false,
         onClick: onGoToOrders,
@@ -408,7 +409,7 @@ export function OverviewTab({ stats, onGoToOrders, onGoToProducts, onGoToCustome
           }}>Overview</h1>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <DateRangePicker value={dateRange} onChange={setDateRange} />
+          <DateRangePicker value={dateRange} onChange={onDateRangeChange} />
           <div style={{
             fontFamily: 'Jost, sans-serif', fontSize: 12, color: T.grey1,
             background: T.white, border: `1px solid ${T.grey3}`,

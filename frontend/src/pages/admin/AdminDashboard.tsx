@@ -33,6 +33,7 @@ export default function AdminDashboard() {
     stats, products, orders, loading,
     toast, toastType,
     showToast, fetchAll,
+    dateRange, changeDateRange,
   } = useAdminData();
 
   const [tab,          setTab]          = useState<Tab>('overview');
@@ -329,7 +330,7 @@ export default function AdminDashboard() {
           className="admin-main"
           style={{ flex: 1, padding: '32px 36px 60px', overflowY: 'auto', minWidth: 0, background: T.white }}
         >
-          {loading ? (
+          {loading && !stats ? (
             <div style={{
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center',
@@ -344,6 +345,8 @@ export default function AdminDashboard() {
             <>
               {tab === 'overview' && stats && (
                 <OverviewTab
+                  dateRange={dateRange}
+                  onDateRangeChange={changeDateRange}
                   stats={stats}
                   onGoToOrders={()    => setTab('orders')}
                   onGoToProducts={()  => setTab('products')}
