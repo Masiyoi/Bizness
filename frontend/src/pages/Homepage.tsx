@@ -287,6 +287,12 @@ function Tagline() {
           color: var(--ink);
           line-height: 1.1;
         }
+        .lp-tagline-text {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          column-gap: clamp(14px,2.4vw,36px);
+        }
         .lp-tagline-icon {
           width: clamp(26px,3.2vw,44px);
           height: clamp(26px,3.2vw,44px);
@@ -295,10 +301,11 @@ function Tagline() {
         }
         @media (max-width: 640px) {
           .lp-tagline { padding: 24px 16px 0; }
+          .lp-tagline-text { flex-direction: column; align-items: center; text-align: center; row-gap: 4px; }
         }
       `}</style>
       <section className="lp-tagline">
-        <p className="lp-tagline-text">Make your move.We bring the access</p>
+        <p className="lp-tagline-text"><span>Make your move</span><span>We bring the access</span></p>
         <img src="/diamond.png" alt="" className="lp-tagline-icon" />
       </section>
     </>
