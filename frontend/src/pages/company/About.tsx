@@ -649,7 +649,7 @@ export default function About() {
       <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.08)', padding: 'calc(112px + clamp(8px,3vw,40px)) clamp(20px,6%,80px) clamp(24px,4vw,48px)' }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: '#C8A951', marginBottom: 10 }}>{meta.badge}</div>
         <h1 style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 800, fontSize: 'clamp(24px,4.5vw,48px)', color: '#0A0A0A', lineHeight: 1.1, marginBottom: 12 }}>{meta.title}</h1>
-        <p style={{ fontSize: 'clamp(14px,1.4vw,16px)', color: '#777', lineHeight: 1.75, maxWidth: 560 }}>{meta.subtitle}</p>
+        <p style={{ fontSize: 'clamp(14px,1.4vw,16px)', color: '#0A0A0A', lineHeight: 1.75, maxWidth: 560 }}>{meta.subtitle}</p>
       </div>
 
       {/* ── Mobile horizontal tabs ── */}
