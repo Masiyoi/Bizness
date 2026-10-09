@@ -47,6 +47,8 @@ async function callGemini(model, key, payload) {
       signal: ctrl.signal,
       body: JSON.stringify(payload),
     });
+  } finally {
+    clearTimeout(timer);
   }
 }
 
