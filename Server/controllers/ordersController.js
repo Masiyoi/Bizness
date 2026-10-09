@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const { sendMetaEvent } = require('../services/metaCapi');
+const { generateOrderNumber } = require('../services/orderNumber');
 
 // ── GET /api/orders/reserve-number  — reserve the next order number ─────────
 /**
@@ -18,8 +19,7 @@ const { sendMetaEvent } = require('../services/metaCapi');
 exports.reserveOrderNumber = async (req, res) => {
   let orderNumber;
   try {
-    const result = await db.query(`SELECT nextval('orders_order_number_seq') AS n`);
-    orderNumber = 'ON-' + String(result.rows[0].n).padStart(6, '0');
+    orderNumber = await generateOrderNumber(); // PW-XXXXX (sqids)
   } catch (err) {
     console.error('reserveOrderNumber error:', err.message);
     return res.status(500).json({ msg: 'Failed to reserve order number' });

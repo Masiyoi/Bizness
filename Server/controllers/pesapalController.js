@@ -1,5 +1,6 @@
 ﻿const axios = require('axios');
 const db    = require('../config/db');
+const { generateOrderNumber } = require('../services/orderNumber');
 const { calculateFirstOrderDiscount, calculateOrderDiscount } = require('./discountController');
 const { awardOrderPoints, getShippingOverride, markGoldDiscountCodeUsed } = require('./membersController');
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
@@ -89,7 +90,7 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
   const deliveryFee   = shippingMeta.delivery_fee  || payment.delivery_fee  || 0;
   const discountAmount = Number(shippingMeta.discount_amount) || 0;
   const discountType   = shippingMeta.discount_type || null;
-  const reservedOrderNumber = shippingMeta.reserved_order_number || null;
+  const reservedOrderNumber = shippingMeta.reserved_order_number || await generateOrderNumber();
   const affiliateCode = shippingMeta.affiliate_code || null;
   const discountCodeId = shippingMeta.discount_code_id || null;
 
@@ -247,7 +248,7 @@ exports.initiatePayment = async (req, res) => {
   // Never trust a client-supplied amount â€” recompute the subtotal from the DB
   // cart (using flash-sale price where active) and apply the first-order
   // discount (if eligible) here, mirroring stkPush.
-  let roundedAmount, discountInfo;
+  let roundedAmount, discountInfo, deliveryOverride;
   try {
     const cartRes = await db.query(
       `SELECT ci.quantity,
@@ -274,7 +275,7 @@ exports.initiatePayment = async (req, res) => {
     );
 
     discountInfo = await calculateOrderDiscount(userId, subtotal, discount_code);
-    const deliveryOverride = await getShippingOverride(userId, subtotal, delivery_fee);
+    deliveryOverride = await getShippingOverride(userId, subtotal, delivery_fee);
     const total  = discountInfo.discountedSubtotal + deliveryOverride.deliveryFee;
     roundedAmount = Math.ceil(total);
   } catch (err) {
@@ -458,7 +459,7 @@ exports.pesapalIPN = async (req, res) => {
           const deliveryFee  = shippingMeta.delivery_fee  || payment.delivery_fee  || 0;
           const discountAmount = Number(shippingMeta.discount_amount) || 0;
           const discountType   = shippingMeta.discount_type || null;
-          const reservedOrderNumber = shippingMeta.reserved_order_number || null;
+          const reservedOrderNumber = shippingMeta.reserved_order_number || await generateOrderNumber();
           const affiliateCode = shippingMeta.affiliate_code || null;
 
           const cartRes = await db.query(

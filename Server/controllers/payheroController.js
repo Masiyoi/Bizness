@@ -1,5 +1,6 @@
 ﻿const axios = require('axios');
 const db    = require('../config/db');
+const { generateOrderNumber } = require('../services/orderNumber');
 const { calculateFirstOrderDiscount, calculateOrderDiscount } = require('./discountController');
 const { awardOrderPoints, getShippingOverride, markGoldDiscountCodeUsed } = require('./membersController');
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
@@ -68,7 +69,7 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
   const deliveryFee   = shippingMeta.delivery_fee  || payment.delivery_fee  || 0;
   const discountAmount = Number(shippingMeta.discount_amount) || 0;
   const discountType   = shippingMeta.discount_type || null;
-  const reservedOrderNumber = shippingMeta.reserved_order_number || null;
+  const reservedOrderNumber = shippingMeta.reserved_order_number || await generateOrderNumber();
   const affiliateCode  = shippingMeta.affiliate_code || null;
   const discountCodeId = shippingMeta.discount_code_id || null;
   // Captured client-side when checkout started (see stkPush below) and
@@ -451,7 +452,7 @@ exports.payHeroCallback = async (req, res) => {
           const deliveryFee  = shippingMeta.delivery_fee  || payment.delivery_fee  || 0;
           const discountAmount = Number(shippingMeta.discount_amount) || 0;
           const discountType   = shippingMeta.discount_type || null;
-          const reservedOrderNumber = shippingMeta.reserved_order_number || null;
+          const reservedOrderNumber = shippingMeta.reserved_order_number || await generateOrderNumber();
           const affiliateCode = shippingMeta.affiliate_code || null;
 
           const cartRes = await db.query(

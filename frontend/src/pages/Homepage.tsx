@@ -323,7 +323,7 @@ function Editorial({ onShop }: { onShop: (cat: string) => void }) {
       <div className="lp-editorial-copy">
         <p style={{ fontFamily:"var(--f-sans)", fontSize:10, fontWeight:800, letterSpacing:'3px', textTransform:'uppercase', color:'#0A0A0A', marginBottom:16 }}>Editorial</p>
         <h3>Rooted in the City,<br/>Built for<br/>the Culture</h3>
-        <p>Karibu Plug Walk Studios-your ultimate Plug for the freshest kicks and street ready drip hapa 254. Our customer is the real main character-everything we drop is curated with you at the center.Satisfaction yako ndio Standard yetu, hakuna stories mob only geniuine care na premium service.Our mission is to Elevate individual style, with the vision of becoming the definitive heartbeat of kenya's urban drip culture. </p>
+        <p>Karibu Plug Walk Studios-your ultimate Plug for the freshest kicks and street ready drip hapa 254<img src="https://flagcdn.com/w40/ke.png" alt="Kenya" style={{ height: "0.85em", width: "auto", marginLeft: 6, verticalAlign: "-0.05em", display: "inline-block" }} />. Our customer is the real main character-everything we drop is curated with you at the center.Satisfaction yako ndio Standard yetu, hakuna stories mob only geniuine care na premium service.Our mission is to Elevate individual style, with the vision of becoming the definitive heartbeat of kenya's urban drip culture. </p>
         <button className="lp-btn-primary" onClick={() => navigate('/about')}>Read About Us</button>
       </div>
     </section>
@@ -739,7 +739,7 @@ export default function Homepage() {
                     <style>{`@keyframes popupFadeUp { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }`}</style>
 
                     <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-                      <p style={{ fontFamily: 'var(--f-sans)', fontSize: 8, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--mid)', margin: '0 0 2px' }}>The Collection</p>
+                      <p style={{ fontFamily: 'var(--f-sans)', fontSize: 8, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--ink)', margin: '0 0 2px' }}>The Collection</p>
                       <p style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--ink)', margin: 0 }}>Sort By</p>
                     </div>
 
@@ -754,7 +754,7 @@ export default function Homepage() {
                     cursor: 'pointer',
                   }}
                 >
-                  <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'featured' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: sortBy === 'featured' ? 'var(--ink)' : 'var(--mid)' }}>Featured</span>
+                  <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'featured' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink)' }}>Featured</span>
                 </button>
                 <button
                   onClick={() => { setSortBy('price_asc'); setSortDrawerOpen(false); }}
@@ -767,7 +767,7 @@ export default function Homepage() {
                     cursor: 'pointer',
                   }}
                 >
-                  <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'price_asc' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: sortBy === 'price_asc' ? 'var(--ink)' : 'var(--mid)' }}>Price: Low → High</span>
+                  <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'price_asc' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink)' }}>Price: Low → High</span>
                 </button>
                 <button
                   onClick={() => { setSortBy('price_desc'); setSortDrawerOpen(false); }}
@@ -780,7 +780,7 @@ export default function Homepage() {
                     cursor: 'pointer',
                   }}
                 >
-                  <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'price_desc' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: sortBy === 'price_desc' ? 'var(--ink)' : 'var(--mid)' }}>Price: High → Low</span>
+                  <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'price_desc' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink)' }}>Price: High → Low</span>
                 </button>
                 <button
                   onClick={() => { setSortBy('newest'); setSortDrawerOpen(false); }}
@@ -793,7 +793,7 @@ export default function Homepage() {
                     cursor: 'pointer',
                   }}
                 >
-                  <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'newest' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: sortBy === 'newest' ? 'var(--ink)' : 'var(--mid)' }}>Newest First</span>
+                  <span style={{ fontFamily: 'var(--f-sans)', fontSize: 10, fontWeight: sortBy === 'newest' ? 700 : 400, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--ink)' }}>Newest First</span>
                 </button>
 
                     {sizeOptions.length > 0 && (

@@ -26,6 +26,7 @@
     "nodemailer": "^8.0.1",
     "pg": "^8.19.0",
     "resend": "^6.21.0",
+    "sqids": "^0.3.0",
     "streamifier": "^0.1.1",
     "web-push": "^3.6.7"
   }

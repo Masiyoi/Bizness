@@ -1,5 +1,6 @@
 ﻿const axios = require('axios');
 const db    = require('../config/db');
+const { generateOrderNumber } = require('../services/orderNumber');
 const { calculateFirstOrderDiscount } = require('./discountController');
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
 const { decrementStockForItems } = require('../utils/stockDeduction');
@@ -235,7 +236,7 @@ exports.mpesaCallback = async (req, res) => {
       const deliveryFee  = shippingMeta.delivery_fee  || payment.delivery_fee  || 0;
       const discountAmount = Number(shippingMeta.discount_amount) || 0;
       const discountType   = shippingMeta.discount_type || null;
-      const reservedOrderNumber = shippingMeta.reserved_order_number || null;
+      const reservedOrderNumber = shippingMeta.reserved_order_number || await generateOrderNumber();
 
       // 3. Fetch the user's cart items with product details
       const cartRes = await db.query(
@@ -367,7 +368,7 @@ exports.mpesaCallback = async (req, res) => {
           const deliveryFee  = shippingMeta.delivery_fee  || payment.delivery_fee  || 0;
           const discountAmount = Number(shippingMeta.discount_amount) || 0;
           const discountType   = shippingMeta.discount_type || null;
-          const reservedOrderNumber = shippingMeta.reserved_order_number || null;
+          const reservedOrderNumber = shippingMeta.reserved_order_number || await generateOrderNumber();
 
           const cartRes = await db.query(
             `SELECT
