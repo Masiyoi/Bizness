@@ -298,7 +298,7 @@ function Tagline() {
         }
       `}</style>
       <section className="lp-tagline">
-        <p className="lp-tagline-text">Do it for the experience</p>
+        <p className="lp-tagline-text">Make your move.We bring the access</p>
         <img src="/diamond.png" alt="" className="lp-tagline-icon" />
       </section>
     </>
@@ -314,7 +314,7 @@ function Editorial({ onShop }: { onShop: (cat: string) => void }) {
         <div className="lp-editorial-badge">Est. 2025 Nairobi, Kenya</div>
       </div>
       <div className="lp-editorial-copy">
-        <p style={{ fontFamily:"var(--f-sans)", fontSize:10, fontWeight:800, letterSpacing:'3px', textTransform:'uppercase', color:'#0A0A0A', marginBottom:16 }}>Our Story</p>
+        <p style={{ fontFamily:"var(--f-sans)", fontSize:10, fontWeight:800, letterSpacing:'3px', textTransform:'uppercase', color:'#0A0A0A', marginBottom:16 }}>Editorial</p>
         <h3>Rooted in the City,<br/>Built for<br/>the Culture</h3>
         <p>Karibu Plug Walk Studios-your ultimate Plug for the freshest kicks and street ready drip hapa 254. Our customer is the real main character-everything we drop is curated with you at the center.Satisfaction yako ndio Standard yetu, hakuna stories mob only geniuine care na premium service.Our mission is to Elevate individual style, with the vision of becoming the definitive heartbeat of kenya's urban drip culture. </p>
         <button className="lp-btn-primary" onClick={() => navigate('/about')}>Read About Us</button>

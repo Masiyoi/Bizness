@@ -41,17 +41,17 @@ import approvedIcon        from '../../assets/track/approved.png';
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 36 }}>
-      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '2.5px', textTransform: 'uppercase', color: '#000', marginBottom: 14 }}>{title}</div>
+      <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#000', marginBottom: 14 }}>{title}</div>
       {children}
     </div>
   );
 }
 function Prose({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 14, color: '#444', lineHeight: 1.85, fontFamily: "'DM Sans',sans-serif" }}>{children}</div>;
+  return <div style={{ fontSize: 14, fontWeight: 300, color: '#0A0A0A', lineHeight: 1.8, fontFamily: "'DM Sans',sans-serif" }}>{children}</div>;
 }
 function AccentCard({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{ background: '#f9f6f1', borderRadius: 10, padding: '18px 22px', fontSize: 13, color: '#555', lineHeight: 1.75, marginTop: 8, ...style }}>
+    <div style={{ background: '#f9f6f1', borderRadius: 10, padding: '18px 22px', fontSize: 14, fontWeight: 300, color: '#0A0A0A', lineHeight: 1.8, fontFamily: "'DM Sans',sans-serif", marginTop: 8, ...style }}>
       {children}
     </div>
   );
@@ -66,8 +66,8 @@ function InfoGrid({ items }: { items: { icon: string; label: string; value: Reac
           ) : (
             <div style={{ fontSize: 22, marginBottom: 8 }}>{it.icon}</div>
           )}
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#000', marginBottom: 4 }}>{it.label}</div>
-          <div style={{ fontSize: 13, fontWeight: 800, color: '#000' }}>{it.value}</div>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#000', marginBottom: 4 }}>{it.label}</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: '#000' }}>{it.value}</div>
         </div>
       ))}
     </div>
@@ -76,10 +76,10 @@ function InfoGrid({ items }: { items: { icon: string; label: string; value: Reac
 function SizeTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
   return (
     <div style={{ overflowX: 'auto', marginBottom: 8 }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
         <thead>
           <tr style={{ background: '#000' }}>
-            {headers.map(h => <th key={h} style={{ padding: '10px 14px', textAlign: 'left', color: '#fff', fontWeight: 700, fontSize: 11, letterSpacing: '1.2px', textTransform: 'uppercase' }}>{h}</th>)}
+            {headers.map(h => <th key={h} style={{ padding: '10px 14px', textAlign: 'left', color: '#fff', fontWeight: 700, fontSize: 12, letterSpacing: '1.2px', textTransform: 'uppercase' }}>{h}</th>)}
           </tr>
         </thead>
         <tbody>
@@ -97,11 +97,11 @@ function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ borderBottom: '1px solid rgba(0,0,0,0.15)', padding: '14px 0' }}>
-      <button onClick={() => setOpen(o => !o)} style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 700, color: '#000', gap: 12 }}>
+      <button onClick={() => setOpen(o => !o)} style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: "'DM Sans',sans-serif", fontSize: 15, fontWeight: 700, color: '#000', gap: 12 }}>
         {q}
-        <span style={{ display: 'inline-block', transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none', color: '#000', fontSize: 11, flexShrink: 0 }}>▼</span>
+        <span style={{ display: 'inline-block', transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none', color: '#000', fontSize: 12, flexShrink: 0 }}>▼</span>
       </button>
-      {open && <p style={{ marginTop: 10, fontSize: 13, color: '#000', lineHeight: 1.75, fontFamily: "'DM Sans',sans-serif" }}>{a}</p>}
+      {open && <p style={{ marginTop: 10, fontSize: 14, color: '#000', lineHeight: 1.75, fontFamily: "'DM Sans',sans-serif" }}>{a}</p>}
     </div>
   );
 }
@@ -162,8 +162,8 @@ function TabAbout() {
           ].map(v => (
             <div key={v.title} style={{ background: '#fff', borderRadius: 12, padding: '18px 20px' }}>
               <img src={v.icon} alt={v.title} style={{ width: 36, height: 36, objectFit: 'contain', marginBottom: 10, display: 'block' }} />
-              <div style={{ fontWeight: 800, fontSize: 14, color: '#000', marginBottom: 6 }}>{v.title}</div>
-              <div style={{ fontSize: 14, fontWeight: 400, color: '#444', lineHeight: 1.85, fontFamily: "'DM Sans',sans-serif" }}>{v.desc}</div>
+              <div style={{ fontWeight: 800, fontSize: 16, color: '#000', marginBottom: 6 }}>{v.title}</div>
+              <div style={{ fontSize: 14, fontWeight: 300, color: '#0A0A0A', lineHeight: 1.8, fontFamily: "'DM Sans',sans-serif" }}>{v.desc}</div>
             </div>
           ))}
         </div>
@@ -196,11 +196,11 @@ function TabCareers() {
         {ROLES.map(role => (
           <div key={role.title} style={{ background: 'transparent', padding: '14px 0', marginBottom: 14, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontWeight: 700, fontSize: 15, color: '#000', marginBottom: 4 }}>{role.title}</div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#000', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 8 }}>{role.type}</div>
-              <div style={{ fontSize: 13, color: '#000', lineHeight: 1.6 }}>{role.desc}</div>
+              <div style={{ fontWeight: 700, fontSize: 18, color: '#000', marginBottom: 4 }}>{role.title}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#000', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 8 }}>{role.type}</div>
+              <div style={{ fontSize: 14, color: '#000', lineHeight: 1.6 }}>{role.desc}</div>
             </div>
-            <a href={`mailto:plugwalkstudio@gmail.com?subject=Application: ${role.title}`} style={{ background: '#000', color: '#fff', border: '1.5px solid #000', borderRadius: 8, padding: '10px 20px', fontSize: 11, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase', textDecoration: 'none', whiteSpace: 'nowrap', alignSelf: 'flex-start', marginTop: 4 }}>Apply →</a>
+            <a href={`mailto:plugwalkstudio@gmail.com?subject=Application: ${role.title}`} style={{ background: '#000', color: '#fff', border: '1.5px solid #000', borderRadius: 8, padding: '10px 20px', fontSize: 12, fontWeight: 700, letterSpacing: '1.2px', textTransform: 'uppercase', textDecoration: 'none', whiteSpace: 'nowrap', alignSelf: 'flex-start', marginTop: 4 }}>Apply →</a>
           </div>
         ))}
       </Section>
@@ -216,7 +216,7 @@ function TabCareers() {
           ].map(p => (
             <div key={p.perk} style={{ background: 'transparent', padding: '4px 0', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
               <img src={p.icon} alt="" style={{ width: 22, height: 22, objectFit: 'contain', flexShrink: 0 }} />
-              <span style={{ fontSize: 13, color: '#000', fontWeight: 600, lineHeight: 1.5 }}>{p.perk}</span>
+              <span style={{ fontSize: 14, color: '#000', fontWeight: 600, lineHeight: 1.5 }}>{p.perk}</span>
             </div>
           ))}
         </div>
@@ -251,7 +251,7 @@ function TabPress() {
       </Section>
       <Section title="Press Contact">
         <div style={{ background: 'transparent', padding: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 12 }}>Media Enquiries</div>
+          <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 12 }}>Media Enquiries</div>
           <div style={{ fontSize: 14, color: '#000', lineHeight: 2 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={emailIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <a href="mailto:plugwalkstudio@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudio@gmail.com</a></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={telephoneIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <a href="tel:+254723831949" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 723 831 949</a></div>
@@ -269,7 +269,7 @@ function TabStores() {
     <>
       <Section title="Our Location">
         <div style={{ background: 'transparent', padding: 0, marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 12 }}>Plug Walk Studios — Nairobi</div>
+          <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 12 }}>Plug Walk Studios — Nairobi</div>
           <div style={{ fontSize: 14, color: '#000', lineHeight: 2 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={coverageIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <strong style={{ color: '#000' }}>Nairobi CBD, Kenya</strong></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={telephoneIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <a href="tel:+254723831949" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 723 831 949</a></div>
@@ -325,8 +325,8 @@ function TabFAQs() {
 function TabContact() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [sent, setSent] = useState(false);
-  const inp: React.CSSProperties = { width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 8, padding: '12px 14px', fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: '#0a0a0a', outline: 'none', boxSizing: 'border-box', marginBottom: 14 };
-  const lbl: React.CSSProperties = { fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', color: 'rgba(0,0,0,0.4)', textTransform: 'uppercase', display: 'block', marginBottom: 6 };
+  const inp: React.CSSProperties = { width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 8, padding: '12px 14px', fontFamily: "'DM Sans',sans-serif", fontSize: 16, color: '#0a0a0a', outline: 'none', boxSizing: 'border-box', marginBottom: 14 };
+  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, letterSpacing: '1.5px', color: 'rgba(0,0,0,0.4)', textTransform: 'uppercase', display: 'block', marginBottom: 6 };
   const card: React.CSSProperties = { background: 'transparent', borderRadius: 10, padding: '8px 0', display: 'flex', alignItems: 'flex-start', gap: 12, textDecoration: 'none' };
   return (
     <>
@@ -334,19 +334,19 @@ function TabContact() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12, marginBottom: 8 }}>
           <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" style={card}>
             <img src={telephoneIcon} alt="" style={{ width: 22, height: 22, objectFit: 'contain', flexShrink: 0 }} />
-            <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 4 }}>Phone / WhatsApp</div><div style={{ fontSize: 13, color: '#000', fontWeight: 700, marginBottom: 2, textDecoration: 'underline' }}>+254 723 831 949</div><div style={{ fontSize: 11, color: '#000' }}>Tap to open WhatsApp</div></div>
+            <div><div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 4 }}>Phone / WhatsApp</div><div style={{ fontSize: 14, color: '#000', fontWeight: 700, marginBottom: 2, textDecoration: 'underline' }}>+254 723 831 949</div><div style={{ fontSize: 12, color: '#000' }}>Tap to open WhatsApp</div></div>
           </a>
           <a href="mailto:plugwalkstudios@gmail.com" style={card}>
             <img src={emailIcon} alt="" style={{ width: 22, height: 22, objectFit: 'contain', flexShrink: 0 }} />
-            <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 4 }}>Email</div><div style={{ fontSize: 13, color: '#000', fontWeight: 700, marginBottom: 2, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</div><div style={{ fontSize: 11, color: '#000' }}>Tap to send email</div></div>
+            <div><div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 4 }}>Email</div><div style={{ fontSize: 14, color: '#000', fontWeight: 700, marginBottom: 2, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</div><div style={{ fontSize: 12, color: '#000' }}>Tap to send email</div></div>
           </a>
           <a href="https://www.google.com/maps/search/Nairobi+CBD+Kenya" target="_blank" rel="noopener noreferrer" style={card}>
             <img src={coverageIcon} alt="" style={{ width: 22, height: 22, objectFit: 'contain', flexShrink: 0 }} />
-            <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 4 }}>Visit Us</div><div style={{ fontSize: 13, color: '#000', fontWeight: 700, marginBottom: 2, textDecoration: 'underline' }}>Nairobi CBD, Kenya</div><div style={{ fontSize: 11, color: '#000' }}>View on Maps</div></div>
+            <div><div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 4 }}>Visit Us</div><div style={{ fontSize: 14, color: '#000', fontWeight: 700, marginBottom: 2, textDecoration: 'underline' }}>Nairobi CBD, Kenya</div><div style={{ fontSize: 12, color: '#000' }}>View on Maps</div></div>
           </a>
           <div style={card}>
             <img src={timeIcon} alt="" style={{ width: 22, height: 22, objectFit: 'contain', flexShrink: 0 }} />
-            <div><div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 4 }}>Working Hours</div><div style={{ fontSize: 13, color: '#000', fontWeight: 700, marginBottom: 2 }}>Mon–Sat, 9am–6pm</div><div style={{ fontSize: 11, color: '#000' }}>EAT (UTC+3)</div></div>
+            <div><div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 4 }}>Working Hours</div><div style={{ fontSize: 14, color: '#000', fontWeight: 700, marginBottom: 2 }}>Mon–Sat, 9am–6pm</div><div style={{ fontSize: 12, color: '#000' }}>EAT (UTC+3)</div></div>
           </div>
         </div>
       </Section>
@@ -354,8 +354,8 @@ function TabContact() {
         {sent ? (
           <div style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, padding: 28, textAlign: 'center' }}>
             <div style={{ fontSize: 36, marginBottom: 12 }}>✅</div>
-            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>Message Sent!</div>
-            <div style={{ fontSize: 13, color: '#666' }}>We'll get back to you within a few hours during business hours.</div>
+            <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 6 }}>Message Sent!</div>
+            <div style={{ fontSize: 14, color: '#666' }}>We'll get back to you within a few hours during business hours.</div>
           </div>
         ) : (
           <div>
@@ -367,7 +367,7 @@ function TabContact() {
             <input style={inp} placeholder="Order issue, sizing question…" value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} />
             <label style={lbl}>Message *</label>
             <textarea style={{ ...inp, minHeight: 120, resize: 'vertical', marginBottom: 18 }} placeholder="How can we help?" value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} />
-            <button onClick={() => { if (form.name && form.email && form.message) setSent(true); }} style={{ background: '#000', color: '#fff', border: 'none', borderRadius: 6, padding: '13px 28px', fontFamily: "'DM Sans',sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', cursor: 'pointer' }}>Send Message</button>
+            <button onClick={() => { if (form.name && form.email && form.message) setSent(true); }} style={{ background: '#000', color: '#fff', border: 'none', borderRadius: 6, padding: '13px 28px', fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', cursor: 'pointer' }}>Send Message</button>
           </div>
         )}
       </Section>
@@ -389,8 +389,8 @@ function TabDelivery() {
     <>
       <Section title="Delivery Zones & Estimates">
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead><tr style={{ background: '#000' }}>{['Zone','Estimated Time','Cost'].map(h => <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: '#fff', fontWeight: 700, fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase' }}>{h}</th>)}</tr></thead>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+            <thead><tr style={{ background: '#000' }}>{['Zone','Estimated Time','Cost'].map(h => <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: '#fff', fontWeight: 700, fontSize: 12, letterSpacing: '1.5px', textTransform: 'uppercase' }}>{h}</th>)}</tr></thead>
             <tbody>{ZONES.map((row, i) => <tr key={row.zone} style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.12)' }}><td style={{ padding: '12px 16px', fontWeight: 700, color: '#000' }}>{row.zone}</td><td style={{ padding: '12px 16px', color: '#000' }}>{row.time}</td><td style={{ padding: '12px 16px', color: '#000', fontWeight: 700 }}>{row.cost}</td></tr>)}</tbody>
           </table>
         </div>
@@ -419,12 +419,12 @@ function TabReturns() {
       <Section title="What Can Be Returned">
         <div className="ab-two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           <div style={{ background: 'transparent', padding: '16px 0' }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#16a34a', textTransform: 'uppercase', marginBottom: 12 }}>✓ Eligible</div>
-            {ELIGIBLE.map(item => <div key={item} style={{ fontSize: 13, color: '#16a34a', marginBottom: 8, display: 'flex', gap: 8 }}><span style={{ color: '#16a34a', flexShrink: 0 }}>✓</span>{item}</div>)}
+            <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '1.5px', color: '#16a34a', textTransform: 'uppercase', marginBottom: 12 }}>✓ Eligible</div>
+            {ELIGIBLE.map(item => <div key={item} style={{ fontSize: 14, color: '#16a34a', marginBottom: 8, display: 'flex', gap: 8 }}><span style={{ color: '#16a34a', flexShrink: 0 }}>✓</span>{item}</div>)}
           </div>
           <div style={{ background: 'transparent', padding: '16px 0' }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#dc2626', textTransform: 'uppercase', marginBottom: 12 }}>✗ Not Eligible</div>
-            {NOT_ELIGIBLE.map(item => <div key={item} style={{ fontSize: 13, color: '#dc2626', marginBottom: 8, display: 'flex', gap: 8 }}><span style={{ flexShrink: 0, color: '#dc2626' }}>✗</span>{item}</div>)}
+            <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '1.5px', color: '#dc2626', textTransform: 'uppercase', marginBottom: 12 }}>✗ Not Eligible</div>
+            {NOT_ELIGIBLE.map(item => <div key={item} style={{ fontSize: 14, color: '#dc2626', marginBottom: 8, display: 'flex', gap: 8 }}><span style={{ flexShrink: 0, color: '#dc2626' }}>✗</span>{item}</div>)}
           </div>
         </div>
       </Section>
@@ -436,8 +436,8 @@ function TabReturns() {
           { step: '04', title: 'Refund/Exchange',  desc: 'Approved refunds are processed within 3–5 business days to M-Pesa or original payment method.' },
         ].map(s => (
           <div key={s.step} style={{ display: 'flex', gap: 16, marginBottom: 18, alignItems: 'flex-start' }}>
-            <div style={{ minWidth: 40, height: 40, borderRadius: 8, background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
-            <div><div style={{ fontWeight: 700, fontSize: 14, color: '#000', marginBottom: 3 }}>{s.title}</div><div style={{ fontSize: 13, color: '#000', lineHeight: 1.6 }}>{s.desc}</div></div>
+            <div style={{ minWidth: 40, height: 40, borderRadius: 8, background: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{s.step}</div>
+            <div><div style={{ fontWeight: 700, fontSize: 16, color: '#000', marginBottom: 3 }}>{s.title}</div><div style={{ fontSize: 14, color: '#000', lineHeight: 1.6 }}>{s.desc}</div></div>
           </div>
         ))}
       </Section>
@@ -496,7 +496,7 @@ function TabOrders() {
           {STEPS.map(step => (
             <div key={step.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 24, position: 'relative' }}>
               <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#fff', border: '2px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative', zIndex: 1 }}><img src={step.icon} alt="" style={{ width: 20, height: 20, objectFit: 'contain' }} /></div>
-              <div style={{ paddingTop: 6 }}><div style={{ fontWeight: 700, fontSize: 14, color: '#000', marginBottom: 3 }}>{step.label}</div><div style={{ fontSize: 13, color: '#000', lineHeight: 1.6 }}>{step.desc}</div></div>
+              <div style={{ paddingTop: 6 }}><div style={{ fontWeight: 700, fontSize: 16, color: '#000', marginBottom: 3 }}>{step.label}</div><div style={{ fontSize: 14, color: '#000', lineHeight: 1.6 }}>{step.desc}</div></div>
             </div>
           ))}
         </div>
@@ -555,10 +555,10 @@ function TabCookies() {
         {COOKIE_TYPES.map(ct => (
           <div key={ct.name} style={{ background: 'transparent', padding: '12px 0', marginBottom: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <span style={{ fontWeight: 800, fontSize: 14, color: '#000' }}>{ct.name}</span>
-              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '2px 8px', borderRadius: 10, background: ct.required ? '#000' : 'rgba(0,0,0,0.08)', color: ct.required ? '#fff' : '#000' }}>{ct.required ? 'Required' : 'Optional'}</span>
+              <span style={{ fontWeight: 800, fontSize: 16, color: '#000' }}>{ct.name}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '2px 8px', borderRadius: 10, background: ct.required ? '#000' : 'rgba(0,0,0,0.08)', color: ct.required ? '#fff' : '#000' }}>{ct.required ? 'Required' : 'Optional'}</span>
             </div>
-            <div style={{ fontSize: 13, color: '#000', lineHeight: 1.65 }}>{ct.desc}</div>
+            <div style={{ fontSize: 14, color: '#000', lineHeight: 1.65 }}>{ct.desc}</div>
           </div>
         ))}
       </Section>
@@ -624,12 +624,13 @@ export default function About() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0 }
-        .ab-tab-group-label { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(0,0,0,0.35); padding: 0 4px 6px; }
-        .ab-tab-btn { background: none; border: none; cursor: pointer; font-family: 'DM Sans',sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.5px; color: #888; padding: 8px 14px; border-radius: 6px; transition: all 0.15s; white-space: nowrap; }
+        .ab-tab-group-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(0,0,0,0.35); padding: 0 4px 6px; }
+        .ab-tab-btn { background: none; border: none; cursor: pointer; font-family: 'DM Sans',sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.5px; color: #888; padding: 8px 14px; border-radius: 6px; transition: all 0.15s; white-space: nowrap; }
         .ab-tab-btn:hover { color: #111; background: rgba(0,0,0,0.04); }
         .ab-tab-btn.active { color: #111; background: #fff; font-weight: 700; box-shadow: 0 1px 4px rgba(0,0,0,0.10); }
         .ab-content { opacity: 0; transform: translateY(8px); transition: opacity 0.2s ease, transform 0.2s ease; }
         .ab-content.visible { opacity: 1; transform: translateY(0); }
+        .ab-content b, .ab-content strong { font-weight: 700; }
         @media (max-width: 700px) {
           .ab-sidebar { display: none !important; }
           .ab-mobile-tabs { display: flex !important; }
@@ -646,9 +647,9 @@ export default function About() {
 
       {/* ── Hero header ── */}
       <div style={{ background: '#fff', borderBottom: '1px solid rgba(0,0,0,0.08)', padding: 'calc(112px + clamp(8px,3vw,40px)) clamp(20px,6%,80px) clamp(24px,4vw,48px)' }}>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: '#C8A951', marginBottom: 10 }}>{meta.badge}</div>
-        <h1 style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 800, fontSize: 'clamp(28px,5vw,52px)', color: '#0A0A0A', lineHeight: 1.1, marginBottom: 12 }}>{meta.title}</h1>
-        <p style={{ fontSize: 'clamp(13px,1.4vw,15px)', color: '#777', lineHeight: 1.75, maxWidth: 560 }}>{meta.subtitle}</p>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: '#C8A951', marginBottom: 10 }}>{meta.badge}</div>
+        <h1 style={{ fontFamily: "'DM Sans',sans-serif", fontWeight: 800, fontSize: 'clamp(24px,4.5vw,48px)', color: '#0A0A0A', lineHeight: 1.1, marginBottom: 12 }}>{meta.title}</h1>
+        <p style={{ fontSize: 'clamp(14px,1.4vw,16px)', color: '#777', lineHeight: 1.75, maxWidth: 560 }}>{meta.subtitle}</p>
       </div>
 
       {/* ── Mobile horizontal tabs ── */}

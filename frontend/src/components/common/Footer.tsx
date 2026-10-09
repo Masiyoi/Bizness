@@ -286,7 +286,7 @@ export default function Footer() {
           </p>
 
           <p className="ft-tagline">
-            Do It For The Experience
+            Make your move.We bring the access
             <img src="/diamond.png" alt="" className="ft-tagline-icon" />
           </p>
 
