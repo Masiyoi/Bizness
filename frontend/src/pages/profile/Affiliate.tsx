@@ -155,7 +155,7 @@ export default function Affiliate() {
         boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
       }}>
         <strong>Payouts</strong> are processed instantly via M-Pesa once your pending balance reaches KSh 500. Questions about your earnings? Reach us at{' '}
-        <a href="mailto:lukuprime254@gmail.com" style={{ color: '#B8860B', fontWeight: 700, textDecoration: 'none' }}>lukuprime254@gmail.com</a>
+        <a href="mailto:plugwalkstudios@gmail.com" style={{ color: '#B8860B', fontWeight: 700, textDecoration: 'none' }}>plugwalkstudios@gmail.com</a>
         {' '}or via call{' '}
         <a href="tel:0723831949" style={{ color: '#B8860B', fontWeight: 700, textDecoration: 'none' }}>0723831949</a>.
       </div>
