@@ -572,6 +572,16 @@ function VariantStockBadge({ variant, hasVariants, selectionComplete, productSto
 // ── Product Carousel Section ──────────────────────────────────────────────────
 function ProductCarouselSection({ title, products, currentId }: { title: string; products: Product[]; currentId: number }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [perPage, setPerPage] = useState<number>(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches ? 2 : 3
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const onChange = () => setPerPage(mq.matches ? 2 : 3);
+    onChange();
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
   const navigate  = useNavigate();
   const [cartIds, setCartIds]         = useState<number[]>([]);
   const [wishlistIds, setWishlistIds] = useState<number[]>([]);
@@ -616,8 +626,8 @@ function ProductCarouselSection({ title, products, currentId }: { title: string;
 
   // Group products into chunks of 3 so each scroll-snap "page" shows 3 cards
   const chunks: Product[][] = [];
-  for (let i = 0; i < products.length; i += 3) {
-    chunks.push(products.slice(i, i + 3));
+  for (let i = 0; i < products.length; i += perPage) {
+    chunks.push(products.slice(i, i + perPage));
   }
 
   return (
@@ -661,7 +671,7 @@ function ProductCarouselSection({ title, products, currentId }: { title: string;
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  flex: '0 0 calc((100% - 32px) / 3)',
+                  flex: `0 0 calc((100% - ${(perPage - 1) * 16}px) / ${perPage})`,
                   cursor: 'pointer',
                   position: 'relative',
                 }}
