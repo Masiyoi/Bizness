@@ -14,6 +14,8 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   return output;
 }
 
+const OPT_OUT_KEY = 'push_opt_out';
+const ASKED_KEY   = 'push_asked_at';
 export function isPushSupported(): boolean {
   return (
     typeof window !== 'undefined' &&
@@ -50,6 +52,7 @@ export async function enablePushNotifications(): Promise<boolean> {
 
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') return false;
+  try { localStorage.removeItem(OPT_OUT_KEY); } catch { /* ignore */ }
 
   try {
     const registration = await getRegistration();
@@ -74,6 +77,7 @@ export async function enablePushNotifications(): Promise<boolean> {
 
 /** Call from the "Disable notifications" toggle. */
 export async function disablePushNotifications(): Promise<void> {
+  try { localStorage.setItem(OPT_OUT_KEY, '1'); } catch { /* ignore */ }
   if (!isPushSupported()) return;
 
   try {
@@ -92,6 +96,35 @@ export async function disablePushNotifications(): Promise<void> {
   }
 }
 
+/**
+ * Default-on behaviour for customers. Call after login; returns a cleanup fn.
+ * - opted out on this device -> does nothing
+ * - permission already granted -> (re)subscribes and saves silently
+ * - permission not yet asked  -> asks on the first tap (iOS needs a gesture), at most once a week
+ * - permission blocked        -> does nothing
+ */
+export function autoEnablePush(): () => void {
+  const noop = () => {};
+  if (!isPushSupported() || !VAPID_PUBLIC_KEY) return noop;
+  try {
+    if (localStorage.getItem(OPT_OUT_KEY) === '1') return noop;
+    if (Notification.permission === 'denied') return noop;
+    if (Notification.permission === 'granted') {
+      void enablePushNotifications();
+      return noop;
+    }
+    const askedAt = Number(localStorage.getItem(ASKED_KEY) || 0);
+    if (Date.now() - askedAt < 7 * 24 * 60 * 60 * 1000) return noop;
+    const onTap = () => {
+      localStorage.setItem(ASKED_KEY, String(Date.now()));
+      void enablePushNotifications();
+    };
+    window.addEventListener('click', onTap, { once: true });
+    return () => window.removeEventListener('click', onTap);
+  } catch {
+    return noop;
+  }
+}
 /** Use for the toggle's initial position. */
 export async function isPushEnabled(): Promise<boolean> {
   if (!isPushSupported() || Notification.permission !== 'granted') return false;

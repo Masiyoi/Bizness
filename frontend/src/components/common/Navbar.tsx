@@ -6,7 +6,7 @@ import { getInitials, readUser } from '../../constants/theme';
 import type { User } from '../../constants/theme';
 import { performLogout } from '../../pages/profile/ProfileLayout';
 import Gallery from './Gallery';
-import { enablePushNotifications, disablePushNotifications, isPushEnabled } from '../../utils/push';
+import { enablePushNotifications, disablePushNotifications, isPushEnabled, autoEnablePush } from '../../utils/push';
 interface CategoryNode { id: string; name: string; slug: string; sort_order?: number; }
 interface CategoryTree {
   men:   { footwear: CategoryNode[]; clothing: CategoryNode[] };
@@ -74,6 +74,10 @@ export default function Navbar({
   useEffect(() => {
     if (user?.role !== 'admin') return;
     isPushEnabled().then(setPushOn).catch(() => {});
+  }, [user?.id]);
+  useEffect(() => {
+    if (!user || user.role === 'admin') return;
+    return autoEnablePush();
   }, [user?.id]);
   const togglePush = async () => {
     if (pushBusy) return;
