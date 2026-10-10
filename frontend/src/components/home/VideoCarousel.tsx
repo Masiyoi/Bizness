@@ -19,7 +19,7 @@ export const VIDEO_TILES: VideoTile[] = [
   {
     id: 1,
     src: 'https://res.cloudinary.com/dfiy43f01/video/upload/v1789767247/newdrop_vcgd2d.mp4',
-    poster: '/images/street-style-01-poster.jpg',
+    poster: 'https://res.cloudinary.com/dfiy43f01/video/upload/so_0,w_1200,q_auto/v1789767247/newdrop_vcgd2d.jpg',
     badge: 'New Drop',
     headline: 'Shop Latest Apparel & Footwear',
     sub: 'Fresh fits and new kicks just landed. Browse the latest apparel and footwear releases online now, with fast dispatch and easy returns',
@@ -31,7 +31,7 @@ export const VIDEO_TILES: VideoTile[] = [
   {
     id: 2,
     src: 'https://res.cloudinary.com/dfiy43f01/video/upload/v1776253181/vid2_upoe8o.mp4',
-    poster: '/images/street-style-02-poster.jpg',
+    poster: 'https://res.cloudinary.com/dfiy43f01/video/upload/so_0,w_1200,q_auto/v1776253181/vid2_upoe8o.jpg',
     badge: "HeadGear Studio",
     headline: 'Crown your look',
     sub: 'Shop our various headgear products.Browse premium snap backs, bucket hats, dad caps , warm beanies and more.Fast shipping and the perfect fit guaranteed.',
