@@ -33,7 +33,81 @@ const RESET_TOKEN_EXPIRY_MINUTES = 30
 // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const generateToken = (userId, role) =>
   jwt.sign({ id: userId, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+const escapeHtml = (s) => String(s ?? '')
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+// Shared transactional-email layout (table-based + inline styles so it renders
+// in Gmail/Outlook/Apple Mail). `paragraphs` and `note` are trusted HTML we
+// write ourselves; anything user-supplied goes through escapeHtml.
+const renderEmail = ({ preheader, eyebrow, heading, name, paragraphs, buttonLabel, buttonUrl, note }) => {
+  const base = process.env.CLIENT_URL || 'https://plugwalk.co';
+  const font = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+  const first = escapeHtml(String(name || '').trim().split(/\s+/)[0] || 'there');
+  const body = paragraphs.map((p) =>
+    `<p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#222222;">${p}</p>`).join('');
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light only">
+<title>${escapeHtml(heading)}</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f4;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${escapeHtml(preheader)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f4f4;">
+<tr><td align="center" style="padding:32px 16px;">
+  <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;background:#ffffff;border:1px solid #e5e5e5;">
+    <tr><td align="center" style="background:#000000;padding:28px 24px;">
+      <img src="${base}/plugwalk.jpg" width="48" height="48" alt="" style="display:block;border-radius:50%;margin:0 auto 12px;">
+      <div style="font-family:${font};font-size:14px;font-weight:600;letter-spacing:6px;color:#ffffff;text-transform:uppercase;">Plug Walk</div>
+    </td></tr>
+    <tr><td style="padding:40px 40px 8px;font-family:${font};">
+      <div style="font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#888888;margin-bottom:10px;">${escapeHtml(eyebrow)}</div>
+      <h1 style="margin:0 0 22px;font-size:26px;line-height:1.25;font-weight:700;color:#000000;">${escapeHtml(heading)}</h1>
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.7;color:#222222;">Hi ${first},</p>
+      ${body}
+    </td></tr>
+    <tr><td align="center" style="padding:14px 40px 8px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+        <td align="center" bgcolor="#000000" style="background:#000000;">
+          <a href="${buttonUrl}" style="display:inline-block;padding:16px 40px;font-family:${font};font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#ffffff;text-decoration:none;">${escapeHtml(buttonLabel)} &rarr;</a>
+        </td>
+      </tr></table>
+    </td></tr>
+    <tr><td style="padding:22px 40px 36px;font-family:${font};">
+      <p style="margin:0 0 16px;font-size:13px;line-height:1.6;color:#666666;">${note}</p>
+      <p style="margin:0;font-size:12px;line-height:1.6;color:#999999;">If the button doesn't work, copy and paste this link into your browser:<br><a href="${buttonUrl}" style="color:#000000;word-break:break-all;">${buttonUrl}</a></p>
+    </td></tr>
+    <tr><td align="center" style="background:#fafafa;border-top:1px solid #eeeeee;padding:18px 24px;font-family:${font};">
+      <p style="margin:0;font-size:11px;letter-spacing:1px;color:#999999;">&copy; ${new Date().getFullYear()} Plug Walk &middot; Nairobi, Kenya</p>
+    </td></tr>
+  </table>
+</td></tr>
+</table>
+</body>
+</html>`;
+};
 const sendPasswordResetEmail = async (email, fullName, token) => {
+  const resetUrl = `${process.env.CLIENT_URL}/#/reset-password/${token}`;
+  await resend.emails.send({
+    from:    `Plug Walk Studios <${process.env.EMAIL_FROM}>`,
+    to:      email,
+    subject: 'Reset your Plug Walk Studios password',
+    html: renderEmail({
+      preheader:   `Your password reset link expires in ${RESET_TOKEN_EXPIRY_MINUTES} minutes.`,
+      eyebrow:     'Password reset',
+      heading:     'Reset your password',
+      name:        fullName,
+      paragraphs:  ['We received a request to reset the password on your Plug Walk account. Tap the button below to choose a new one.'],
+      buttonLabel: 'Reset password',
+      buttonUrl:   resetUrl,
+      note:        `This link expires in <strong>${RESET_TOKEN_EXPIRY_MINUTES} minutes</strong>. If you didn't request this, you can safely ignore this email &mdash; your password won't change unless you use the link.`,
+    }),
+    text: `Hi ${String(fullName || '').trim().split(/\s+/)[0] || 'there'},\n\nReset your Plug Walk password using this link (valid for ${RESET_TOKEN_EXPIRY_MINUTES} minutes):\n${resetUrl}\n\nIf you didn't request this, ignore this email.`,
+  });
+};
+const _oldSendPasswordResetEmail = async (email, fullName, token) => {
   const resetUrl = `${process.env.CLIENT_URL}/#/reset-password/${token}`;
   await resend.emails.send({
     from:    `Plug Walk Studios <${process.env.EMAIL_FROM}>`,
@@ -131,6 +205,25 @@ const isAccountLocked = (user) => {
 };
 // â”€â”€ Verification email â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const sendVerificationEmail = async (email, fullName, token) => {
+  const verifyUrl = `${process.env.CLIENT_URL}/#/verify-email/${token}`;
+  await resend.emails.send({
+    from:    `Plug Walk Studios <${process.env.EMAIL_FROM}>`,
+    to:      email,
+    subject: 'Verify your Plug Walk Studios account',
+    html: renderEmail({
+      preheader:   'Confirm your email to activate your Plug Walk account.',
+      eyebrow:     'Welcome',
+      heading:     'Verify your email',
+      name:        fullName,
+      paragraphs:  ['Thanks for joining Plug Walk. Confirm your email address to activate your account and start shopping.'],
+      buttonLabel: 'Verify email',
+      buttonUrl:   verifyUrl,
+      note:        `This link expires in <strong>24 hours</strong>. If you didn't create an account, you can safely ignore this email.`,
+    }),
+    text: `Hi ${String(fullName || '').trim().split(/\s+/)[0] || 'there'},\n\nVerify your Plug Walk email using this link (valid for 24 hours):\n${verifyUrl}\n\nIf you didn't sign up, ignore this email.`,
+  });
+};
+const _oldSendVerificationEmail = async (email, fullName, token) => {
   const verifyUrl = `${process.env.CLIENT_URL}/#/verify-email/${token}`;
   await resend.emails.send({
     from:    `Plug Walk Studios <${process.env.EMAIL_FROM}>`,
