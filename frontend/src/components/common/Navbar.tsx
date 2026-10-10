@@ -1,4 +1,4 @@
-﻿// src/components/common/Navbar.tsx
+// src/components/common/Navbar.tsx
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation }  from 'react-router-dom';
 import axios            from 'axios';
@@ -6,6 +6,7 @@ import { getInitials, readUser } from '../../constants/theme';
 import type { User } from '../../constants/theme';
 import { performLogout } from '../../pages/profile/ProfileLayout';
 import Gallery from './Gallery';
+import { enablePushNotifications, disablePushNotifications, isPushEnabled } from '../../utils/push';
 interface CategoryNode { id: string; name: string; slug: string; sort_order?: number; }
 interface CategoryTree {
   men:   { footwear: CategoryNode[]; clothing: CategoryNode[] };
@@ -68,6 +69,28 @@ export default function Navbar({
   const [loyaltyEligible, setLoyaltyEligible] = useState(false);
   const [loyaltyOrdersUntilNext, setLoyaltyOrdersUntilNext] = useState<number | null>(null);
   const [regularBannerIndex, setRegularBannerIndex] = useState(0);
+  const [pushOn,   setPushOn]   = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  useEffect(() => {
+    if (user?.role !== 'admin') return;
+    isPushEnabled().then(setPushOn).catch(() => {});
+  }, [user?.id]);
+  const togglePush = async () => {
+    if (pushBusy) return;
+    setPushBusy(true);
+    try {
+      if (pushOn) {
+        await disablePushNotifications();
+        setPushOn(false);
+      } else {
+        const ok = await enablePushNotifications();
+        setPushOn(ok);
+        if (!ok) alert('Could not enable notifications. Make sure notifications are allowed for this site in your browser settings.');
+      }
+    } finally {
+      setPushBusy(false);
+    }
+  };
   const langRef          = useRef<HTMLDivElement>(null);
 
   // ── Scroll detection ──────────────────────────────────────────────────────
@@ -624,6 +647,9 @@ export default function Navbar({
                     {user.role === 'admin' && (
                       <>
                         <button className="mitem" style={{ color: '#7C3AED', fontWeight: 600 }} onClick={() => go('/admin')}>Admin Dashboard</button>
+                        <button className="mitem" disabled={pushBusy} onClick={togglePush}>
+                          {pushBusy ? 'Working...' : pushOn ? 'Notifications: On (tap to turn off)' : 'Enable notifications'}
+                        </button>
                         <div style={{ margin: '6px 12px', padding: '8px 10px', borderRadius: 8, background: '#faf5ff', border: '1px solid #ede9fe' }}>
                           <span style={{ fontFamily: "'Jost', sans-serif", fontSize: 10, color: '#9333ea' }}>Browsing as admin — cart disabled</span>
                         </div>
