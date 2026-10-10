@@ -1,4 +1,4 @@
-﻿const axios = require('axios');
+const axios = require('axios');
 const db    = require('../config/db');
 const { generateOrderNumber } = require('../services/orderNumber');
 const { calculateFirstOrderDiscount, calculateOrderDiscount } = require('./discountController');
@@ -6,7 +6,7 @@ const { awardOrderPoints, getShippingOverride, markGoldDiscountCodeUsed } = requ
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
 const { decrementStockForItems } = require('../utils/stockDeduction');
 const { sendMetaEvent } = require('../services/metaCapi');
-const { sendPush } = require('../utils/webPush');
+const { sendPush, notifyAdminsOfOrder } = require('../utils/webPush');
 
 // â”€â”€ Pesapal base URLs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PESAPAL_BASE = process.env.PESAPAL_ENV === 'production'
@@ -157,6 +157,10 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
     ]
   );
   const newOrderId = orderInsertRes.rows[0]?.id;
+  notifyAdminsOfOrder(
+    { order_number: reservedOrderNumber, id: newOrderId, total: payment.amount, customer_name: shipping.firstName },
+    'confirmed'
+  ).catch(() => {});
 
   sendPush(payment.user_id, {
     type: 'order_confirmed',
@@ -451,7 +455,8 @@ exports.pesapalIPN = async (req, res) => {
           [OrderTrackingId]
         );
 
-        if (paymentRes.rows.length > 0) {
+        if (paymentRes.rows.length > 0 &&
+          !(await db.query('SELECT 1 FROM orders WHERE payment_id = $1', [paymentRes.rows[0].id])).rows.length) {
           const payment      = paymentRes.rows[0];
           const shippingMeta = payment.shipping_meta || {};
           const { shipping = {}, selectedColors = {}, selectedSizes = {} } = shippingMeta;
@@ -511,6 +516,11 @@ exports.pesapalIPN = async (req, res) => {
           );
 
           console.log(`ðŸ“‹ Cancelled-order record created for user ${payment.user_id}`);
+          notifyAdminsOfOrder(
+            { order_number: reservedOrderNumber, total: payment.amount, customer_name: shipping.firstName },
+            'failed',
+            payment_status_description
+          ).catch(() => {});
         }
       } catch (orderErr) {
         console.error('Failed to create cancelled-order record:', orderErr.message);
