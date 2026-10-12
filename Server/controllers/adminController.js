@@ -437,6 +437,13 @@ exports.updateCostPrice = async (req, res) => {
 // ── DELETE /api/admin/products/:id ───────────────────────────────────────────
 exports.deleteProduct = async (req, res) => {
   try {
+    // Keep reviews: stamp the product name on them before the FK nulls product_id
+    await db.query(
+      `UPDATE reviews
+       SET product_name = (SELECT name FROM products WHERE id = $1)
+       WHERE product_id = $1 AND product_name IS NULL`,
+      [req.params.id]
+    );
     const result = await db.query(
       'DELETE FROM products WHERE id = $1 RETURNING id',
       [req.params.id]

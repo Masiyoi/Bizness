@@ -1,4 +1,4 @@
-﻿// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 //  reviewController.js  ·  Reviews API
 //  Mount in your router:  app.use('/api/reviews', reviewRouter)
 // ─────────────────────────────────────────────────────────────
@@ -96,13 +96,13 @@ router.get('/homepage', async (req, res) => {
          r.comment,
          r.created_at,
          u.full_name,
-         p.name       AS product_name,
-         p.id         AS product_id,
+         COALESCE(p.name, r.product_name) AS product_name,
+         r.product_id AS product_id,
          p.image_url  AS image_url,
          p.category   AS category
        FROM reviews r
        JOIN users    u ON u.id = r.user_id
-       JOIN products p ON p.id = r.product_id
+       LEFT JOIN products p ON p.id = r.product_id
        WHERE r.rating >= 4
          AND r.comment IS NOT NULL
          AND LENGTH(TRIM(r.comment)) > 10
@@ -128,8 +128,8 @@ router.get('/my', auth, async (req, res) => {
          r.comment,
          r.created_at,
          r.updated_at,
-         p.id         AS product_id,
-         p.name       AS product_name,
+         r.product_id AS product_id,
+         COALESCE(p.name, r.product_name) AS product_name,
          p.image_url  AS product_image,
          p.price      AS product_price,
          p.category   AS product_category,
@@ -139,7 +139,7 @@ router.get('/my', auth, async (req, res) => {
            '[]'::jsonb
          ) AS media
        FROM reviews r
-       JOIN products p ON p.id = r.product_id
+       LEFT JOIN products p ON p.id = r.product_id
        WHERE r.user_id = $1
        ORDER BY r.updated_at DESC`,
       [req.user.id]
@@ -353,10 +353,10 @@ router.get('/admin/all', auth, async (req, res) => {
       `SELECT
          r.id, r.rating, r.comment, r.created_at,
          u.full_name, u.email,
-         p.name AS product_name, p.id AS product_id
+         COALESCE(p.name, r.product_name) AS product_name, r.product_id AS product_id
        FROM reviews r
        JOIN users    u ON u.id = r.user_id
-       JOIN products p ON p.id = r.product_id
+       LEFT JOIN products p ON p.id = r.product_id
        WHERE r.rating BETWEEN $1 AND $2
        ORDER BY r.created_at DESC
        LIMIT $3 OFFSET $4`,
