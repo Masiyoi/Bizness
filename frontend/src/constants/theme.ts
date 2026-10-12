@@ -182,8 +182,8 @@ export interface HomepageReview {
   created_at:    string;
   full_name:     string;
   product_name:  string;
-  product_image: string;
-  product_id:    number;
+  product_image: string | null;
+  product_id:    number | null;
   category?:    string;
   media?:        HomepageReviewMedia[];
   admin_reply?:  string | null;

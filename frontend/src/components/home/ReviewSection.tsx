@@ -12,8 +12,8 @@ function ReviewCard({ review, navigate }: { review: HomepageReview; navigate: (p
   const displayName = nameParts[0] + (nameParts[1] ? ` ${nameParts[1][0]}.` : '');
   return (
     <div
-      onClick={() => navigate(`/product/${review.product_id}`)}
-      className="group w-full max-w-[210px] mx-auto shrink-0 bg-white rounded-[12px] overflow-hidden border border-cream-deep cursor-pointer transition-all duration-200 hover:border-black flex flex-col relative"
+      onClick={review.product_id ? () => navigate(`/product/${review.product_id}`) : undefined}
+      className={`group w-full max-w-[210px] mx-auto shrink-0 bg-white rounded-[12px] overflow-hidden border border-cream-deep transition-all duration-200 flex flex-col relative ${review.product_id ? 'cursor-pointer hover:border-black' : ''}`}
     >
       <div className="relative w-full h-[140px] bg-[#F5F5F5] overflow-hidden">
         {review.media && review.media.length > 0 ? (
@@ -49,9 +49,11 @@ function ReviewCard({ review, navigate }: { review: HomepageReview; navigate: (p
             +{review.media.length - 1}
           </span>
         )}
-        <span className="absolute top-2.5 right-2.5 bg-white/90 backdrop-blur-sm text-[9px] font-bold text-[#0A0A0A] rounded-full px-2.5 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          View &rarr;
-        </span>
+        {review.product_id && (
+          <span className="absolute top-2.5 right-2.5 bg-white/90 backdrop-blur-sm text-[9px] font-bold text-[#0A0A0A] rounded-full px-2.5 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            View &rarr;
+          </span>
+        )}
       </div>
       <div className="flex flex-col items-center text-center gap-1 px-3 pt-2.5">
         <div className="flex gap-0.5">

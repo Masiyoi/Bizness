@@ -95,11 +95,17 @@ router.get('/homepage', async (req, res) => {
          r.rating,
          r.comment,
          r.created_at,
+         r.admin_reply,
          u.full_name,
          COALESCE(p.name, r.product_name) AS product_name,
          r.product_id AS product_id,
-         p.image_url  AS image_url,
-         p.category   AS category
+         p.image_url  AS product_image,
+         p.category   AS category,
+         COALESCE(
+           (SELECT jsonb_agg(jsonb_build_object('id', rm.id, 'url', rm.url, 'media_type', rm.media_type) ORDER BY rm.created_at)
+            FROM review_media rm WHERE rm.review_id = r.id),
+           '[]'::jsonb
+         ) AS media
        FROM reviews r
        JOIN users    u ON u.id = r.user_id
        LEFT JOIN products p ON p.id = r.product_id
