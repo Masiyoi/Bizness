@@ -433,7 +433,7 @@ exports.payHeroCallback = async (req, res) => {
       console.log(`âœ… PayHero callback processed â€” ref ${MpesaReceiptNumber} â€” KSh ${Amount}`);
     } else {
       await db.query(
-        `UPDATE payments SET status = 'failed', result_desc = $1, updated_at = NOW()
+        `UPDATE payments SET status = 'cancelled', result_desc = $1, updated_at = NOW()
          WHERE checkout_request_id = $2`,
         [ResultDesc || 'Payment failed', CheckoutRequestID]
       );

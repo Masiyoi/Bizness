@@ -34,7 +34,17 @@ const isEligibleForFirstOrderDiscount = async (userId) => {
     `SELECT 1 FROM orders WHERE user_id = $1 AND status = 'confirmed' LIMIT 1`,
     [userId]
   );
-  return result.rows.length === 0;
+  if (result.rows.length > 0) return false;
+  const pending = await db.query(
+    `SELECT 1 FROM payments
+     WHERE user_id = $1
+       AND status = 'pending'
+       AND shipping_meta->>'discount_type' = 'first_order'
+       AND created_at > NOW() - INTERVAL '10 minutes'
+     LIMIT 1`,
+    [userId]
+  );
+  return pending.rows.length === 0;
 };
 // ── Internal: compute discount for a given subtotal ───────────────────────────
 // Used by the /preview endpoint (display only) AND by paymentController
@@ -175,7 +185,7 @@ exports.getDiscountHistory = async (req, res) => {
       `SELECT order_number, created_at, discount_type, discount_amount
        FROM orders
        WHERE user_id = $1
-         AND discount_amount IS NOT NULL
+         AND status <> 'cancelled' AND discount_amount IS NOT NULL
          AND discount_amount > 0
        ORDER BY created_at DESC`,
       [userId]
@@ -208,14 +218,14 @@ exports.getAdminDiscountSummary = async (req, res) => {
       `SELECT COALESCE(SUM(discount_amount), 0) AS total_discount,
               COUNT(*) AS orders_count
        FROM orders
-       WHERE discount_amount IS NOT NULL AND discount_amount > 0 ${dateFilter}`,
+       WHERE status <> 'cancelled' AND discount_amount IS NOT NULL AND discount_amount > 0 ${dateFilter}`,
       params
     );
     const ordersRes = await db.query(
       `SELECT order_number, customer_name, customer_email, mpesa_phone,
               total, discount_type, discount_amount, created_at
        FROM orders
-       WHERE discount_amount IS NOT NULL AND discount_amount > 0 ${dateFilter}
+       WHERE status <> 'cancelled' AND discount_amount IS NOT NULL AND discount_amount > 0 ${dateFilter}
        ORDER BY created_at DESC`,
       params
     );

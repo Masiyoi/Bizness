@@ -440,7 +440,7 @@ exports.pesapalIPN = async (req, res) => {
 
     } else if (status === 'failed' || status === 'invalid') {
       await db.query(
-        `UPDATE payments SET status = 'failed', result_desc = $1, updated_at = NOW()
+        `UPDATE payments SET status = 'cancelled', result_desc = $1, updated_at = NOW()
          WHERE checkout_request_id = $2`,
         [payment_status_description, OrderTrackingId]
       );
@@ -612,11 +612,11 @@ exports.getPesapalStatus = async (req, res) => {
           }
         } else if (liveStatus === 'failed' || liveStatus === 'invalid') {
           await db.query(
-            `UPDATE payments SET status = 'failed', updated_at = NOW()
+            `UPDATE payments SET status = 'cancelled', updated_at = NOW()
              WHERE checkout_request_id = $1`,
             [orderTrackingId]
           );
-          payment.status = 'failed';
+          payment.status = 'cancelled';
         }
       } catch (liveErr) {
         console.error('Live Pesapal status check failed:', liveErr.message);

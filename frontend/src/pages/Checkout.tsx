@@ -411,7 +411,7 @@ export default function Checkout() {
           // Fire-and-forget: never let a failed/expired-session cart delete
           // affect the success screen that's already rendered.
           axios.delete('/api/cart').catch(() => {});
-        } else if (status === 'failed') {
+        } else if (status === 'failed' || status === 'cancelled') {
           clearAll(); setFailMsg(res.data.result_desc || 'Payment was not completed.'); setStep('failed');
         }
       } catch { /* keep polling */ }
@@ -492,7 +492,7 @@ export default function Checkout() {
         if (status === 'completed') {
           clearAll(); setReceipt(confirmation_code || ''); if (order_number) setOrderNumber(order_number); setStep('success');
           axios.delete('/api/cart').catch(() => {});
-        } else if (status === 'failed') {
+        } else if (status === 'failed' || status === 'cancelled') {
           clearAll(); setFailMsg(res.data.result_desc || 'Payment was not completed.'); setStep('failed');
         }
       } catch { /* keep polling */ }
@@ -576,7 +576,7 @@ export default function Checkout() {
         const { status, confirmation_code, order_number } = res.data;
         if (status === 'completed') {
           clearAll(); setReceipt(confirmation_code || ''); if (order_number) setOrderNumber(order_number); setStep('success');
-        } else if (status === 'failed') {
+        } else if (status === 'failed' || status === 'cancelled') {
           clearAll(); setFailMsg('Payment was not completed.'); setStep('failed');
         }
       } catch (err: any) {
