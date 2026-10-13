@@ -31,7 +31,7 @@ const validateGoldDiscountCode = async (userId, subtotal, code) => {
 // ── Internal: has this user ever completed (paid) an order? ──────────────────
 const isEligibleForFirstOrderDiscount = async (userId) => {
   const result = await db.query(
-    `SELECT 1 FROM orders WHERE user_id = $1 AND status = 'confirmed' LIMIT 1`,
+    `SELECT 1 FROM orders WHERE user_id = $1 AND status <> 'cancelled' LIMIT 1`,
     [userId]
   );
   if (result.rows.length > 0) return false;
@@ -67,7 +67,7 @@ const calculateFirstOrderDiscount = async (userId, subtotal) => {
 // "completed order" means the same thing everywhere in this file.
 const getConfirmedOrderCount = async (userId) => {
   const result = await db.query(
-    `SELECT COUNT(*)::int AS n FROM orders WHERE user_id = $1 AND status = 'confirmed'`,
+    `SELECT COUNT(*)::int AS n FROM orders WHERE user_id = $1 AND status <> 'cancelled'`,
     [userId]
   );
   return result.rows[0].n;
