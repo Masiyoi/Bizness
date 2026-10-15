@@ -786,7 +786,7 @@ export default function Navbar({
             Shop All
           </button>
           <div className="mitem" style={{ borderRadius: 0, padding: '11px 14px', fontWeight: 700, cursor: 'default' }}>
-            Shop
+            Find Your Style
           </div>
           <div style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', paddingBottom: 8 }}>
             <div style={{ display: 'flex', gap: 6, padding: '0 14px 10px' }}>
