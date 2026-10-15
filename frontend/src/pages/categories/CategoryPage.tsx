@@ -38,6 +38,7 @@ interface CategoryPageOverrideProps {
   badgeStyle?:     BadgeStyle;
   apiEndpoint?:    string;
   filters?:        CategoryFilter[];
+  pageSize?:       number;  // products per page (default 12, pass 0 to disable pagination)
 }
 
 // Optional per-slug overrides for the hero banner / copy / badge that your old
@@ -219,6 +220,7 @@ export default function CategoryPage({
   badgeStyle:   badgeStyleOverride,
   apiEndpoint,
   filters,
+  pageSize = 12,
 }: CategoryPageOverrideProps = {}) {
   const navigate = useNavigate();
   const { gender, department, slug } = useParams<{ gender: Gender; department: Department; slug: string }>();
@@ -233,6 +235,7 @@ export default function CategoryPage({
   const [wishlist,   setWishlist]   = useState<number[]>([]);
   const [navSpacerHeight, setNavSpacerHeight] = useState(96);
   const [activeFilter, setActiveFilter] = useState(0);
+  const [page, setPage] = useState(1);
 
   // ── Resolve display name from the same tree the navbar uses ─────
   useEffect(() => {
@@ -380,6 +383,27 @@ export default function CategoryPage({
     return 0;
   });
 
+  // ── Pagination (only active when the pageSize prop is set) ──────
+  const totalPages  = pageSize ? Math.max(1, Math.ceil(sorted.length / pageSize)) : 1;
+  const currentPage = Math.min(page, totalPages);
+  const visible     = pageSize
+    ? sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+    : sorted;
+  const pageNumbers: (number | '...')[] = (() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const out: (number | '...')[] = [1];
+    if (currentPage > 3) out.push('...');
+    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) out.push(i);
+    if (currentPage < totalPages - 2) out.push('...');
+    out.push(totalPages);
+    return out;
+  })();
+  useEffect(() => { setPage(1); }, [sortBy, activeFilter, slug, gender, department, apiEndpoint]);
+  const goToPage = (n: number) => {
+    setPage(n);
+    document.getElementById('cat-products-top')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   if (!apiEndpoint && !filters?.length && (!gender || !department || !slug)) return null;
 
   return (
@@ -467,7 +491,7 @@ export default function CategoryPage({
       )}
 
       {/* ── Toolbar ── */}
-      <div className="px-[5%] py-4 flex justify-between items-center border-b border-cream-deep">
+      <div id="cat-products-top" className="px-[5%] py-4 flex justify-between items-center border-b border-cream-deep scroll-mt-24">
         <span className="font-sans text-[12px] text-muted">
           {loading ? 'Loading...' : `${sorted.length} product${sorted.length !== 1 ? 's' : ''}`}
         </span>
@@ -518,7 +542,7 @@ export default function CategoryPage({
 
         {!loading && sorted.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-            {sorted.map(product => (
+            {visible.map(product => (
               <ProductCard
                 key={product.id}
                 product={product}
@@ -532,6 +556,45 @@ export default function CategoryPage({
           </div>
         )}
       </div>
+
+      {!!pageSize && !loading && totalPages > 1 && (
+        <div className="px-[5%] pb-14 flex flex-col items-center gap-3">
+          <div className="flex items-center justify-center gap-1 flex-wrap">
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="font-sans text-[11px] font-semibold tracking-[1.5px] uppercase px-4 h-10 border border-cream-deep bg-white text-navy hover:border-black transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              ← Prev
+            </button>
+            {pageNumbers.map((n, i) =>
+              n === '...' ? (
+                <span key={`gap${i}`} className="px-2 font-sans text-[12px] text-muted">…</span>
+              ) : (
+                <button
+                  key={n}
+                  onClick={() => goToPage(n)}
+                  className={`font-sans text-[12px] font-semibold w-10 h-10 border transition-colors ${
+                    n === currentPage
+                      ? 'bg-black text-white border-black'
+                      : 'bg-white text-navy border-cream-deep hover:border-black'
+                  }`}
+                >
+                  {n}
+                </button>
+              )
+            )}
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="font-sans text-[11px] font-semibold tracking-[1.5px] uppercase px-4 h-10 border border-cream-deep bg-white text-navy hover:border-black transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Next →
+            </button>
+          </div>
+          <p className="font-sans text-[11px] text-muted">Page {currentPage} of {totalPages}</p>
+        </div>
+      )}
 
       <Footer />
     </div>

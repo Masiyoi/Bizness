@@ -41,6 +41,7 @@ import ShopGenderPage from './pages/categories/ShopGenderPage';
 import NewArrivals    from './pages/categories/NewArrivals';
 import BestSellers    from './pages/categories/BestSellers';
 import Headgear       from './pages/categories/Headgear';
+import AllProducts from './pages/categories/AllProducts';
 
 // ── Components ─────────────────────────────────────────────────────────────────
 import FloatingCart from './components/common/FloatingCart';
@@ -215,6 +216,7 @@ export default function App() {
         <Route path="/categories/new-arrivals" element={<NewArrivals />} />
         <Route path="/categories/best-sellers" element={<BestSellers />} />
         <Route path="/categories/headgear" element={<Headgear />} />
+        <Route path="/shop-all" element={<AllProducts />} />
         {/* PW Essentials — standalone category, no gender/department */}
         <Route path="/pw-essentials" element={
           <CategoryPage

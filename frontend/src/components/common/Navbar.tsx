@@ -477,6 +477,9 @@ export default function Navbar({
                 )}
               </div>
 
+              {/* Shop All: full catalogue */}
+              <span className="nav-link" style={{ color: ink }} onClick={() => navigate('/shop-all')}>Shop All</span>
+
               {/* ── Shop — Men/Women mega-menu with Footwear/Clothing columns ── */}
               <div ref={shopMenuRef} style={{ position: 'relative' }}>
                 <span className="nav-link flex items-center gap-1" style={{ color: ink }}
@@ -779,6 +782,9 @@ export default function Navbar({
               </div>
             )}
           </div>          {/* ── Shop — Men/Women tabs with Footwear/Clothing subcategories ── */}
+          <button className="mitem" style={{ borderRadius: 0, padding: '11px 14px', fontWeight: 700 }} onClick={() => go('/shop-all')}>
+            Shop All
+          </button>
           <div className="mitem" style={{ borderRadius: 0, padding: '11px 14px', fontWeight: 700, cursor: 'default' }}>
             Shop
           </div>
