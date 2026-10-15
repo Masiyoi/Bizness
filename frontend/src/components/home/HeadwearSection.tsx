@@ -30,13 +30,15 @@ export default function HeadwearSection({
   const wrapRef = useRef<HTMLDivElement>(null);
   const pausedRef = useRef(false);
   const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const loop = headwear.length > 0 ? [...headwear, ...headwear] : [];
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [canLoop, setCanLoop] = useState(false);
+  const loop = canLoop ? [...headwear, ...headwear] : headwear;
 
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     const el = wrapRef.current;
-    if (!el || headwear.length === 0) return;
+    if (!el || headwear.length === 0 || !canLoop) return;
     let raf: number;
     const speed = 0.4; // px per frame — slides rightward
 
@@ -53,7 +55,22 @@ export default function HeadwearSection({
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [headwear.length]);
+  }, [headwear.length, canLoop]);
+
+  // Only duplicate the list for the seamless auto-scroll when a single copy is
+  // wider than the visible area; otherwise a short list shows repeats.
+  useEffect(() => {
+    const check = () => {
+      const wrap  = wrapRef.current;
+      const track = trackRef.current;
+      if (!wrap || !track) return;
+      const oneCopy = canLoop ? track.scrollWidth / 2 : track.scrollWidth;
+      setCanLoop(oneCopy > wrap.clientWidth);
+    };
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, [headwear.length, canLoop]);
 
   const pause = () => {
     pausedRef.current = true;
@@ -265,7 +282,7 @@ export default function HeadwearSection({
           onTouchEnd={() => scheduleResume()}
           onWheel={() => { pause(); scheduleResume(); }}
         >
-          <div className="hw-track">
+          <div className="hw-track" ref={trackRef}>
             {loop.map((p, i) => {
               const stock  = p.stock ?? 0;
               const inCart = cartIds.includes(p.id);
