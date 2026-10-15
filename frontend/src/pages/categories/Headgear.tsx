@@ -5,11 +5,11 @@ import CategoryPage, { type CategoryFilter } from './CategoryPage';
 // (an inline array would re-trigger the fetch effect on every render).
 const MEN = {
   url: '/api/products',
-  params: { gender: 'men', department: 'clothing', category: 'men-headgear' },
+  params: { gender: 'men', department: 'accessories', category: 'men-headgear' },
 };
 const WOMEN = {
   url: '/api/products',
-  params: { gender: 'women', department: 'clothing', category: 'women-headgear' },
+  params: { gender: 'women', department: 'accessories', category: 'women-headgear' },
 };
 
 const HEADGEAR_FILTERS: CategoryFilter[] = [

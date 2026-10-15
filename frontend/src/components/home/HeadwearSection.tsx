@@ -21,7 +21,11 @@ const COVER_IMAGE = 'https://res.cloudinary.com/dfiy43f01/image/upload/v17845379
 export default function HeadwearSection({
   products, onExplore, cartIds, wishlist, isAdmin, onCartToggle, onWishlistToggle,
 }: HeadwearSectionProps) {
-  const headwear = products.filter(p => p.category === 'Headgear');
+  const headwear = products.filter(p =>
+    p.category_slug === 'men-headgear' ||
+    p.category_slug === 'women-headgear' ||
+    p.category === 'Headgear'
+  );
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const pausedRef = useRef(false);

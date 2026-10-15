@@ -164,6 +164,40 @@ const CATEGORY_META: Record<string, { bannerUrl?: string; description?: string; 
     bannerUrl: '/women/womenaccessories.jpg',
     description: 'Add the finishing touch with chic women\u2019s accessories. Browse versatile leather crossbody bags, statement belts, jewelry, and UV sunglasses today.',
   },
+
+  // ── Accessories subcategories ─────────────────────────────────
+  'men-jewelry-watches': {
+    // TODO: add bannerUrl
+    description: 'Finish your look with statement pieces. Shop sleek watches, chains, bracelets, and rings crafted to stand out and built for everyday wear. Order today.',
+  },
+  'men-leather-goods-bags': {
+    // TODO: add bannerUrl
+    description: 'Carry it in style. Browse genuine leather wallets, belts, backpacks, and messenger bags designed for daily essentials and a sharp finish. Shop now.',
+  },
+  'men-eyewear': {
+    // TODO: add bannerUrl
+    description: 'See and be seen. Explore UV-protective sunglasses and sharp frames in classic and modern shapes made to complete any outfit. Shop now.',
+  },
+  'women-jewelry-watches': {
+    // TODO: add bannerUrl
+    description: 'Add some sparkle. Discover delicate necklaces, statement earrings, stacking rings, and elegant watches made for every occasion. Explore now.',
+  },
+  'women-handbags-belts': {
+    // TODO: add bannerUrl
+    description: 'Find your carry-all. Shop structured totes, crossbody bags, clutches, and statement belts that pull every outfit together. Order today.',
+  },
+  'women-hair-accessories': {
+    // TODO: add bannerUrl
+    description: 'Style your hair your way. Browse claw clips, satin scrunchies, headbands, and pins that add polish to every look. Shop now.',
+  },
+  'women-eyewear': {
+    // TODO: add bannerUrl
+    description: 'Shade in style. Explore oversized, cat-eye, and classic sunglasses with UV protection to match every mood and outfit. Shop now.',
+  },
+  'women-neckwear': {
+    // TODO: add bannerUrl
+    description: 'Wrap it up beautifully. Shop silky scarves, light shawls, and neck ties in colors and prints that lift any outfit. Order today.',
+  },
 };
 
 const DEFAULT_BANNER = '/banners/default.jpg';
