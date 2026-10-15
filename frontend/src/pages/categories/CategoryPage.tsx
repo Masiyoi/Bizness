@@ -12,7 +12,7 @@ import emptyIcon from '../../assets/empty.png';
 import type { Product, User } from '../../constants/theme';
 
 type Gender = 'men' | 'women';
-type Department = 'footwear' | 'clothing';
+type Department = 'footwear' | 'clothing' | 'accessories';
 type BadgeStyle = 'gold' | 'red' | 'white' | 'black';
 
 // A tab shown above the product grid. Each tab can hit one or more endpoints;
@@ -22,8 +22,8 @@ export interface CategoryFilter { label: string; requests: FilterRequest[]; }
 
 interface CategoryNode { id: string; name: string; slug: string; sort_order?: number; }
 interface CategoryTree {
-  men:   { footwear: CategoryNode[]; clothing: CategoryNode[] };
-  women: { footwear: CategoryNode[]; clothing: CategoryNode[] };
+  men:   { footwear: CategoryNode[]; clothing: CategoryNode[]; accessories: CategoryNode[] };
+  women: { footwear: CategoryNode[]; clothing: CategoryNode[]; accessories: CategoryNode[] };
 }
 
 // Optional overrides for pages outside the gender/department/slug taxonomy

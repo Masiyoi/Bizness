@@ -9,8 +9,8 @@ import Gallery from './Gallery';
 import { enablePushNotifications, disablePushNotifications, isPushEnabled, autoEnablePush } from '../../utils/push';
 interface CategoryNode { id: string; name: string; slug: string; sort_order?: number; }
 interface CategoryTree {
-  men:   { footwear: CategoryNode[]; clothing: CategoryNode[] };
-  women: { footwear: CategoryNode[]; clothing: CategoryNode[] };
+  men:   { footwear: CategoryNode[]; clothing: CategoryNode[]; accessories: CategoryNode[] };
+  women: { footwear: CategoryNode[]; clothing: CategoryNode[]; accessories: CategoryNode[] };
   essentials: CategoryNode[];
 }
 
@@ -53,6 +53,7 @@ export default function Navbar({
   });
   const [showFootwearList, setShowFootwearList] = useState(false);
   const [showClothingList, setShowClothingList] = useState(false);
+  const [showAccessoriesList, setShowAccessoriesList] = useState(false);
   const [genderFootwearPreview, setGenderFootwearPreview] = useState<any[]>([]);
 
   const [lang, setLang] = useState(() => {
@@ -319,7 +320,7 @@ export default function Navbar({
     navigate('/');
   };
 
-  const go = (path: string) => { navigate(path); setShowMenu(false); setMobileMenuOpen(false); };  const goCategory = (gender: 'men' | 'women', department: 'footwear' | 'clothing', slug: string) => {
+  const go = (path: string) => { navigate(path); setShowMenu(false); setMobileMenuOpen(false); };  const goCategory = (gender: 'men' | 'women', department: 'footwear' | 'clothing' | 'accessories', slug: string) => {
     onCategorySelect?.(slug);
     navigate(`/shop/${gender}/${department}/${slug}`);
     setShowShopMenu(false);
@@ -487,7 +488,7 @@ export default function Navbar({
                   </svg>
                 </span>
                 {showShopMenu && (
-                  <div style={{ position: 'absolute', top: 'calc(100% + 16px)', left: '50%', transform: 'translateX(-50%)', background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, padding: 16, minWidth: 420, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 200, animation: 'fadeInDown 0.15s ease' }}>
+                  <div style={{ position: 'absolute', top: 'calc(100% + 16px)', left: '50%', transform: 'translateX(-50%)', background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, padding: 16, minWidth: 620, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 200, animation: 'fadeInDown 0.15s ease' }}>
                     <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
                       {(['men', 'women'] as const).map(g => (
                         <button key={g} onClick={() => setShopGenderTab(g)} style={{ flex: 1, fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '8px 0', border: 'none', borderRadius: 8, cursor: 'pointer', background: shopGenderTab === g ? '#111' : '#f5f5f5', color: shopGenderTab === g ? '#fff' : '#666' }}>
@@ -495,7 +496,7 @@ export default function Navbar({
                         </button>
                       ))}
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>
                       <div>
                         <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.35)', marginBottom: 6, padding: '0 14px' }}>Footwear</div>
                         {(categoryTree?.[shopGenderTab]?.footwear ?? []).map(c => (
@@ -506,6 +507,12 @@ export default function Navbar({
                         <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.35)', marginBottom: 6, padding: '0 14px' }}>Clothing</div>
                         {(categoryTree?.[shopGenderTab]?.clothing ?? []).map(c => (
                           <button key={c.id} className="mitem" onClick={() => goCategory(shopGenderTab, 'clothing', c.slug)}>{c.name}</button>
+                        ))}
+                      </div>
+                      <div>
+                        <div style={{ fontFamily: "'Jost', sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(0,0,0,0.35)', marginBottom: 6, padding: '0 14px' }}>Accessories</div>
+                        {(categoryTree?.[shopGenderTab]?.accessories ?? []).map(c => (
+                          <button key={c.id} className="mitem" onClick={() => goCategory(shopGenderTab, 'accessories', c.slug)}>{c.name}</button>
                         ))}
                       </div>
                     </div>
@@ -806,6 +813,20 @@ export default function Navbar({
               </svg>
             </button>            {showClothingList && (categoryTree?.[shopGenderTab]?.clothing ?? []).map(c => (
               <button key={c.id} className="mitem" style={{ padding: '9px 14px 9px 26px' }} onClick={() => goCategory(shopGenderTab, 'clothing', c.slug)}>
+                {c.name}
+              </button>
+            ))}
+            <button
+              onClick={() => setShowAccessoriesList(s => !s)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Jost', sans-serif", fontSize: 10, fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#111', padding: '10px 26px 6px' }}
+            >
+              Accessories
+              <svg width="8" height="5" viewBox="0 0 8 5" fill="none" style={{ transition: 'transform 0.2s', transform: showAccessoriesList ? 'rotate(180deg)' : 'none' }}>
+                <path d="M1 1l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            {showAccessoriesList && (categoryTree?.[shopGenderTab]?.accessories ?? []).map(c => (
+              <button key={c.id} className="mitem" style={{ padding: '9px 14px 9px 26px' }} onClick={() => goCategory(shopGenderTab, 'accessories', c.slug)}>
                 {c.name}
               </button>
             ))}

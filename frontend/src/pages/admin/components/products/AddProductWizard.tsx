@@ -8,8 +8,8 @@ import { authH } from '../../utils';
 interface Variant { color: string; size: string; stock: number; sku: string; }
 interface CategoryNode { id: string; name: string; slug: string; sort_order?: number; }
 interface CategoryTree {
-  men:   { footwear: CategoryNode[]; clothing: CategoryNode[] };
-  women: { footwear: CategoryNode[]; clothing: CategoryNode[] };
+  men:   { footwear: CategoryNode[]; clothing: CategoryNode[]; accessories: CategoryNode[] };
+  women: { footwear: CategoryNode[]; clothing: CategoryNode[]; accessories: CategoryNode[] };
   essentials: CategoryNode[];
 }
 
@@ -255,7 +255,7 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
   const [saleEndsAt,   setSaleEndsAt]   = useState<string>((editProduct as any)?.sale_ends_at ? String((editProduct as any).sale_ends_at).slice(0,16) : '');
   const [tree,        setTree]        = useState<CategoryTree | null>(null);
   const [gender,      setGender]      = useState<'men' | 'women'>('men');
-  const [department,  setDepartment]  = useState<'footwear' | 'clothing'>('footwear');
+  const [department,  setDepartment]  = useState<'footwear' | 'clothing' | 'accessories'>('footwear');
   const [categoryId,  setCategoryId]  = useState<string>(editProduct?.category_id || '');
   const [isEssentials, setIsEssentials] = useState<boolean>(false);
   const [description, setDescription] = useState(editProduct?.description || '');
@@ -278,8 +278,8 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
       return;
     }
     (['men', 'women'] as const).forEach(g => {
-      (['footwear', 'clothing'] as const).forEach(d => {
-        if (tree[g][d].some(c => c.id === cid)) {
+      (['footwear', 'clothing', 'accessories'] as const).forEach(d => {
+        if (tree[g][d]?.some(c => c.id === cid)) {
           setGender(g);
           setDepartment(d);
           setCategoryId(cid);
@@ -692,9 +692,10 @@ export function AddProductWizard({ onClose, onSaved, editProduct }: WizardProps)
                       <option value="men">Men</option>
                       <option value="women">Women</option>
                     </select>
-                    <select value={department} onChange={e => { const d = e.target.value as 'footwear' | 'clothing'; setDepartment(d); setCategoryId(''); }} style={inp}>
+                    <select value={department} onChange={e => { const d = e.target.value as 'footwear' | 'clothing' | 'accessories'; setDepartment(d); setCategoryId(''); }} style={inp}>
                       <option value="footwear">Footwear</option>
                       <option value="clothing">Clothing</option>
+                      <option value="accessories">Accessories</option>
                     </select>
                     <select value={categoryId} onChange={e => setCategoryId(e.target.value)} style={inp}>
                       <option value="">Select subcategory</option>

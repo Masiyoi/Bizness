@@ -16,6 +16,7 @@ import FlashSaleStrip from '../components/home/FlashSaleStrip';
 import CategoryBanner   from '../components/home/CategoryBanner';
 import HeadwearSection  from '../components/home/HeadwearSection';
 import FootwearSection  from '../components/home/FootwearSection';
+import AccessoriesSection from '../components/home/AccessoriesSection';
 import StoreLocator from '../components/home/StoreLocator';
 import AppDownload from '../components/home/AppDownload';
 import ChatbotWidget from '../components/home/ChatbotWidget';
@@ -26,8 +27,8 @@ import type { Product, HomepageReview, User } from '../constants/theme';
 const PRODUCTS_PER_PAGE = 8;
 interface CategoryNode { id: string; name: string; slug: string; sort_order?: number; }
 interface CategoryTree {
-  men:   { footwear: CategoryNode[]; clothing: CategoryNode[] };
-  women: { footwear: CategoryNode[]; clothing: CategoryNode[] };
+  men:   { footwear: CategoryNode[]; clothing: CategoryNode[]; accessories: CategoryNode[] };
+  women: { footwear: CategoryNode[]; clothing: CategoryNode[]; accessories: CategoryNode[] };
 }
 
 const css = `
@@ -360,7 +361,7 @@ export default function Homepage() {
   const [products, setProducts]       = useState<Product[]>([]);
   const [loading, setLoading]         = useState(true);
   const [genderFilter, setGenderFilter] = useState<'men' | 'women'>('men');
-  const [departmentFilter, setDepartmentFilter] = useState<'all' | 'clothing' | 'footwear'>('all');
+  const [departmentFilter, setDepartmentFilter] = useState<'all' | 'clothing' | 'footwear' | 'accessories'>('all');
   const [categoryTree, setCategoryTree] = useState<CategoryTree | null>(null);
   const [activeCategory, setCategory] = useState('all');
   const [search, setSearch]           = useState(searchParams.get('search') ?? '');
@@ -408,18 +409,18 @@ export default function Homepage() {
   useEffect(() => {
     axios.get('/api/categories')
       .then(r => {
-        type CategoryRow = CategoryNode & { gender: 'men' | 'women'; department: 'footwear' | 'clothing' };
+        type CategoryRow = CategoryNode & { gender: 'men' | 'women'; department: 'footwear' | 'clothing' | 'accessories' };
         const rows: CategoryRow[] = r.data;
         const tree: CategoryTree = {
-          men:   { footwear: [], clothing: [] },
-          women: { footwear: [], clothing: [] },
+          men:   { footwear: [], clothing: [], accessories: [] },
+          women: { footwear: [], clothing: [], accessories: [] },
         };
         rows.forEach(row => {
           const bucket = tree[row.gender]?.[row.department];
           if (bucket) bucket.push({ id: row.id, name: row.name, slug: row.slug, sort_order: row.sort_order });
         });
         (Object.keys(tree) as Array<'men' | 'women'>).forEach(g => {
-          (Object.keys(tree[g]) as Array<'footwear' | 'clothing'>).forEach(d => {
+          (Object.keys(tree[g]) as Array<'footwear' | 'clothing' | 'accessories'>).forEach(d => {
             tree[g][d].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
           });
         });
@@ -505,9 +506,15 @@ export default function Homepage() {
     selectCategory('all');
   };
 
+  const shopAccessories = (gender: 'men' | 'women') => {
+    setGenderFilter(gender);
+    setDepartmentFilter('accessories');
+    selectCategory('all');
+  };
+
   const genderCategoryNodes = categoryTree
     ? (departmentFilter === 'all'
-        ? [...categoryTree[genderFilter].clothing, ...categoryTree[genderFilter].footwear]
+        ? [...categoryTree[genderFilter].clothing, ...categoryTree[genderFilter].footwear, ...categoryTree[genderFilter].accessories]
         : categoryTree[genderFilter][departmentFilter])
     : [];
 
@@ -525,8 +532,8 @@ export default function Homepage() {
   const navCategoryNames = categoryTree
     ? Array.from(new Set(
         [
-          ...categoryTree.men.clothing, ...categoryTree.men.footwear,
-          ...categoryTree.women.clothing, ...categoryTree.women.footwear,
+          ...categoryTree.men.clothing, ...categoryTree.men.footwear, ...categoryTree.men.accessories,
+          ...categoryTree.women.clothing, ...categoryTree.women.footwear, ...categoryTree.women.accessories,
         ].map(c => c.name)
       ))
     : [];
@@ -854,13 +861,13 @@ export default function Homepage() {
             ))}
           </div>
           <div className="lp-toggle-group">
-            {(['all', 'clothing', 'footwear'] as const).map(d => (
+            {(['all', 'clothing', 'footwear', 'accessories'] as const).map(d => (
               <button
                 key={d}
                 className={`lp-toggle-btn ${departmentFilter === d ? 'active' : ''}`}
                 onClick={() => setDepartmentFilter(d)}
               >
-                {d === 'all' ? 'All' : d === 'clothing' ? 'Clothing' : 'Footwear'}
+                {d === 'all' ? 'All' : d === 'clothing' ? 'Clothing' : d === 'footwear' ? 'Footwear' : 'Accessories'}
               </button>
             ))}
           </div>
@@ -952,6 +959,17 @@ export default function Homepage() {
       <div className="lp-video-wrap">
         <VideoCarousel tiles={bottomVideo} />
       </div>
+
+      <AccessoriesSection
+        products={products}
+        categoryTree={categoryTree}
+        cartIds={cartIds}
+        wishlist={wishlist}
+        isAdmin={user?.role === 'admin'}
+        onCartToggle={toggleCart}
+        onWishlistToggle={toggleWishlist}
+        onShopAll={shopAccessories}
+      />
 
       <div style={{ marginTop: 32 }}><Gallery/></div>
 

@@ -9,8 +9,8 @@ exports.getCategoryTree = async (req, res) => {
        ORDER BY gender, department, sort_order`
     );
     const tree = {
-      men:   { footwear: [], clothing: [] },
-      women: { footwear: [], clothing: [] },
+      men:   { footwear: [], clothing: [], accessories: [] },
+      women: { footwear: [], clothing: [], accessories: [] },
       essentials: [],
     };
     for (const row of result.rows) {
@@ -18,7 +18,7 @@ exports.getCategoryTree = async (req, res) => {
         tree.essentials.push(row);
         continue;
       }
-      tree[row.gender][row.department].push(row);
+      (tree[row.gender]?.[row.department] ?? []).push(row);
     }
     res.json(tree);
   } catch (err) {
