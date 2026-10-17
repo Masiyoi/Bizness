@@ -146,10 +146,10 @@ function TabAbout() {
     <>
       <Section title="Our Story">
         <Prose>
-          <p>A journey of a thousand steps starts with a single step.What began as a passion for finding the freshest drops has grown into a full platform connecting thousands of fashion-forward Kenyans with styles they love — from classic streetwear to luxury pieces, everyday fits to special occasion looks.</p>
-          <p style={{ marginTop: 14 }}>Every action has a reaction.We value our customers' trust,time,urgency and conveniency by providing premium services with fast delivery and easy returns.</p>
-          <p style={{ marginTop: 14}}>Mission yetu ni kuwa Plug the latest fashion trends and classy looks that makes you confident.</p>
-          <p style={{ marginTop: 14}}>In a culture where <b>change is the only constant</b> ,our vision is to stand as the definitive destination where street style meets flawless execution-empowering you to step out with bold confidence,own every transition and <b>truly do it for the experience</b>.</p>
+          <p>A journey of a thousand steps starts with a single step. What began as a passion for finding the freshest drops has grown into a full platform connecting thousands of fashion-forward Kenyans with styles they love — from sneakers, heels, loafers, hoodies, jeans, dresses, headwear, accessories and clothing.</p>
+          <p style={{ marginTop: 14 }}>Every action has a reaction. We value our customers' trust, time, urgency and conveniency by providing premium services with fast delivery and easy returns.</p>
+          <p style={{ marginTop: 14}}>Mission yetu ni kuwa Plug na the latest fashion trends and classy looks that makes you confident.</p>
+          <p style={{ marginTop: 14}}>In a culture where <b>change is the only constant</b> , our vision is to stand as the definitive destination where street style meets flawless execution — empowering you to step out with bold confidence, own every transition and <b>truly do it for the experience</b>.</p>
         </Prose>
       </Section>
       <Section title="What We Stand For">
