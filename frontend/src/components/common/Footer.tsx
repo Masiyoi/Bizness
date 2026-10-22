@@ -81,7 +81,7 @@ const SOCIAL_ICONS = (
     >
       <img src={tiktokIcon} alt="TikTok" style={{ width: 20, height: 20, objectFit: 'contain', display: 'block' }} />
     </a>
-    <a href="https://youtube.com/@plugwalk254?si=OA_YFWWzHM25xOxC" target="_blank" rel="noopener noreferrer"
+    <a href="https://youtube.com/@plugwalkco?si=D2ct6cKmTSVnDUBU" target="_blank" rel="noopener noreferrer"
       style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'transform 0.2s, opacity 0.2s' }}
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.opacity = '0.6'; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.opacity = '1'; }}
