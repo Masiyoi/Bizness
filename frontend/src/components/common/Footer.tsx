@@ -326,7 +326,7 @@ export default function Footer() {
                 </span>
               ))}
             </div>
-            <div className="ft-copy">© 2026 Plug Walk Studios.All rights reserved. Designed and built by The Plug Walk Team</div>
+            <div className="ft-copy">© 2026 Plug Walk Studio.All rights reserved. Designed and built by The Plug Walk Team</div>
           </div>
 
         </div>

@@ -6,17 +6,17 @@ export default function Terms() {
     <PageShell
       badge="Legal"
       title="Terms & Conditions"
-      subtitle="By using Plug Walk Studios, you agree to these terms. Please read them carefully. Last updated: January 2025."
+      subtitle="By using Plug Walk Studio, you agree to these terms. Please read them carefully. Last updated: January 2025."
     >
       <Section title="1. Acceptance of Terms">
         <Prose>
-          <p>By accessing or using the Plug Walk Studios   website and services, you agree to be bound by these Terms & Conditions. If you do not agree, please do not use our platform.</p>
+          <p>By accessing or using the Plug Walk Studio website and services, you agree to be bound by these Terms & Conditions. If you do not agree, please do not use our platform.</p>
         </Prose>
       </Section>
 
       <Section title="2. Use of the Platform">
         <Prose>
-          <p>You may use Plug Walk Studios for lawful personal shopping purposes only. You must not misuse the platform, attempt to defraud us or other users, submit false orders, or engage in any activity that disrupts our services. We reserve the right to suspend accounts that violate these rules.</p>
+          <p>You may use Plug Walk Studio for lawful personal shopping purposes only. You must not misuse the platform, attempt to defraud us or other users, submit false orders, or engage in any activity that disrupts our services. We reserve the right to suspend accounts that violate these rules.</p>
         </Prose>
       </Section>
 
@@ -47,13 +47,13 @@ export default function Terms() {
 
       <Section title="7. Intellectual Property">
         <Prose>
-          <p>All content on this platform — including images, logos, text, and design — is the property of Plug Walk Studios or our content partners. You may not reproduce, distribute, or use any content without written permission.</p>
+          <p>All content on this platform — including images, logos, text, and design — is the property of Plug Walk Studio or our content partners. You may not reproduce, distribute, or use any content without written permission.</p>
         </Prose>
       </Section>
 
       <Section title="8. Limitation of Liability">
         <Prose>
-          <p>Plug Walk Studios' liability is limited to the value of the goods purchased. We are not liable for indirect or consequential losses arising from the use of our platform or products.</p>
+          <p>Plug Walk Studio's liability is limited to the value of the goods purchased. We are not liable for indirect or consequential losses arising from the use of our platform or products.</p>
         </Prose>
       </Section>
 

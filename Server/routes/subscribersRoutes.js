@@ -24,7 +24,7 @@ router.post('/', async (req, res) => {
       [email]
     );
 
-    res.status(201).json({ msg: 'Welcome to the Plug Walk Studios exclusive club! 🎉' });
+    res.status(201).json({ msg: 'Welcome to the Plug Walk Studio exclusive club! 🎉' });
   } catch (err) {
     console.error('Subscriber error:', err);
     res.status(500).json({ msg: 'Something went wrong. Please try again.' });

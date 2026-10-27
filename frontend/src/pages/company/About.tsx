@@ -231,7 +231,7 @@ function TabCareers() {
 function TabPress() {
   return (
     <>
-      <Section title="About Plug Walk Studios">
+      <Section title="About Plug Walk Studio">
         <Prose><p>Launched in Nairobi, we've quickly become the go-to platform for fashion-forward Kenyans who demand quality, authenticity, and speed.</p></Prose>
       </Section>
       <Section title="Key Facts">
@@ -269,7 +269,7 @@ function TabStores() {
     <>
       <Section title="Our Location">
         <div style={{ background: 'transparent', padding: 0, marginBottom: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 12 }}>Plug Walk Studios — Nairobi</div>
+          <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 12 }}>Plug Walk Studio — Nairobi</div>
           <div style={{ fontSize: 14, color: '#000', lineHeight: 2 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={coverageIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <strong style={{ color: '#000' }}>Nairobi CBD, Kenya</strong></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><img src={telephoneIcon} alt="" style={{ width: 18, height: 18, objectFit: 'contain' }} /> <a href="tel:+254723831949" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 723 831 949</a></div>
@@ -315,9 +315,9 @@ function TabFAQs() {
       </Section>
       <Section title="Returns & Products">
         <FAQItem q="What is your return policy?" a="We offer 30-day returns on eligible items in original condition with tags attached." />
-        <FAQItem q="Are your products authentic?" a="Yes. Every item on Plug Walk Studios is carefully sourced and verified. We have a zero-tolerance policy for counterfeit goods." />
+        <FAQItem q="Are your products authentic?" a="Yes. Every item on Plug Walk Studio is carefully sourced and verified. We have a zero-tolerance policy for counterfeit goods." />
       </Section>
-      <AccentCard style={{ background: '#fff', color: '#000' }}>Still have a question? Reach us on WhatsApp at <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 723 831 949</a> or email <a href="mailto:plugwalkstudios@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</a>.</AccentCard>
+      <AccentCard style={{ background: '#fff', color: '#000' }}>Still have a question? Reach us on WhatsApp at <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 723 831 949</a> or email <a href="mailto:plugwalkstudio@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</a>.</AccentCard>
     </>
   );
 }
@@ -483,7 +483,7 @@ function TabOrders() {
     { icon: doubleCheckIcon,   label:'Quality Check',    desc:'Every item is inspected before dispatch.'            },
     { icon: deliveryIcon,      label:'Dispatched',       desc:'Your order is handed to our delivery partner.'       },
     { icon: deliveryTruckIcon, label:'Out for Delivery', desc:'Your rider is on the way.'                           },
-    { icon: approvedIcon,      label:'Delivered',         desc:'Enjoy your Plug Walk Studios order!'                        },
+    { icon: approvedIcon,      label:'Delivered',         desc:'Enjoy your Plug Walk Studio order!'                        },
   ];
   return (
     <>
@@ -517,22 +517,22 @@ function TabOrders() {
 function TabPrivacy() {
   return (
     <>
-      <Section title="Information We Collect"><Prose><p>When you use Plug Walk Studios, we collect information you provide directly — name, email, phone number, delivery address, and payment details. We also collect usage data such as pages visited, items viewed, and purchase history to improve your experience.</p></Prose></Section>
+      <Section title="Information We Collect"><Prose><p>When you use Plug Walk Studio, we collect information you provide directly — name, email, phone number, delivery address, and payment details. We also collect usage data such as pages visited, items viewed, and purchase history to improve your experience.</p></Prose></Section>
       <Section title="How We Use Your Information"><Prose><p>We use your data to process orders, arrange delivery, send order updates, and handle returns. With your consent, we may send you promotional emails or SMS. We never sell your personal data to third parties.</p></Prose></Section>
       <Section title="Data Sharing"><Prose><p>We share your information only with trusted partners — delivery companies, payment processors, and email/SMS services. All partners are contractually bound to protect your data.</p></Prose></Section>
-      <Section title="Your Rights"><Prose><p>You have the right to access, correct, or delete your personal data. Opt out of marketing at any time by clicking "Unsubscribe" or replying STOP to any SMS. For data requests, email <a href="mailto:plugwalkstudios@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</a>.</p></Prose></Section>
+      <Section title="Your Rights"><Prose><p>You have the right to access, correct, or delete your personal data. Opt out of marketing at any time by clicking "Unsubscribe" or replying STOP to any SMS. For data requests, email <a href="mailto:plugwalkstudio@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudio@gmail.com</a>.</p></Prose></Section>
     </>
   );
 }
 
 function TabTerms() {
   const sections = [
-    ['1. Acceptance of Terms', 'By accessing or using the Plug Walk Studios website and services, you agree to be bound by these Terms & Conditions. If you do not agree, please do not use our platform.'],
-    ['2. Use of the Platform', 'You may use Plug Walk Studios for lawful personal shopping purposes only. We reserve the right to suspend accounts that violate these rules.'],
+    ['1. Acceptance of Terms', 'By accessing or using the Plug Walk Studio website and services, you agree to be bound by these Terms & Conditions. If you do not agree, please do not use our platform.'],
+    ['2. Use of the Platform', 'You may use Plug Walk Studio for lawful personal shopping purposes only. We reserve the right to suspend accounts that violate these rules.'],
     ['3. Orders & Pricing', 'All prices are in Kenyan Shillings (KSh). We reserve the right to cancel any order in the event of pricing errors, with full refunds issued.'],
     ['4. Payments', 'Payment must be completed before dispatch. We accept M-Pesa, Visa/Mastercard, and cash on delivery (Nairobi only).'],
     ['5. Returns & Refunds', 'Returns are accepted within 2–3 days of delivery on eligible items. Refunds are processed within 3–5 business days of return approval.'],
-    ['6. Intellectual Property', 'All content on this platform is the property of Plug Walk Studios or our content partners. Do not reproduce without written permission.'],
+    ['6. Intellectual Property', 'All content on this platform is the property of Plug Walk Studio or our content partners. Do not reproduce without written permission.'],
   ];
   return (
     <>
@@ -585,8 +585,8 @@ const TAB_CONTENT: Record<string, React.ReactNode> = {
 };
 
 const TAB_META: Record<string, { badge: string; title: string; subtitle: string }> = {
-  about:      { badge: 'Company', title: 'About Plug Walk Studios',         subtitle: "Plug Walk Studios-curated Footwear and Apparel." },
-  careers:    { badge: 'Company', title: 'Careers at Plug Walk Studios',    subtitle: "Join a team that's redefining fashion in Kenya. We're growing fast and looking for passionate people." },
+  about:      { badge: 'Company', title: 'About Plug Walk Studio',         subtitle: "Plug Walk Studio-curated Footwear and Apparel." },
+  careers:    { badge: 'Company', title: 'Careers at Plug Walk Studio',    subtitle: "Join a team that's redefining fashion in Kenya. We're growing fast and looking for passionate people." },
   press:      { badge: 'Company', title: 'Press & Media',            subtitle: 'For press enquiries, brand partnerships, and media kit requests.' },
   stores:     { badge: 'Company', title: 'Store Locator',            subtitle: 'Find us in Nairobi CBD — or shop the full catalogue online from anywhere in Kenya.' },
   faqs:       { badge: 'Support', title: 'Frequently Asked Questions', subtitle: 'Everything you need to know about ordering, delivery, returns, and more.' },
@@ -596,7 +596,7 @@ const TAB_META: Record<string, { badge: string; title: string; subtitle: string 
   'size-guide':{ badge: 'Support',title: 'Size Guide',               subtitle: 'Find your perfect fit. All measurements are in centimetres unless stated.' },
   orders:     { badge: 'Support', title: 'Track My Order',           subtitle: 'Stay up-to-date on every step of your delivery journey.' },
   privacy:    { badge: 'Legal',   title: 'Privacy Policy',           subtitle: 'We respect your privacy. Last updated: January 2025.' },
-  terms:      { badge: 'Legal',   title: 'Terms & Conditions',       subtitle: 'By using Plug Walk Studios, you agree to these terms. Last updated: January 2025.' },
+  terms:      { badge: 'Legal',   title: 'Terms & Conditions',       subtitle: 'By using Plug Walk Studio, you agree to these terms. Last updated: January 2025.' },
   cookies:    { badge: 'Legal',   title: 'Cookie Policy',            subtitle: 'We use cookies to make your experience smooth and secure. Last updated: January 2025.' },
 };
 

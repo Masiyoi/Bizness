@@ -324,7 +324,7 @@ function Editorial({ onShop }: { onShop: (cat: string) => void }) {
       <div className="lp-editorial-copy">
         <p style={{ fontFamily:"var(--f-sans)", fontSize:10, fontWeight:800, letterSpacing:'3px', textTransform:'uppercase', color:'#0A0A0A', marginBottom:16 }}>Editorial</p>
         <h3>Rooted in the City,<br/>Built for<br/>the Culture</h3>
-        <p>Karibu Plug Walk Studios — your ultimate Plug for the freshest kicks and street ready drip hapa 254<img src="https://flagcdn.com/w40/ke.png" alt="Kenya" style={{ height: "0.85em", width: "auto", marginLeft: 6, verticalAlign: "-0.05em", display: "inline-block" }} />. Our customer is the real main character-everything we drop is curated with you at the center. Satisfaction yako ndio standard yetu, hakuna stories mob only genuine care na premium service. Our mission is to elevate individual style, with the vision of becoming the definitive heartbeat of kenya's urban drip culture. </p>
+        <p>Karibu Plug Walk Studio — your ultimate Plug for the freshest kicks and street ready drip hapa 254<img src="https://flagcdn.com/w40/ke.png" alt="Kenya" style={{ height: "0.85em", width: "auto", marginLeft: 6, verticalAlign: "-0.05em", display: "inline-block" }} />. Our customer is the real main character-everything we drop is curated with you at the center. Satisfaction yako ndio standard yetu, hakuna stories mob only genuine care na premium service. Our mission is to elevate individual style, with the vision of becoming the definitive heartbeat of kenya's urban drip culture. </p>
         <button className="lp-btn-primary" onClick={() => navigate('/about')}>Read About Us</button>
       </div>
     </section>
