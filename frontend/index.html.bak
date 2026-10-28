@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      // Pesapal's redirect sometimes drops the URL fragment (#/checkout)
+      // entirely when it appends its own OrderTrackingId query param,
+      // landing us on a bare "/?OrderTrackingId=xxx" with no hash -- which
+      // HashRouter can't route (it falls through to "/"). Catch that here,
+      // before the app bundle even loads, and rewrite it into the hash
+      // shape the router expects.
+      (function () {
+        var search = window.location.search;
+        if (search && !window.location.hash && /OrderTrackingId=/.test(search)) {
+          window.location.replace(window.location.pathname + '#/checkout' + search);
+        }
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- REQUIRED FOR GOOGLE OAUTH ORIGIN VERIFICATION -->
+    <meta name="referrer" content="no-referrer-when-downgrade" />
+
+    <!-- ============================================================
+         FAVICON -- all icon links point at /public/plugwalk.jpg
+    ============================================================= -->
+    <link rel="icon" type="image/jpeg" href="/plugwalk.jpg" />
+    <link rel="shortcut icon" href="/plugwalk.jpg" />
+    <link rel="apple-touch-icon" href="/plugwalk.jpg" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Theme color - matches your navy brand color -->
+    <meta name="theme-color" content="#1B2B5E" />
+    <meta name="msapplication-TileColor" content="#1B2B5E" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+
+    <!-- ============================================================
+         PRIMARY SEO
+    ============================================================= -->
+    <title>Plug Walk Studio | Kenya's premier online Footwear & Streetwear Apparel</title>
+    <meta name="description" content="Plug Walk Studio | Kenya's premier online Footwear & Streetwear Apparel" />
+    <meta name="keywords" content="online fashion Kenya, buy clothes Nairobi, sneakers Kenya, dresses Kenya, designer wear Nairobi, bags Kenya, heels Kenya, affordable fashion Kenya, Plug Walk, online shopping Kenya" />
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="Plug Walk" />
+    <link rel="canonical" href="https://plugwalk.co" />
+
+    <!-- ============================================================
+         OPEN GRAPH (Facebook, WhatsApp, LinkedIn)
+    ============================================================= -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://plugwalk.co" />
+    <meta property="og:title" content="Plug Walk | Kenya's Premier Online Fashion Store" />
+    <meta property="og:description" content="Authentic drops, fast Nairobi CBD delivery from KSh 100, and style that speaks before you do." />
+    <meta property="og:image" content="https://plugwalk.co/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Plug Walk - Shop The Finest" />
+    <meta property="og:locale" content="en_KE" />
+    <meta property="og:site_name" content="Plug Walk" />
+
+    <!-- ============================================================
+         TWITTER / X CARD
+    ============================================================= -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@lukuprime" />
+    <meta name="twitter:title" content="Plug Walk | Online Fashion Store Kenya" />
+    <meta name="twitter:description" content="Shop sneakers, dresses, bags & designer wear in Kenya. Fast Nairobi delivery from KSh 100." />
+    <meta name="twitter:image" content="https://plugwalk.co/og-image.jpg" />
+    <meta name="twitter:image:alt" content="Plug Walk - Shop The Finest" />
+
+    <!-- ============================================================
+         PERFORMANCE - DNS PREFETCH & PRECONNECT
+         Add domains your app fetches from (fonts,
+         APIs, CDNs) so the browser resolves them early.
+    ============================================================= -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://accounts.google.com" />
+
+    <!-- ============================================================
+         SCHEMA.ORG STRUCTURED DATA
+         Helps Google show rich results (ratings,
+         opening hours, location) in search.
+    ============================================================= -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ClothingStore",
+      "name": "Plug Walk",
+      "description": "Kenya's premier online Footwear & Streetwear Apparel.",
+      "url": "https://plugwalk.co",
+      "logo": "https://plugwalk.co/logo.png",
+      "image": "https://lukuprime.co.ke/og-image.jpg",
+      "telephone": "+254714022882",
+      "email": "masiyoiisaac@gmail.com",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Nairobi CBD",
+        "addressLocality": "Nairobi",
+        "addressRegion": "Nairobi County",
+        "addressCountry": "KE"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": -1.2864,
+        "longitude": 36.8172
+      },
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+        "opens": "09:00",
+        "closes": "18:00"
+      },
+      "priceRange": "KSh 100 - KSh 10,000",
+      "currenciesAccepted": "KES",
+      "paymentAccepted": "M-Pesa, Cash",
+      "areaServed": {
+        "@type": "City",
+        "name": "Nairobi"
+      },
+      "sameAs": [
+        "https://www.instagram.com/lukuprime",
+        "https://www.tiktok.com/@lukuprime"
+      ]
+    }
+    </script>
+
+    <!-- ============================================================
+         GOOGLE SIGN-IN (deferred - non-blocking)
+    ============================================================= -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+      <!-- ============================================================
+         META PIXEL
+    ============================================================= -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '2373776686725041');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=2373776686725041&ev=PageView&noscript=1"
+    /></noscript>
+
+    <style id="initial-loader-style">
+      #initial-loader {
+        position: fixed;
+        inset: 0;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.3s ease;
+      }
+      #initial-loader .spinner-ring {
+        position: relative;
+        width: 170px;
+        height: 170px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #initial-loader .spinner-ring::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 4px solid #e5e5e5;
+        border-top-color: #4FC3F7;
+        animation: initial-loader-spin 1s linear infinite;
+      }
+      #initial-loader .spinner-ring img {
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        object-fit: contain;
+        background: #ffffff;
+      }
+      @keyframes initial-loader-spin {
+        to { transform: rotate(360deg); }
+      }
+      #initial-loader.fade-out {
+        opacity: 0;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="initial-loader">
+      <div class="spinner-ring">
+        <img src="/plugwalk.jpg" alt="Loading" />
+      </div>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      (function () {
+        var MIN_DISPLAY_MS = 2000;
+        var startTime = Date.now();
+        var removed = false;
+        function hideLoader() {
+          if (removed) return;
+          var loader = document.getElementById('initial-loader');
+          if (!loader) return;
+          removed = true;
+          loader.classList.add('fade-out');
+          setTimeout(function () { loader.remove(); }, 300);
+        }
+        function removeLoader() {
+          var elapsed = Date.now() - startTime;
+          var remaining = MIN_DISPLAY_MS - elapsed;
+          if (remaining > 0) {
+            setTimeout(hideLoader, remaining);
+          } else {
+            hideLoader();
+          }
+        }
+        var root = document.getElementById('root');
+        var observer = new MutationObserver(function () {
+          if (root.childNodes.length > 0) {
+            observer.disconnect();
+            removeLoader();
+          }
+        });
+        observer.observe(root, { childList: true });
+        // Fallback in case the observer never fires
+        window.addEventListener('load', function () {
+          setTimeout(removeLoader, 4000);
+        });
+      })();
+    </script>
+  </body>
+</html>
