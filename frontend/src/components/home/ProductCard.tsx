@@ -39,7 +39,7 @@ const S = {
   imgContainer: {
     position:      'relative' as const,
     width:         '100%',
-    aspectRatio:   '1',
+    aspectRatio:   '4/5',
     background:    'transparent',
     overflow:      'hidden' as const,
     display:       'flex',

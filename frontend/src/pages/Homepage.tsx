@@ -899,7 +899,7 @@ export default function Homepage() {
             <div className="lp-grid">
               {[...Array(8)].map((_, i) => (
                 <div key={i}>
-                  <div className="lp-skel" style={{ width:'100%', aspectRatio:'1' }} />
+                  <div className="lp-skel" style={{ width:'100%', aspectRatio:'4/5' }} />
                   <div style={{ padding:'16px 14px' }}>
                     <div className="lp-skel" style={{ height:12, width:'65%', marginBottom:8 }}/>
                     <div className="lp-skel" style={{ height:10, width:'40%' }}/>

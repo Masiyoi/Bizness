@@ -294,7 +294,7 @@ function Slideshow({ media, productName, stock, jumpToIndex }: {
           onMouseUp={onMouseUpMain}
           onMouseLeave={onMouseUpMain}
           style={{
-            overflow:'hidden', background:'#f2f2f2', lineHeight:0, aspectRatio:'1/1', position:'relative',
+            overflow:'hidden', background:'#f2f2f2', lineHeight:0, aspectRatio:'4/5', position:'relative',
             cursor: (zoomLevels[active] ?? 1) > 1 ? 'grab' : 'default',
             touchAction: (zoomLevels[active] ?? 1) > 1 ? 'none' : 'pan-y',
           }}

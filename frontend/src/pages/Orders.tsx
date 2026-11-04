@@ -381,7 +381,7 @@ export default function Orders() {
               <div className="order-header" onClick={() => toggleExpand(order.id)}>  {/* uses order.id */}
                 <div className="order-tile-row">
                   <div className="tile-left-col">
-                    <div style={{ position:'relative', width:'100%', aspectRatio:'1/1', maxWidth:'clamp(96px,26vw,160px)', borderRadius:16, overflow:'hidden', background:T.creamMid, border:`1px solid ${T.creamDeep}`, flexShrink:0 }}>
+                    <div style={{ position:'relative', width:'100%', aspectRatio:'4/5', maxWidth:'clamp(96px,26vw,160px)', borderRadius:16, overflow:'hidden', background:T.creamMid, border:`1px solid ${T.creamDeep}`, flexShrink:0 }}>
                       {heroItem && (
                         <img src={heroItem.image_url} alt={heroItem.name} style={{ width:'100%', height:'100%', objectFit:'cover' }}
                           onError={e => { (e.target as HTMLImageElement).src = `https://placehold.co/160x160/F5F5F5/000000?text=LP`; }}/>

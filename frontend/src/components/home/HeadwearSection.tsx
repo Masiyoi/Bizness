@@ -184,7 +184,7 @@ export default function HeadwearSection({
         .hw-item-imgwrap {
           position: relative;
           width: 100%;
-          aspect-ratio: 1;
+          aspect-ratio: 4 / 5;
           overflow: hidden;
           background: #eee;
           display: block;
