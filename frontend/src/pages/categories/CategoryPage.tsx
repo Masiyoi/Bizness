@@ -169,34 +169,42 @@ const CATEGORY_META: Record<string, { bannerUrl?: string; description?: string; 
   // ── Accessories subcategories ─────────────────────────────────
   'men-jewelry-watches': {
     // TODO: add bannerUrl
+     bannerUrl: '/banner/menWatches.jpg',
     description: 'Finish your look with statement pieces. Shop sleek watches, chains, bracelets, and rings crafted to stand out and built for everyday wear. Order today.',
   },
   'men-leather-goods-bags': {
     // TODO: add bannerUrl
+     bannerUrl: '/banner/menBags.jpg',
     description: 'Carry it in style. Browse genuine leather wallets, belts, backpacks, and messenger bags designed for daily essentials and a sharp finish. Shop now.',
   },
   'men-eyewear': {
     // TODO: add bannerUrl
+     bannerUrl: '/banner/menEyewear.jpg',
     description: 'See and be seen. Explore UV-protective sunglasses and sharp frames in classic and modern shapes made to complete any outfit. Shop now.',
   },
   'women-jewelry-watches': {
     // TODO: add bannerUrl
+     bannerUrl: '/banner/womenWatches.jpg',
     description: 'Add some sparkle. Discover delicate necklaces, statement earrings, stacking rings, and elegant watches made for every occasion. Explore now.',
   },
   'women-handbags-belts': {
     // TODO: add bannerUrl
+     bannerUrl: '/banner/womenBags.jpg',
     description: 'Find your carry-all. Shop structured totes, crossbody bags, clutches, and statement belts that pull every outfit together. Order today.',
   },
   'women-hair-accessories': {
     // TODO: add bannerUrl
+     bannerUrl: '/banner/womenHair.jpg',
     description: 'Style your hair your way. Browse claw clips, satin scrunchies, headbands, and pins that add polish to every look. Shop now.',
   },
   'women-eyewear': {
     // TODO: add bannerUrl
+     bannerUrl: '/banner/womenEyewear.jpg',
     description: 'Shade in style. Explore oversized, cat-eye, and classic sunglasses with UV protection to match every mood and outfit. Shop now.',
   },
   'women-neckwear': {
     // TODO: add bannerUrl
+     bannerUrl: '/banner/womenNeck.jpg',
     description: 'Wrap it up beautifully. Shop silky scarves, light shawls, and neck ties in colors and prints that lift any outfit. Order today.',
   },
 };
