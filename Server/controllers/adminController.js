@@ -16,7 +16,7 @@ const uploadToCloudinary = (buffer) =>
       {
         folder: 'bizna_products',
         transformation: [
-          { width: 800, height: 1000, crop: 'pad', background: 'white', gravity: 'center' },
+          { width: 800, height: 1000, crop: 'fill', gravity: 'auto' },
           { quality: 'auto', fetch_format: 'auto' },
         ],
       },

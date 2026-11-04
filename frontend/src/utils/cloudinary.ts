@@ -20,7 +20,7 @@ export function cloudinaryTransform(url: string, transformation: string): string
 // g_auto does subject-aware cropping to THIS ratio, so as long as it
 // matches what the browser renders, object-fit: cover never has to
 // re-crop (blindly, from center) on top of it and cut anything off.
-export const CARD_IMAGE_TRANSFORM = 'c_fill,g_auto,ar_4:5,w_600,q_auto,f_auto';
+export const CARD_IMAGE_TRANSFORM = 'e_trim:10:white/c_fill,g_auto,ar_4:5,w_600,q_auto,f_auto';
 
 export function toCardImage(url: string): string {
   return cloudinaryTransform(url, CARD_IMAGE_TRANSFORM);
