@@ -5,7 +5,7 @@ interface CategoryItem {
   slug: string;
   name: string;
   gender?: 'men' | 'women';
-  department?: 'footwear' | 'clothing';
+  department?: 'footwear' | 'clothing' | 'accessories';
 }
 interface CategoryBannerProps {
   categories: CategoryItem[];
@@ -53,6 +53,15 @@ const CATEGORY_IMAGES: Record<string, string> = {
   'women-loungewear':      '/women/womenloungewear.jpg',
   'women-socks':           '/women/womensocks.jpg',
   'women-accessories':     '/women/womenaccessories.jpg',
+  // ── Accessories subcategories ─────────────────────────────────
+  'men-jewelry-watches':     '/banner/menWatches.jpg',
+  'men-leather-goods-bags':  '/banner/menBags.jpg',
+  'men-eyewear':             '/banner/menEyes.jpg',
+  'women-jewelry-watches':   '/banner/womenWatches.jpg',
+  'women-handbags-belts':    '/banner/womenBags.jpg',
+  'women-hair-accessories':  '/banner/womenHair.jpg',
+  'women-eyewear':           '/banner/womenEyewear.jpg',
+  'women-neckwear':          '/banner/womenNeck.jpg',
 };
 
 function getCategoryImage(slug: string): string {
@@ -64,12 +73,17 @@ const FOOTWEAR_SLUGS = new Set([
   'women-sneakers-athletic', 'women-boots', 'women-formal-dress',
   'women-heels', 'women-sandals-slides', 'women-flats-casuals',
 ]);
+const ACCESSORIES_SLUGS = new Set([
+  'men-jewelry-watches', 'men-leather-goods-bags', 'men-eyewear',
+  'women-jewelry-watches', 'women-handbags-belts', 'women-hair-accessories',
+  'women-eyewear', 'women-neckwear',
+]);
 function getCategoryPath(cat: CategoryItem): string | null {
   const gender =
     cat.gender ??
     (cat.slug.startsWith('women-') ? 'women' : cat.slug.startsWith('men-') ? 'men' : null);
   if (!gender) return null; // e.g. the "all" tile
-  const department = cat.department ?? (FOOTWEAR_SLUGS.has(cat.slug) ? 'footwear' : 'clothing');
+  const department = cat.department ?? (ACCESSORIES_SLUGS.has(cat.slug) ? 'accessories' : FOOTWEAR_SLUGS.has(cat.slug) ? 'footwear' : 'clothing');
   return `/shop/${gender}/${department}/${cat.slug}`;
 }
 export default function CategoryBanner({ categories, activeCategory, onSelect }: CategoryBannerProps) {

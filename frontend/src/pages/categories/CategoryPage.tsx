@@ -179,7 +179,7 @@ const CATEGORY_META: Record<string, { bannerUrl?: string; description?: string; 
   },
   'men-eyewear': {
     // TODO: add bannerUrl
-     bannerUrl: '/banner/menEyewear.jpg',
+     bannerUrl: '/banner/menEyes.jpg',
     description: 'See and be seen. Explore UV-protective sunglasses and sharp frames in classic and modern shapes made to complete any outfit. Shop now.',
   },
   'women-jewelry-watches': {
