@@ -224,7 +224,8 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
     customData: {
       currency: 'KES',
       value: Number(payment.amount),
-      content_ids: itemsArray.map(i => i.product_id),
+      content_ids: itemsArray.map(i => String(i.product_id)),
+      content_type: 'product',
     },
   }).catch(() => {});
 

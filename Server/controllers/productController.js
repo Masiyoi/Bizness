@@ -124,7 +124,7 @@ exports.getProductById = async (req, res) => {
       customData: {
         currency: 'KES',
         value: Number(product.sale_price ?? product.price),
-        content_ids: [product.id],
+        content_ids: [String(product.id)],
         content_type: 'product',
         content_name: product.name,
       },
