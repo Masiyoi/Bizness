@@ -3,7 +3,15 @@ const crypto = require('crypto');
 
 const PIXEL_ID = process.env.META_PIXEL_ID;
 const TOKEN = process.env.META_CAPI_ACCESS_TOKEN;
-const API_VERSION = 'v21.0';
+// Meta matches on digits-only, country-code-first numbers (e.g. 254712345678).
+const normalizePhone = (p) => {
+  if (!p) return undefined;
+  let d = String(p).replace(/\D/g, '');
+  if (d.startsWith('0')) d = '254' + d.slice(1);
+  else if (d.length === 9) d = '254' + d;
+  return d || undefined;
+};
+const API_VERSION = 'v26.0';
 
 const hash = (val) =>
   val ? crypto.createHash('sha256').update(String(val).trim().toLowerCase()).digest('hex') : undefined;
@@ -46,12 +54,13 @@ const sendMetaEvent = async ({ eventName, eventId, req, userData = {}, customDat
       event_time: Math.floor(Date.now() / 1000),
       event_id: eventId,
       action_source: 'website',
-      event_source_url: req?.headers?.referer || 'https://lukuprime.shop',
+      event_source_url: userData.eventSourceUrl || req?.headers?.referer || 'https://www.plugwalk.co',
       user_data: {
         em: hash(userData.email),
-        ph: hash(userData.phone),
-        client_ip_address: req?.ip,
-        client_user_agent: req?.headers?.['user-agent'],
+        ph: hash(normalizePhone(userData.phone)),
+        external_id: hash(userData.externalId),
+        client_ip_address: userData.ip || req?.ip,
+        client_user_agent: userData.userAgent || req?.headers?.['user-agent'],
         // userData.fbc/fbp win over req.cookies — needed for webhook-triggered
         // events (e.g. PayHero payment callback) that have no cookies of their
         // own but were handed fbc/fbp captured earlier client-side.

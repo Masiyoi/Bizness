@@ -525,6 +525,8 @@ export default function Checkout() {
       // plumbing at all — pass req directly to sendMetaEvent there instead.
       const res = await axios.post('/api/payments/pesapal/initiate', {
         amount:         total,
+        fbc: getCookie('_fbc'),
+        fbp: getCookie('_fbp'),
         delivery_zone:  deliveryZone,
         delivery_fee:   deliveryFee,
         shipping:       passedShipping,

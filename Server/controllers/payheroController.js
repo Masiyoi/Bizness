@@ -78,6 +78,8 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
   // cookies of its own.
   const fbc = shippingMeta.fbc || null;
   const fbp = shippingMeta.fbp || null;
+  const clientIp = shippingMeta.client_ip || null;
+  const clientUa = shippingMeta.client_ua || null;
 
   const cartRes = await db.query(
     `SELECT
@@ -213,6 +215,9 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
     userData: {
       email: shipping.email,
       phone: safeFormatPhone(shipping.phone || payment.phone),
+      ip: clientIp,
+      userAgent: clientUa,
+      externalId: payment.user_id,
       fbc,
       fbp,
     },
@@ -268,6 +273,8 @@ exports.stkPush = async (req, res) => {
     }
   }
   const userId = req.user.id;
+  const clientIp = req.ip;
+  const clientUa = req.headers['user-agent'] || null;
 
   if (!phone) {
     return res.status(400).json({ msg: 'Phone is required' });
@@ -371,6 +378,8 @@ exports.stkPush = async (req, res) => {
           reserved_order_number,
           external_reference: externalReference,
           affiliate_code: validatedAffiliateCode,
+          client_ip: clientIp,
+          client_ua: clientUa,
           fbc,
           fbp,
         }),

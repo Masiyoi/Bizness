@@ -93,6 +93,10 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
   const reservedOrderNumber = shippingMeta.reserved_order_number || await generateOrderNumber();
   const affiliateCode = shippingMeta.affiliate_code || null;
   const discountCodeId = shippingMeta.discount_code_id || null;
+  const fbc = shippingMeta.fbc || null;
+  const fbp = shippingMeta.fbp || null;
+  const clientIp = shippingMeta.client_ip || null;
+  const clientUa = shippingMeta.client_ua || null;
 
   // NOTE: mirrors the same sale-price CASE WHEN used in initiatePayment's
   // total calculation, so the snapshot stores what was actually charged
@@ -217,7 +221,15 @@ await awardOrderPoints(payment.user_id, payment.amount);
   sendMetaEvent({
     eventName: 'Purchase',
     eventId: `purchase-${reservedOrderNumber || newOrderId}`,
-    userData: { email: shipping.email, phone: shipping.phone || payment.phone },
+    userData: {
+      email: shipping.email,
+      phone: shipping.phone || payment.phone,
+      fbc,
+      fbp,
+      ip: clientIp,
+      userAgent: clientUa,
+      externalId: payment.user_id,
+    },
     customData: {
       currency: 'KES',
       value: Number(payment.amount),
@@ -245,8 +257,12 @@ exports.initiatePayment = async (req, res) => {
     reserved_order_number = null,
     affiliate_code = null,
     discount_code = null,
+    fbc = null,
+    fbp = null,
   } = req.body;
   const userId = req.user.id;
+  const clientIp = req.ip;
+  const clientUa = req.headers['user-agent'] || null;
 
   // â”€â”€ Compute the authoritative order total server-side â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Never trust a client-supplied amount â€” recompute the subtotal from the DB
@@ -379,6 +395,14 @@ exports.initiatePayment = async (req, res) => {
           discount_code_id: discountInfo.discountCodeId,
           reserved_order_number,
           affiliate_code: validatedAffiliateCode,
+          client_ip: clientIp,
+          client_ua: clientUa,
+          fbc,
+          fbp,
+          client_ip: clientIp,
+          client_ua: clientUa,
+          fbc,
+          fbp,
         }),
       ]
     );

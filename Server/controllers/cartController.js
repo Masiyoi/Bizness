@@ -56,6 +56,7 @@ exports.addToCart = async (req, res) => {
     quantity = 1,
     selected_color = null,
     selected_size = null,
+    event_id = null,
   } = req.body;
 
   if (!product_id) return res.status(400).json({ msg: 'product_id is required' });
@@ -118,7 +119,7 @@ exports.addToCart = async (req, res) => {
     // Fire-and-forget â€” never let a Meta API hiccup block or fail the cart add.
     sendMetaEvent({
       eventName: 'AddToCart',
-      eventId: `atc-${req.user.id}-${product_id}-${Date.now()}`,
+      eventId: event_id || `atc-${req.user.id}-${product_id}-${Date.now()}`,
       req,
       userData: {
         email: req.user.email,
@@ -127,7 +128,7 @@ exports.addToCart = async (req, res) => {
       customData: {
         currency: 'KES',
         value: effectivePrice * Number(quantity),
-        content_ids: [product_id],
+        content_ids: [String(product_id)],
         content_type: 'product',
         content_name: product?.name,
       },
