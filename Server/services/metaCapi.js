@@ -1,5 +1,6 @@
 const axios = require('axios');
 const crypto = require('crypto');
+const db = require('../config/db');
 
 const PIXEL_ID = process.env.META_PIXEL_ID;
 const TOKEN = process.env.META_CAPI_ACCESS_TOKEN;
@@ -48,6 +49,23 @@ const sendMetaEvent = async ({ eventName, eventId, req, userData = {}, customDat
     return;
   }
 
+  // Fill in email/phone from the users table when the caller didn't have them
+  // (req.user only holds { id, role }, and webhook events have no req at all).
+  const lookupId = userData.externalId ?? req?.user?.id;
+  if (lookupId && (!userData.email || !userData.phone)) {
+    try {
+      const u = await db.query('SELECT email, phone FROM users WHERE id = $1', [lookupId]);
+      if (u.rows[0]) {
+        userData = {
+          ...userData,
+          email: userData.email || u.rows[0].email,
+          phone: userData.phone || u.rows[0].phone,
+        };
+      }
+    } catch (e) {
+      console.error('Meta CAPI user lookup failed:', e.message);
+    }
+  }
   const payload = {
     data: [{
       event_name: eventName,
@@ -58,7 +76,7 @@ const sendMetaEvent = async ({ eventName, eventId, req, userData = {}, customDat
       user_data: {
         em: hash(userData.email),
         ph: hash(normalizePhone(userData.phone)),
-        external_id: hash(userData.externalId),
+        external_id: hash(userData.externalId ?? req?.user?.id),
         client_ip_address: userData.ip || req?.ip,
         client_user_agent: userData.userAgent || req?.headers?.['user-agent'],
         // userData.fbc/fbp win over req.cookies — needed for webhook-triggered
