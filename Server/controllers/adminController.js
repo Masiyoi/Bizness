@@ -165,13 +165,6 @@ exports.getProductById = async (req, res) => {
       product.sizes  = [...new Set(product.variants.map(v => v.size).filter(Boolean))];
     }
 
-    sendMetaEvent({
-      eventName: 'ViewContent',
-      eventId: `view-${product.id}-${Date.now()}`,
-      req,
-      customData: { content_ids: [product.id], currency: 'KES', value: product.price },
-    }).catch(() => {});
-
     res.json(product);
   } catch (err) {
     console.error('getProductById error:', err.message);

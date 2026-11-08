@@ -125,7 +125,7 @@ exports.getProductById = async (req, res) => {
         currency: 'KES',
         value: Number(product.sale_price ?? product.price),
         content_ids: [String(product.id)],
-        content_type: 'product',
+        content_type: 'product_group',
         content_name: product.name,
       },
     }).catch(() => {});

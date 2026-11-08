@@ -233,8 +233,7 @@ await awardOrderPoints(payment.user_id, payment.amount);
     customData: {
       currency: 'KES',
       value: Number(payment.amount),
-      content_ids: itemsArray.map(i => String(i.product_id)),
-      content_type: 'product',
+      variantItems: itemsArray.map(i => ({ product_id: i.product_id, color: i.selected_color, size: i.selected_size })),
     },
   }).catch(() => {}); // never let a tracking failure affect order fulfillment
 

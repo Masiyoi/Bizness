@@ -30,7 +30,7 @@ exports.reserveOrderNumber = async (req, res) => {
   // query here must never fail the order-number reservation itself.
   try {
     const cartRes = await db.query(
-      `SELECT ci.quantity, ci.product_id,
+      `SELECT ci.quantity, ci.product_id, ci.selected_color, ci.selected_size,
               CASE
                 WHEN p.sale_price IS NOT NULL
                  AND p.sale_price < p.price
@@ -60,7 +60,7 @@ exports.reserveOrderNumber = async (req, res) => {
       customData: {
         currency: 'KES',
         value,
-        content_ids: cartRes.rows.map(r => r.product_id),
+        variantItems: cartRes.rows.map(r => ({ product_id: r.product_id, color: r.selected_color, size: r.selected_size })),
         num_items: cartRes.rows.reduce((n, r) => n + r.quantity, 0),
       },
     }).catch(() => {});

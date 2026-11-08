@@ -66,6 +66,19 @@ const sendMetaEvent = async ({ eventName, eventId, req, userData = {}, customDat
       console.error('Meta CAPI user lookup failed:', e.message);
     }
   }
+  // Callers pass variantItems [{ product_id, color, size }]; map them to the feed's catalog ids.
+  if (customData.variantItems) {
+    const { variantItems, ...rest } = customData;
+    const resolved = await Promise.all(
+      variantItems.map((i) => resolveContentId(i.product_id, i.color, i.size))
+    );
+    const allExact = resolved.every((r) => r.contentType === 'product');
+    customData = {
+      ...rest,
+      content_ids: allExact ? resolved.map((r) => r.id) : variantItems.map((i) => String(i.product_id)),
+      content_type: allExact ? 'product' : 'product_group',
+    };
+  }
   const payload = {
     data: [{
       event_name: eventName,
@@ -107,4 +120,23 @@ const sendMetaEvent = async ({ eventName, eventId, req, userData = {}, customDat
   }
 };
 
-module.exports = { sendMetaEvent };
+// Resolves the catalog item id the product feed uses for a cart/order line.
+// Feed ids: "<productId>-<variantId>" for products with variants, "<productId>" otherwise.
+// Falls back to the parent id with product_group if no variant matches.
+const resolveContentId = async (productId, color, size) => {
+  const pid = String(productId);
+  try {
+    const { rows } = await db.query(
+      'SELECT id, color, size FROM product_variants WHERE product_id = $1',
+      [productId]
+    );
+    if (!rows.length) return { id: pid, contentType: 'product' };
+    const norm = (s) => String(s ?? '').trim().toLowerCase();
+    const hit = rows.find((v) => norm(v.color) === norm(color) && norm(v.size) === norm(size));
+    if (hit) return { id: pid + '-' + hit.id, contentType: 'product' };
+  } catch (e) {
+    console.error('Meta content id lookup failed:', e.message);
+  }
+  return { id: pid, contentType: 'product_group' };
+};
+module.exports = { sendMetaEvent, resolveContentId };

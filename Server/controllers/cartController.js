@@ -128,8 +128,7 @@ exports.addToCart = async (req, res) => {
       customData: {
         currency: 'KES',
         value: effectivePrice * Number(quantity),
-        content_ids: [String(product_id)],
-        content_type: 'product',
+        variantItems: [{ product_id, color: selected_color, size: selected_size }],
         content_name: product?.name,
       },
     }).catch(() => {});
