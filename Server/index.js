@@ -7,6 +7,7 @@ const cron = require('node-cron');
 
 // Routes
 const productRoutes = require('./routes/productRoutes');
+const feedRoutes = require('./routes/feedRoutes');
 const authRoutes = require('./routes/authRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
@@ -82,6 +83,7 @@ app.set('trust proxy', 1);
 
 // Public routes (no auth required)
 app.use('/api/products', productRoutes);
+app.use('/feeds', feedRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/payments', paymentRoutes);
