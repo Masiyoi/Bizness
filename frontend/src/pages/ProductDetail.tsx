@@ -596,7 +596,7 @@ function ProductCarouselSection({ title, products, currentId }: { title: string;
   const toggleCart = async (productId: number) => {
     try {
       if (cartIds.includes(productId)) {
-        await axios.delete(`/api/cart/${productId}`);
+        await axios.delete(`/api/cart/product/${productId}`);
         setCartIds(prev => prev.filter(id => id !== productId));
       } else {
         await axios.post('/api/cart', { product_id: productId, quantity: 1 });
@@ -982,7 +982,7 @@ function CompleteTheLookGrid({ ids, currentId }: { ids: number[]; currentId: num
   const toggleCart = async (productId: number) => {
     try {
       if (cartIds.includes(productId)) {
-        await axios.delete(`/api/cart/${productId}`);
+        await axios.delete(`/api/cart/product/${productId}`);
         setCartIds(prev => prev.filter(id => id !== productId));
       } else {
         await axios.post('/api/cart', { product_id: productId, quantity: 1 });

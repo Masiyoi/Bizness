@@ -95,7 +95,7 @@ const fetchCart = useCallback(async () => {
   setBusyCart(productId);
   try {
     if (cartIds.includes(productId)) {
-      await axios.delete(`/api/cart/${productId}`);
+      await axios.delete(`/api/cart/product/${productId}`);
       setCartIds(p => p.filter(id => id !== productId));
     } else {
       await axios.post('/api/cart', { product_id: productId, quantity: 1 });

@@ -470,7 +470,7 @@ export default function Homepage() {
 
     try {
       if (wasInCart) {
-        await axios.delete(`/api/cart/${productId}`);
+        await axios.delete(`/api/cart/product/${productId}`);
       } else {
         await axios.post('/api/cart', { product_id: productId, quantity: 1 });
       }
