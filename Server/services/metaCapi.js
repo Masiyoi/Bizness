@@ -134,6 +134,8 @@ const resolveContentId = async (productId, color, size) => {
     const norm = (s) => String(s ?? '').trim().toLowerCase();
     const hit = rows.find((v) => norm(v.color) === norm(color) && norm(v.size) === norm(size));
     if (hit) return { id: pid + '-' + hit.id, contentType: 'product' };
+    // Single-variant product added without a color/size: the only variant is unambiguous.
+    if (rows.length === 1 && !color && !size) return { id: pid + '-' + rows[0].id, contentType: 'product' };
   } catch (e) {
     console.error('Meta content id lookup failed:', e.message);
   }

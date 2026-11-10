@@ -51,7 +51,7 @@ exports.getCart = async (req, res) => {
 
 // POST /api/cart  â€” add item (with color + size awareness)
 exports.addToCart = async (req, res) => {
-  const {
+  let {
     product_id,
     quantity = 1,
     selected_color = null,
@@ -64,6 +64,17 @@ exports.addToCart = async (req, res) => {
   try {
     const cartId = await getOrCreateCart(req.user.id);
 
+    // Quick-add paths send no variant. If the product has exactly one variant, use it.
+    if (!selected_color && !selected_size) {
+      const vr = await db.query(
+        'SELECT color, size FROM product_variants WHERE product_id = $1 LIMIT 2',
+        [product_id]
+      );
+      if (vr.rows.length === 1) {
+        selected_color = vr.rows[0].color || null;
+        selected_size  = vr.rows[0].size  || null;
+      }
+    }
     // Check if the exact same product + color + size combo already exists
     const existing = await db.query(
       `SELECT * FROM cart_items
@@ -221,6 +232,21 @@ exports.clearCart = async (req, res) => {
     res.json({ msg: 'Cart cleared' });
   } catch (err) {
     console.error('clearCart error:', err.message);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+// DELETE /api/cart/product/:productId - remove every line of a product (card toggle buttons)
+exports.removeCartByProduct = async (req, res) => {
+  const { productId } = req.params;
+  try {
+    const cartId = await getOrCreateCart(req.user.id);
+    await db.query(
+      'DELETE FROM cart_items WHERE cart_id = $1 AND product_id = $2',
+      [cartId, productId]
+    );
+    res.json({ msg: 'Item removed' });
+  } catch (err) {
+    console.error('removeCartByProduct error:', err.message);
     res.status(500).json({ msg: 'Server error' });
   }
 };
