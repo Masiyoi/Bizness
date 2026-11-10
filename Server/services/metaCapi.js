@@ -137,6 +137,7 @@ const resolveContentId = async (productId, color, size) => {
   } catch (e) {
     console.error('Meta content id lookup failed:', e.message);
   }
+  console.warn(`Meta content id fallback: product ${pid} has variants but none match color="${color}" size="${size}" -> sending product_group`);
   return { id: pid, contentType: 'product_group' };
 };
 module.exports = { sendMetaEvent, resolveContentId };
