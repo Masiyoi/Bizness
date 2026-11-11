@@ -235,6 +235,109 @@ exports.clearCart = async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 };
+// POST /api/cart/meta-checkout - fill the logged-in user's cart from a Meta checkout URL
+// Body: { products: "172-5:2,163:1", coupon: "CODE" }
+// Catalog ids are "<productId>-<variantId>" (product has variants) or "<productId>".
+// Non-destructive and idempotent: existing lines are set to the requested quantity,
+// other lines in the cart are left alone, so opening the link twice cannot double items.
+const META_MAX_LINES = 25;
+const META_MAX_QTY   = 10;
+exports.metaCheckout = async (req, res) => {
+  const rawProducts = req.body && req.body.products;
+  const rawCoupon   = req.body && req.body.coupon;
+  const entries = (Array.isArray(rawProducts) ? rawProducts.map(String) : String(rawProducts || '').split(','))
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (entries.length === 0) return res.status(400).json({ msg: 'No products supplied' });
+  if (entries.length > META_MAX_LINES) return res.status(400).json({ msg: 'Too many items in one checkout link' });
+  const skipped = [];
+  const wanted  = new Map();
+  for (const entry of entries) {
+    const m = /^(\d+)(?:-(\d+))?:(\d+)$/.exec(entry);
+    if (!m) { skipped.push({ id: entry, reason: 'malformed' }); continue; }
+    const qty = parseInt(m[3], 10);
+    const id  = entry.split(':')[0];
+    if (qty < 1) { skipped.push({ id, reason: 'bad_quantity' }); continue; }
+    const productId = Number(m[1]);
+    const variantId = m[2] ? Number(m[2]) : null;
+    const key  = productId + '-' + (variantId === null ? '' : variantId);
+    const prev = wanted.get(key);
+    wanted.set(key, { id, productId, variantId, requested: (prev ? prev.requested : 0) + qty });
+  }
+  try {
+    const cartId = await getOrCreateCart(req.user.id);
+    const added  = [];
+    for (const w of wanted.values()) {
+      const pr = await db.query('SELECT id, stock_quantity, stock FROM products WHERE id = $1', [w.productId]);
+      if (pr.rows.length === 0) { skipped.push({ id: w.id, reason: 'unknown_product' }); continue; }
+      const vr = await db.query('SELECT id, color, size, stock FROM product_variants WHERE product_id = $1', [w.productId]);
+      let color = null;
+      let size  = null;
+      let available;
+      if (w.variantId !== null) {
+        const v = vr.rows.find((r) => Number(r.id) === w.variantId);
+        if (!v) { skipped.push({ id: w.id, reason: 'unknown_variant' }); continue; }
+        color = v.color || null;
+        size  = v.size  || null;
+        available = Number(v.stock);
+      } else if (vr.rows.length === 0) {
+        available = Number(pr.rows[0].stock_quantity ?? pr.rows[0].stock ?? 0);
+      } else if (vr.rows.length === 1) {
+        // Single-variant product sent without a variant id: unambiguous (same rule as addToCart).
+        color = vr.rows[0].color || null;
+        size  = vr.rows[0].size  || null;
+        available = Number(vr.rows[0].stock);
+      } else {
+        skipped.push({ id: w.id, reason: 'variant_required' });
+        continue;
+      }
+      if (!(available > 0)) { skipped.push({ id: w.id, reason: 'out_of_stock' }); continue; }
+      const quantity = Math.min(w.requested, available, META_MAX_QTY);
+      const existing = await db.query(
+        `SELECT id FROM cart_items
+         WHERE cart_id = $1 AND product_id = $2
+           AND COALESCE(selected_color, '') = COALESCE($3, '')
+           AND COALESCE(selected_size,  '') = COALESCE($4, '')`,
+        [cartId, w.productId, color, size]
+      );
+      if (existing.rows.length > 0) {
+        await db.query('UPDATE cart_items SET quantity = $1 WHERE id = $2', [quantity, existing.rows[0].id]);
+      } else {
+        await db.query(
+          `INSERT INTO cart_items (cart_id, product_id, quantity, selected_color, selected_size)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [cartId, w.productId, quantity, color, size]
+        );
+      }
+      added.push({
+        id: w.id, product_id: w.productId, variant_id: w.variantId,
+        color, size, quantity, requested: w.requested, adjusted: quantity < w.requested,
+      });
+    }
+    if (added.length === 0) return res.status(422).json({ msg: 'None of the items in this link are available', skipped });
+    // The same coupon value can be a salesperson (affiliate) code and/or a member discount code.
+    // Affiliate codes are validated here; the frontend checks discount codes via /api/discount/preview.
+    const coupon = String(rawCoupon || '').trim().toUpperCase().slice(0, 64) || null;
+    let affiliateCode = null;
+    if (coupon) {
+      const sp = await db.query(
+        `SELECT coupon_code FROM salespersons WHERE coupon_code = $1 AND status = 'active'`,
+        [coupon]
+      );
+      if (sp.rows.length > 0) affiliateCode = sp.rows[0].coupon_code;
+    }
+    logActivity({
+      userId: req.user.id,
+      eventType: 'meta_checkout_link',
+      metadata: { lines: added.length, skipped: skipped.length, coupon },
+      req,
+    }).catch(() => {});
+    return res.json({ added, skipped, coupon, affiliate_code: affiliateCode });
+  } catch (err) {
+    console.error('metaCheckout error:', err.message);
+    return res.status(500).json({ msg: 'Server error' });
+  }
+};
 // DELETE /api/cart/product/:productId - remove every line of a product (card toggle buttons)
 exports.removeCartByProduct = async (req, res) => {
   const { productId } = req.params;

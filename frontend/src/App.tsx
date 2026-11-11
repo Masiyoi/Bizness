@@ -46,6 +46,7 @@ import AllProducts from './pages/categories/AllProducts';
 // ── Components ─────────────────────────────────────────────────────────────────
 import FloatingCart from './components/common/FloatingCart';
 import ScrollToTop  from './components/common/ScrollToTop';
+import MetaCheckoutGate from './components/common/MetaCheckoutGate';
 
 // ── Support Pages ──────────────────────────────────────────────────────────────
 import TrackOrder from './pages/support/TrackOrder';
@@ -197,6 +198,7 @@ export default function App() {
     <Router>
       <ScrollToTop />
       <FloatingCartManager />
+      <MetaCheckoutGate />
 
       <Routes>
 
