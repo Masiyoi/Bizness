@@ -16,6 +16,11 @@ const API_VERSION = 'v26.0';
 
 const hash = (val) =>
   val ? crypto.createHash('sha256').update(String(val).trim().toLowerCase()).digest('hex') : undefined;
+// City / zip / country: lowercase and strip spaces + punctuation before hashing (Meta's normalization rule).
+const hashNorm = (val) => {
+  const n = String(val ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return n ? hash(n) : undefined;
+};
 
 /**
  * Sends a server-side event to Meta's Conversions API.
@@ -90,6 +95,11 @@ const sendMetaEvent = async ({ eventName, eventId, req, userData = {}, customDat
         em: hash(userData.email),
         ph: hash(normalizePhone(userData.phone)),
         external_id: hash(userData.externalId ?? req?.user?.id),
+        fn: hash(userData.firstName),
+        ln: hash(userData.lastName),
+        ct: hashNorm(userData.city),
+        zp: hashNorm(userData.zip),
+        country: hashNorm(userData.country || 'ke'),
         client_ip_address: userData.ip || req?.ip,
         client_user_agent: userData.userAgent || req?.headers?.['user-agent'],
         // userData.fbc/fbp win over req.cookies — needed for webhook-triggered
@@ -142,4 +152,16 @@ const resolveContentId = async (productId, color, size) => {
   console.warn(`Meta content id fallback: product ${pid} has variants but none match color="${color}" size="${size}" -> sending product_group`);
   return { id: pid, contentType: 'product_group' };
 };
-module.exports = { sendMetaEvent, resolveContentId };
+// Maps a saved shipping object to the userData fields sendMetaEvent hashes.
+// Pickup / CBD / environs orders are all in Nairobi; other-county orders use the county.
+const shippingToUserData = (shipping = {}, deliveryZone) => {
+  const parts = String(shipping.firstName || '').trim().split(/\s+/).filter(Boolean);
+  const nairobiZones = ['pickup', 'cbd', 'environs'];
+  return {
+    firstName: parts[0],
+    lastName: shipping.lastName || (parts.length > 1 ? parts.slice(1).join(' ') : undefined),
+    city: shipping.city || (nairobiZones.includes(deliveryZone) ? 'Nairobi' : shipping.county),
+    zip: shipping.postalCode || shipping.zip,
+  };
+};
+module.exports = { sendMetaEvent, resolveContentId, shippingToUserData };

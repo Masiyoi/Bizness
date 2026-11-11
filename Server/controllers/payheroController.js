@@ -5,7 +5,7 @@ const { calculateFirstOrderDiscount, calculateOrderDiscount } = require('./disco
 const { awardOrderPoints, getShippingOverride, markGoldDiscountCodeUsed } = require('./membersController');
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
 const { decrementStockForItems } = require('../utils/stockDeduction');
-const { sendMetaEvent } = require('../services/metaCapi');
+const { sendMetaEvent, shippingToUserData } = require('../services/metaCapi');
 const { sendPush, notifyAdminsOfOrder } = require('../utils/webPush');
 const { logActivity } = require('../services/activityLogger');
 
@@ -80,6 +80,7 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
   const fbp = shippingMeta.fbp || null;
   const clientIp = shippingMeta.client_ip || null;
   const clientUa = shippingMeta.client_ua || null;
+  const eventSourceUrl = shippingMeta.event_source_url || null;
 
   const cartRes = await db.query(
     `SELECT
@@ -220,6 +221,8 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
       externalId: payment.user_id,
       fbc,
       fbp,
+      eventSourceUrl,
+      ...shippingToUserData(shipping, deliveryZone),
     },
     customData: {
       currency: 'KES',
@@ -257,6 +260,7 @@ exports.stkPush = async (req, res) => {
     discount_code = null,
     fbc = null,
     fbp = null,
+    event_source_url = null,
   } = req.body;
   let validatedAffiliateCode = null;
   if (affiliate_code) {
@@ -382,6 +386,7 @@ exports.stkPush = async (req, res) => {
           client_ua: clientUa,
           fbc,
           fbp,
+          event_source_url,
         }),
       ]
     );

@@ -5,7 +5,7 @@ const { calculateFirstOrderDiscount, calculateOrderDiscount } = require('./disco
 const { awardOrderPoints, getShippingOverride, markGoldDiscountCodeUsed } = require('./membersController');
 const { computeInitialDeliveryState } = require('../utils/deliveryAutomation');
 const { decrementStockForItems } = require('../utils/stockDeduction');
-const { sendMetaEvent } = require('../services/metaCapi');
+const { sendMetaEvent, shippingToUserData } = require('../services/metaCapi');
 const { sendPush, notifyAdminsOfOrder } = require('../utils/webPush');
 
 // â”€â”€ Pesapal base URLs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -97,6 +97,7 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
   const fbp = shippingMeta.fbp || null;
   const clientIp = shippingMeta.client_ip || null;
   const clientUa = shippingMeta.client_ua || null;
+  const eventSourceUrl = shippingMeta.event_source_url || null;
 
   // NOTE: mirrors the same sale-price CASE WHEN used in initiatePayment's
   // total calculation, so the snapshot stores what was actually charged
@@ -229,6 +230,8 @@ await awardOrderPoints(payment.user_id, payment.amount);
       ip: clientIp,
       userAgent: clientUa,
       externalId: payment.user_id,
+      eventSourceUrl,
+      ...shippingToUserData(shipping, deliveryZone),
     },
     customData: {
       currency: 'KES',
@@ -259,6 +262,7 @@ exports.initiatePayment = async (req, res) => {
     discount_code = null,
     fbc = null,
     fbp = null,
+    event_source_url = null,
   } = req.body;
   const userId = req.user.id;
   const clientIp = req.ip;
@@ -399,10 +403,7 @@ exports.initiatePayment = async (req, res) => {
           client_ua: clientUa,
           fbc,
           fbp,
-          client_ip: clientIp,
-          client_ua: clientUa,
-          fbc,
-          fbp,
+          event_source_url,
         }),
       ]
     );

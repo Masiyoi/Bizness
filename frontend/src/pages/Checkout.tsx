@@ -384,6 +384,7 @@ export default function Checkout() {
         // fired from a webhook with no browser cookies of its own.
         fbc: getCookie('_fbc'),
         fbp: getCookie('_fbp'),
+        event_source_url: window.location.href,
       });
 
       setCheckoutRequestId(res.data.checkoutRequestId);
@@ -466,6 +467,7 @@ export default function Checkout() {
         // payheroController.js.
         fbc: getCookie('_fbc'),
         fbp: getCookie('_fbp'),
+        event_source_url: window.location.href,
       });
 
       setPayHeroCheckoutRequestId(res.data.checkoutRequestId);
@@ -527,6 +529,7 @@ export default function Checkout() {
         amount:         total,
         fbc: getCookie('_fbc'),
         fbp: getCookie('_fbp'),
+        event_source_url: window.location.href,
         delivery_zone:  deliveryZone,
         delivery_fee:   deliveryFee,
         shipping:       passedShipping,
