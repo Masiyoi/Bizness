@@ -19,7 +19,6 @@ import bookmarkIcon from '../assets/bookmark.png';
 import addedIcon from '../assets/added.png';
 import bookmarkedIcon from '../assets/bookmarked.png';
 import zoomInIcon from '../assets/zoom-in.png';
-import { ttViewContent } from '../utils/tiktokPixel';
 import ProductCard    from '../components/home/ProductCard';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -1439,13 +1438,6 @@ export default function ProductDetail() {
     }).catch(() => {});
   }, [id]);
 
-  const ttViewedRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (!product) return;
-    if (ttViewedRef.current === product.id) return; // fire once per product
-    ttViewedRef.current = product.id;
-    ttViewContent({ id: product.id, name: product.name, price: Number(product.price) });
-  }, [product?.id]);
   const showToast = (msg: string, icon?: string) => {
     setToast({ text: msg, icon });
     setTimeout(() => setToast(null), 2800);
