@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { isNewProduct } from '../../constants/theme';
 import type { Product } from '../../constants/theme';
+import { ttViewContent } from '../../utils/tiktokPixel';
 
 interface QuickViewModalProps {
   product: Product & { sku?: string; images?: string[] };
@@ -73,6 +74,10 @@ export default function QuickViewModal({
     if (Math.abs(delta) > 35) delta < 0 ? goTo(activeIdx + 1) : goTo(activeIdx - 1);
   };
 
+  useEffect(() => {
+    ttViewContent({ id: product.id, name: product.name, price: salePrice ?? Number(product.price) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id]);
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };

@@ -47,6 +47,7 @@ import AllProducts from './pages/categories/AllProducts';
 import FloatingCart from './components/common/FloatingCart';
 import ScrollToTop  from './components/common/ScrollToTop';
 import MetaCheckoutGate from './components/common/MetaCheckoutGate';
+import { ttPageView } from './utils/tiktokPixel';
 
 // ── Support Pages ──────────────────────────────────────────────────────────────
 import TrackOrder from './pages/support/TrackOrder';
@@ -143,6 +144,16 @@ axios.interceptors.response.use(
 );
 
 // ─── FloatingCart wrapper ──────────────────────────────────────────────────────
+function TikTokPageViews() {
+  const { pathname } = useLocation();
+  const first = useRef(true);
+  useEffect(() => {
+    // index.html already fires ttq.page() for the first load
+    if (first.current) { first.current = false; return; }
+    ttPageView();
+  }, [pathname]);
+  return null;
+}
 function FloatingCartManager() {
   const [cartCount, setCartCount] = useState(0);
   const { pathname } = useLocation();
@@ -199,6 +210,7 @@ export default function App() {
       <ScrollToTop />
       <FloatingCartManager />
       <MetaCheckoutGate />
+      <TikTokPageViews />
 
       <Routes>
 

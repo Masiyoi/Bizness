@@ -15,6 +15,7 @@ import applePayLogo from '../assets/Apple_Pay_logo.svg';
 import googlePayLogo from '../assets/Google_Pay_Logo.svg';
 import locationIcon from '../assets/location.png';
 import freeIcon from '../assets/free.png';
+import { trackTikTok } from '../utils/tiktokPixel';
 
 interface CartItem {
   id: number;
@@ -394,6 +395,18 @@ export default function Cart() {
       return;
     }
     setError('');
+    trackTikTok('InitiateCheckout', {
+      contents: items.map(i => ({
+        content_id: String(i.product_id),
+        content_type: 'product',
+        content_name: i.name,
+        quantity: i.quantity,
+        price: getEffectivePrice(i),
+      })),
+      content_type: 'product',
+      currency: 'KES',
+      value: total,
+    });
     sessionStorage.setItem('luku_shipping', JSON.stringify(shipping));
     sessionStorage.setItem('luku_zone',     deliveryZone);
     sessionStorage.setItem('luku_colors',   JSON.stringify(selectedColors));
