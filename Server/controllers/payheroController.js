@@ -81,6 +81,8 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
   const clientIp = shippingMeta.client_ip || null;
   const clientUa = shippingMeta.client_ua || null;
   const eventSourceUrl = shippingMeta.event_source_url || null;
+  const ttclid = shippingMeta.ttclid || null;
+  const ttp = shippingMeta.ttp || null;
 
   const cartRes = await db.query(
     `SELECT
@@ -219,6 +221,8 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
       ip: clientIp,
       userAgent: clientUa,
       externalId: payment.user_id,
+      ttclid,
+      ttp,
       fbc,
       fbp,
       eventSourceUrl,
@@ -261,6 +265,8 @@ exports.stkPush = async (req, res) => {
     fbc = null,
     fbp = null,
     event_source_url = null,
+    ttclid = null,
+    ttp = null,
   } = req.body;
   let validatedAffiliateCode = null;
   if (affiliate_code) {
@@ -387,6 +393,8 @@ exports.stkPush = async (req, res) => {
           fbc,
           fbp,
           event_source_url,
+          ttclid,
+          ttp,
         }),
       ]
     );

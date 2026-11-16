@@ -1,6 +1,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
 const db = require('../config/db');
+const { sendTikTokEvent } = require('./tiktokEvents');
 
 const PIXEL_ID = process.env.META_PIXEL_ID;
 const TOKEN = process.env.META_CAPI_ACCESS_TOKEN;
@@ -84,6 +85,8 @@ const sendMetaEvent = async ({ eventName, eventId, req, userData = {}, customDat
       content_type: allExact ? 'product' : 'product_group',
     };
   }
+  // Mirror to TikTok Events API (same event_id for dedup). Never throws.
+  sendTikTokEvent({ eventName, eventId, req, userData, customData }).catch(() => {});
   const payload = {
     data: [{
       event_name: eventName,

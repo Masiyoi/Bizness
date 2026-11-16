@@ -168,7 +168,16 @@
       ttq.load('DBTL3C3C77U7CBT64KCG');
       ttq.page();
     }(window, document, 'ttq');
-    </script>    <style id="initial-loader-style">
+    </script>    <script>
+      // Keep TikTok click id from the landing URL for server-side attribution
+      (function () {
+        try {
+          var m = /[?&]ttclid=([^&#]+)/.exec(window.location.search + window.location.hash);
+          if (m) localStorage.setItem('ttclid', decodeURIComponent(m[1]));
+        } catch (e) {}
+      })();
+    </script>
+    <style id="initial-loader-style">
       #initial-loader {
         position: fixed;
         inset: 0;

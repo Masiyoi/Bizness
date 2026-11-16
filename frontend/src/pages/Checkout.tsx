@@ -382,6 +382,8 @@ export default function Checkout() {
         // Captured from the base Meta Pixel snippet's cookies so the backend
         // can persist them and attach them to the Purchase CAPI event later,
         // fired from a webhook with no browser cookies of its own.
+        ttclid: localStorage.getItem('ttclid') || getCookie('ttclid'),
+        ttp: getCookie('_ttp'),
         fbc: getCookie('_fbc'),
         fbp: getCookie('_fbp'),
         event_source_url: window.location.href,
@@ -465,6 +467,8 @@ export default function Checkout() {
         // Purchase CAPI event later, fired from the PayHero webhook which
         // has no browser cookies of its own. See fulfillPayHeroPayment in
         // payheroController.js.
+        ttclid: localStorage.getItem('ttclid') || getCookie('ttclid'),
+        ttp: getCookie('_ttp'),
         fbc: getCookie('_fbc'),
         fbp: getCookie('_fbp'),
         event_source_url: window.location.href,
@@ -527,6 +531,8 @@ export default function Checkout() {
       // plumbing at all — pass req directly to sendMetaEvent there instead.
       const res = await axios.post('/api/payments/pesapal/initiate', {
         amount:         total,
+        ttclid: localStorage.getItem('ttclid') || getCookie('ttclid'),
+        ttp: getCookie('_ttp'),
         fbc: getCookie('_fbc'),
         fbp: getCookie('_fbp'),
         event_source_url: window.location.href,

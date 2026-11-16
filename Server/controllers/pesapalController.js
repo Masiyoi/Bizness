@@ -98,6 +98,8 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
   const clientIp = shippingMeta.client_ip || null;
   const clientUa = shippingMeta.client_ua || null;
   const eventSourceUrl = shippingMeta.event_source_url || null;
+  const ttclid = shippingMeta.ttclid || null;
+  const ttp = shippingMeta.ttp || null;
 
   // NOTE: mirrors the same sale-price CASE WHEN used in initiatePayment's
   // total calculation, so the snapshot stores what was actually charged
@@ -230,6 +232,8 @@ await awardOrderPoints(payment.user_id, payment.amount);
       ip: clientIp,
       userAgent: clientUa,
       externalId: payment.user_id,
+      ttclid,
+      ttp,
       eventSourceUrl,
       ...shippingToUserData(shipping, deliveryZone),
     },
@@ -263,6 +267,8 @@ exports.initiatePayment = async (req, res) => {
     fbc = null,
     fbp = null,
     event_source_url = null,
+    ttclid = null,
+    ttp = null,
   } = req.body;
   const userId = req.user.id;
   const clientIp = req.ip;
@@ -404,6 +410,8 @@ exports.initiatePayment = async (req, res) => {
           fbc,
           fbp,
           event_source_url,
+          ttclid,
+          ttp,
         }),
       ]
     );
