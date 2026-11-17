@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { isNewProduct } from '../../constants/theme';
 import type { Product } from '../../constants/theme';
 import { ttViewContent } from '../../utils/tiktokPixel';
+import axios from 'axios';
 
 interface QuickViewModalProps {
   product: Product & { sku?: string; images?: string[] };
@@ -78,6 +79,104 @@ export default function QuickViewModal({
     ttViewContent({ id: product.id, name: product.name, price: salePrice ?? Number(product.price) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
+  // ---- Variant picking (colour / size) before add to cart ----
+  const parseArr = (raw: any): any[] => {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw;
+    try { const v = JSON.parse(raw); return Array.isArray(v) ? v : []; } catch { return []; }
+  };
+  // null = we don't know yet whether this product has variants
+  const [variants, setVariants] = useState<any[] | null>(
+    () => ((product as any).variants !== undefined ? parseArr((product as any).variants) : null)
+  );
+  const [picking, setPicking]         = useState(false);
+  const [selColor, setSelColor]       = useState('');
+  const [selSize, setSelSize]         = useState('');
+  const [pickErr, setPickErr]         = useState('');
+  const [adding, setAdding]           = useState(false);
+  const [inCartLocal, setInCartLocal] = useState(inCart);
+  useEffect(() => { setInCartLocal(inCart); }, [inCart]);
+  const vs           = variants ?? [];
+  const hasVariants  = vs.length > 0;
+  const hasColorDim  = vs.some(v => v.color);
+  const hasSizeDim   = vs.some(v => v.size);
+  const colorOpts: string[] = Array.from(new Set(vs.map(v => v.color).filter(Boolean)));
+  const sizeOpts: string[]  = Array.from(new Set(
+    vs.filter(v => !selColor || v.color === selColor).map(v => v.size).filter(Boolean)
+  ));
+  const selectionComplete = (!hasColorDim || !!selColor) && (!hasSizeDim || !!selSize);
+  const selectedVariant = hasVariants && selectionComplete
+    ? (vs.find(v => (!hasColorDim || v.color === selColor) && (!hasSizeDim || v.size === selSize)) ?? null)
+    : null;
+  const colorSoldOut = (c: string) => vs.filter(v => v.color === c).every(v => Number(v.stock) === 0);
+  const sizeSoldOut  = (s: string) =>
+    vs.filter(v => v.size === s && (!selColor || v.color === selColor)).every(v => Number(v.stock) === 0);
+  const effInCart = inCart || inCartLocal;
+  const unitPrice = salePrice ?? Number(product.price);
+  const cartLabel = picking && hasVariants && !effInCart
+    ? (selectionComplete
+        ? 'Add to Cart - KSh ' + unitPrice.toLocaleString()
+        : 'Select ' + (hasColorDim && !selColor ? 'a colour' : 'a size'))
+    : 'Add to Cart';
+  const addWithVariant = async () => {
+    setAdding(true);
+    setPickErr('');
+    try {
+      await axios.post('/api/cart', {
+        product_id: product.id,
+        quantity: 1,
+        selected_color: selColor || null,
+        selected_size: selSize || null,
+      });
+      setInCartLocal(true);
+      setPicking(false);
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    } catch (e: any) {
+      if (e?.response?.status !== 401) setPickErr('Could not add to cart. Try again.');
+    } finally {
+      setAdding(false);
+    }
+  };
+  const removeLocal = async () => {
+    setAdding(true);
+    try {
+      await axios.delete('/api/cart/product/' + product.id);
+      setInCartLocal(false);
+      setSelColor('');
+      setSelSize('');
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    } catch { /* ignore */ }
+    finally { setAdding(false); }
+  };
+  const handleAddClick = async () => {
+    let list = variants;
+    if (list === null) {
+      // Card data had no variant info: fetch the product once to find out
+      setAdding(true);
+      try {
+        const r = await axios.get('/api/products/' + product.id);
+        list = parseArr(r.data?.variants);
+      } catch { list = []; }
+      setVariants(list);
+      setAdding(false);
+    }
+    if (!list || list.length === 0) { onCartToggle(product.id); return; } // plain product
+    if (!picking) { setPicking(true); return; }                             // reveal the options
+    if (!selectionComplete) {
+      setPickErr(hasColorDim && !selColor ? 'Please choose a colour' : 'Please choose a size');
+      return;
+    }
+    if (selectedVariant && Number(selectedVariant.stock) === 0) {
+      setPickErr('This combination is sold out');
+      return;
+    }
+    await addWithVariant();
+  };
+  const handleCartClick = () => {
+    if (inCart) { onCartToggle(product.id); return; }   // parent knows it is in the cart: parent removes it
+    if (inCartLocal) { removeLocal(); return; }          // added from the picker here
+    handleAddClick();
+  };
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
@@ -384,12 +483,72 @@ export default function QuickViewModal({
               </div>
             )}
 
+            {picking && hasVariants && !effInCart && (
+              <div style={{ marginBottom: 16 }}>
+                {hasColorDim && (
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{ fontFamily: MONO, fontSize: 9.5, fontWeight: 500, letterSpacing: '1.5px', color: C.muted, textTransform: 'uppercase', marginBottom: 8 }}>
+                      Colour{selColor ? ': ' + selColor : ''}
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {colorOpts.map(c => {
+                        const active = selColor === c;
+                        const out = colorSoldOut(c);
+                        return (
+                          <button key={c} disabled={out}
+                            onClick={() => { setSelColor(c); setSelSize(''); setPickErr(''); }}
+                            style={{
+                              padding: '7px 12px', fontFamily: MONO, fontSize: 10.5, fontWeight: 600,
+                              border: '1px solid ' + C.ink, borderRadius: 2,
+                              background: active ? C.ink : C.paper, color: active ? C.paper : C.ink,
+                              opacity: out ? 0.35 : 1, textDecoration: out ? 'line-through' : 'none',
+                              cursor: out ? 'not-allowed' : 'pointer',
+                            }}>
+                            {c}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {hasSizeDim && (
+                  <div style={{ marginBottom: 6 }}>
+                    <div style={{ fontFamily: MONO, fontSize: 9.5, fontWeight: 500, letterSpacing: '1.5px', color: C.muted, textTransform: 'uppercase', marginBottom: 8 }}>
+                      Size{selSize ? ': ' + selSize : ''}
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {sizeOpts.map(s => {
+                        const active = selSize === s;
+                        const out = sizeSoldOut(s);
+                        return (
+                          <button key={s} disabled={out}
+                            onClick={() => { setSelSize(s); setPickErr(''); }}
+                            style={{
+                              padding: '7px 12px', fontFamily: MONO, fontSize: 10.5, fontWeight: 600,
+                              border: '1px solid ' + C.ink, borderRadius: 2,
+                              background: active ? C.ink : C.paper, color: active ? C.paper : C.ink,
+                              opacity: out ? 0.35 : 1, textDecoration: out ? 'line-through' : 'none',
+                              cursor: out ? 'not-allowed' : 'pointer',
+                            }}>
+                            {s}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {pickErr && (
+                  <div style={{ fontFamily: MONO, fontSize: 10.5, color: C.accent, marginTop: 8 }}>{pickErr}</div>
+                )}
+              </div>
+            )}
             <div style={{ flex: 1 }} />
 
             <CTAs
-              isAdmin={isAdmin} stock={stock} inCart={inCart} inWishlist={inWishlist}
+              isAdmin={isAdmin} stock={stock} inCart={effInCart} inWishlist={inWishlist}
+              busy={adding} cartLabel={cartLabel}
               productId={product.id}
-              onCartToggle={onCartToggle}
+              onCartToggle={handleCartClick}
               onWishlistToggle={onWishlistToggle}
               onClose={onClose}
             />
@@ -418,8 +577,8 @@ function CornerBrackets() {
   );
 }
 
-function CTAs({ isAdmin, stock, inCart, inWishlist, productId, onCartToggle, onWishlistToggle, onClose }: {
-  isAdmin: boolean; stock: number; inCart: boolean; inWishlist: boolean;
+function CTAs({ isAdmin, stock, inCart, inWishlist, busy, cartLabel, productId, onCartToggle, onWishlistToggle, onClose }: {
+  isAdmin: boolean; stock: number; inCart: boolean; inWishlist: boolean; busy: boolean; cartLabel: string;
   productId: number;
   onCartToggle: (id: number) => void;
   onWishlistToggle: (id: number) => void;
@@ -445,7 +604,7 @@ function CTAs({ isAdmin, stock, inCart, inWishlist, productId, onCartToggle, onW
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <button
         className="qv-cart-btn"
-        disabled={stock === 0}
+        disabled={stock === 0 || busy}
         onClick={() => { if (stock > 0) onCartToggle(productId); }}
         style={{
           width: '100%', padding: '13px 0',
@@ -457,7 +616,7 @@ function CTAs({ isAdmin, stock, inCart, inWishlist, productId, onCartToggle, onW
           color:      stock === 0 ? '#AAAAAA' : inCart ? C.paper : C.ink,
         }}
       >
-        {stock === 0 ? 'Sold Out' : inCart ? '✕ Remove from Cart' : 'Add to Cart'}
+        {stock === 0 ? 'Sold Out' : inCart ? '✕ Remove from Cart' : busy ? 'Adding...' : cartLabel}
       </button>
 
       <button
