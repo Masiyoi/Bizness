@@ -421,8 +421,8 @@ export default function QuickViewModal({
 
             {/* Eyebrow */}
             <span style={{
-              fontFamily: MONO, fontSize: 9.5, fontWeight: 500,
-              letterSpacing: '2.5px', color: C.muted, textTransform: 'uppercase',
+              fontFamily: MONO, fontSize: 9.5, fontWeight: 800,
+              letterSpacing: '2.5px', color: C.ink, textTransform: 'uppercase',
               marginBottom: 8,
             }}>
               Quick View
@@ -487,7 +487,7 @@ export default function QuickViewModal({
               <div style={{ marginBottom: 16 }}>
                 {hasColorDim && (
                   <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontFamily: MONO, fontSize: 9.5, fontWeight: 500, letterSpacing: '1.5px', color: C.muted, textTransform: 'uppercase', marginBottom: 8 }}>
+                    <div style={{ fontFamily: MONO, fontSize: 9.5, fontWeight: 800, letterSpacing: '1.5px', color: C.ink, textTransform: 'uppercase', marginBottom: 8 }}>
                       Colour{selColor ? ': ' + selColor : ''}
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -513,7 +513,7 @@ export default function QuickViewModal({
                 )}
                 {hasSizeDim && (
                   <div style={{ marginBottom: 6 }}>
-                    <div style={{ fontFamily: MONO, fontSize: 9.5, fontWeight: 500, letterSpacing: '1.5px', color: C.muted, textTransform: 'uppercase', marginBottom: 8 }}>
+                    <div style={{ fontFamily: MONO, fontSize: 9.5, fontWeight: 800, letterSpacing: '1.5px', color: C.ink, textTransform: 'uppercase', marginBottom: 8 }}>
                       Size{selSize ? ': ' + selSize : ''}
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
