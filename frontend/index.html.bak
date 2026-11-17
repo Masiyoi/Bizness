@@ -31,9 +31,11 @@
     <!-- ============================================================
          FAVICON -- all icon links point at /public/plugwalk.jpg
     ============================================================= -->
-    <link rel="icon" type="image/jpeg" href="/plugwalk.jpg" />
-    <link rel="shortcut icon" href="/plugwalk.jpg" />
-    <link rel="apple-touch-icon" href="/plugwalk.jpg" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
     <link rel="manifest" href="/site.webmanifest" />
 
     <!-- Theme color - matches your navy brand color -->
@@ -155,6 +157,26 @@
     src="https://www.facebook.com/tr?id=2373776686725041&ev=PageView&noscript=1"
     /></noscript>
 
+    <!-- ============================================================
+         TIKTOK PIXEL
+    ============================================================= -->
+    <script>
+    !function (w, d, t) {
+      w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(
+    var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script")
+    ;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
+      ttq.load('DBTL3C3C77U7CBT64KCG');
+      ttq.page();
+    }(window, document, 'ttq');
+    </script>    <script>
+      // Keep TikTok click id from the landing URL for server-side attribution
+      (function () {
+        try {
+          var m = /[?&]ttclid=([^&#]+)/.exec(window.location.search + window.location.hash);
+          if (m) localStorage.setItem('ttclid', decodeURIComponent(m[1]));
+        } catch (e) {}
+      })();
+    </script>
     <style id="initial-loader-style">
       #initial-loader {
         position: fixed;

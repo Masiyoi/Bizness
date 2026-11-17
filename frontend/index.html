@@ -236,7 +236,9 @@
     <script type="module" src="/src/main.tsx"></script>
     <script>
       (function () {
-        var MIN_DISPLAY_MS = 2000;
+        // Skip the forced splash on Meta checkout links so crawlers/validators
+        // see real content immediately.
+        var MIN_DISPLAY_MS = /meta-checkout/.test(window.location.pathname) ? 0 : 2000;
         var startTime = Date.now();
         var removed = false;
         function hideLoader() {

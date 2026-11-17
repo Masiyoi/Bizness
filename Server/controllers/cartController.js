@@ -353,3 +353,59 @@ exports.removeCartByProduct = async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 };
+
+// GET /api/cart/meta-checkout-preview?products=154-992:2,154-989:2
+// Public + read-only: lets guests (and Meta's checker) see what the link contains.
+exports.metaCheckoutPreview = async (req, res) => {
+  const entries = String(req.query.products || '')
+    .split(',').map((s) => s.trim()).filter(Boolean).slice(0, META_MAX_LINES);
+  if (entries.length === 0) return res.status(400).json({ msg: 'No products supplied' });
+
+  const items = [];
+  const skipped = [];
+  try {
+    for (const entry of entries) {
+      const m = /^(\d+)(?:-(\d+))?:(\d+)$/.exec(entry);
+      if (!m) { skipped.push({ id: entry, reason: 'malformed' }); continue; }
+      const productId = Number(m[1]);
+      const variantId = m[2] ? Number(m[2]) : null;
+      const requested = parseInt(m[3], 10);
+
+      const pr = await db.query(
+        'SELECT id, name, price, sale_price, sale_ends_at, image_url FROM products WHERE id = $1',
+        [productId]
+      );
+      if (pr.rows.length === 0) { skipped.push({ id: entry, reason: 'unknown_product' }); continue; }
+      const p = pr.rows[0];
+
+      let color = null, size = null, stock = null;
+      if (variantId !== null) {
+        const vr = await db.query(
+          'SELECT color, size, stock FROM product_variants WHERE id = $1 AND product_id = $2',
+          [variantId, productId]
+        );
+        if (vr.rows.length === 0) { skipped.push({ id: entry, reason: 'unknown_variant' }); continue; }
+        color = vr.rows[0].color || null;
+        size  = vr.rows[0].size  || null;
+        stock = Number(vr.rows[0].stock);
+      }
+
+      const onSale = p.sale_price != null && Number(p.sale_price) < Number(p.price)
+        && (!p.sale_ends_at || new Date(p.sale_ends_at) > new Date());
+      const unitPrice = onSale ? Number(p.sale_price) : Number(p.price);
+      const quantity = Math.min(requested, META_MAX_QTY, stock ?? META_MAX_QTY);
+
+      items.push({
+        id: variantId !== null ? `${productId}-${variantId}` : String(productId),
+        product_id: productId, variant_id: variantId,
+        name: p.name, image_url: p.image_url, color, size,
+        unit_price: unitPrice, quantity, line_total: unitPrice * quantity,
+      });
+    }
+    if (items.length === 0) return res.status(422).json({ msg: 'No available items', skipped });
+    res.json({ items, skipped, subtotal: items.reduce((s, i) => s + i.line_total, 0) });
+  } catch (err) {
+    console.error('metaCheckoutPreview error:', err.message);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
