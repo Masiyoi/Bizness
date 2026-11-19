@@ -100,6 +100,8 @@ const fulfillPesapalPayment = async (orderTrackingId, confirmationCode) => {
   const eventSourceUrl = shippingMeta.event_source_url || null;
   const ttclid = shippingMeta.ttclid || null;
   const ttp = shippingMeta.ttp || null;
+  const metaAdId = shippingMeta.meta_ad_id || null;
+  const metaAdTs = Number(shippingMeta.meta_ad_ts) || null;
 
   // NOTE: mirrors the same sale-price CASE WHEN used in initiatePayment's
   // total calculation, so the snapshot stores what was actually charged
@@ -235,6 +237,9 @@ await awardOrderPoints(payment.user_id, payment.amount);
       ttclid,
       ttp,
       eventSourceUrl,
+      orderId: newOrderId,
+      adId: metaAdId,
+      adTouchTs: metaAdTs,
       ...shippingToUserData(shipping, deliveryZone),
     },
     customData: {
@@ -269,6 +274,8 @@ exports.initiatePayment = async (req, res) => {
     event_source_url = null,
     ttclid = null,
     ttp = null,
+    meta_ad_id = null,
+    meta_ad_ts = null,
   } = req.body;
   const userId = req.user.id;
   const clientIp = req.ip;
@@ -407,6 +414,8 @@ exports.initiatePayment = async (req, res) => {
           affiliate_code: validatedAffiliateCode,
           client_ip: clientIp,
           client_ua: clientUa,
+          meta_ad_id,
+          meta_ad_ts,
           fbc,
           fbp,
           event_source_url,

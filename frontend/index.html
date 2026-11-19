@@ -220,7 +220,21 @@
         pointer-events: none;
       }
     </style>
-  </head>
+  <script>
+  (function () {
+    try {
+      var p = new URLSearchParams(window.location.search);
+      var h = window.location.hash || '';
+      var hp = h.indexOf('?') > -1 ? new URLSearchParams(h.split('?')[1]) : null;
+      var ad = p.get('meta_ad_id') || (hp && hp.get('meta_ad_id'));
+      if (ad && /^\d+$/.test(ad)) {
+        localStorage.setItem('meta_ad_id', ad);
+        localStorage.setItem('meta_ad_ts', String(Math.floor(Date.now() / 1000)));
+      }
+    } catch (e) {}
+  })();
+</script>
+</head>
 
   <body>
     <!-- Google Tag Manager (noscript) -->

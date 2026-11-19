@@ -127,6 +127,19 @@ const sendMetaEvent = async ({ eventName, eventId, req, userData = {}, customDat
       { params: { access_token: TOKEN } }
     );
     console.log(`✅ Meta CAPI: ${eventName} sent (event_id=${eventId})`, data);
+    if (eventName === 'Purchase' && userData.orderId && userData.adId && userData.adTouchTs) {
+      queueAttribution({
+        orderId: userData.orderId,
+        purchaseEventId: eventId,
+        purchaseEventTime: payload.data[0].event_time,
+        orderValue: customData.value,
+        currency: customData.currency,
+        adId: userData.adId,
+        touchpointTs: userData.adTouchTs,
+        userData: payload.data[0].user_data,
+        eventSourceUrl: payload.data[0].event_source_url,
+      }).catch((e) => console.error('queueAttribution failed:', e.message));
+    }
     return data;
   } catch (err) {
     console.error(`❌ Meta CAPI send failed for ${eventName} (event_id=${eventId}):`, err.response?.data || err.message);
@@ -167,4 +180,75 @@ const shippingToUserData = (shipping = {}, deliveryZone) => {
     zip: shipping.postalCode || shipping.zip,
   };
 };
-module.exports = { sendMetaEvent, resolveContentId, shippingToUserData };
+// ── Custom Attribution Source (AppendAttribution) ─────────────────────────
+// Queue one row per Purchase that came from a Meta ad click.
+const queueAttribution = async ({ orderId, purchaseEventId, purchaseEventTime, orderValue, currency, adId, touchpointTs, userData, eventSourceUrl, share = 1 }) => {
+  if (!orderId || !adId || !touchpointTs) return;
+  await db.query(
+    `INSERT INTO meta_attribution_queue
+       (order_id, purchase_event_id, purchase_event_time, order_value, currency,
+        ad_id, touchpoint_ts, attribution_share, user_data, event_source_url)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+     ON CONFLICT (order_id, ad_id) DO NOTHING`,
+    [orderId, purchaseEventId, purchaseEventTime, orderValue, currency || 'KES',
+     String(adId), touchpointTs, share, JSON.stringify(userData || {}), eventSourceUrl || null]
+  );
+};
+// Sends due rows (>= send_after, still inside the 48h window). Call every few minutes.
+const flushAttributionQueue = async () => {
+  if (!PIXEL_ID || !TOKEN) return;
+  await db.query(
+    `UPDATE meta_attribution_queue SET status = 'expired', updated_at = now()
+      WHERE status = 'pending' AND to_timestamp(purchase_event_time) + interval '47 hours' <= now()`
+  );
+  const { rows } = await db.query(
+    `UPDATE meta_attribution_queue SET attempts = attempts + 1, updated_at = now()
+      WHERE id IN (
+        SELECT id FROM meta_attribution_queue
+         WHERE status = 'pending' AND send_after <= now()
+         ORDER BY created_at LIMIT 50 FOR UPDATE SKIP LOCKED)
+      RETURNING *`
+  );
+  for (const r of rows) {
+    const payload = {
+      data: [{
+        event_name: 'AppendAttribution',
+        event_time: Math.floor(Date.now() / 1000),
+        event_id: r.passback_event_id,
+        action_source: 'website',
+        event_source_url: r.event_source_url || 'https://www.plugwalk.co',
+        attribution_data: {
+          ad_id: String(r.ad_id),
+          touchpoint_ts: Number(r.touchpoint_ts),
+          attribution_share: Number(r.attribution_share),
+          attribution_value: Number(r.attribution_value),
+        },
+        original_event_data: {
+          event_name: 'Purchase',
+          event_time: Number(r.purchase_event_time),
+        },
+        custom_data: { currency: r.currency },
+        user_data: r.user_data,
+      }],
+      ...(process.env.META_TEST_EVENT_CODE && { test_event_code: process.env.META_TEST_EVENT_CODE }),
+    };
+    try {
+      await axios.post(`https://graph.facebook.com/${API_VERSION}/${PIXEL_ID}/events`, payload, { params: { access_token: TOKEN } });
+      await db.query(`UPDATE meta_attribution_queue SET status='sent', sent_at=now(), last_error=NULL, updated_at=now() WHERE id=$1`, [r.id]);
+      console.log(`✅ Meta AppendAttribution sent (order ${r.order_id}, ad ${r.ad_id})`);
+    } catch (err) {
+      const msg = JSON.stringify(err.response?.data || err.message).slice(0, 500);
+      await db.query(
+        `UPDATE meta_attribution_queue SET status = CASE WHEN attempts >= 5 THEN 'failed' ELSE 'pending' END,
+                last_error=$2, send_after = now() + interval '15 minutes', updated_at=now() WHERE id=$1`,
+        [r.id, msg]
+      );
+      console.error(`❌ Meta AppendAttribution failed (order ${r.order_id}):`, msg);
+    }
+  }
+};
+// Flush queued AppendAttribution events every 5 minutes.
+setInterval(() => {
+  flushAttributionQueue().catch((e) => console.error('flushAttributionQueue failed:', e.message));
+}, 5 * 60 * 1000).unref();
+module.exports = { sendMetaEvent, resolveContentId, shippingToUserData, queueAttribution, flushAttributionQueue };

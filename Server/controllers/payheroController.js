@@ -83,6 +83,8 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
   const eventSourceUrl = shippingMeta.event_source_url || null;
   const ttclid = shippingMeta.ttclid || null;
   const ttp = shippingMeta.ttp || null;
+  const metaAdId = shippingMeta.meta_ad_id || null;
+  const metaAdTs = Number(shippingMeta.meta_ad_ts) || null;
 
   const cartRes = await db.query(
     `SELECT
@@ -226,6 +228,9 @@ const fulfillPayHeroPayment = async (checkoutRequestId, confirmationCode) => {
       fbc,
       fbp,
       eventSourceUrl,
+      orderId: newOrderId,
+      adId: metaAdId,
+      adTouchTs: metaAdTs,
       ...shippingToUserData(shipping, deliveryZone),
     },
     customData: {
@@ -267,6 +272,8 @@ exports.stkPush = async (req, res) => {
     event_source_url = null,
     ttclid = null,
     ttp = null,
+    meta_ad_id = null,
+    meta_ad_ts = null,
   } = req.body;
   let validatedAffiliateCode = null;
   if (affiliate_code) {
@@ -390,6 +397,8 @@ exports.stkPush = async (req, res) => {
           affiliate_code: validatedAffiliateCode,
           client_ip: clientIp,
           client_ua: clientUa,
+          meta_ad_id,
+          meta_ad_ts,
           fbc,
           fbp,
           event_source_url,

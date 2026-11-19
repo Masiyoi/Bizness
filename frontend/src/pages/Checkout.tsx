@@ -67,6 +67,16 @@ const getCookie = (name: string): string | undefined => {
   return match ? decodeURIComponent(match[1]) : undefined;
 };
 
+// Meta ad click captured on landing (see index.html), used for Custom Attribution.
+const getAdTouch = (): { meta_ad_id?: string; meta_ad_ts?: number } => {
+  try {
+    const id = localStorage.getItem('meta_ad_id');
+    const ts = Number(localStorage.getItem('meta_ad_ts'));
+    if (!id || !ts) return {};
+    if (Date.now() / 1000 - ts > 7 * 24 * 3600) return {};
+    return { meta_ad_id: id, meta_ad_ts: ts };
+  } catch { return {}; }
+};
 export default function Checkout() {
   const navigate   = useNavigate();
   const location   = useLocation();
@@ -453,6 +463,7 @@ export default function Checkout() {
       // amount is intentionally omitted — the server recomputes the total
       // from the cart + first-order discount eligibility, never trusting the client.
       const res = await axios.post('/api/payments/payhero/stk-push', {
+        ...getAdTouch(),
         phone: payHeroPhone,
         delivery_zone:  deliveryZone,
         delivery_fee:   deliveryFee,
@@ -530,6 +541,7 @@ export default function Checkout() {
       // the earlier round of fixes) and doesn't need this fbc/fbp-via-cookie
       // plumbing at all — pass req directly to sendMetaEvent there instead.
       const res = await axios.post('/api/payments/pesapal/initiate', {
+        ...getAdTouch(),
         amount:         total,
         ttclid: localStorage.getItem('ttclid') || getCookie('ttclid'),
         ttp: getCookie('_ttp'),
