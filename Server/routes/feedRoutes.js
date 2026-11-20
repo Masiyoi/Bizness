@@ -6,11 +6,20 @@ const BRAND = process.env.FEED_BRAND || 'Plug Walk Studio';
 const COLUMNS = [
   'id', 'item_group_id', 'title', 'description', 'availability', 'condition',
   'price', 'sale_price', 'link', 'image_link', 'additional_image_link',
-  'brand', 'product_type', 'color', 'size', 'gender', 'age_group',
+  'brand', 'product_type', 'google_product_category', 'color', 'size', 'gender', 'age_group',
 ];
 const clean = (v) => String(v ?? '').replace(/\s+/g, ' ').trim();
 const csv = (v) => '"' + clean(v).replace(/"/g, '""') + '"';
 const money = (n) => Number(n).toFixed(2) + ' KES';
+
+const cap = (x) => (x ? x.charAt(0).toUpperCase() + x.slice(1) : '');
+const GOOGLE_CAT = {
+  footwear: 'Apparel & Accessories > Shoes',
+  clothing: 'Apparel & Accessories > Clothing',
+  accessories: 'Apparel & Accessories > Clothing Accessories',
+};
+const googleCat = (d) => GOOGLE_CAT[String(d || '').toLowerCase()] || 'Apparel & Accessories';
+const feedGender = (g) => ({ men: 'male', women: 'female' }[String(g || '').toLowerCase()] || 'unisex');
 function imageUrls(p) {
   const list = [];
   if (p.image_url) list.push(p.image_url);
@@ -32,7 +41,7 @@ router.get('/meta.csv', async (req, res) => {
   if (req.query.key !== expected) return res.status(403).send('Forbidden');
   try {
     const pRes = await db.query(
-      'SELECT id, name, description, price, sale_price, sale_ends_at, stock_quantity, stock, image_url, images, category FROM products ORDER BY id'
+      'SELECT p.id, p.name, p.description, p.price, p.sale_price, p.sale_ends_at, p.stock_quantity, p.stock, p.image_url, p.images, c.gender AS cat_gender, c.department AS cat_department, c.name AS cat_name FROM products p LEFT JOIN categories c ON c.id = p.category_id ORDER BY p.id'
     );
     const vRes = await db.query(
       'SELECT id, product_id, color, size, stock FROM product_variants ORDER BY product_id, id'
@@ -66,8 +75,9 @@ router.get('/meta.csv', async (req, res) => {
         image_link: imgs[0],
         additional_image_link: imgs.slice(1, 11).join(','),
         brand: BRAND,
-        product_type: p.category || '',
-        gender: 'unisex',
+        product_type: [cap(p.cat_gender), cap(p.cat_department), p.cat_name].filter(Boolean).join(' > ') || 'Apparel & Accessories',
+        google_product_category: googleCat(p.cat_department),
+        gender: feedGender(p.cat_gender),
         age_group: 'adult',
       };
       const own = byProduct.get(p.id) || [];
