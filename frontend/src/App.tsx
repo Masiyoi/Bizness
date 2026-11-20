@@ -48,6 +48,7 @@ import FloatingCart from './components/common/FloatingCart';
 import ScrollToTop  from './components/common/ScrollToTop';
 import MetaCheckoutGate from './components/common/MetaCheckoutGate';
 import { ttPageView } from './utils/tiktokPixel';
+import './utils/tiktokIdentity';
 
 // ── Support Pages ──────────────────────────────────────────────────────────────
 import TrackOrder from './pages/support/TrackOrder';

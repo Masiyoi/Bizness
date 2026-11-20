@@ -1,3 +1,4 @@
+import { identifyTikTokUser } from './tiktokIdentity';
 // Thin wrapper around the TikTok browser pixel (loaded in index.html).
 declare global { interface Window { ttq?: any } }
 export const newTtEventId = () =>
@@ -8,7 +9,7 @@ export const trackTikTok = (
   eventId?: string
 ) => {
   try {
-    window.ttq?.track(event, props, { event_id: eventId || newTtEventId() });
+    identifyTikTokUser(); window.ttq?.track(event, props, { event_id: eventId || newTtEventId() });
   } catch { /* tracking must never break the UI */ }
 };
 export const ttViewContent = (p: { id: number | string; name: string; price: number }) =>
@@ -25,5 +26,5 @@ export const ttViewContent = (p: { id: number | string; name: string; price: num
     value: p.price,
   });
 export const ttPageView = () => {
-  try { window.ttq?.page(); } catch { /* ignore */ }
+  try { identifyTikTokUser(); window.ttq?.page(); } catch { /* ignore */ }
 };
