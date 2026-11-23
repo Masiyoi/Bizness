@@ -1080,7 +1080,7 @@ export default function Checkout() {
             </div>
             <h2 style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 700, fontSize: 26, color: T.navy, marginBottom: 8 }}>Payment Successful!</h2>
             <p style={{ fontFamily: "'Cormorant Garamond',serif", color: T.navy, fontSize: 14, fontWeight: 600, marginBottom: 24, lineHeight: 1.7 }}>
-              Your order has been placed.<br />Thank you for shopping from number one Plug in Kenya!
+              Your order has been placed.<br />Thank you for shopping from the number one Plug in Kenya!
             </p>
 
             <div style={{ marginBottom: 20, textAlign: 'left' }}>

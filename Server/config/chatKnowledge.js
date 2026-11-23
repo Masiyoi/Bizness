@@ -120,7 +120,7 @@ PRIVACY, TERMS AND COOKIES (summary only)
 
 CONTACT
 - WhatsApp and phone: +254 723 831 949 (https://wa.me/254723831949). Fastest reply, usually within minutes during business hours.
-- Email: plugwalkstudios@gmail.com
+- Email: plugwalkstudio@gmail.com
 - Hours: Monday to Saturday, 9am to 6pm EAT.
 - Location: Imenti House, Nairobi CBD, Kenya. To view items in person, arrange it on WhatsApp first.
 `.trim();

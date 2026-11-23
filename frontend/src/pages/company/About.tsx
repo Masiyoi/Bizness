@@ -317,7 +317,7 @@ function TabFAQs() {
         <FAQItem q="What is your return policy?" a="We offer 30-day returns on eligible items in original condition with tags attached." />
         <FAQItem q="Are your products authentic?" a="Yes. Every item on Plug Walk Studio is carefully sourced and verified. We have a zero-tolerance policy for counterfeit goods." />
       </Section>
-      <AccentCard style={{ background: '#fff', color: '#000' }}>Still have a question? Reach us on WhatsApp at <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 723 831 949</a> or email <a href="mailto:plugwalkstudio@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</a>.</AccentCard>
+      <AccentCard style={{ background: '#fff', color: '#000' }}>Still have a question? Reach us on WhatsApp at <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 723 831 949</a> or email <a href="mailto:plugwalkstudio@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudio@gmail.com</a>.</AccentCard>
     </>
   );
 }
@@ -336,9 +336,9 @@ function TabContact() {
             <img src={telephoneIcon} alt="" style={{ width: 22, height: 22, objectFit: 'contain', flexShrink: 0 }} />
             <div><div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 4 }}>Phone / WhatsApp</div><div style={{ fontSize: 14, color: '#000', fontWeight: 700, marginBottom: 2, textDecoration: 'underline' }}>+254 723 831 949</div><div style={{ fontSize: 12, color: '#000' }}>Tap to open WhatsApp</div></div>
           </a>
-          <a href="mailto:plugwalkstudios@gmail.com" style={card}>
+          <a href="mailto:plugwalkstudio@gmail.com" style={card}>
             <img src={emailIcon} alt="" style={{ width: 22, height: 22, objectFit: 'contain', flexShrink: 0 }} />
-            <div><div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 4 }}>Email</div><div style={{ fontSize: 14, color: '#000', fontWeight: 700, marginBottom: 2, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</div><div style={{ fontSize: 12, color: '#000' }}>Tap to send email</div></div>
+            <div><div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '1.5px', color: '#000', textTransform: 'uppercase', marginBottom: 4 }}>Email</div><div style={{ fontSize: 14, color: '#000', fontWeight: 700, marginBottom: 2, textDecoration: 'underline' }}>plugwalkstudio@gmail.com</div><div style={{ fontSize: 12, color: '#000' }}>Tap to send email</div></div>
           </a>
           <a href="https://www.google.com/maps/search/Nairobi+CBD+Kenya" target="_blank" rel="noopener noreferrer" style={card}>
             <img src={coverageIcon} alt="" style={{ width: 22, height: 22, objectFit: 'contain', flexShrink: 0 }} />
@@ -504,7 +504,7 @@ function TabOrders() {
       <Section title="Contact to Track">
         <InfoGrid items={[
           { icon: telephoneIcon, label:'Call / WhatsApp', value: <a href="https://wa.me/254723831949" target="_blank" rel="noopener noreferrer" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>+254 723 831 949</a> },
-          { icon: emailIcon,     label:'Email',           value: <a href="mailto:plugwalkstudios@gmail.com" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</a> },
+          { icon: emailIcon,     label:'Email',           value: <a href="mailto:plugwalkstudio@gmail.com" style={{ color: '#000', fontWeight: 800, textDecoration: 'underline' }}>plugwalkstudio@gmail.com</a> },
           { icon: timeIcon,      label:'Support Hours',   value:'Mon–Sat, 9am–6pm'    },
           { icon: coverageIcon,  label:'Location',        value:'Nairobi CBD, Kenya'   },
         ]} />
@@ -537,7 +537,7 @@ function TabTerms() {
   return (
     <>
       {sections.map(([title, body]) => <Section key={title} title={title}><Prose><p>{body}</p></Prose></Section>)}
-      <AccentCard style={{ background: '#fff', color: '#000' }}>Questions? Email <a href="mailto:plugwalkstudios@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</a> or call <a href="tel:+254723831949" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 723 831 949</a>.</AccentCard>
+      <AccentCard style={{ background: '#fff', color: '#000' }}>Questions? Email <a href="mailto:plugwalkstudio@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudio@gmail.com</a> or call <a href="tel:+254723831949" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>+254 723 831 949</a>.</AccentCard>
     </>
   );
 }
@@ -562,7 +562,7 @@ function TabCookies() {
           </div>
         ))}
       </Section>
-      <AccentCard style={{ background: '#fff', color: '#000' }}>Questions about cookies? Email <a href="mailto:plugwalkstudios@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudios@gmail.com</a>.</AccentCard>
+      <AccentCard style={{ background: '#fff', color: '#000' }}>Questions about cookies? Email <a href="mailto:plugwalkstudio@gmail.com" style={{ color: '#000', fontWeight: 700, textDecoration: 'underline' }}>plugwalkstudio@gmail.com</a>.</AccentCard>
     </>
   );
 }

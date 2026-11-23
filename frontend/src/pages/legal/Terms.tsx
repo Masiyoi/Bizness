@@ -65,7 +65,7 @@ export default function Terms() {
 
       <Section title="10. Contact">
         <Prose>
-          <p>Questions about these terms? Email <strong>plugwalkstudios@gmail.com</strong> or call <strong>+254 723 831 949</strong>.</p>
+          <p>Questions about these terms? Email <strong>plugwalkstudio@gmail.com</strong> or call <strong>+254 723 831 949</strong>.</p>
         </Prose>
       </Section>
     </PageShell>
