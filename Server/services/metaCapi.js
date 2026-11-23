@@ -14,6 +14,22 @@ const normalizePhone = (p) => {
   return d || undefined;
 };
 const API_VERSION = 'v26.0';
+// Reads a cookie from req.cookies if cookie-parser is mounted, else from the raw Cookie header.
+const cookieFrom = (req, name) => {
+  if (req?.cookies?.[name]) return req.cookies[name];
+  const raw = req?.headers?.cookie;
+  if (!raw) return undefined;
+  const m = raw.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
+  try { return m ? decodeURIComponent(m[1]) : undefined; } catch { return m ? m[1] : undefined; }
+};
+// Builds a Click ID (fbc) from an fbclid in the URL when no _fbc cookie is available.
+// Preserve fbclid case exactly; Meta treats it as case-sensitive.
+const fbcFromUrl = (url) => {
+  try {
+    const id = new URL(url).searchParams.get('fbclid');
+    return id ? `fb.1.${Date.now()}.${id}` : undefined;
+  } catch { return undefined; }
+};
 
 const hash = (val) =>
   val ? crypto.createHash('sha256').update(String(val).trim().toLowerCase()).digest('hex') : undefined;
@@ -108,8 +124,9 @@ const sendMetaEvent = async ({ eventName, eventId, req, userData = {}, customDat
         // userData.fbc/fbp win over req.cookies — needed for webhook-triggered
         // events (e.g. PayHero payment callback) that have no cookies of their
         // own but were handed fbc/fbp captured earlier client-side.
-        fbc: userData.fbc || req?.cookies?._fbc,
-        fbp: userData.fbp || req?.cookies?._fbp,
+        fbc: userData.fbc || cookieFrom(req, '_fbc') || req?.headers?.['x-fbc'] || req?.body?.fbc
+             || fbcFromUrl(userData.eventSourceUrl || req?.headers?.referer),
+        fbp: userData.fbp || cookieFrom(req, '_fbp') || req?.headers?.['x-fbp'] || req?.body?.fbp,
       },
       custom_data: customData,
     }],
