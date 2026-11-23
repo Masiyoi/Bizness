@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { Order, Stats } from '../../types';
 import { T, TRACKING_TO_STATUS } from '../../constants';
 import { OrderCard }    from './OrderCard';
@@ -14,6 +14,8 @@ interface OrdersTabProps {
 export function OrdersTab({ orders, stats, onView, onUpdate }: OrdersTabProps) {
   const [search,       setSearch]       = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [dateFrom,     setDateFrom]     = useState('');
+  const [dateTo,       setDateTo]       = useState('');
 
   const filtered = useMemo(() => orders.filter(o => {
     const matchStatus = statusFilter === '' || o.status === TRACKING_TO_STATUS[statusFilter];
@@ -25,9 +27,26 @@ export function OrdersTab({ orders, stats, onView, onUpdate }: OrdersTabProps) {
       (o.mpesa_phone    || '').toLowerCase().includes(q) ||
       (o.mpesa_receipt  || '').toLowerCase().includes(q) ||
       String(o.id).includes(q);
-    return matchStatus && matchSearch;
-  }), [orders, search, statusFilter]);
+    const created   = new Date(o.created_at).getTime();
+    const matchFrom = !dateFrom || created >= new Date(`${dateFrom}T00:00:00`).getTime();
+    const matchTo   = !dateTo   || created <= new Date(`${dateTo}T23:59:59.999`).getTime();
+    return matchStatus && matchSearch && matchFrom && matchTo;
+  }), [orders, search, statusFilter, dateFrom, dateTo]);
 
+  const toISODate = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const applyPreset = (days: number) => {
+    const end   = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - (days - 1));
+    setDateFrom(toISODate(start));
+    setDateTo(toISODate(end));
+  };
+  const hasDateFilter = !!(dateFrom || dateTo);
+  const dateInputStyle: React.CSSProperties = {
+    padding: '8px 10px', borderRadius: 8, border: `1px solid ${T.grey3}`,
+    background: T.white, color: T.black, fontFamily: 'Jost,sans-serif', fontSize: 12,
+  };
   // Simple CSV export of visible orders
   const exportCSV = () => {
     const header = ['Order ID','Customer','Email','Phone','Total','Status','Tracking','M-Pesa Receipt','Date'].join(',');
@@ -89,6 +108,26 @@ export function OrdersTab({ orders, stats, onView, onUpdate }: OrdersTabProps) {
         totalCount={orders.length}  filteredCount={filtered.length}
       />
 
+      {/* Date filter */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 16, fontFamily: 'Jost,sans-serif', fontSize: 12 }}>
+        <span style={{ color: T.grey1, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', fontSize: 10 }}>Date</span>
+        {[{ label: 'Today', days: 1 }, { label: '7 days', days: 7 }, { label: '30 days', days: 30 }].map(p => (
+          <button
+            key={p.label}
+            onClick={() => applyPreset(p.days)}
+            style={{ ...dateInputStyle, cursor: 'pointer', fontWeight: 600 }}
+          >{p.label}</button>
+        ))}
+        <input type="date" value={dateFrom} max={dateTo || undefined} onChange={e => setDateFrom(e.target.value)} style={dateInputStyle} />
+        <span style={{ color: T.grey1 }}>to</span>
+        <input type="date" value={dateTo} min={dateFrom || undefined} onChange={e => setDateTo(e.target.value)} style={dateInputStyle} />
+        {hasDateFilter && (
+          <button
+            onClick={() => { setDateFrom(''); setDateTo(''); }}
+            style={{ ...dateInputStyle, cursor: 'pointer', color: T.grey1 }}
+          >✕ Clear dates</button>
+        )}
+      </div>
       {/* List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {orders.length === 0 && (
@@ -106,7 +145,7 @@ export function OrdersTab({ orders, stats, onView, onUpdate }: OrdersTabProps) {
             <button
               className="btn btn-secondary"
               style={{ background: T.grey5, color: T.grey1, border: `1px solid ${T.grey3}`, margin: '0 auto' }}
-              onClick={() => { setSearch(''); setStatusFilter(''); }}
+              onClick={() => { setSearch(''); setStatusFilter(''); setDateFrom(''); setDateTo(''); }}
             >Clear filters</button>
           </div>
         )}
